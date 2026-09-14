@@ -1449,6 +1449,9 @@ model Lead {
   updatedAt     DateTime      @updatedAt
   uuid          String?       @unique(map: "Lead_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt     DateTime?
+  dataClassification DataClassification @default(SEED_DEMO)
+  retrievalTimestamp  DateTime?
+  rawEvidence         String?
   tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outreachLogs  OutreachLog[]
 
@@ -1457,6 +1460,7 @@ model Lead {
   @@index([city, entityType])
   @@index([tenantId])
   @@index([deletedAt], map: "Lead_deleted_idx")
+  @@index([dataClassification])
 }
 
 model OutreachLog {
@@ -2866,6 +2870,16 @@ enum LeadTier {
   GOLD
   PLATINUM
 }
+
+enum DataClassification {
+  SEED_DEMO           // Intentionally seeded demonstration data
+  USER_PROVIDED       // Explicitly provided by user/agent
+  EXTERNAL_OBSERVED   // Observed from external source, evidence preserved
+  INFERRED            // System-generated inference, not directly observed
+  VALIDATED           // Externally observed AND independently validated
+  AUTHORIZED          // Validated AND authorized for action/sharing
+}
+
 
 enum LeadStatus {
   DISCOVERED
