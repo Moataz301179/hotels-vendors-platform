@@ -1,0 +1,73 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# tools config (may contain credentials)
+tools.yaml
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+/app/generated/prisma
+.ssh/
+
+# orphaned / temp files — never commit
+dev.db
+*.log
+*.pid
+*.zip
+.dev.pid
+session-*.zip
+tmp/
+graphify-out/
+backup_frontend/
+extracted_roadmap/
+.crew-venv/
+crew/
+
+# playwright MCP captures (local debugging only)
+.playwright-mcp/
+
+# ad-hoc SQL dumps — real migrations live in prisma/migrations/
+/schema-v6-*.sql
+
+# macOS
+.DS_Store
+**/.DS_Store
+# Playwright CLI output (may contain credentials)
+.playwright-cli/

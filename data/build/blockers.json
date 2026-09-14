@@ -1,0 +1,16 @@
+{
+  "blockers": [
+    {
+      "id": "B001",
+      "taskId": "T003",
+      "priority": "P0",
+      "description": "Oliv Finance API credentials not received. Blocks Phase 3 fintech layer.",
+      "owner": "api-agent",
+      "reportedAt": "2026-06-02",
+      "escalationLevel": 1,
+      "resolutionTarget": "2026-06-05",
+      "resolvedAt": null,
+      "workaround": "Use mock Oliv adapter for development. Switch to real API when credentials arrive."
+    }
+  ]
+}

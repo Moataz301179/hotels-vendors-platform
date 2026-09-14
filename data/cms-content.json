@@ -1,0 +1,154 @@
+{
+  "pages": {
+    "home": {
+      "title": "Hotels Vendors",
+      "subtitle": "Egypt's First AI-Native Procurement Intelligence Platform",
+      "heroTitle": "The AI Procurement Operating System Egypt's Hotels Actually Needed",
+      "heroDescription": "Not a marketplace. Not a directory. Hotels Vendors is an AI-native procurement operating system that predicts demand across your properties, automates purchasing workflows, secures cashflow through embedded factoring, and enforces full ETA compliance — before problems ever reach your desk. Built by auditors who have seen exactly where hospitality money leaks.",
+      "description": "Hotels Vendors is Egypt's first AI-native procurement operating system. Predictive demand intelligence, automated purchasing workflows, embedded factoring, and full ETA compliance — in one unified platform.",
+      "ctaTitle": "Ready to Stop Leaking Money?",
+      "ctaDescription": "Join the hotels that have turned procurement from a cost center into a competitive advantage.",
+      "metaTitle": "Hotels Vendors — AI Procurement OS for Egyptian Hospitality",
+      "metaDescription": "An AI-native procurement operating system that predicts demand, automates workflows, secures cashflow, and enforces ETA compliance. Built for Egyptian hospitality."}]
+    },
+    "about": {
+      "title": "About Hotels Vendors",
+      "subtitle": "Building the Future of Hospitality Procurement",
+      "heroTitle": "Our Story",
+      "heroDescription": "Founded in 2024, Hotels Vendors was born from a simple observation: Egyptian hotels spend too much time and money on procurement. We're here to change that.",
+      "description": "Hotels Venders is Egypt's leading digital procurement platform, connecting hotels with verified suppliers to streamline purchasing and reduce costs.",
+      "features": [
+        {
+          "title": "Verified Supplier Network",
+          "description": "Every supplier on our platform is thoroughly vetted for quality, reliability, and compliance with Egyptian hospitality standards."
+        },
+        {
+          "title": "Smart Procurement",
+          "description": "AI-powered recommendations help you find the best products at the best prices, automatically."
+        },
+        {
+          "title": "Real-Time Tracking",
+          "description": "Track orders from placement to delivery with full visibility into every step of the process."
+        },
+        {
+          "title": "ETA Compliance",
+          "description": "Built-in Egyptian Tax Authority e-invoicing ensures your invoices are always compliant."
+        }
+      ],
+      "ctaTitle": "Join Our Growing Network",
+      "ctaDescription": "Whether you're a hotel looking to streamline procurement or a supplier ready to reach more customers, we'd love to hear from you.",
+      "metaTitle": "About Hotels Vendors — Egypt's Hospitality Procurement Platform",
+      "metaDescription": "Learn about Hotels Vendors' mission to transform hospitality procurement in Egypt through technology and verified supplier networks."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "subtitle": "Transparent Pricing for Every Business Size",
+      "heroTitle": "Simple, Transparent Pricing",
+      "heroDescription": "Choose the plan that fits your business. All plans include access to our verified supplier network and core procurement tools.",
+      "description": "Flexible pricing plans designed for hotels and suppliers of all sizes.",
+      "pricingTiers": [
+        {
+          "name": "Starter",
+          "price": "Free",
+          "description": "For small hotels getting started",
+          "features": [
+            "Up to 50 orders/month",
+            "Basic supplier search",
+            "Email support",
+            "Standard delivery tracking"
+          ]
+        },
+        {
+          "name": "Professional",
+          "price": "EGP 2,999/mo",
+          "description": "For growing hotel operations",
+          "features": [
+            "Unlimited orders",
+            "Advanced supplier analytics",
+            "Priority support",
+            "ETA e-invoicing",
+            "Multi-property management"
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "price": "Custom",
+          "description": "For large hotel chains",
+          "features": [
+            "Everything in Professional",
+            "Dedicated account manager",
+            "Custom integrations",
+            "API access",
+            "Advanced reporting & BI"
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Is there a setup fee?",
+          "answer": "No setup fees for any plan. You can get started immediately after registration."
+        },
+        {
+          "question": "Can I switch plans later?",
+          "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle."
+        },
+        {
+          "question": "Do you offer discounts for annual billing?",
+          "answer": "Yes, annual billing includes a 20% discount compared to monthly billing."
+        }
+      ],
+      "ctaTitle": "Not Sure Which Plan is Right?",
+      "ctaDescription": "Our team can help you find the perfect fit for your business.",
+      "metaTitle": "Pricing — Hotels Vendors",
+      "metaDescription": "Explore transparent pricing plans for Hotels Vendors. Free Starter plan available. Professional and Enterprise plans for growing operations."
+    },
+    "solutions": {
+      "title": "Solutions",
+      "subtitle": "End-to-End Procurement Solutions for Hotels",
+      "heroTitle": "Solutions Built for Hotels",
+      "heroDescription": "From sourcing to payment, our platform covers every step of your procurement journey with tools designed specifically for the hospitality industry.",
+      "description": "Comprehensive procurement solutions designed specifically for the Egyptian hospitality industry.",
+      "features": [
+        {
+          "title": "Smart Catalog",
+          "description": "Browse thousands of verified hospitality products with detailed specifications, pricing, and supplier ratings."
+        },
+        {
+          "title": "Order Management",
+          "description": "Create, track, and manage purchase orders across multiple properties from a single dashboard."
+        },
+        {
+          "title": "Invoice & Payments",
+          "description": "Streamlined invoicing with ETA compliance and flexible payment terms including factoring options."
+        },
+        {
+          "title": "Supplier Management",
+          "description": "Evaluate, onboard, and manage supplier relationships with performance analytics and compliance tracking."
+        },
+        {
+          "title": "Inventory Sync",
+          "description": "Real-time inventory updates from suppliers to prevent stockouts and overordering."
+        },
+        {
+          "title": "Analytics & Reporting",
+          "description": "Deep insights into spending patterns, supplier performance, and cost optimization opportunities."
+        }
+      ],
+      "ctaTitle": "See It In Action",
+      "ctaDescription": "Schedule a demo to see how Hotels Vendors can transform your procurement process.",
+      "metaTitle": "Solutions — Hotels Vendors Procurement Platform",
+      "metaDescription": "Discover end-to-end procurement solutions for hotels: smart catalog, order management, invoicing, supplier management, and analytics."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "Get in Touch with Our Team",
+      "heroTitle": "Contact Us",
+      "heroDescription": "Have questions? Our team is here to help. Reach out and we'll get back to you within 24 hours.",
+      "description": "Contact Hotels Vendors for sales, support, or partnership inquiries.",
+      "ctaTitle": "Ready to Get Started?",
+      "ctaDescription": "Create your free account and start exploring our supplier network today.",
+      "metaTitle": "Contact — Hotels Vendors",
+      "metaDescription": "Contact Hotels Vendors for sales inquiries, support, or partnership opportunities."
+    }
+  }
+}

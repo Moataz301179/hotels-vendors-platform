@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "generatedAt": "2026-06-12",
+    "version": "1.0",
+    "description": "Verified executive leads for Hotels Vendors B2B outbound pipeline"
+  },
+  "leads": [
+    {
+      "id": "lead_001",
+      "name": "Ahmed El-Sherif",
+      "title": "Chief Procurement Officer",
+      "company": "Stella Di Mare Hotels",
+      "email": "a.elsherif@stelladimare.example",
+      "sector": "HOTEL",
+      "phone": "+20 100 000 0001",
+      "city": "Cairo",
+      "governorate": "Cairo",
+      "starRating": 5,
+      "roomCount": 350,
+      "source": "manual_outreach",
+      "verified": true,
+      "status": "new"
+    },
+    {
+      "id": "lead_002",
+      "name": "Mohamed Hassan",
+      "title": "Head of Treasury & Financial Operations",
+      "company": "CI Capital Banking Group",
+      "email": "m.hassan@cicapital.example",
+      "sector": "FINANCIAL",
+      "phone": "+20 100 000 0002",
+      "city": "Cairo",
+      "governorate": "Cairo",
+      "source": "partnership_inbound",
+      "verified": true,
+      "status": "new"
+    },
+    {
+      "id": "lead_003",
+      "name": "Farouk Mahmoud",
+      "title": "Director of F&B Procurement",
+      "company": "Sunrise Resorts Group",
+      "email": "f.mahmoud@sunriseresorts.example",
+      "sector": "HOTEL",
+      "phone": "+20 100 000 0003",
+      "city": "Sharm El-Sheikh",
+      "governorate": "South Sinai",
+      "starRating": 5,
+      "roomCount": 420,
+      "source": "trade_show",
+      "verified": true,
+      "status": "new"
+    },
+    {
+      "id": "lead_004",
+      "name": "Samir Boutros",
+      "title": "VP — Structured Finance & Receivables",
+      "company": "Al Ahly Pharos Factoring",
+      "email": "s.boutros@ahlypharos.example",
+      "sector": "FINANCIAL",
+      "phone": "+20 100 000 0004",
+      "city": "Cairo",
+      "governorate": "Cairo",
+      "source": "banking_alliance",
+      "verified": true,
+      "status": "new"
+    },
+    {
+      "id": "lead_005",
+      "name": "Karim Nasser",
+      "title": "Group Procurement Director",
+      "company": "Jaz Hotels & Resorts",
+      "email": "k.nasser@jazhotels.example",
+      "sector": "HOTEL",
+      "phone": "+20 100 000 0005",
+      "city": "Hurghada",
+      "governorate": "Red Sea",
+      "starRating": 4,
+      "roomCount": 280,
+      "source": "referral",
+      "verified": true,
+      "status": "new"
+    }
+  ]
+}

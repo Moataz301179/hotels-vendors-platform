@@ -1,0 +1,19 @@
+{
+  "buildCommand": "npx prisma generate && npx next build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "regions": ["fra1"],
+  "functions": {
+    "app/api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/ai/:path*",
+      "destination": "/api/v1/ai/:path*"
+    }
+  ]
+}
