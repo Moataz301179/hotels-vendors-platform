@@ -1,75 +1,99 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePrefs } from "@/i18n/provider";
-import { CATEGORIES, SUPPLIERS } from "@/lib/data";
-import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Card, PageHead, btnCls } from "@/components/ui";
-import { IcArrow, IcMail, IcPhone, IcPin, IcWarehouse } from "@/components/icons";
-import type { Role } from "@/lib/types";
+import { Building2, Loader2, AlertCircle, Mail, Phone, MapPin } from "lucide-react";
+import { useApi } from "@/lib/hooks/use-api";
+import AppShell, { RequireAuth } from "@/components/AppShell";
 
-const HOTEL: Role[] = ["hotel_admin", "gm", "finance_director"];
+interface Supplier {
+  id: string;
+  name: string;
+  city: string;
+  tier: string;
+  phone: string | null;
+  email: string | null;
+  createdAt: string;
+}
+
+interface SuppliersResponse {
+  suppliers: Supplier[];
+}
 
 export default function SuppliersPage() {
-  const { t, lang } = usePrefs();
-  const nm = (e: string, a: string) => (lang === "ar" ? a : e);
+  const { data, loading, error } = useApi<SuppliersResponse>("/api/v1/suppliers");
+
+  const suppliers = data?.suppliers || [];
+
+  if (loading) {
+    return (
+      <RequireAuth>
+        <AppShell active="/suppliers">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={32} className="text-accent animate-spin" />
+          </div>
+        </AppShell>
+      </RequireAuth>
+    );
+  }
 
   return (
     <RequireAuth>
       <AppShell active="/suppliers">
-        <Guard roles={[...HOTEL, "platform_admin"]}>
-          <PageHead kicker={t("suppliers.k")} title={t("suppliers.t")} sub={t("suppliers.sub")} />
-          <div className="grid gap-5 lg:grid-cols-3">
-            {SUPPLIERS.map((s) => {
-              return (
-                <Card key={s.id} className="flex flex-col p-6">
-                  <div className="flex items-start justify-between gap-3">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-white mb-1">Suppliers</h1>
+            <p className="text-sm text-foreground-muted">
+              {suppliers.length} verified suppliers
+            </p>
+          </div>
+
+          {error ? (
+            <div className="text-center py-12">
+              <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
+              <p className="text-foreground-muted text-sm">{error}</p>
+            </div>
+          ) : suppliers.length === 0 ? (
+            <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
+              <Building2 size={32} className="mx-auto text-foreground-muted mb-3" />
+              <h3 className="text-lg font-medium text-white mb-1">No Suppliers Yet</h3>
+              <p className="text-foreground-muted text-sm max-w-md mx-auto">
+                Connect with suppliers to start listing their products on your marketplace.
+                Verified suppliers will appear here with full contact details.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-3">
+              {suppliers.map((s) => (
+                <div key={s.id} className="bg-surface-1 border border-border-subtle rounded-xl p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
                     <div>
-                      <h2 className="text-lg font-bold tracking-tight">{nm(s.name, s.nameAr)}</h2>
-                      <div className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-500 dark:text-ink-400">
-                        <IcPin className="text-brass-600 dark:text-brass-400" /> {s.city}
-                      </div>
+                      <h2 className="text-lg font-medium text-white">{s.name}</h2>
+                      <p className="text-xs text-foreground-muted">{s.city}</p>
                     </div>
-                    <span className="rounded-full border border-emerald-600/25 bg-emerald-600/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">
-                      {t("suppliers.vatReg")}
+                    <span className="text-xs px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">
+                      {s.tier}
                     </span>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {s.categories.map((c) => (
-                      <span key={c} className="rounded-full bg-fog-100 px-2.5 py-1 text-[11px] font-semibold text-ink-600 dark:bg-ink-800 dark:text-ink-300">
-                        {nm(CATEGORIES.find((x) => x.id === c)?.name ?? "", CATEGORIES.find((x) => x.id === c)?.nameAr ?? "")}
-                      </span>
-                    ))}
+                  <div className="space-y-2 text-sm">
+                    {s.phone && (
+                      <div className="flex items-center gap-2 text-foreground-muted">
+                        <Phone size={12} />
+                        <span dir="ltr">{s.phone}</span>
+                      </div>
+                    )}
+                    {s.email && (
+                      <div className="flex items-center gap-2 text-foreground-muted">
+                        <Mail size={12} />
+                        <span>{s.email}</span>
+                      </div>
+                    )}
                   </div>
-                  <dl className="mt-5 space-y-2.5 text-[13px] text-ink-600 dark:text-ink-300">
-                    <div className="flex items-center gap-2">
-                      <IcWarehouse className="shrink-0 text-brass-600 dark:text-brass-400" />
-                      <span>{nm(s.coverage, s.coverageAr)}</span>
-                    </div>
-                    <div className="tnum flex items-center gap-2">
-                      <IcArrow className="shrink-0 text-brass-600 dark:text-brass-400" />
-                      <span>{t("suppliers.lead", { a: s.leadDays[0], b: s.leadDays[1] })}</span>
-                    </div>
-                    <div className="tnum flex items-center gap-2">
-                      <IcPhone className="shrink-0 text-brass-600 dark:text-brass-400" />
-                      <span dir="ltr">{s.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <IcMail className="shrink-0 text-brass-600 dark:text-brass-400" />
-                      <span>{s.email}</span>
-                    </div>
-                  </dl>
-                  <div className="mt-auto pt-6">
-                    <Link href="/marketplace" className={btnCls("outline", "sm")}>
-                      {t("suppliers.catalog")}
-                      <IcArrow className="rtl:-scale-x-100" />
-                    </Link>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </Guard>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </AppShell>
     </RequireAuth>
   );

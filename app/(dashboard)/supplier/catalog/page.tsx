@@ -1,204 +1,139 @@
 "use client";
 
-import { useState } from "react";
-import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/store";
-import { CATEGORIES } from "@/lib/data";
-import { fmtMoney } from "@/lib/format";
-import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
-  Btn,
-  Card,
-  Field,
-  Img,
-  Modal,
-  PageHead,
-  Select,
-  StatePill,
-  T,
-  Td,
-  TextArea,
-  TextInput,
-  Th,
-  Toggle,
-} from "@/components/ui";
-import { IcCheck, IcPlus, IcX } from "@/components/icons";
-import type { Product } from "@/lib/types";
+  Plus, Search, Package, Loader2, AlertCircle, Edit, Trash2,
+} from "lucide-react";
+import { useApi } from "@/lib/hooks/use-api";
+import AppShell, { RequireAuth } from "@/components/AppShell";
 
-export default function CatalogPage() {
-  const { t, lang } = usePrefs();
-  const { data, user, upsertProduct, toggleProductListed, toast } = useApp();
-  const orgId = user?.orgId ?? "";
-  const mine = data.products.filter((p) => p.supplierId === orgId);
-  const nm = (e: string, a: string) => (lang === "ar" ? a : e);
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  unitPrice: number;
+  currency: string;
+  stockQuantity: number;
+  status: string;
+}
 
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", category: "fbn", unit: "", price: "", moq: "1", leadDays: "3", desc: "" });
-  const [err, setErr] = useState<Record<string, string>>({});
+interface ProductsResponse {
+  data: Product[];
+  pagination: { page: number; limit: number; total: number };
+}
 
-  const create = () => {
-    const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = t("common.required");
-    if (!form.unit.trim()) e.unit = t("common.required");
-    const price = Number(form.price);
-    if (!price || price <= 0) e.price = t("common.required");
-    setErr(e);
-    if (Object.keys(e).length) return;
-    const cat = CATEGORIES.find((c) => c.id === form.category)!;
-    const p: Product = {
-      id: `p${Date.now()}`,
-      sku: `${cat.id.slice(0, 3).toUpperCase()}-9${Math.floor(Math.random() * 900) + 100}`,
-      name: form.name.trim(),
-      nameAr: form.name.trim(),
-      categoryId: cat.id as Product["categoryId"],
-      supplierId: orgId,
-      unit: form.unit.trim(),
-      unitAr: form.unit.trim(),
-      price,
-      moq: Math.max(1, Number(form.moq) || 1),
-      leadDays: Math.max(1, Number(form.leadDays) || 3),
-      stock: "in",
-      img: cat.img,
-      alt: form.name.trim(),
-      desc: form.desc.trim() || form.name.trim(),
-      descAr: form.desc.trim() || form.name.trim(),
-      specs: [{ k: "Origin", kAr: "المصدر", v: "Egypt" }],
-    };
-    upsertProduct(p);
-    setOpen(false);
-    setForm({ name: "", category: "fbn", unit: "", price: "", moq: "1", leadDays: "3", desc: "" });
-    toast(t("central.saveDone"));
+export default function SupplierCatalogPage() {
+  const [q, setQ] = useState("");
+
+  const queryParams = new URLSearchParams();
+  if (q.trim()) queryParams.set("search", q.trim());
+  queryParams.set("limit", "50");
+
+  const { data, loading, error, refetch } = useApi<ProductsResponse>(
+    `/api/v1/products?${queryParams.toString()}`
+  );
+
+  const products = data?.data || [];
+
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "EGP",
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   return (
     <RequireAuth>
-      <AppShell active="/supplier-central/catalog">
-        <Guard roles={["supplier_manager"]}>
-          <PageHead
-            kicker={t("central.k")}
-            title={t("nav.catalog")}
-            sub={`${mine.length} ${t("home.prodCount")}`}
-            actions={
-              <Btn onClick={() => setOpen(true)}>
-                <IcPlus /> {t("central.newProduct")}
-              </Btn>
-            }
-          />
-
-          <T minWidth="min-w-[860px]">
-            <thead>
-              <tr>
-                <Th>{t("common.name")}</Th>
-                <Th>{t("market.sku")}</Th>
-                <Th>{t("central.cat")}</Th>
-                <Th className="text-end">{t("central.priceV")}</Th>
-                <Th className="text-end">{t("market.moq")}</Th>
-                <Th className="text-end">{t("central.leadV")}</Th>
-                <Th>{t("central.stock")}</Th>
-                <Th>{t("common.status")}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {mine.map((p) => (
-                <tr key={p.id} className="hover:bg-fog-50 dark:hover:bg-ink-850">
-                  <Td>
-                    <div className="flex items-center gap-3">
-                      <div className="h-11 w-14 shrink-0 overflow-hidden rounded bg-fog-100">
-                        <Img src={p.img} alt={p.alt} className="h-full w-full" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold">{nm(p.name, p.nameAr)}</div>
-                        <div className="text-xs text-ink-400">{nm(p.unit, p.unitAr)}</div>
-                      </div>
-                    </div>
-                  </Td>
-                  <Td className="tnum text-[13px]">{p.sku}</Td>
-                  <Td className="text-[13px]">{nm(CATEGORIES.find((c) => c.id === p.categoryId)?.name ?? "", CATEGORIES.find((c) => c.id === p.categoryId)?.nameAr ?? "")}</Td>
-                  <Td className="tnum text-end font-semibold">{fmtMoney(p.price, lang)}</Td>
-                  <Td className="tnum text-end">{p.moq}</Td>
-                  <Td className="tnum text-end">{p.leadDays}</Td>
-                  <Td>
-                    <Select
-                      value={p.stock}
-                      onChange={(e) => {
-                        upsertProduct({ ...p, stock: e.target.value as Product["stock"] });
-                        toast(t("central.saveDone"));
-                      }}
-                      className="!h-9 min-w-28 text-[13px]"
-                      aria-label={t("central.stock")}
-                    >
-                      <option value="in">{t("state.in_stock")}</option>
-                      <option value="low">{t("state.low_stock")}</option>
-                      <option value="out">{t("state.out_of_stock")}</option>
-                    </Select>
-                  </Td>
-                  <Td>
-                    <div className="flex items-center gap-2.5">
-                      <Toggle
-                        on={p.stock !== "out"}
-                        onChange={() => {
-                          toggleProductListed(p.id);
-                          toast(t(p.stock === "out" ? "central.listed" : "central.delisted"), p.stock === "out" ? "ok" : "warn");
-                        }}
-                        label={t("central.delist")}
-                      />
-                      <span className="text-[12px] font-medium text-ink-500">
-                        {p.stock === "out" ? t("state.out_of_stock") : t("state.in_stock")}
-                      </span>
-                    </div>
-                  </Td>
-                </tr>
-              ))}
-            </tbody>
-          </T>
-
-          <Modal
-            open={open}
-            onClose={() => setOpen(false)}
-            title={t("central.newProduct")}
-            wide
-            footer={
-              <>
-                <Btn variant="ghost" onClick={() => setOpen(false)}>{t("common.cancel")}</Btn>
-                <Btn onClick={create}>
-                  <IcCheck /> {t("common.save")}
-                </Btn>
-              </>
-            }
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Field label={`${t("common.name")} *`} id="np-name" error={err.name}>
-                  <TextInput id="np-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                </Field>
-              </div>
-              <Field label={t("central.cat")} id="np-cat">
-                <Select id="np-cat" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                  {CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>{nm(c.name, c.nameAr)}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label={t("market.unit")} id="np-unit" error={err.unit}>
-                <TextInput id="np-unit" placeholder="10 kg sack" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
-              </Field>
-              <Field label={`${t("central.priceV")} (EGP) *`} id="np-price" error={err.price}>
-                <TextInput id="np-price" type="number" min={1} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-              </Field>
-              <Field label={t("market.moq")} id="np-moq">
-                <TextInput id="np-moq" type="number" min={1} value={form.moq} onChange={(e) => setForm({ ...form, moq: e.target.value })} />
-              </Field>
-              <Field label={t("central.leadV")} id="np-lead">
-                <TextInput id="np-lead" type="number" min={1} value={form.leadDays} onChange={(e) => setForm({ ...form, leadDays: e.target.value })} />
-              </Field>
-              <div className="sm:col-span-2">
-                <Field label={t("market.desc")} id="np-desc">
-                  <TextArea id="np-desc" value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} />
-                </Field>
-              </div>
+      <AppShell active="/supplier/catalog">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-white mb-1">Product Catalog</h1>
+              <p className="text-sm text-foreground-muted">
+                {data?.pagination ? `${data.pagination.total} products` : "Your listed products"}
+              </p>
             </div>
-          </Modal>
-        </Guard>
+            <Link
+              href="/supplier/products/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors"
+            >
+              <Plus size={16} />
+              Add Product
+            </Link>
+          </div>
+
+          <div className="relative max-w-xs">
+            <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full ps-10 pe-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white placeholder:text-foreground-muted focus:outline-none focus:border-accent transition-colors"
+            />
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 size={32} className="text-accent animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
+              <p className="text-foreground-muted text-sm">{error}</p>
+              <button onClick={refetch} className="text-accent text-sm mt-2 hover:underline">Retry</button>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
+              <Package size={32} className="mx-auto text-foreground-muted mb-3" />
+              <h3 className="text-lg font-medium text-white mb-1">No Products Listed</h3>
+              <p className="text-foreground-muted text-sm max-w-md mx-auto mb-4">
+                Add your first product to start selling to hotels on the marketplace.
+              </p>
+              <Link
+                href="/supplier/products/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors"
+              >
+                <Plus size={16} />
+                Add First Product
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-surface-1 border border-border-subtle rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border-subtle">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Product</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">SKU</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Category</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Price</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Stock</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle">
+                  {products.map((product) => (
+                    <tr key={product.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-4 py-3 text-white font-medium">{product.name}</td>
+                      <td className="px-4 py-3 text-sm text-foreground-muted">{product.sku}</td>
+                      <td className="px-4 py-3 text-sm text-foreground-muted">{product.category}</td>
+                      <td className="px-4 py-3 text-right text-white">{formatMoney(product.unitPrice)}</td>
+                      <td className="px-4 py-3 text-right text-foreground-muted">{product.stockQuantity}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button className="text-foreground-muted hover:text-accent transition-colors">
+                          <Edit size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </AppShell>
     </RequireAuth>
   );
