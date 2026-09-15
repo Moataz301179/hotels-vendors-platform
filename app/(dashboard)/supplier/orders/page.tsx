@@ -1,89 +1,150 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/store";
-import { hotelById } from "@/lib/data";
-import { fmtDate, fmtMoney } from "@/lib/format";
+import { useState, useEffect } from "react";
+import { Search, Package, Loader2, AlertCircle } from "lucide-react";
+import { useApi } from "@/lib/hooks/use-api";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { EmptyState, PageHead, StatePill, T, Td, Th } from "@/components/ui";
-import { IcBox } from "@/components/icons";
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  currency: string;
+  createdAt: string;
+  hotel: { id: string; name: string; city: string };
+  items: { id: string; product: { id: string; name: string } }[];
+}
+
+interface OrdersResponse {
+  orders: Order[];
+  pagination: { page: number; limit: number; total: number };
+}
 
 export default function SupplierOrdersPage() {
-  const { t, lang } = usePrefs();
-  const { data, user } = useApp();
+  const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
 
-  const list = useMemo(() => {
-    let out = data.orders.filter((o) => o.supplierId === user?.orgId && o.approval.state !== "rejected");
-    if (filter === "open") out = out.filter((o) => o.fulfillment !== "delivered");
-    if (filter === "delivered") out = out.filter((o) => o.fulfillment === "delivered");
-    if (filter === "ack") out = out.filter((o) => o.fulfillment === "none");
-    return out;
-  }, [data.orders, user, filter]);
+  const queryParams = new URLSearchParams();
+  if (q.trim()) queryParams.set("search", q.trim());
+  if (filter !== "all") queryParams.set("status", filter);
+  queryParams.set("limit", "50");
 
-  const chips = [
-    { id: "all", label: t("orders.fAll") },
-    { id: "ack", label: t("central.needAck") },
-    { id: "open", label: t("orders.fActive") },
-    { id: "delivered", label: t("state.delivered") },
-  ];
+  const { data, loading, error, refetch } = useApi<OrdersResponse>(
+    `/api/v1/orders?${queryParams.toString()}`
+  );
+
+  const orders = data?.orders || [];
+
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency", currency: "EGP", maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+  };
 
   return (
     <RequireAuth>
-      <AppShell active="/supplier-central/orders">
+      <AppShell active="/supplier/orders">
         <Guard roles={["supplier_manager"]}>
-          <PageHead kicker={t("central.k")} title={t("central.incoming")} sub={t("orders.sub")} />
-          <div className="mb-5 flex gap-1.5 overflow-x-auto">
-            {chips.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setFilter(c.id)}
-                aria-pressed={filter === c.id}
-                className={`whitespace-nowrap rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors ${
-                  filter === c.id
-                    ? "border-ink-950 bg-ink-950 text-white dark:border-white dark:bg-white dark:text-ink-950"
-                    : "border-line bg-white text-ink-600 hover:border-ink-400 dark:border-linedark dark:bg-ink-900 dark:text-ink-300"
-                }`}
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-semibold text-white mb-1">Orders</h1>
+              <p className="text-sm text-foreground-muted">
+                {data?.pagination ? `${data.pagination.total} orders` : "Orders from hotels"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search by order #..."
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="w-full ps-10 pe-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white placeholder:text-foreground-muted focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="px-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white focus:outline-none focus:border-accent"
               >
-                {c.label}
-              </button>
-            ))}
+                <option value="all">All Status</option>
+                <option value="DRAFT">Draft</option>
+                <option value="PENDING_APPROVAL">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="IN_TRANSIT">In Transit</option>
+                <option value="DELIVERED">Delivered</option>
+              </select>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={32} className="text-accent animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
+                <p className="text-foreground-muted text-sm">{error}</p>
+                <button onClick={refetch} className="text-accent text-sm mt-2 hover:underline">Retry</button>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
+                <Package size={32} className="mx-auto text-foreground-muted mb-3" />
+                <h3 className="text-lg font-medium text-white mb-1">No Orders Yet</h3>
+                <p className="text-foreground-muted text-sm max-w-md mx-auto">
+                  When hotels place orders, they'll appear here with status tracking.
+                  Update order status as you fulfill them.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-surface-1 border border-border-subtle rounded-xl overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border-subtle">
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Order</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Hotel</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Status</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Amount</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle">
+                    {orders.map((order) => (
+                      <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="px-4 py-3">
+                          <Link href={`/orders/${order.id}`} className="text-accent hover:underline font-medium">
+                            {order.orderNumber}
+                          </Link>
+                          <div className="text-xs text-foreground-muted">
+                            {order.items.length} items
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-foreground-secondary">{order.hotel.name}</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            order.status === "DELIVERED" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                            order.status === "PENDING_APPROVAL" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                            "bg-gray-500/10 text-gray-400 border border-gray-500/20"
+                          }`}>
+                            {order.status.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-white">{formatMoney(order.total)}</td>
+                        <td className="px-4 py-3 text-sm text-foreground-muted">{formatDate(order.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          {list.length === 0 ? (
-            <EmptyState icon={<IcBox />} title={t("central.noIncoming")} />
-          ) : (
-            <T>
-              <thead>
-                <tr>
-                  <Th>{t("orders.col.po")}</Th>
-                  <Th>{t("login.org")}</Th>
-                  <Th>{t("orders.col.created")}</Th>
-                  <Th className="text-end">{t("orders.col.amount")}</Th>
-                  <Th>{t("orders.col.fulfillment")}</Th>
-                  <Th>{t("orders.col.receipt")}</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((o) => (
-                  <tr key={o.id} className="cursor-pointer hover:bg-fog-50 dark:hover:bg-ink-850">
-                    <Td>
-                      <Link href={`/supplier-central/orders/${o.id}`} className="font-semibold hover:underline">
-                        {o.po}
-                      </Link>
-                      <div className="text-xs text-ink-400">{o.lines.length} {t("common.items")}</div>
-                    </Td>
-                    <Td className="text-[13px]">{hotelById(o.hotelId)?.name}</Td>
-                    <Td className="tnum text-[13px] text-ink-500">{fmtDate(o.createdAt, lang)}</Td>
-                    <Td className="tnum text-end font-semibold">{fmtMoney(o.total, lang)}</Td>
-                    <Td>{o.fulfillment === "none" ? <StatePill s="pending" label={t("state.not_started")} /> : <StatePill s={o.fulfillment} />}</Td>
-                    <Td>{o.receipt === "none" ? <span className="text-ink-400">—</span> : <StatePill s={o.receipt} />}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </T>
-          )}
         </Guard>
       </AppShell>
     </RequireAuth>

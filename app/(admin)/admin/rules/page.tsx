@@ -1,127 +1,127 @@
 "use client";
 
-import { useState } from "react";
-import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/store";
-import { fmtMoney } from "@/lib/format";
+import { useState, useEffect } from "react";
+import { Scale, Loader2, AlertCircle, Plus } from "lucide-react";
+import { useApi } from "@/lib/hooks/use-api";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Btn, Card, Field, PageHead, TextInput } from "@/components/ui";
-import { IcScale } from "@/components/icons";
-import type { Role } from "@/lib/types";
 
-const APPROVER_ROLES: Role[] = ["gm", "finance_director"];
+interface AuthorityRule {
+  id: string;
+  name: string;
+  role: string;
+  minValue: number;
+  maxValue: number | null;
+  action: string;
+  priority: number;
+  slaHours: number | null;
+  approvers: string[];
+}
+
+interface RulesResponse {
+  rules: AuthorityRule[];
+}
 
 export default function RulesPage() {
-  const { t, lang } = usePrefs();
-  const { data, updateRule, toast } = useApp();
-  const [drafts, setDrafts] = useState<Record<string, { min: string; max: string; sla: string }>>(() =>
-    Object.fromEntries(
-      data.rules.map((r) => [
-        r.id,
-        { min: String(r.min), max: r.max === null ? "" : String(r.max), sla: String(r.slaHours) },
-      ])
-    )
-  );
-  const [amount, setAmount] = useState("75000");
+  const { data, loading, error } = useApi<RulesResponse>("/api/v1/authority/rules");
 
-  const save = (id: string) => {
-    const d = drafts[id];
-    const rule = data.rules.find((r) => r.id === id);
-    if (!d || !rule) return;
-    updateRule(id, {
-      min: Math.max(0, Number(d.min) || 0),
-      max: d.max === "" ? null : Math.max(0, Number(d.max) || 0),
-      slaHours: Math.max(0, Number(d.sla) || 0),
-    });
-    toast(t("admin.rules.saved", { id }));
+  const rules = data?.rules || [];
+
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "EGP", maximumFractionDigits: 0 }).format(amount);
   };
-
-  const evAmount = Number(amount) || 0;
-  const matched = data.rules.find((r) => evAmount >= r.min && (r.max === null || evAmount <= r.max));
 
   return (
     <RequireAuth>
       <AppShell active="/admin/rules">
         <Guard roles={["platform_admin"]}>
-          <PageHead kicker={t("admin.k")} title={t("admin.rules.t")} sub={t("admin.rules.sub")} />
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-5 lg:col-span-2">
-              {data.rules.map((r) => {
-                const d = drafts[r.id];
-                return (
-                  <Card key={r.id} className="p-6">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <IcScale className="text-xl text-brass-600 dark:text-brass-400" />
-                        <div>
-                          <div className="text-[15px] font-bold">{lang === "ar" ? r.nameAr : r.name}</div>
-                          <div className="tnum text-xs text-ink-500 dark:text-ink-400">{r.id.toUpperCase()}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[13px] font-medium text-ink-600 dark:text-ink-300">
-                        {r.approvers.length === 0 ? (
-                          <span className="rounded-full border border-emerald-600/25 bg-emerald-600/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-800 dark:text-emerald-300">
-                            {t("home.apAuto")}
-                          </span>
-                        ) : (
-                          r.approvers.map((a) => (
-                            <span key={a} className="rounded-full border border-blue-700/25 bg-blue-700/10 px-2.5 py-1 text-[12px] font-semibold text-blue-800 dark:text-blue-300">
-                              {t(`role.${a}`)}
-                            </span>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <Field label={`${t("admin.rules.colBand")} (min)`} id={`${r.id}-min`}>
-                        <TextInput id={`${r.id}-min`} type="number" min={0} value={d.min} onChange={(e) => setDrafts({ ...drafts, [r.id]: { ...d, min: e.target.value } })} />
-                      </Field>
-                      <Field label={`${t("admin.rules.colBand")} (max)`} id={`${r.id}-max`} hint={t("common.optional")}>
-                        <TextInput id={`${r.id}-max`} type="number" min={0} placeholder="∞" value={d.max} onChange={(e) => setDrafts({ ...drafts, [r.id]: { ...d, max: e.target.value } })} />
-                      </Field>
-                      <Field label={`${t("admin.rules.colSla")} (h)`} id={`${r.id}-sla`}>
-                        <TextInput id={`${r.id}-sla`} type="number" min={0} value={d.sla} onChange={(e) => setDrafts({ ...drafts, [r.id]: { ...d, sla: e.target.value } })} />
-                      </Field>
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <Btn size="sm" onClick={() => save(r.id)}>{t("admin.rules.saveRule")}</Btn>
-                    </div>
-                  </Card>
-                );
-              })}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-white mb-1">Authority Rules</h1>
+                <p className="text-sm text-foreground-muted">
+                  {rules.length} approval rules configured
+                </p>
+              </div>
+              <button className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors">
+                <Plus size={16} />
+                Add Rule
+              </button>
             </div>
 
-            <Card className="h-fit p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-ink-500 dark:text-ink-400">
-                {t("admin.rules.eval")}
-              </h2>
-              <p className="mt-1.5 text-[13px] text-ink-500 dark:text-ink-400">{t("admin.rules.evalSub")}</p>
-              <div className="mt-4">
-                <Field label={t("common.amount")} id="ev-amount">
-                  <TextInput id="ev-amount" type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
-                </Field>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={32} className="text-accent animate-spin" />
               </div>
-              <div className="mt-4 rounded-lg border border-brass-500/30 bg-brass-500/8 p-4 text-[13px] leading-relaxed">
-                <div className="tnum mb-1 text-base font-bold">{fmtMoney(evAmount, lang)}</div>
-                {matched ? (
-                  matched.approvers.length === 0 ? (
-                    <span>{t("admin.rules.autoEval", { v: new Intl.NumberFormat(lang === "ar" ? "ar-EG" : "en-US").format(evAmount) })}</span>
-                  ) : (
-                    <span>
-                      {t("admin.rules.evalResult", {
-                        v: new Intl.NumberFormat(lang === "ar" ? "ar-EG" : "en-US").format(evAmount),
-                        r: matched.approvers.map((a) => t(`role.${a}`)).join(" + "),
-                        s: matched.slaHours,
-                      })}
-                    </span>
-                  )
-                ) : (
-                  <span className="text-ink-500">{t("common.noData")}</span>
-                )}
+            ) : error ? (
+              <div className="text-center py-12">
+                <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
+                <p className="text-foreground-muted text-sm">{error}</p>
               </div>
-              <div className="mt-4 text-[12px] text-ink-400">{t("home.auditNote")}</div>
-            </Card>
+            ) : rules.length === 0 ? (
+              <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
+                <Scale size={32} className="mx-auto text-foreground-muted mb-3" />
+                <h3 className="text-lg font-medium text-white mb-1">No Rules Configured</h3>
+                <p className="text-foreground-muted text-sm max-w-md mx-auto mb-4">
+                  Authority Matrix rules define approval workflows based on order value thresholds.
+                  Configure rules to automate purchase order approvals.
+                </p>
+                <button className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors">
+                  <Plus size={16} />
+                  Create First Rule
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {rules.map((rule) => (
+                  <div key={rule.id} className="bg-surface-1 border border-border-subtle rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <Scale size={20} className="text-foreground-muted" />
+                        <div>
+                          <div className="text-white font-medium">{rule.name}</div>
+                          <div className="text-xs text-foreground-muted">{rule.role} • Priority {rule.priority}</div>
+                        </div>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        rule.action === "AUTO_APPROVE"
+                          ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                          : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                      }`}>
+                        {rule.action.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <div className="text-xs text-foreground-muted mb-1">Min Value</div>
+                        <div className="text-white font-medium">{formatMoney(rule.minValue)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-foreground-muted mb-1">Max Value</div>
+                        <div className="text-white font-medium">{rule.maxValue ? formatMoney(rule.maxValue) : "∞"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-foreground-muted mb-1">SLA</div>
+                        <div className="text-white font-medium">{rule.slaHours ? `${rule.slaHours}h` : "—"}</div>
+                      </div>
+                    </div>
+
+                    {rule.approvers.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-border-subtle">
+                        <div className="text-xs text-foreground-muted mb-2">Approvers</div>
+                        <div className="flex flex-wrap gap-2">
+                          {rule.approvers.map((role) => (
+                            <span key={role} className="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
+                              {role}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </Guard>
       </AppShell>

@@ -1,100 +1,116 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/store";
-import { fmtDateTime } from "@/lib/format";
+import { useState, useEffect } from "react";
+import { Search, History, Loader2, AlertCircle, Shield } from "lucide-react";
+import { useApi } from "@/lib/hooks/use-api";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { EmptyState, PageHead, Pager, T, Td, TextInput, Th } from "@/components/ui";
-import { IcHistory, IcSearch } from "@/components/icons";
 
-const PAGE_SIZE = 10;
+interface AuditLog {
+  id: string;
+  entityName: string;
+  entityId: string;
+  actionType: string;
+  createdAt: string;
+  actorId: string | null;
+  actorRole: string | null;
+  changes: unknown;
+}
+
+interface AuditResponse {
+  auditLogs: AuditLog[];
+  pagination: { page: number; limit: number; total: number };
+}
 
 export default function AuditPage() {
-  const { t, lang } = usePrefs();
-  const { data } = useApp();
   const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
 
-  const list = useMemo(() => {
-    if (!q.trim()) return data.audit;
-    const s = q.trim().toLowerCase();
-    return data.audit.filter(
-      (a) =>
-        a.actor.toLowerCase().includes(s) ||
-        a.entity.toLowerCase().includes(s) ||
-        a.action.toLowerCase().includes(s) ||
-        a.detail.toLowerCase().includes(s) ||
-        a.detailAr.includes(q.trim())
-    );
-  }, [data.audit, q]);
+  const queryParams = new URLSearchParams();
+  if (q.trim()) queryParams.set("search", q.trim());
+  queryParams.set("limit", "50");
 
-  const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
-  const cur = Math.min(page, pages);
-  const slice = list.slice((cur - 1) * PAGE_SIZE, cur * PAGE_SIZE);
+  const { data, loading, error, refetch } = useApi<AuditResponse>(
+    `/api/v1/admin/audit?${queryParams.toString()}`
+  );
+
+  const auditLogs = data?.auditLogs || [];
+
+  const formatDateTime = (date: string) => {
+    return new Date(date).toLocaleString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+  };
 
   return (
     <RequireAuth>
       <AppShell active="/admin/audit">
         <Guard roles={["platform_admin"]}>
-          <PageHead
-            kicker={t("admin.k")}
-            title={t("admin.audit.t")}
-            sub={t("admin.audit.sub")}
-            actions={
-              <div className="relative w-72 max-w-full">
-                <IcSearch className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-400" />
-                <TextInput
-                  className="ps-10"
-                  placeholder={t("admin.audit.searchPh")}
-                  value={q}
-                  onChange={(e) => {
-                    setQ(e.target.value);
-                    setPage(1);
-                  }}
-                  aria-label={t("common.search")}
-                />
-              </div>
-            }
-          />
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-semibold text-white mb-1">Audit Log</h1>
+              <p className="text-sm text-foreground-muted">
+                {data?.pagination ? `${data.pagination.total} events` : "Platform activity log"}
+              </p>
+            </div>
 
-          {slice.length === 0 ? (
-            <EmptyState icon={<IcHistory />} title={t("admin.audit.noMatches")} sub={`${list.length} ${t("common.results")}`} />
-          ) : (
-            <>
-              <T minWidth="min-w-[900px]">
-                <thead>
-                  <tr>
-                    <Th>{t("admin.audit.colAt")}</Th>
-                    <Th>{t("admin.audit.colActor")}</Th>
-                    <Th>{t("admin.audit.colRole")}</Th>
-                    <Th>{t("admin.audit.colAction")}</Th>
-                    <Th>{t("admin.audit.colEntity")}</Th>
-                    <Th>{t("admin.audit.colDetail")}</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {slice.map((a) => (
-                    <tr key={a.id} className="align-top hover:bg-fog-50 dark:hover:bg-ink-850">
-                      <Td className="tnum whitespace-nowrap text-[13px] text-ink-500">{fmtDateTime(a.at, lang)}</Td>
-                      <Td>
-                        <div className="text-[13px] font-medium">{a.actor}</div>
-                      </Td>
-                      <Td className="whitespace-nowrap text-[12px] text-ink-500">{t(`role.${a.role}`)}</Td>
-                      <Td>
-                        <span className="tnum rounded bg-ink-950 px-2 py-1 font-mono text-[11px] font-semibold text-brass-300 dark:bg-white/10">
-                          {a.action}
-                        </span>
-                      </Td>
-                      <Td className="tnum text-[13px] font-medium">{a.entity}</Td>
-                      <Td className="text-[13px] text-ink-500 dark:text-ink-400">{lang === "ar" ? a.detailAr || a.detail : a.detail}</Td>
+            <div className="relative max-w-xs">
+              <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search audit log..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="w-full ps-10 pe-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white placeholder:text-foreground-muted focus:outline-none focus:border-accent transition-colors"
+              />
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={32} className="text-accent animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
+                <p className="text-foreground-muted text-sm">{error}</p>
+                <button onClick={refetch} className="text-accent text-sm mt-2 hover:underline">Retry</button>
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
+                <History size={32} className="mx-auto text-foreground-muted mb-3" />
+                <h3 className="text-lg font-medium text-white mb-1">No Audit Events</h3>
+                <p className="text-foreground-muted text-sm max-w-md mx-auto">
+                  All platform actions (logins, approvals, mutations) will be recorded here
+                  with full actor attribution and change history.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-surface-1 border border-border-subtle rounded-xl overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border-subtle">
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Timestamp</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Action</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Entity</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Actor</th>
                     </tr>
-                  ))}
-                </tbody>
-              </T>
-              <Pager page={cur} pages={pages} onPage={setPage} />
-            </>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle">
+                    {auditLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="px-4 py-3 text-sm text-foreground-muted">{formatDateTime(log.createdAt)}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
+                            {log.actionType}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-white text-sm">{log.entityName}</td>
+                        <td className="px-4 py-3 text-sm text-foreground-muted">{log.actorId || "system"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </Guard>
       </AppShell>
     </RequireAuth>
