@@ -150,6 +150,24 @@ export function createOrderWorker(): Worker {
           }
 
           await recordSwarmEvent("order_payment_guaranteed", "INFO", { jobId: job.id, orderId });
+
+          // Audit and provenance link for payment guarantee verification
+          const auditGuarantee = await prisma.auditLog.create({
+            data: {
+              entityName: "ORDER",
+              entityId: order.id,
+              actionType: "UPDATE",
+              tenantId,
+              actorId: userId,
+              actorRole: (metadata?.userRole as string) || "HOTEL_MANAGER",
+              changes: { paymentGuaranteed: true, status: "PENDING_APPROVAL", action: "PAYMENT_GUARANTEE", jobId: job.id },
+            },
+          });
+          await linkProcurementAudit(auditGuarantee.id, "VALIDATED" as ProvenanceClassification, "orders-payment-guarantee", {
+            orderId: order.id,
+            approvalId: null,
+          }).catch((err) => console.error("Audit provenance link failed:", err));
+
           return { guaranteed: true };
         }
 
