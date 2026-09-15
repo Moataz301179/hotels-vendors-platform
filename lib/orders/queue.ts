@@ -192,6 +192,24 @@ export function createOrderWorker(): Worker {
           // In production: send email/WhatsApp to supplier
           // For now: log notification intent
           await recordSwarmEvent("order_supplier_notified", "INFO", { jobId: job.id, orderId });
+
+          // Audit and provenance link for supplier notification
+          const auditNotify = await prisma.auditLog.create({
+            data: {
+              entityName: "ORDER",
+              entityId: order.id,
+              actionType: "UPDATE",
+              tenantId,
+              actorId: userId,
+              actorRole: (metadata?.userRole as string) || "HOTEL_MANAGER",
+              changes: { status: order.status, action: "NOTIFY_SUPPLIER", supplierNotified: true, jobId: job.id },
+            },
+          });
+          await linkProcurementAudit(auditNotify.id, "VALIDATED" as ProvenanceClassification, "orders-notify-supplier", {
+            orderId: order.id,
+            approvalId: null,
+          }).catch((err) => console.error("Audit provenance link failed:", err));
+
           return { notified: true };
         }
 
