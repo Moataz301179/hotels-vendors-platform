@@ -7,6 +7,7 @@
  * - Prevents overlapping bookings on same dock
  */
 import { prisma } from "@/lib/prisma";
+import { linkProcurementAudit, type ProvenanceClassification } from "../audit/procurement-audit-link";
 
 const SLOT_DURATION_MINUTES = 30;
 const GEOFENCE_RADIUS_KM = 15;
@@ -71,7 +72,7 @@ export async function bookDockSlot(
   const slot = preferredSlot[0];
 
   // Store slot booking
-  await prisma.auditLog.create({
+  const auditDock = await prisma.auditLog.create({
     data: {
       tenantId: hotelId,
       entityId: orderId,
@@ -83,6 +84,7 @@ export async function bookDockSlot(
       },
     },
   });
+  await linkProcurementAudit(auditDock.id, "VALIDATED" as ProvenanceClassification, "shipping-dock-scheduled", { orderId }).catch((err) => console.error("Audit provenance link failed:", err));
 
   return { success: true, slot };
 }
