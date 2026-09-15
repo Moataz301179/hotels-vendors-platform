@@ -6,6 +6,7 @@
  * Generates scannable QR codes for highway toll/checkpoint inspection.
  */
 import { prisma } from "@/lib/prisma";
+import { linkProcurementAudit, type ProvenanceClassification } from "../audit/procurement-audit-link";
 
 interface EtaWaybillItem {
   itemCode: string;
@@ -96,7 +97,7 @@ export async function generateEtaWaybill(
     generatedAt: new Date().toISOString(),
   };
 
-  await prisma.auditLog.create({
+  const auditResult = await prisma.auditLog.create({
     data: {
       tenantId, entityId: orderId, actorId: "ETA_WAYBILL_GENERATOR", actionType: "UPDATE",
       changes: {
@@ -112,6 +113,7 @@ export async function generateEtaWaybill(
       },
     },
   });
+  await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "shipping-eta-waybill", { orderId: orderId }).catch((err) => console.error("Audit provenance link failed:", err));
 
   return { success: true, waybill };
 }
