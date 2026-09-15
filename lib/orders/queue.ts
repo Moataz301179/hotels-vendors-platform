@@ -17,6 +17,7 @@ import type { UserRole } from "@prisma/client";
 import { recordSwarmEvent } from "@/lib/swarm/monitoring";
 import { orderApprovedTemplate } from "@/lib/notifications/email";
 import { addEmailJob } from "@/lib/notifications/queue";
+import { linkProcurementAudit, type ProvenanceClassification } from "@/lib/audit/procurement-audit-link";
 
 // ── Queue ──
 export const orderQueue = new Queue("order-processing", {
@@ -116,6 +117,24 @@ export function createOrderWorker(): Worker {
           }
 
           await recordSwarmEvent("order_confirmed", "INFO", { jobId: job.id, orderId });
+
+          // Create audit entry and link provenance chain
+          const auditResult = await prisma.auditLog.create({
+            data: {
+              entityName: "ORDER",
+              entityId: order.id,
+              actionType: "UPDATE",
+              tenantId,
+              actorId: userId,
+              actorRole: (metadata?.userRole as string) || "HOTEL_MANAGER",
+              changes: { status: "CONFIRMED", action: "CONFIRM_ORDER", jobId: job.id },
+            },
+          });
+          await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "orders-confirm-order", {
+            orderId: order.id,
+            approvalId: null,
+          }).catch((err) => console.error("Audit provenance link failed:", err));
+
           return { confirmed: true };
         }
 
