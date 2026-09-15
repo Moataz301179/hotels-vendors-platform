@@ -3650,3 +3650,48 @@ enum ProductSource {
   DROPSHIP
   MANUAL
 }
+
+model EvidenceRecord {
+  id                  String    @id @default(cuid())
+  tenantId            String
+  sourceUrl           String?
+  sourceReference     String?
+  rawEvidenceHash     String?
+  extractedFact       String?
+  entityId            String?
+  entityName          String?
+  entityUuid          String?   @unique
+  provenanceClass     EvidenceClass @default(OBSERVED)
+  confidenceScore     Float?    @db.Float
+  retrievalTimestamp  DateTime  @default(now())
+  auditLogId          String?
+  status              EvidenceStatus @default(PENDING)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  uuid                String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt           DateTime?
+
+  auditLog            AuditLog? @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
+
+  @@index([entityId, entityName])
+  @@index([entityUuid])
+  @@index([tenantId])
+  @@index([status])
+}
+
+enum EvidenceClass {
+  OBSERVED
+  USER_PROVIDED
+  INFERRED
+  MODEL_PREDICTED
+  VALIDATED
+  AUTHORIZED
+}
+
+enum EvidenceStatus {
+  PENDING
+  EXTRACTED
+  RESOLVED
+  REJECTED
+  ARCHIVED
+}
