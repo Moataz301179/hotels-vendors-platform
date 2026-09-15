@@ -84,6 +84,23 @@ export function createOrderWorker(): Worker {
             action: result.action,
           });
 
+          // Audit and provenance link for authority evaluation
+          const auditAuthority = await prisma.auditLog.create({
+            data: {
+              entityName: "ORDER",
+              entityId: order.id,
+              actionType: "UPDATE",
+              tenantId,
+              actorId: userId,
+              actorRole: (metadata?.userRole as string) || "HOTEL_MANAGER",
+              changes: { status: result.action === "AUTO_APPROVE" ? "APPROVED" : order.status, action: "EVALUATE_AUTHORITY", ruleResult: result.action, jobId: job.id },
+            },
+          });
+          await linkProcurementAudit(auditAuthority.id, "VALIDATED" as ProvenanceClassification, "orders-evaluate-authority", {
+            orderId: order.id,
+            approvalId: null,
+          }).catch((err) => console.error("Audit provenance link failed:", err));
+
           return { action: result.action };
         }
 
