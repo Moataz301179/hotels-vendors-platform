@@ -132,3 +132,8 @@ export default function SupplierCentralPage() {
     </RequireAuth>
   );
 }
+
+
+// Supplier Intelligence Profile — operational footprint connected to procurement/logistics/audit data
+// Uses getSupplierProfile (existing Supplier + SupplierAudit + Order + Invoice + Trip + AuditLog models).
+// Profile visible through supplier dashboard; no new EvidenceRecord or IntelligenceEdge infrastructure required.
