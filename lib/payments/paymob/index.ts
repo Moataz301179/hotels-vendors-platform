@@ -15,6 +15,7 @@
 
 import * as crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { linkProcurementAudit, type ProvenanceClassification } from "../audit/procurement-audit-link";
 
 // ============================================================================
 // 1. CONFIGURATION & ENVIRONMENT
@@ -772,7 +773,7 @@ export async function releaseEscrowToken(input: TokenReleaseInput): Promise<{ re
     data: { paidDate: new Date() },
   });
 
-  await prisma.auditLog.create({
+  const auditResult = await prisma.auditLog.create({
     data: {
       entityName: "INVOICE",
       entityId: payment.id,
@@ -788,6 +789,13 @@ export async function releaseEscrowToken(input: TokenReleaseInput): Promise<{ re
       },
     },
   });
+
+  // Link audit entry to procurement provenance chain (existing module, no new DB table)
+  await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "paymob-escrow-release", {
+    orderId: order.id,
+    invoiceId: input.invoiceId,
+    approvalId: input.approverId || null,
+  }).catch((err) => console.error("Audit provenance link failed:", err));
 
   return {
     released: true,
@@ -867,4 +875,4 @@ export const paymobAdapter = {
   releaseEscrowToken,
   getEscrowStatus,
   verifyWebhook: verifyPaymobWebhook,
-};
+};mktemp(2439) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)
