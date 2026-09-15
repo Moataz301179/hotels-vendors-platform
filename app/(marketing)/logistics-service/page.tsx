@@ -30,7 +30,7 @@ const features = [
   { icon: Thermometer, title: "Cold-Chain Ready", desc: "Temperature-controlled vehicles for F&B, pharmaceuticals, and perishables. Real-time temperature monitoring with automated alerts.", color: "var(--accent-base)" },
   { icon: Route, title: "AI Route Optimization", desc: "Dynamic route planning across 6 governorates. Multi-supplier load matching minimizes dock congestion and receiving overhead.", color: "var(--orange-base)" },
   { icon: MapPin, title: "Real-Time GPS Tracking", desc: "Track every shipment from pickup to delivery. Automated ETA updates sent to your procurement team. Digital proof of delivery.", color: "var(--purple-base)" },
-  { icon: Banknote, title: "Paid in 4 Hours", desc: "Not 90 days. Not 30 days. Digital POD triggers automated payment within 4 hours of confirmed delivery.", color: "var(--orange-base)" },
+  { icon: Banknote, title: "48-Hour Settlement", desc: "Digital POD triggers automated settlement within 48 hours of confirmed delivery — aligned with platform settlement timeline.", color: "var(--orange-base)" },
 ];
 
 export default function LogisticsServicePage() {
@@ -42,7 +42,7 @@ export default function LogisticsServicePage() {
         <div className="relative z-10 mx-auto max-w-7xl px-6">
           <span className="text-[11px] font-medium text-white/30 uppercase tracking-[0.15em] mb-3 block">Logistics</span>
           <h1 className="text-[clamp(30px,5vw,52px)] font-medium leading-[1.05] tracking-tight mb-5 text-white">
-            Fill Your Trucks with<br />Consolidated Loads.<br /><span className="text-white">Get Paid in 4 Hours.<br />Not 90 Days.</span>
+            Fill Your Trucks with<br />Consolidated Loads.<br /><span className="text-white">Settled in 48 Hours.<br />Not 90 Days.</span>
           </h1>
           <p className="text-[15px] text-white/40 max-w-2xl leading-relaxed mb-8">
             AI-driven shared-route consolidation across 6 Egyptian governorates. Multi-supplier load matching, cold-chain capability, and real-time GPS. Built for carriers who want guaranteed volume and fast settlement.
@@ -66,7 +66,7 @@ export default function LogisticsServicePage() {
               { icon: Truck, label: "6 Governorates", desc: "Full coverage" },
               { icon: TrendingDown, label: "40% Cost Reduction", desc: "Shared-route model" },
               { icon: Clock, label: "48-Hour Delivery", desc: "SLA-backed" },
-              { icon: Banknote, label: "4-Hour Payment", desc: "Digital POD trigger" },
+              { icon: Banknote, label: "48-Hour Payment", desc: "Digital POD trigger (48h)" },
             ].map((b) => (
               <div key={b.label} className="flex items-center gap-3">
                 <b.icon size={16} style={{ color: "#64b5f6" }} />
@@ -131,3 +131,4 @@ export default function LogisticsServicePage() {
     </main>
   );
 }
+mktemp(73770) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)

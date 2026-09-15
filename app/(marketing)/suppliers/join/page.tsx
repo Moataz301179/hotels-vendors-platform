@@ -117,8 +117,8 @@ export default function SupplierJoinPage() {
       {/* Trust Bar */}
       <section className="py-6 border-y" style={{ borderColor: "var(--success)18" }}>
         <div className="max-w-4xl mx-auto px-6 flex flex-wrap justify-center gap-6 text-[12px] text-white/30">
-          <span className="flex items-center gap-2"><Landmark size={14} style={{ color: "var(--success)" }} /> FRA Licensed Digital Factoring</span>
-          <span className="flex items-center gap-2"><Shield size={14} style={{ color: "var(--success)" }} /> Suez Canal Bank EGP 30M Facility</span>
+          <span className="flex items-center gap-2"><Landmark size={14} style={{ color: "var(--success)" }} /> Oliv: FRA-Licensed Digital Factoring (Partner)</span>
+          <span className="flex items-center gap-2"><Shield size={14} style={{ color: "var(--success)" }} /> Oliv Partner Facility: EGP 30M (Suez Canal Bank)</span>
           <span className="flex items-center gap-2"><CheckCircle2 size={14} style={{ color: "var(--success)" }} /> 48-Hour Funding SLA</span>
           <span className="flex items-center gap-2"><Zap size={14} style={{ color: "var(--success)" }} /> Non-Recourse by Design</span>
         </div>
