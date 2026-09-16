@@ -21,6 +21,21 @@ export function IntelligenceArenaShell({ role }: ArenaWorkspaceProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-2xl font-semibold text-white mb-1">Intelligence Arena</h1>
           <p className="text-sm text-foreground-muted">Unified workspace connecting Phase 2 (Evidence/Graph) + Phase 3 (Reasoning) + Phase 4 (Commercial) + Phase 5 (Transaction) + Phase 6 (Network) + Phase 7 (Continuous) — explainable interface; no autonomous execution.</p>
+
+        {/* Phase 2-7 Operational Intelligence References */}
+        <div className="bg-surface-2 border border-border-subtle rounded-lg p-4 mt-4">
+          <h4 className="text-xs font-medium text-foreground-muted mb-3 uppercase tracking-[0.1em]">Phase 2-7 Intelligence Status</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-foreground-subtle">
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">EvidenceRecord</span><span className="text-[10px] text-foreground-muted block">Phase 2: Persistent evidence storage (348b7d7)</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">IntelligenceEdge</span><span className="text-[10px] text-foreground-muted block">Phase 2: Temporal relationships (9851734)</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">NeedFinding</span><span className="text-[10px] text-foreground-muted block">Phase 3: Need Detection engine (52d5b1d)</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">OpportunityPackage</span><span className="text-[10px] text-foreground-muted block">Phase 3: Opportunity Matching (fa9f082)</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">Commercial Approach</span><span className="text-[10px] text-foreground-muted block">Phase 4: Smart Approach (ed1f318) — PROPOSED recommendations only</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">Transaction Intelligence</span><span className="text-[10px] text-foreground-muted block">Phase 5: Transaction reference (13874a6)</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">Network Intelligence</span><span className="text-[10px] text-foreground-muted block">Phase 6: Network patterns (629858a)</span></div>
+            <div className="bg-surface-1 rounded px-3 py-2 border border-border-subtle"><span className="font-medium text-white">Continuous Intelligence</span><span className="text-[10px] text-foreground-muted block">Phase 7: Change detection (9db61e4) — requires review</span></div>
+          </div>
+        </div>
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
