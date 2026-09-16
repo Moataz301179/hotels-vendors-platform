@@ -6,7 +6,6 @@ import { NeedFinding } from "@/lib/intelligence/need-detection/types";
 import { OpportunityPackage } from "@/lib/intelligence/opportunity/engine";
 import { TemporalContext } from "@/lib/intelligence/reasoning/temporal-context";
 import { IntelligenceApproach } from "@/lib/intelligence/commercial/approach-engine";
-import { TransactionRecommendation } from "@/lib/intelligence/transaction/intelligence-bridge";
 import { NetworkInsight } from "@/lib/intelligence/network/network-engine";
 import { IntelligenceUpdate } from "@/lib/intelligence/monitoring/change-detection";
 import { Card, StatePill, Stat } from "./ui";
@@ -51,6 +50,18 @@ export function IntelligenceArenaShell({ role }: ArenaWorkspaceProps) {
             </Card>
           ))}
         </div>
+        {/* Interactive Role Actions — Production Continuity */}
+        <div className="bg-surface-1 border border-border-subtle rounded-xl p-5">
+          <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2"><ArrowRight size={16} className="text-foreground-muted" />Interactive Role Actions</h3>
+          <p className="text-[11px] text-foreground-subtle mb-3">Role-specific actions connecting intelligence findings to procurement/commercial/network/transaction workflows — requires user review; no autonomous execution.</p>
+          <div className="grid md:grid-cols-5 gap-2 text-[11px] text-foreground-subtle">
+            <a href="/hotel/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Eye size={14} /><span>Hotel / Procurement Portal</span></a>
+            <a href="/supplier" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Package size={14} /><span>Supplier Central</span></a>
+            <a href="/shipping" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Truck size={14} /><span>Shipping / Logistics</span></a>
+            <a href="/factoring" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><ShieldCheck size={14} /><span>Factoring / Liquidity</span></a>
+            <a href="/admin" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Users size={14} /><span>Admin / Audit</span></a>
+          </div>
+        </div>
         <div className="bg-surface-1 border border-border-subtle rounded-xl p-5">
           <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2"><Eye size={16} className="text-foreground-muted" />Readiness & Provenance</h3>
           <div className="grid md:grid-cols-5 gap-2 text-[10px] text-foreground-subtle">
@@ -72,19 +83,19 @@ export function IntelligenceArenaShell({ role }: ArenaWorkspaceProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
           <h4 className="text-[11px] font-medium text-foreground-muted mb-3 uppercase tracking-[0.1em]">Role-Specific Workspace Actions</h4>
           <div className="grid md:grid-cols-5 gap-2 text-[10px]">
-            <a href="/procurement/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            <a href="/hotel/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Eye size={14} /> <span>Hotel / Procurement Portal</span>
             </a>
-            <a href="/supplier/central" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            <a href="/supplier" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Package size={14} /> <span>Supplier Central</span>
             </a>
-            <a href="/shipping/deliveries" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            <a href="/shipping" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Truck size={14} /> <span>Shipping / Logistics</span>
             </a>
-            <a href="/factoring/liquidity" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            <a href="/factoring" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <ShieldCheck size={14} /> <span>Factoring / Liquidity</span>
             </a>
-            <a href="/admin/control-center" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            <a href="/admin" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Users size={14} /> <span>Admin / Audit</span>
             </a>
           </div>
