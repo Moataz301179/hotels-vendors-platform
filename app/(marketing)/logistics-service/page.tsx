@@ -131,4 +131,3 @@ export default function LogisticsServicePage() {
     </main>
   );
 }
-mktemp(73770) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)

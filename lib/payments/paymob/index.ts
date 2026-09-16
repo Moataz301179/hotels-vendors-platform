@@ -875,4 +875,4 @@ export const paymobAdapter = {
   releaseEscrowToken,
   getEscrowStatus,
   verifyWebhook: verifyPaymobWebhook,
-};mktemp(2439) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)
+};;
