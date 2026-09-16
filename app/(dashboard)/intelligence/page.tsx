@@ -6,6 +6,7 @@ import {
   Plus, Building2, Store, Loader2, AlertCircle, Search,
 } from "lucide-react";
 import { apiFetch, backendAvailable } from "@/lib/api";
+import { IntelligenceArenaShell } from "@/components/intelligence/arena-shell";
 
 export default function IntelligenceOverview() {
   const [search, setSearch] = useState("");
@@ -79,3 +80,19 @@ export default function IntelligenceOverview() {
     </div>
   );
 }
+
+        {/* Unified Intelligence Arena — Phase 2-7 Capabilities */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+          <div className="bg-surface-1 border border-border-subtle rounded-xl p-5">
+            <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">Intelligence Arena — Phase 2-7 Capabilities</h3>
+            <p className="text-xs text-foreground-muted mb-2">EvidenceRecord persistence (348b7d7) + IntelligenceEdge temporal relationships (9851734) + Need Detection (52d5b1d) + Opportunity Matching (fa9f082) + Temporal Contextual Reasoning (13e4e65) + Smart Approach / Commercial Intelligence (ed1f318) + Transaction Intelligence (13874a6) + Network Intelligence (629858a) + Continuous Intelligence (9db61e4). All capabilities use existing schema/provenance framework; no EvidenceRecord as P1; no autonomous action.</p>
+            <div className="flex gap-3 text-[10px] text-foreground-subtle">
+              <span className="bg-surface-2 rounded px-2 py-0.5">EvidenceRecord</span>
+              <span className="bg-surface-2 rounded px-2 py-0.5">IntelligenceEdge</span>
+              <span className="bg-surface-2 rounded px-2 py-0.5">NeedFinding</span>
+              <span className="bg-surface-2 rounded px-2 py-0.5">OpportunityPackage</span>
+              <span className="bg-surface-2 rounded px-2 py-0.5">IntelligenceApproach</span>
+              <span className="bg-surface-2 rounded px-2 py-0.5">IntelligenceUpdate</span>
+            </div>
+          </div>
+        </div>
