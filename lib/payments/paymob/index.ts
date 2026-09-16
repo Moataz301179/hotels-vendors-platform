@@ -15,7 +15,7 @@
 
 import * as crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { linkProcurementAudit, type ProvenanceClassification } from "../audit/procurement-audit-link";
+// import removed: procurement-audit-link module not present; audit provenance handled by AuditLog directly
 
 // ============================================================================
 // 1. CONFIGURATION & ENVIRONMENT
