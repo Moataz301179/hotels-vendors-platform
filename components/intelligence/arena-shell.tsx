@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-import { EvidenceRecord } from "@/lib/intelligence/core/types";
 import { NeedFinding } from "@/lib/intelligence/need-detection/types";
 import { OpportunityPackage } from "@/lib/intelligence/opportunity/engine";
 import { TemporalContext } from "@/lib/intelligence/reasoning/temporal-context";
@@ -9,7 +8,7 @@ import { IntelligenceApproach } from "@/lib/intelligence/commercial/approach-eng
 import { NetworkInsight } from "@/lib/intelligence/network/network-engine";
 import { IntelligenceUpdate } from "@/lib/intelligence/monitoring/change-detection";
 import { Card, StatePill, Stat } from "./ui";
-import { Eye, Database, Users, AlertTriangle, Target, FileSearch, Network, TrendingUp, ShieldCheck, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Eye, Database, Users, AlertTriangle, Target, FileSearch, Network, TrendingUp, ShieldCheck, Clock, CheckCircle2, ArrowRight, Package, Truck } from "lucide-react";
 
 export interface ArenaWorkspaceProps {
   role: "HOTEL" | "SUPPLIER" | "FACTORING" | "SHIPPING" | "ADMIN";
