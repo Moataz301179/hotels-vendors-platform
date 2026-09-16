@@ -414,7 +414,7 @@ export async function initializePaymobPayment(params: {
 
   const iframeUrl = getPaymobIframeUrl(paymentToken);
 
-  return { iframeUrl, orderId: input.invoiceId, paymentToken };
+  return { iframeUrl, orderId: params.invoiceId, paymentToken };
 }
 
 // ============================================================================
