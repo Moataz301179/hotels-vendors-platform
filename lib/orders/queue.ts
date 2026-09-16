@@ -101,6 +101,8 @@ export function createOrderWorker(): Worker {
             approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
+          // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
+
           return { action: result.action };
         }
 
@@ -152,6 +154,8 @@ export function createOrderWorker(): Worker {
             approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
+          // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
+
           const txRec = await import("@/lib/intelligence/transaction/intelligence-bridge").then((m) =>
             m.connectRecommendationToTransaction(
               { opportunityId: `opportunity-${orderId}`, needFindingId: `need-${order.id || orderId}`, findingCategory: "COMMERCIAL_SIGNAL", needType: "procurement_optimization", description: `Confirmed order for ${orderId} creates supplier/procurement opportunity.`, reasoning: `Opportunity derived from confirmed order + evidence/provenance chain (not autonomous).`, affectedParticipants: [{ type: "HOTEL" as const, entityId: order.hotelId || "unknown", entityName: order.hotel?.name || "Unknown", recommendation: `Review supplier/procurement optimization opportunity.`, evidenceReferences: [] }], provenanceReferences: [auditResult ? auditResult.id : ""], confidenceScore: 0.75, status: "PROPOSED" as const },
@@ -194,6 +198,8 @@ export function createOrderWorker(): Worker {
             approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
+          // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
+
           return { guaranteed: true };
         }
 
@@ -218,6 +224,8 @@ export function createOrderWorker(): Worker {
             orderId: order.id,
             approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
+
+          // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
 
           return { notified: true };
         }
