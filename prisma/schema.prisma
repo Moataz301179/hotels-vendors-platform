@@ -742,6 +742,9 @@ model AuditLog {
   changes      Json?
   tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  evidenceRecords EvidenceRecord[]
+  intelligenceEdges IntelligenceEdge[]
+
   @@index([actorId])
   @@index([createdAt])
   @@index([tenantId, entityName, entityId], map: "AuditLog_tenant_entity_idx")
@@ -3662,7 +3665,7 @@ model EvidenceRecord {
   entityName          String?
   entityUuid          String?   @unique
   provenanceClass     EvidenceClass @default(OBSERVED)
-  confidenceScore     Float?    @db.Float
+  confidenceScore     Float?    
   retrievalTimestamp  DateTime  @default(now())
   auditLogId          String?
   status              EvidenceStatus @default(PENDING)
@@ -3704,7 +3707,7 @@ model IntelligenceEdge {
   relationshipType    String
   validFrom           DateTime  @default(now())
   validTo             DateTime?
-  confidence          Float?    @db.Float
+  confidence          Float?    
   auditLogId          String?
   provenanceClass     EvidenceClass @default(OBSERVED)
   entityUuid          String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
