@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePrefs } from "@/i18n/provider";
 import { canApprove, useApp } from "@/lib/store";
+import { useApi } from "@/lib/hooks/use-api";
 import { carrierById, hotelById, productById, supplierById } from "@/lib/data";
 import { fmtDate, fmtDateTime, fmtMoney, relDay } from "@/lib/format";
 import type { Order } from "@/lib/types";
@@ -37,6 +38,7 @@ const FULFILL_RANK = ["none", "acknowledged", "preparing", "shipped", "in_transi
 
 export default function OrderDetail({ orderId, mode }: { orderId: string; mode: "hotel" | "supplier" }) {
   const { t, lang } = usePrefs();
+  const { data: apiData, loading: apiLoading } = useApi<{ data: Order }>(`/api/v1/orders/${orderId}`);
   const { data, user, decideOrder, advanceFulfillment, toast } = useApp();
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -45,7 +47,8 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
   const [noteErr, setNoteErr] = useState("");
   const [etaDays, setEtaDays] = useState(2);
 
-  const order = data.orders.find((o) => o.id === orderId);
+  const realOrder = apiData?.data;
+  const order = realOrder || data.orders.find((o) => o.id === orderId);
 
   const invoice = useMemo(
     () => (order ? data.invoices.find((i) => i.orderId === order.id) : undefined),
@@ -60,7 +63,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
     [data.deliveries, order]
   );
 
-  if (!order) {
+  if (!order && !apiLoading && !realOrder) {
     return (
       <EmptyState
         icon={<IcBox />}
