@@ -48,22 +48,30 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
   const [etaDays, setEtaDays] = useState(2);
 
   const realOrder = apiData?.data;
-  const order = realOrder || data.orders.find((o) => o.id === orderId);
+  const safeOrder = realOrder || data.orders.find((o) => o.id === orderId);
+  const safeOrder = order;
 
   const invoice = useMemo(
-    () => (order ? data.invoices.find((i) => i.orderId === order.id) : undefined),
+    () => (order ? data.invoices.find((i) => i.orderId === safeOrder.id) : undefined),
     [data.invoices, order]
   );
   const financing = useMemo(
-    () => (order ? data.financing.find((f) => f.orderId === order.id) : undefined),
+    () => (order ? data.financing.find((f) => f.orderId === safeOrder.id) : undefined),
     [data.financing, order]
   );
   const delivery = useMemo(
-    () => (order ? data.deliveries.find((d) => d.orderId === order.id) : undefined),
+    () => (order ? data.deliveries.find((d) => d.orderId === safeOrder.id) : undefined),
     [data.deliveries, order]
   );
 
   if (!order && !apiLoading && !realOrder) {
+    return (
+      <div className="text-center p-8 text-sm text-foreground-muted">
+        Order not found or no data available.
+      </div>
+    );
+  }
+  const safeOrder = order!;
     return (
       <EmptyState
         icon={<IcBox />}
@@ -73,15 +81,15 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
     );
   }
 
-  const supplier = supplierById(order.supplierId);
-  const hotel = hotelById(order.hotelId);
+  const supplier = supplierById(safeOrder.supplierId);
+  const hotel = hotelById(safeOrder.hotelId);
   const canSeeHotel = mode === "hotel" || user?.role === "platform_admin";
-  const isSupplierOwner = mode === "supplier" && user?.orgId === order.supplierId;
+  const isSupplierOwner = mode === "supplier" && user?.orgId === safeOrder.supplierId;
 
   /* ---- timeline ---- */
-  const approvalDone = order.approval.state === "approved" || order.approval.state === "auto";
-  const approvalFailed = order.approval.state === "rejected";
-  const fr = FULFILL_RANK.indexOf(order.fulfillment);
+  const approvalDone = safeOrder.approval.state === "approved" || safeOrder.approval.state === "auto";
+  const approvalFailed = safeOrder.approval.state === "rejected";
+  const fr = FULFILL_RANK.indexOf(safeOrder.fulfillment);
   const hasInvoice = !!invoice;
   const settled = (invoice?.status === "paid") || financing?.status === "funded";
 
@@ -96,15 +104,15 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
     { key: "orders.detail.tl8", state: fr >= 6 ? "done" : fr >= 4 && fr < 6 ? "current" : "todo" },
     {
       key: "orders.detail.tl9",
-      state: order.receipt === "complete" ? "done" : order.receipt === "partial" ? "current" : fr >= 6 ? "current" : "todo",
+      state: safeOrder.receipt === "complete" ? "done" : safeOrder.receipt === "partial" ? "current" : fr >= 6 ? "current" : "todo",
     },
-    { key: "orders.detail.tl10", state: hasInvoice ? "done" : order.receipt !== "none" ? "current" : "todo" },
+    { key: "orders.detail.tl10", state: hasInvoice ? "done" : safeOrder.receipt !== "none" ? "current" : "todo" },
     { key: "orders.detail.tl11", state: settled ? "done" : hasInvoice ? "current" : "todo" },
   ];
 
   const doApprove = () => {
-    decideOrder(order.id, true, note);
-    toast(t("orders.detail.approveDone", { po: order.po }));
+    decideOrder(safeOrder.id, true, note);
+    toast(t("orders.detail.approveDone", { po: safeOrder.po }));
     setApproveOpen(false);
     setNote("");
   };
@@ -113,15 +121,15 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
       setNoteErr(t("common.required"));
       return;
     }
-    decideOrder(order.id, false, note.trim());
-    toast(t("orders.detail.rejectDone", { po: order.po }), "warn");
+    decideOrder(safeOrder.id, false, note.trim());
+    toast(t("orders.detail.rejectDone", { po: safeOrder.po }), "warn");
     setRejectOpen(false);
     setNote("");
     setNoteErr("");
   };
   const doShip = () => {
-    advanceFulfillment(order.id, Math.max(1, Math.min(14, Number(etaDays) || 2)));
-    toast(t("orders.detail.shipDone", { c: carrierById(CARRIER[order.supplierId])?.name ?? "" }));
+    advanceFulfillment(safeOrder.id, Math.max(1, Math.min(14, Number(etaDays) || 2)));
+    toast(t("orders.detail.shipDone", { c: carrierById(CARRIER[safeOrder.supplierId])?.name ?? "" }));
     setShipOpen(false);
   };
 
@@ -143,13 +151,13 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
         <div>
           <div className="kicker mb-1.5 text-brass-600 dark:text-brass-400">{t("orders.detail.k")}</div>
           <h1 className="text-2xl font-bold tracking-tight text-ink-950 dark:text-white">
-            {order.po}
+            {safeOrder.po}
           </h1>
           <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
             {supplier?.name}
             {canSeeHotel && hotel ? ` · ${hotel.name}` : ""}
             <span className="mx-1.5">·</span>
-            {fmtDate(order.createdAt, lang)}
+            {fmtDate(safeOrder.createdAt, lang)}
           </p>
         </div>
         <div className="rounded-lg border border-line bg-white px-5 py-4 text-end dark:border-linedark dark:bg-ink-900">
@@ -157,20 +165,20 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
             {t("orders.detail.totalBox")}
           </div>
           <div className="tnum mt-1 text-xl font-bold text-ink-950 dark:text-white">
-            {fmtMoney(order.total, lang)}
+            {fmtMoney(safeOrder.total, lang)}
           </div>
           <div className="tnum mt-0.5 text-xs text-ink-500">
-            {fmtMoney(order.vat, lang)} {t("common.vat")}
+            {fmtMoney(safeOrder.vat, lang)} {t("common.vat")}
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <StatePill s={order.approval.state} label={t(`state.${order.approval.state}`)} />
-        {order.fulfillment !== "none" ? (
-          <StatePill s={order.fulfillment} />
+        <StatePill s={safeOrder.approval.state} label={t(`state.${safeOrder.approval.state}`)} />
+        {safeOrder.fulfillment !== "none" ? (
+          <StatePill s={safeOrder.fulfillment} />
         ) : null}
-        {order.receipt !== "none" ? <StatePill s={order.receipt} /> : null}
+        {safeOrder.receipt !== "none" ? <StatePill s={safeOrder.receipt} /> : null}
         {invoice ? <StatePill s={invoice.status} /> : null}
         {financing ? <StatePill s={financing.status} /> : null}
       </div>
@@ -178,12 +186,12 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
       {approvalFailed ? (
         <Banner tone="bad">
           {t("orders.detail.rejectedBanner")}
-          {order.approval.note ? <span className="mt-1 block italic">“{order.approval.note}”</span> : null}
+          {safeOrder.approval.note ? <span className="mt-1 block italic">“{safeOrder.approval.note}”</span> : null}
         </Banner>
       ) : null}
 
       {/* approval actions */}
-      {mode === "hotel" && order.approval.state === "pending" ? (
+      {mode === "hotel" && safeOrder.approval.state === "pending" ? (
         <Card className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -192,10 +200,10 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
               </div>
               <div className="mt-1 text-[13px] text-ink-500 dark:text-ink-400">
                 {t("cart.approver")}:{" "}
-                <strong>{order.approval.required.map((r) => t(`role.${r}`)).join(" + ")}</strong>
+                <strong>{safeOrder.approval.required.map((r) => t(`role.${r}`)).join(" + ")}</strong>
               </div>
             </div>
-            {canApprove(user, order.approval.required) ? (
+            {canApprove(user, safeOrder.approval.required) ? (
               <div className="flex gap-2">
                 <Btn onClick={() => setApproveOpen(true)}>
                   <IcCheck /> {t("orders.detail.approve")}
@@ -214,7 +222,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
       ) : null}
 
       {/* supplier actions */}
-      {isSupplierOwner && order.approval.state !== "rejected" && order.fulfillment === "none" ? (
+      {isSupplierOwner && safeOrder.approval.state !== "rejected" && safeOrder.fulfillment === "none" ? (
         <Card className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm font-semibold text-ink-950 dark:text-white">
@@ -222,16 +230,16 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
             </div>
             <Btn
               onClick={() => {
-                advanceFulfillment(order.id);
-                toast(t("orders.detail." + (nextFulfillMsg[order.fulfillment] ?? "ackDone"), { s: supplier?.name ?? "" }));
+                advanceFulfillment(safeOrder.id);
+                toast(t("orders.detail." + (nextFulfillMsg[safeOrder.fulfillment] ?? "ackDone"), { s: supplier?.name ?? "" }));
               }}
             >
-              <IcCheck /> {t(nextFulfillLabel[order.fulfillment])}
+              <IcCheck /> {t(nextFulfillLabel[safeOrder.fulfillment])}
             </Btn>
           </div>
         </Card>
       ) : null}
-      {isSupplierOwner && order.fulfillment === "acknowledged" ? (
+      {isSupplierOwner && safeOrder.fulfillment === "acknowledged" ? (
         <Card className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm font-semibold text-ink-950 dark:text-white">
@@ -239,7 +247,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
             </div>
             <Btn
               onClick={() => {
-                advanceFulfillment(order.id);
+                advanceFulfillment(safeOrder.id);
                 toast(t("orders.detail.prepDone"));
               }}
             >
@@ -248,7 +256,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
           </div>
         </Card>
       ) : null}
-      {isSupplierOwner && order.fulfillment === "preparing" ? (
+      {isSupplierOwner && safeOrder.fulfillment === "preparing" ? (
         <Card className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm font-semibold text-ink-950 dark:text-white">
@@ -327,7 +335,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
                 </tr>
               </thead>
               <tbody>
-                {order.lines.map((l) => {
+                {safeOrder.lines.map((l) => {
                   const p = productById(l.productId);
                   return (
                     <tr key={l.productId}>
@@ -351,9 +359,9 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
               </tbody>
             </T>
             <div className="flex justify-end gap-8 border-t border-line px-5 py-3 text-sm dark:border-linedark">
-              <span className="text-ink-500">{t("common.subtotal")} <span className="tnum font-medium text-ink-950 dark:text-ink-100">{fmtMoney(order.subtotal, lang)}</span></span>
-              <span className="text-ink-500">{t("common.vat")} <span className="tnum font-medium text-ink-950 dark:text-ink-100">{fmtMoney(order.vat, lang)}</span></span>
-              <span className="font-semibold text-ink-950 dark:text-white">{fmtMoney(order.total, lang)}</span>
+              <span className="text-ink-500">{t("common.subtotal")} <span className="tnum font-medium text-ink-950 dark:text-ink-100">{fmtMoney(safeOrder.subtotal, lang)}</span></span>
+              <span className="text-ink-500">{t("common.vat")} <span className="tnum font-medium text-ink-950 dark:text-ink-100">{fmtMoney(safeOrder.vat, lang)}</span></span>
+              <span className="font-semibold text-ink-950 dark:text-white">{fmtMoney(safeOrder.total, lang)}</span>
             </div>
           </Card>
 
@@ -449,7 +457,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
         open={approveOpen}
         onClose={() => setApproveOpen(false)}
         title={t("orders.detail.approveT")}
-        sub={`${order.po} — ${fmtMoney(order.total, lang)}`}
+        sub={`${safeOrder.po} — ${fmtMoney(safeOrder.total, lang)}`}
         footer={
           <>
             <Btn variant="ghost" onClick={() => setApproveOpen(false)}>{t("common.cancel")}</Btn>
@@ -466,7 +474,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
         open={rejectOpen}
         onClose={() => { setRejectOpen(false); setNoteErr(""); }}
         title={t("orders.detail.rejectT")}
-        sub={`${order.po} — ${fmtMoney(order.total, lang)}`}
+        sub={`${safeOrder.po} — ${fmtMoney(safeOrder.total, lang)}`}
         footer={
           <>
             <Btn variant="ghost" onClick={() => setRejectOpen(false)}>{t("common.cancel")}</Btn>
@@ -483,7 +491,7 @@ export default function OrderDetail({ orderId, mode }: { orderId: string; mode: 
         open={shipOpen}
         onClose={() => setShipOpen(false)}
         title={t("orders.detail.ship")}
-        sub={order.po}
+        sub={safeOrder.po}
         footer={
           <>
             <Btn variant="ghost" onClick={() => setShipOpen(false)}>{t("common.cancel")}</Btn>
