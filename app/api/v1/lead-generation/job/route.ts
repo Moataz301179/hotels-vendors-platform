@@ -30,11 +30,11 @@ export const POST = apiRoute(async (request: NextRequest) => {
         sourceReference: `scrapegraphai:${data.sourceId}:${p.sku}`,
         rawEvidenceHash: p.sku ? `sha256-${p.sku}` : null,
         extractedFact: `Discovered ${p.name} (${p.sku || "unknown"}) at price EGP ${p.priceEGP} via source ${data.sourceId}`,
-        entityId: null,
+        entityId: undefined,
         entityName: p.name,
         provenanceClass: "OBSERVED",
         confidenceScore: 0.7,
-        auditLogId: null,
+        auditLogId: undefined,
       }, auth.tenantId);
       evidenceEntries.push({ id: ev.id, entityName: ev.entityName, provenanceClass: ev.provenanceClass, confidenceScore: ev.confidenceScore });
     }
