@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "debugId": "2b2e23b1-ef80-dd17-c497-3cd08ce2bf62",
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28marketing%29/social-media/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n\nexport const metadata: Metadata = {\n  title: \"Social Media — Hotels Vendors\",\n  description:\n    \"Connect with Hotels Vendors on social media. Follow our journey building Egypt's first smart hospitality procurement platform.\",\n};\n\nexport default function SocialMediaLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return children;\n}\n"],"names":["metadata","title","description","SocialMediaLayout","children"],"mappings":"yDAQe,SAASG,AAAkB,UACxCC,CAAQ,CAGT,EACC,OAAOA,CACT,eAZkC,CAChCH,MAAO,gCACPC,YACE,gIACJ"}}]
+}

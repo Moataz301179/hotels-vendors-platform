@@ -1,0 +1,3 @@
+{
+  "/api/v1/support/ticket/route": "app/api/v1/support/ticket/route.js"
+}

@@ -72,6 +72,7 @@ const PUBLIC_PATHS = [
   "/api/v1/ai/public",
   "/api/v1/contact",
   "/api/v1/products",
+  "/api/v1/leads/capture",
   "/api/health",
 ];
 
@@ -343,3 +344,4 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*)",
   ],
 };
+mktemp(45875) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "debugId": "9a7ec83d-fd94-19ee-27de-04ef4ead8680",
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28dashboard%29/intelligence/layout.tsx"],"sourcesContent":["import type { ReactNode } from \"react\";\n\nexport default function IntelligenceLayout({ children }: { children: ReactNode }) {\n  return <div className=\"min-h-screen bg-canvas\">{children}</div>;\n}\n"],"names":["IntelligenceLayout","children","className"],"mappings":"0EAEe,SAASA,AAAmB,UAAEC,CAAQ,CAA2B,EAC9E,MAAO,CAAA,EAAA,EAAA,GAAA,EAAC,MAAA,CAAIC,UAAU,kCAA0BD,GAClD"}}]
+}

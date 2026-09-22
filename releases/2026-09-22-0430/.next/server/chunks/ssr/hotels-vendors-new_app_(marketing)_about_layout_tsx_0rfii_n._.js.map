@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "debugId": "cea47808-2878-3f34-64c4-05d131413d5c",
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28marketing%29/about/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n\nexport const metadata: Metadata = {\n  title: \"About — Hotels Vendors | Founder & CEO\",\n  description: \"Meet Moataz Abdel Ghani, Founder & CEO of Hotels Vendors. Big 4 background, hospitality expertise, and the vision behind Egypt's digital procurement hub.\",\n};\n\nexport default function AboutLayout({\n  children,\n}: Readonly<{ children: React.ReactNode }>) {\n  return <>{children}</>;\n}\n"],"names":["metadata","title","description","AboutLayout","children"],"mappings":"0EAOe,SAASG,AAAY,CAClCC,UAAQ,CACgC,EACxC,MAAO,CAAA,EAAA,EAAA,GAAA,EAAA,EAAA,QAAA,CAAA,UAAGA,GACZ,eATkC,CAChCH,MAAO,yCACPC,YAAa,2JACf"}}]
+}

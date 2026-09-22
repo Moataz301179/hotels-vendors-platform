@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/intelligence/entities/[id]/page": "app/(dashboard)/intelligence/entities/[id]/page.js"
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "debugId": "761f6cc3-e623-040b-cabc-47d7229fb993",
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28admin%29/layout.tsx"],"sourcesContent":["import \"@/i18n/provider\";\nimport { AppProvider } from \"@/lib/store\";\nimport { ToastHost } from \"@/components/AppShell\";\n\nexport default function AdminLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <AppProvider>\n      {children}\n      <ToastHost />\n    </AppProvider>\n  );\n}\n"],"names":["AdminLayout","children"],"mappings":"yDAAA,EAAA,CAAA,CAAA,QACA,IAAA,EAAA,EAAA,CAAA,CAAA,QACA,EAAA,EAAA,CAAA,CAAA,yBAEe,SAASA,AAAY,UAAEC,CAAQ,CAAiC,EAC7E,MACE,CAAA,EAAA,EAAA,IAAA,EAAC,EAAA,WAAW,CAAA,WACTA,EACD,CAAA,EAAA,EAAA,GAAA,EAAC,EAAA,SAAS,CAAA,CAAA,KAGhB"}}]
+}

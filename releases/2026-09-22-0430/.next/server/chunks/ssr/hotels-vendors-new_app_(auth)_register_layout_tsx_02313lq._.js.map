@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "debugId": "9589723d-9e80-419c-7750-34c728135666",
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28auth%29/register/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n\nexport const metadata: Metadata = {\n  robots: { index: false, follow: false },\n};\n\nexport default function RegisterLayout({ children }: { children: React.ReactNode }) {\n  return <>{children}</>;\n}\n"],"names":["metadata","robots","index","follow","RegisterLayout","children"],"mappings":"0EAMe,SAASI,AAAe,UAAEC,CAAQ,CAAiC,EAChF,MAAO,CAAA,EAAA,EAAA,GAAA,EAAA,EAAA,QAAA,CAAA,UAAGA,GACZ,eANkC,CAChCJ,OAAQ,CAAEC,MAAO,GAAOC,QAAQ,CAAM,CACxC"}}]
+}

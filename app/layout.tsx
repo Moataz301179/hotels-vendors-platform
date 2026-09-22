@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { NotificationProvider } from "@/components/notifications/notification-context";
 import { LanguageProvider } from "@/lib/i18n/language-context";
 import { PrefsProvider } from "@/i18n/provider";
+import { ClerkProvider } from "@clerk/nextjs";
 import { AppProvider } from "@/lib/store";
 import { ToastHost } from "@/components/AppShell";
 import Assistant from "@/components/Assistant";
@@ -222,7 +223,7 @@ export default function RootLayout({
           <PrefsProvider>
             <AppProvider>
               <NotificationProvider>
-                <ThemeProvider>{children}<ToastHost /><Assistant /></ThemeProvider>
+                <ClerkProvider><ThemeProvider>{children}<ToastHost /><Assistant /></ThemeProvider></ClerkProvider>
               </NotificationProvider>
             </AppProvider>
           </PrefsProvider>

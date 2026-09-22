@@ -1,0 +1,5 @@
+;!function(){try { var e="undefined"!=typeof globalThis?globalThis:"undefined"!=typeof global?global:"undefined"!=typeof window?window:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&((e._debugIds|| (e._debugIds={}))[n]="9f59df06-57aa-4493-b55a-e1fd2fc65ebc")}catch(e){}}();
+module.exports=[90563,a=>{"use strict";var b=a.i(322519),c=a.i(193600),d=a.i(146934),e=a.i(395627),f=a.i(671844);a.s(["default",0,function(){let{t:a}=(0,d.usePrefs)();return(0,b.jsxs)("div",{className:"flex min-h-screen flex-col items-center justify-center bg-ink-950 px-4 text-white",children:[(0,b.jsx)(f.IcAlert,{className:"mb-4 text-4xl text-brass-300"}),(0,b.jsx)("div",{className:"kicker mb-2 text-brass-300",children:"404"}),(0,b.jsx)("h1",{className:"text-3xl font-bold tracking-tight",children:a("notFound.t")}),(0,b.jsx)("p",{className:"mt-3 max-w-sm text-center text-sm text-ink-300",children:a("notFound.sub")}),(0,b.jsx)(c.default,{href:"/",className:`${(0,e.btnCls)("accent")} mt-8`,children:a("notFound.home")})]})}])}];
+
+//# debugId=9f59df06-57aa-4493-b55a-e1fd2fc65ebc
+//# sourceMappingURL=hotels-vendors-new_app_not-found_tsx_0xd5e_v._.js.map
