@@ -26,7 +26,7 @@ export async function detectNetworkPattern(
   const results: NetworkInsight[] = [];
 
   const activeSuppliers = await prisma.supplier.findMany({
-    where: { tenantId, status: "ACTIVE" }, include: { supplierAudit: true }, take: 10,
+    where: { tenantId, status: "ACTIVE" }, include: { orders: { take: 1 } }, take: 10,
   });
   const supplierIds = activeSuppliers.map((s) => s.id);
   const supplierClusters = await prisma.hotelSupplier.groupBy({
@@ -40,7 +40,7 @@ export async function detectNetworkPattern(
     if (!supplier) continue;
     results.push({
       insightId: `network-${focusEntityId || "global"}-${supplier.id}-${new Date().toISOString()}`,
-      description: `Supplier cluster: ${supplier.name} linked to ${cluster._count?.hotelId || 0} hotel(s); audit status: ${supplier.supplierAudit?.status || "PENDING"}.`,
+      description: `Supplier cluster: ${supplier.name} linked to ${cluster._count?.hotelId || 0} hotel(s); audit status: ${supplier.orders?.length > 0 ? "HAS_ORDERS" : "NO_ORDERS"}.`,
       reasoning: `Network pattern inferred from HotelSupplier relationships + SupplierAudit + order/procurement footprint. Not autonomous; requires review.`,
       networkPattern: "SUPPLIER_CLUSTER" as const,
       entityIds: [supplier.id],

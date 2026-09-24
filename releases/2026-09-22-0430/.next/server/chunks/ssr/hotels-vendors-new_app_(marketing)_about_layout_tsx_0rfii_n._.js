@@ -1,5 +1,0 @@
-;!function(){try { var e="undefined"!=typeof globalThis?globalThis:"undefined"!=typeof global?global:"undefined"!=typeof window?window:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&((e._debugIds|| (e._debugIds={}))[n]="cea47808-2878-3f34-64c4-05d131413d5c")}catch(e){}}();
-module.exports=[218059,a=>{"use strict";var b=a.i(98948);a.s(["default",0,function({children:a}){return(0,b.jsx)(b.Fragment,{children:a})},"metadata",0,{title:"About — Hotels Vendors | Founder & CEO",description:"Meet Moataz Abdel Ghani, Founder & CEO of Hotels Vendors. Big 4 background, hospitality expertise, and the vision behind Egypt's digital procurement hub."}])},902572,a=>{a.n(a.i(218059))}];
-
-//# debugId=cea47808-2878-3f34-64c4-05d131413d5c
-//# sourceMappingURL=hotels-vendors-new_app_%28marketing%29_about_layout_tsx_0rfii_n._.js.map

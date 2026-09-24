@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/stubs-export";
+import { useApp } from "@/lib/store";
 import { CATEGORIES } from "@/lib/stubs-export";
 import { fmtMoney } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import {
   Btn,
   Card,
@@ -120,7 +120,7 @@ export default function CatalogPage() {
                   <Td>
                     <Select
                       value={p.stock}
-                      onChange={(e) => {
+                      onChange={(e: any) => {
                         upsertProduct({ ...p, stock: e.target.value as Product["stock"] });
                         toast(t("central.saveDone"));
                       }}
@@ -136,7 +136,7 @@ export default function CatalogPage() {
                     <div className="flex items-center gap-2.5">
                       <Toggle
                         on={p.stock !== "out"}
-                        onChange={() => {
+                        onChange={(e: any) => {
                           toggleProductListed(p.id);
                           toast(t(p.stock === "out" ? "central.listed" : "central.delisted"), p.stock === "out" ? "ok" : "warn");
                         }}
@@ -169,31 +169,31 @@ export default function CatalogPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Field label={`${t("common.name")} *`} id="np-name" error={err.name}>
-                  <TextInput id="np-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  <TextInput id="np-name" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
                 </Field>
               </div>
               <Field label={t("central.cat")} id="np-cat">
-                <Select id="np-cat" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                <Select id="np-cat" value={form.category} onChange={(e: any) => setForm({ ...form, category: e.target.value })}>
                   {CATEGORIES.map((c) => (
                     <option key={c.id} value={c.id}>{nm(c.name, c.nameAr)}</option>
                   ))}
                 </Select>
               </Field>
               <Field label={t("market.unit")} id="np-unit" error={err.unit}>
-                <TextInput id="np-unit" placeholder="10 kg sack" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+                <TextInput id="np-unit" placeholder="10 kg sack" value={form.unit} onChange={(e: any) => setForm({ ...form, unit: e.target.value })} />
               </Field>
               <Field label={`${t("central.priceV")} (EGP) *`} id="np-price" error={err.price}>
-                <TextInput id="np-price" type="number" min={1} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+                <TextInput id="np-price" type="number" min={1} value={form.price} onChange={(e: any) => setForm({ ...form, price: e.target.value })} />
               </Field>
               <Field label={t("market.moq")} id="np-moq">
-                <TextInput id="np-moq" type="number" min={1} value={form.moq} onChange={(e) => setForm({ ...form, moq: e.target.value })} />
+                <TextInput id="np-moq" type="number" min={1} value={form.moq} onChange={(e: any) => setForm({ ...form, moq: e.target.value })} />
               </Field>
               <Field label={t("central.leadV")} id="np-lead">
-                <TextInput id="np-lead" type="number" min={1} value={form.leadDays} onChange={(e) => setForm({ ...form, leadDays: e.target.value })} />
+                <TextInput id="np-lead" type="number" min={1} value={form.leadDays} onChange={(e: any) => setForm({ ...form, leadDays: e.target.value })} />
               </Field>
               <div className="sm:col-span-2">
                 <Field label={t("market.desc")} id="np-desc">
-                  <TextArea id="np-desc" value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} />
+                  <TextArea id="np-desc" value={form.desc} onChange={(e: any) => setForm({ ...form, desc: e.target.value })} />
                 </Field>
               </div>
             </div>

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "debugId": "d3ff17ee-3540-754e-ee7a-8b204b905036",
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28marketing%29/become-supplier/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n\nexport const metadata: Metadata = {\n  title: \"Become a Supplier — Hotels Vendors\",\n  description:\n    \"Join Egypt's largest hospitality supplier network. Reach 450+ hotel buyers, get guaranteed payments, and grow your B2B business with Hotels Vendors.\",\n};\n\nexport default function BecomeSupplierLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return children;\n}\n"],"names":["metadata","title","description","BecomeSupplierLayout","children"],"mappings":"yDAQe,SAASG,AAAqB,UAC3CC,CAAQ,CAGT,EACC,OAAOA,CACT,eAZkC,CAChCH,MAAO,qCACPC,YACE,sJACJ"}}]
-}

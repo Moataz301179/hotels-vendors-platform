@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/stubs-export";
+import { useApp } from "@/lib/store";
 import { CATEGORIES, hotelById, productById } from "@/lib/stubs-export";
 import { fmtDate, fmtMoney, relDay } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import {
   Btn,
   Card,
@@ -254,7 +254,7 @@ export default function SupplierCentralPage() {
                     return (
                       <li key={r.id} className="rounded-lg border border-line p-4 dark:border-linedark">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold">{p ? (lang === "ar" ? p.nameAr : p.name) : r.productId}</span>
+                          <span className="text-sm font-semibold">{p ? (lang === "ar" ? p.name : p.name) : r.productId}</span>
                           <StatePill s={r.status} label="RFQ" />
                         </div>
                         <div className="tnum mt-1 text-xs text-ink-500">

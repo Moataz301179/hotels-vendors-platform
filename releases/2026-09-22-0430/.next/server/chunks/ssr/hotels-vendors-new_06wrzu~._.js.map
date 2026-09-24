@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "debugId": "18fb63be-3acf-522c-13d0-7484712ba555",
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/lib/seo.ts","../../../../../hotels-vendors-new/app/%28marketing%29/contact/layout.tsx"],"sourcesContent":["const SITE_URL = \"https://www.hotelsvendors.com\";\n\n/** Canonical URL for a public page. Use in page metadata: alternates: { canonical: canonicalUrl(\"/pricing\") } */\nexport function canonicalUrl(path: string): string {\n  return `${SITE_URL}${path === \"/\" ? \"\" : path}`;\n}\n","import type { Metadata } from \"next\";\nimport { canonicalUrl } from \"@/lib/seo\";\n\nexport const metadata: Metadata = {\n  alternates: { canonical: canonicalUrl(\"/contact\") },\n};\n\nexport default function ContactLayout({ children }: { children: React.ReactNode }) {\n  return <>{children}</>;\n}\n"],"names":["SITE_URL","canonicalUrl","path","metadata","alternates","canonical","ContactLayout","children"],"mappings":"8DAGO,SAASC,AAAaC,CAAY,EACvC,MAAO,GAAGF,6BAAoB,MAATE,EAAe,GAAKA,GAAM,AACjD,6CCFO,IAAMC,EAAqB,CAChCC,WAAY,CAAEC,UAAW,CAAA,EAH3B,AAG2B,EAH3B,CAAA,CAAA,QAG2B,YAAA,AAAY,EAAC,WAAY,CACpD,mBAEe,SAASC,AAAc,UAAEC,CAAQ,CAAiC,EAC/E,MAAO,CAAA,EAAA,EAAA,GAAA,EAAA,EAAA,QAAA,CAAA,UAAGA,GACZ"}}]
-}

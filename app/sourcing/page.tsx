@@ -4,12 +4,12 @@ import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
 import { RFQS, categoryById } from "@/lib/stubs-export";
 import { fmtDate } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { Btn, Card, PageHead, StatePill, T, Td, Th } from "@/lib/stubs-export";
 import { IcPlus } from "@/lib/stubs-export";
-import type { Role } from "@/lib/stubs-export";
+import type { Role } from "@/lib/types";
 
-const HOTEL: Role[] = ["hotel_admin", "gm", "finance_director"];
+const HOTEL = ["hotel_admin", "gm", "finance_director"] as Role[];
 
 export default function SourcingPage() {
   const { t, lang } = usePrefs();

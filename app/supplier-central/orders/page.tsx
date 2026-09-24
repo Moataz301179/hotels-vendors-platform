@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/stubs-export";
+import { useApp } from "@/lib/store";
 import { hotelById } from "@/lib/stubs-export";
 import { fmtDate, fmtMoney } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { EmptyState, PageHead, StatePill, T, Td, Th } from "@/lib/stubs-export";
 import { IcBox } from "@/lib/stubs-export";
 

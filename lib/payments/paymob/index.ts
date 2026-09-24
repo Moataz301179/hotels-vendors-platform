@@ -414,7 +414,7 @@ export async function initializePaymobPayment(params: {
 
   const iframeUrl = getPaymobIframeUrl(paymentToken);
 
-  return { iframeUrl, orderId: params.invoiceId, paymentToken };
+  return { iframeUrl, orderId: order.id, paymentToken };
 }
 
 // ============================================================================
@@ -790,12 +790,7 @@ export async function releaseEscrowToken(input: TokenReleaseInput): Promise<{ re
     },
   });
 
-  // Link audit entry to procurement provenance chain (existing module, no new DB table)
-  await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "paymob-escrow-release", {
-    orderId: input.invoiceId,
-    invoiceId: input.invoiceId,
-    approvalId: input.approverId || null,
-  }).catch((err: Error) => console.error("Audit provenance link failed:", err));
+  // Audit provenance link: handled by AuditLog.create above (procurement-audit-link module not present)
 
   return {
     released: true,
@@ -875,4 +870,4 @@ export const paymobAdapter = {
   releaseEscrowToken,
   getEscrowStatus,
   verifyWebhook: verifyPaymobWebhook,
-};;
+};

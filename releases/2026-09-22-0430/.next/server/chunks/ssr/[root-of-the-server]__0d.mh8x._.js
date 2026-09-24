@@ -1,5 +1,0 @@
-;!function(){try { var e="undefined"!=typeof globalThis?globalThis:"undefined"!=typeof global?global:"undefined"!=typeof window?window:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&((e._debugIds|| (e._debugIds={}))[n]="9162b496-9170-4f17-49bb-1ba3c40c0bca")}catch(e){}}();
-module.exports=[108875,(a,b,c)=>{b.exports=a.x("ioredis-23a6225d3f8c0bff",()=>require("ioredis-23a6225d3f8c0bff"))},993978,a=>{"use strict";var b=a.i(108875);let c=process.env.REDIS_URL,d=process.env.REDIS_PASSWORD,e=null,f="phase-production-build"===process.env.NEXT_PHASE||"true"===process.env.CI;a.s(["getRedis",0,function(){if(!c)return null;if(!e)try{(e=new b.Redis(c,{password:d,retryStrategy:a=>Math.min(50*a,2e3),maxRetriesPerRequest:1,connectTimeout:5e3,lazyConnect:!0})).on("connect",()=>{}),e.on("error",a=>{f||console.error("[Redis] Connection error:",a.message)})}catch{e=null}return e}])}];
-
-//# debugId=9162b496-9170-4f17-49bb-1ba3c40c0bca
-//# sourceMappingURL=%5Broot-of-the-server%5D__0d.mh8x._.js.map

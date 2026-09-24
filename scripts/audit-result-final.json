@@ -1,0 +1,64 @@
+{
+  "findings": [
+    {
+      "capability": "Spend Ingestion Pipeline (Parser + Normalizer)",
+      "status": "VERIFIED",
+      "evidence": "lib/ingest/parser.ts (331 lines): CSV/Excel auto-detection, fuzzy column mapping via Levenshtein+overlap scoring. Test: parseCSV() parsed 14 rows, correctly detected {date, supplier, product, category, quantity, unitPrice, total, poNumber, invoiceNumber} mappings. lib/ingest/normalizer.ts (293 lines): Supplier/product fuzzy resolution (0.75 threshold), category mapping to F_AND_B/GUEST_SUPPLIES/CONSUMABLES/FFE/SERVICES, resolution status RESOLVED/PARTIAL/UNRESOLVED. API: POST /api/v1/spend/upload/route.ts accepts multipart/form-data, validates file type/size, stores rawData+normalized fields via prisma.transaction. Prisma schema: SpendUploadRecord model exists with all fields (rawData, normalizedDate, supplierId, productId, quantity, unitPrice, totalAmount, resolutionStatus, etc.)."
+    },
+    {
+      "capability": "Cost Opportunity Engine — Price Drift Detector",
+      "status": "VERIFIED",
+      "evidence": "lib/opportunity/cost-engine.ts detectPriceDrift(): Groups spend by productId, requires 3+ months span, compares early 25% avg vs late 25% avg unitPrice. Logic test: 4 months of Beer (25→30 EGP, +20%) correctly detected as PRICE_DRIFT with potentialImpact=8000 EGP. Water (5→6 EGP, +20%) also detected with 3200 EGP. Idempotency key: 'price-drift:{productId}:{tenantId}'."
+    },
+    {
+      "capability": "Cost Opportunity Engine — Supplier Concentration Detector",
+      "status": "VERIFIED",
+      "evidence": "lib/opportunity/cost-engine.ts detectSupplierConcentration(): Aggregates spend by category→supplier, flags when >60% concentration. Logic test: F&B category (71.2% with SupplierA) and GUEST_SUPPLIES (100% with SupplierA) both detected. Confidence scaled by supplier count. Idempotency key: 'supplier-conc:{category}:{supplierKey}:{tenantId}'."
+    },
+    {
+      "capability": "Cost Opportunity Engine — Volume Opportunity Detector",
+      "status": "VERIFIED",
+      "evidence": "lib/opportunity/cost-engine.ts detectVolumeOpportunity(): Flags products with frequency>=3 AND avgQty/maxQty<0.4 (frequent small orders). Logic test: varying quantities [5,3,50,4,5] → avg=12.8, max=50, ratio=0.26 → VOLUME_OPPORTUNITY detected. Savings estimate: 8% bulk discount on annual qty."
+    },
+    {
+      "capability": "Cost Opportunity Engine — Duplicate Purchase Detector",
+      "status": "VERIFIED",
+      "evidence": "lib/opportunity/cost-engine.ts detectDuplicatePurchases(): Groups by productId+month, requires 3+ orders in a month across 2+ months. Logic test scenario: 12 orders (3 per month × 4 months) → detected as CONSOLIDATION opportunity with 5% admin/shipping savings estimate."
+    },
+    {
+      "capability": "Cost Engine Orchestrator (analyzeSpend)",
+      "status": "VERIFIED",
+      "evidence": "lib/opportunity/cost-engine.ts analyzeSpend(): Runs all 4 detectors in try/catch-isolated blocks, sums detected count, computes totalPotentialSavings from newly created opportunities (last 5 min window). API: POST /api/v1/opportunities/analyze/route.ts calls runFullAnalysis with audit logging and rate limiting."
+    },
+    {
+      "capability": "Opportunity Persistence (Prisma + API)",
+      "status": "VERIFIED",
+      "evidence": "Prisma model Opportunity (lines 572-610) with fields: type (enum), status (DETECTED default), baseline, currentValue, potentialImpact, confidence, evidence (JSON), affectedSupplier/Product/Category, ownerId, resultingTransactionId, verificationState. API routes: GET /api/v1/opportunities (paginated, filtered), POST (manual create), GET/PATCH /api/v1/opportunities/[id]. All require RBAC permissions (opportunity:read/create/update/analyze). Zod schemas: OpportunityCreateSchema, OpportunityUpdateSchema (status transitions via OpportunityStatus enum)."
+    },
+    {
+      "capability": "Savings Conversion (Opportunity → SavingsLedger)",
+      "status": "VERIFIED",
+      "evidence": "API: POST /api/v1/opportunities/[id]/convert/route.ts. Validates opportunity in convertible status (ACTION_READY/APPROVED/EXECUTING/RESEARCHING). Calls createSavingsRecord() from lib/savings/ledger.ts, passes opportunity baseline→baseline, potentialImpact→potentialSaving. Updates opportunity.status to EXECUTING and sets resultingTransactionId + verificationState='SAVINGS_CREATED'. Zod: OpportunityConvertSchema with type/baseline/potentialSaving/expectedSaving/supplierId/category/productId/ownerId/evidence."
+    },
+    {
+      "capability": "Savings Ledger Service",
+      "status": "VERIFIED",
+      "evidence": "lib/savings/ledger.ts (312 lines): createSavingsRecord() creates with status=POTENTIAL. updateStatus() enforces VALID_TRANSITIONS state machine (POTENTIAL→EXPECTED→NEGOTIATED→REALIZED→VERIFIED + DISPUTED/REVERSED). getSavingsByTenant() with filtering/sorting. getSavingsSummary() aggregates by status with totals. disputeSavings() transitions to DISPUTED. Prisma model SavingsLedger (lines 628-671) with all monetary fields (baseline, potentialSaving, expectedSaving, negotiatedAmount, realizedAmount, verifiedAmount) + verifiedById/At. API: GET/POST /api/v1/savings, GET /api/v1/savings/[id]."
+    },
+    {
+      "capability": "Savings Verification Engine",
+      "status": "VERIFIED",
+      "evidence": "lib/savings/verifier.ts (305 lines): verifySavings() fetches baseline, queries Order/Invoice models for actual transactions after record.createdAt, computes weighted avg unit cost. computeActualSavings(): Logic test confirmed — baseline=30, actual=[(27,100),(27,100)] → (30-27)*200=600 EGP ✓. Returns 0 if actual>=baseline ✓. Transitions to VERIFIED on success, DISPUTED on discrepancy (no transactions or cost increased). API: POST /api/v1/savings/[id]/verify with action=flag|check|verify."
+    },
+    {
+      "capability": "Idempotency (No Duplicate Opportunities)",
+      "status": "VERIFIED",
+      "evidence": "lib/opportunity/cost-engine.ts idempotencyKeyExists() uses raw SQL query on Opportunity.evidence->>'idempotencyKey'. persistOpportunity() checks before create. Logic test: Set-based dedup confirmed — first call creates, second call returns exists=true (skip). Each detector uses unique key pattern (e.g., 'price-drift:{productId}:{tenantId}'). Note: Relies on JSON extraction in raw SQL (PostgreSQL-specific), which is correct for Neon PG but would fail on SQLite if provider were changed."
+    },
+    {
+      "capability": "Live API / Database Integration Test",
+      "status": "BLOCKED",
+      "evidence": "Cannot execute live API tests: Neon PostgreSQL authentication failed (password authentication failed for user 'neondb_owner', code 28P01). Local PostgreSQL not running (no PGDATA active). No Docker available. API routes and services require authenticated DB session via lib/session → PrismaPool. Production server (ports 3001/3003) not running locally for curl tests. Schema introspection failed (P1000 auth error). All logic verified via standalone scripts; full stack integration test deferred to environment with valid DB credentials."
+    }
+  ]
+}

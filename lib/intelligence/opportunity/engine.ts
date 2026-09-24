@@ -34,7 +34,7 @@ export async function matchOpportunity(
   // Supplier-facing commercial opportunity
   if (finding.findingCategory === 'COMMERCIAL_SIGNAL' || finding.needType?.includes("procurement") || finding.needType?.includes("supplier")) {
     const suppliers = await prisma.supplier.findMany({
-      where: { tenantId, status: "ACTIVE" }, include: { supplierAudit: true, orders: { take: 3 } }, take: 3,
+      where: { tenantId, status: "ACTIVE" }, include: { audits: { take: 1 }, orders: { take: 3 } }, take: 3,
     });
     for (const s of suppliers) {
       results.push({
@@ -48,7 +48,7 @@ export async function matchOpportunity(
           type: "SUPPLIER",
           entityId: s.id,
           entityName: s.name,
-          recommendation: `Approach supplier ${s.name} regarding expanded procurement relationship with ${finding.entityName}. Review supplier audit (${s.supplierAudit?.status || "PENDING"}) and current order history (${s.orders?.length || 0}) before action.`,
+          recommendation: `Approach supplier ${s.name} regarding expanded procurement relationship with ${finding.entityName}. Review supplier audit (${s.audits?.[0]?.status || "PENDING"}) and current order history (${s.orders?.length || 0}) before action.`,
           evidenceReferences: finding.evidenceIds || [],
         }],
         provenanceReferences: finding.relationshipIds || finding.evidenceIds || [],

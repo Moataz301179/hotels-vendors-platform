@@ -22,31 +22,29 @@ import {
   TripStatus,
 } from "@prisma/client";
 
-/* ── Hotel Schemas ── */
 export const HotelCreateSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: z.string().min(2),
   legalName: z.string().optional(),
-  taxId: z.string().min(3, "Tax ID is required"),
+  taxId: z.string().min(3),
   commercialReg: z.string().optional(),
   address: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  governorate: z.string().min(1, "Governorate is required"),
+  city: z.string().min(1),
+  governorate: z.string().min(1),
   phone: z.string().optional(),
   email: z.string().email().optional(),
   starRating: z.number().int().min(1).max(7).optional(),
   roomCount: z.number().int().optional(),
-  tier: z.nativeEnum(HotelTier).default(HotelTier.CORE),
+  tier: z.nativeEnum(HotelTier).default("CORE" as any),
   creditLimit: z.number().optional(),
 });
 
 export const HotelUpdateSchema = HotelCreateSchema.partial();
 
-/* ── User Schemas ── */
 export const UserCreateSchema = z.object({
   email: z.string().email(),
   name: z.string().min(2),
   phone: z.string().optional(),
-  role: z.nativeEnum(UserRole).default(UserRole.DEPARTMENT_HEAD),
+  role: z.nativeEnum(UserRole).default("DEPARTMENT_HEAD" as any),
   roleId: z.string().cuid(),
   hotelId: z.string().cuid().optional(),
   supplierId: z.string().cuid().optional(),
@@ -55,7 +53,6 @@ export const UserCreateSchema = z.object({
 
 export const UserUpdateSchema = UserCreateSchema.partial();
 
-/* ── Supplier Schemas ── */
 export const SupplierCreateSchema = z.object({
   name: z.string().min(2),
   legalName: z.string().optional(),
@@ -75,7 +72,6 @@ export const SupplierCreateSchema = z.object({
 
 export const SupplierUpdateSchema = SupplierCreateSchema.partial();
 
-/* ── Product Schemas ── */
 export const ProductCreateSchema = z.object({
   sku: z.string().min(2),
   name: z.string().min(2),
@@ -93,7 +89,6 @@ export const ProductCreateSchema = z.object({
 
 export const ProductUpdateSchema = ProductCreateSchema.partial();
 
-/* ── Order Schemas ── */
 export const OrderItemSchema = z.object({
   productId: z.string().cuid(),
   quantity: z.number().int().positive(),
@@ -108,12 +103,11 @@ export const OrderCreateSchema = z.object({
   outletId: z.string().cuid().optional(),
   supplierId: z.string().cuid(),
   requesterId: z.string().cuid().optional(),
-  items: z.array(OrderItemSchema).min(1, "At least one item is required"),
+  items: z.array(OrderItemSchema).min(1),
   deliveryDate: z.string().datetime().optional(),
   deliveryInstructions: z.string().optional(),
 });
 
-/* ── GRN Schemas ── */
 export const GrnLineItemSchema = z.object({
   orderItemId: z.string().cuid(),
   productId: z.string().cuid(),
@@ -135,10 +129,9 @@ export const GrnCreateSchema = z.object({
   deliveryNoteRef: z.string().optional(),
   vehiclePlate: z.string().optional(),
   notes: z.string().optional(),
-  lineItems: z.array(GrnLineItemSchema).min(1, "At least one line item required"),
+  lineItems: z.array(GrnLineItemSchema).min(1),
 });
 
-/* ── Invoice Schemas ── */
 export const InvoiceCreateSchema = z.object({
   invoiceNumber: z.string().min(1),
   orderId: z.string().cuid(),
@@ -152,7 +145,6 @@ export const InvoiceCreateSchema = z.object({
   dueDate: z.string().datetime().optional(),
 });
 
-/* ── Authority Matrix Schemas ── */
 export const AuthorityRuleSchema = z.object({
   role: z.nativeEnum(UserRole),
   minValue: z.number().min(0),
@@ -167,7 +159,6 @@ export const AuthorityRuleSchema = z.object({
   priority: z.number().int().default(0),
 });
 
-/* ── Cart Schemas ── */
 export const CartItemCreateSchema = z.object({
   productId: z.string().cuid(),
   quantity: z.number().int().positive(),
@@ -181,12 +172,10 @@ export const CartCheckoutSchema = z.object({
   outletId: z.string().cuid().optional(),
 });
 
-/* ── ETA Submission Schemas ── */
 export const EtaSubmissionSchema = z.object({
   invoiceId: z.string().cuid(),
 });
 
-/* ── Factoring Schemas ── */
 export const FactoringCompanySchema = z.object({
   name: z.string().min(2),
   legalName: z.string().optional(),
@@ -196,7 +185,7 @@ export const FactoringCompanySchema = z.object({
   maxFacility: z.number().optional(),
   interestRate: z.number().optional(),
   rate: z.number().optional(),
-  status: z.nativeEnum(FactoringCompanyStatus).default(FactoringCompanyStatus.ACTIVE),
+  status: z.nativeEnum(FactoringCompanyStatus).default("ACTIVE" as any),
 });
 
 export const CreditFacilityCreateSchema = z.object({
@@ -212,11 +201,10 @@ export const CreditFacilityUpdateSchema = z.object({
   utilized: z.number().min(0).optional(),
 });
 
-/* ── Outlet Schemas ── */
 export const OutletCreateSchema = z.object({
   propertyId: z.string().cuid(),
   name: z.string().min(2),
-  type: z.nativeEnum(OutletType).default(OutletType.KITCHEN),
+  type: z.nativeEnum(OutletType).default("KITCHEN" as any),
   managerName: z.string().optional(),
   managerPhone: z.string().optional(),
   operatingHours: z.string().optional(),
@@ -224,7 +212,6 @@ export const OutletCreateSchema = z.object({
 
 export const OutletUpdateSchema = OutletCreateSchema.partial().omit({ propertyId: true });
 
-/* ── Logistics Schemas ── */
 export const TripCreateSchema = z.object({
   hubId: z.string().cuid(),
   driverName: z.string().min(1),
@@ -247,12 +234,11 @@ export const TripStopCreateSchema = z.object({
   eta: z.string().datetime().optional(),
 });
 
-/* ── Supplier Audit Schemas ── */
 export const SupplierAuditCreateSchema = z.object({
   auditorName: z.string().min(1),
   auditDate: z.string().datetime(),
   score: z.number().int().min(0).max(100).optional(),
-  status: z.nativeEnum(AuditStatus).default("PENDING"),
+  status: z.nativeEnum(AuditStatus).default("PENDING" as any),
   coldChainCompliant: z.boolean().optional(),
   haccpCertified: z.boolean().optional(),
   onSiteVisited: z.boolean().optional(),
@@ -262,18 +248,16 @@ export const SupplierAuditCreateSchema = z.object({
 
 export const SupplierAuditUpdateSchema = SupplierAuditCreateSchema.partial();
 
-/* ── Password Strength ── */
 const passwordStrength = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
-  .regex(/[a-z]/, "Password must contain at least 1 lowercase letter")
-  .regex(/[0-9]/, "Password must contain at least 1 number");
+  .min(8)
+  .regex(/[A-Z]/)
+  .regex(/[a-z]/)
+  .regex(/[0-9]/);
 
-/* ── Auth Schemas ── */
 export const RegisterSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Valid email is required"),
+  name: z.string().min(2),
+  email: z.string().email(),
   password: passwordStrength,
   hotelId: z.string().cuid().optional(),
   role: z.nativeEnum(UserRole).optional(),
@@ -294,59 +278,29 @@ export const BusinessRegisterSchema = z.object({
   taxDocumentUrl: z.string().optional(),
   accountType: z.enum(["individual", "business"]).default("business"),
   marketingConsent: z.boolean().default(false),
-  termsAccepted: z.literal(true, { error: () => ({ message: "You must accept the Terms of Service and Privacy Policy" }) }),
-}).superRefine((data, ctx) => {
-  if (data.accountType === "business") {
-    if (!data.city) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "City is required for business accounts",
-        path: ["city"],
-      });
-    }
-    if (!data.governorate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Governorate is required for business accounts",
-        path: ["governorate"],
-      });
-    }
-  }
+  termsAccepted: z.literal(true),
 });
 
 export const LoginSchema = z.object({
-  email: z.string().email("Valid email is required").or(
-    z.string().min(1).refine(val => val.toLowerCase() === "admin", {
-      message: "Valid email or 'admin' is required"
-    })
-  ),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().email(),
+  password: z.string().min(1),
 });
 
-/* ── OTP / Phone Auth Schemas ── */
-const EGYPTIAN_PHONE = /^\s*(?:\+?20|0)(10|11|12|15)\d{8}\s*$/;
-
 export const SendOtpSchema = z.object({
-  phone: z.string().min(1, "Phone number is required"),
+  phone: z.string().min(1),
   purpose: z.enum(["LOGIN", "REGISTER", "PASSWORD_RESET", "MFA"]).default("LOGIN"),
 });
 
 export const OtpLoginSchema = SendOtpSchema.extend({
-  code: z.string().min(4, "Verification code is required"),
+  code: z.string().min(4),
 });
 
 export const VerifyOtpSchema = z.object({
-  phone: z.string().min(1, "Phone number is required"),
-  code: z.string().min(4, "Verification code is required"),
+  phone: z.string().min(1),
+  code: z.string().min(4),
   purpose: z.enum(["LOGIN", "REGISTER", "PASSWORD_RESET", "MFA"]).default("LOGIN"),
 });
 
-export const isValidEgyptianPhoneSchema = z
-  .string()
-  .min(1)
-  .refine((val) => EGYPTIAN_PHONE.test(val), { message: "Invalid Egyptian phone" });
-
-/* ── Query Params ── */
 export const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -354,3 +308,101 @@ export const PaginationSchema = z.object({
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
+
+export const SavingsType = z.enum(["NEGOTIATED", "REALIZED", "VERIFIED"]);
+
+export const SavingsStatus = z.enum([
+  "POTENTIAL",
+  "EXPECTED",
+  "NEGOTIATED",
+  "REALIZED",
+  "VERIFIED",
+  "DISPUTED",
+  "REVERSED",
+]);
+
+export const SavingsCreateSchema = z.object({
+  opportunityId: z.string().cuid().optional(),
+  type: SavingsType,
+  baseline: z.number().optional(),
+  potentialSaving: z.number().optional(),
+  expectedSaving: z.number().optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const SavingsListSchema = PaginationSchema.extend({
+  status: SavingsStatus.optional(),
+  type: SavingsType.optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+});
+
+export const SavingsUpdateSchema = z.object({
+  status: SavingsStatus.optional(),
+  type: SavingsType.optional(),
+  baseline: z.number().optional(),
+  potentialSaving: z.number().optional(),
+  expectedSaving: z.number().optional(),
+  negotiatedAmount: z.number().optional(),
+  realizedAmount: z.number().optional(),
+  verifiedAmount: z.number().optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
+  transactionId: z.string().optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+  verifiedById: z.string().cuid().optional(),
+  disputeReason: z.string().optional(),
+});
+
+export const SavingsVerifySchema = z.object({
+  action: z.enum(["flag", "check", "verify"]).default("verify"),
+  reason: z.string().optional(),
+});
+
+export const SavingsDisputeSchema = z.object({
+  reason: z.string().min(1),
+});
+
+export const OpportunityCreateSchema = z.object({
+  type: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
+  baseline: z.number().optional(),
+  currentValue: z.number().optional(),
+  potentialImpact: z.number().optional(),
+  confidence: z.number().optional(),
+  recommendedAction: z.string().optional(),
+  affectedSupplierId: z.string().cuid().optional(),
+  affectedProductId: z.string().cuid().optional(),
+  affectedCategory: z.string().optional(),
+  ownerId: z.string().cuid().optional(),
+});
+
+export const OpportunityUpdateSchema = OpportunityCreateSchema.partial();
+
+export const OpportunityConvertSchema = z.object({
+  convertTo: z.enum(["RFQ", "ORDER", "NEGOTIATION"]),
+  supplierId: z.string().cuid().optional(),
+  productId: z.string().cuid().optional(),
+  quantity: z.number().int().positive().optional(),
+  targetPrice: z.number().positive().optional(),
+  notes: z.string().optional(),
+  type: z.enum(["NEGOTIATED", "REALIZED", "VERIFIED"]).optional(),
+  baseline: z.number().optional(),
+  potentialSaving: z.number().optional(),
+  expectedSaving: z.number().optional(),
+  category: z.string().optional(),
+  ownerId: z.string().cuid().optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
+  targetStatus: z.string().optional(),
+});
+

@@ -98,7 +98,6 @@ export function createOrderWorker(): Worker {
           });
           await linkProcurementAudit(auditAuthority.id, "VALIDATED" as ProvenanceClassification, "orders-evaluate-authority", {
             orderId: order.id,
-            approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
           // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
@@ -151,18 +150,16 @@ export function createOrderWorker(): Worker {
           });
           await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "orders-confirm-order", {
             orderId: order.id,
-            approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
           // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
 
           const txRec = await import("@/lib/intelligence/transaction/intelligence-bridge").then((m) =>
             m.connectRecommendationToTransaction(
-              { opportunityId: `opportunity-${orderId}`, needFindingId: `need-${order.id || orderId}`, findingCategory: "COMMERCIAL_SIGNAL", needType: "procurement_optimization", description: `Confirmed order for ${orderId} creates supplier/procurement opportunity.`, reasoning: `Opportunity derived from confirmed order + evidence/provenance chain (not autonomous).`, affectedParticipants: [{ type: "HOTEL" as const, entityId: order.hotelId || "unknown", entityName: order.hotel?.name || "Unknown", recommendation: `Review supplier/procurement optimization opportunity.`, evidenceReferences: [] }], provenanceReferences: [auditResult ? auditResult.id : ""], confidenceScore: 0.75, status: "PROPOSED" as const },
-              { id: `need-${order.id || orderId}`, entityId: order.id || orderId, entityName: order.orderNumber || orderId, findingCategory: "COMMERCIAL_SIGNAL", needType: "procurement_optimization", description: "Order confirmed: procurement optimization opportunity.", reasoning: "Need derived from confirmed order event.", evidenceIds: [], relationshipIds: [], confidenceScore: 0.7, createdAt: new Date() },
+              { opportunityId: `opportunity-${orderId}`, needFindingId: `need-${order.id || orderId}`, findingCategory: "COMMERCIAL_SIGNAL", needType: "procurement_optimization", description: `Confirmed order for ${orderId} creates supplier/procurement opportunity.`, reasoning: `Opportunity derived from confirmed order + evidence/provenance chain (not autonomous).`, affectedParticipants: [{ type: "HOTEL" as const, entityId: order.hotelId || "unknown", entityName: order.hotel?.name || "Unknown", recommendation: `Review supplier/procurement optimization opportunity.`, evidenceReferences: [] }], provenanceReferences: [auditResult ? auditResult.id : ""], confidenceScore: 0.75, status: "DETECTED" as const, createdAt: new Date() },
+              { id: `need-${order.id || orderId}`, entityId: order.id || orderId, entityName: order.orderNumber || orderId, findingCategory: "COMMERCIAL_SIGNAL", needType: "procurement_optimization", description: "Order confirmed: procurement optimization opportunity.", reasoning: "Need derived from confirmed order event.", evidenceIds: [] as string[], relationshipIds: [] as string[], confidenceScore: 0.7, status: "DETECTED" as const, createdAt: new Date(), provenanceClass: "TRANSACTION_BRIDGE", temporalContext: "ORDER_CONFIRMED" },
               tenantId,
-              `orders-confirm-order`,
-              order.id || orderId
+              `orders-confirm-order`
             )
           ).catch((err) => console.error("Transaction recommendation failed:", err));
           return { confirmed: true, recommendationId: txRec ? txRec.recommendationId : null };
@@ -195,7 +192,6 @@ export function createOrderWorker(): Worker {
           });
           await linkProcurementAudit(auditGuarantee.id, "VALIDATED" as ProvenanceClassification, "orders-payment-guarantee", {
             orderId: order.id,
-            approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
           // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.
@@ -222,7 +218,6 @@ export function createOrderWorker(): Worker {
           });
           await linkProcurementAudit(auditNotify.id, "VALIDATED" as ProvenanceClassification, "orders-notify-supplier", {
             orderId: order.id,
-            approvalId: null,
           }).catch((err) => console.error("Audit provenance link failed:", err));
 
           // Continuous intelligence reference: detect significant changes in evidence + relationships over time; reassess findings; not autonomous action.

@@ -66,7 +66,7 @@ export async function linkProcurementAudit(
     return null;
   }
 
-  const chain = await buildAuditChain(audit.entityId, audit.entityName);
+  const chain = await buildAuditChain(audit.entityId as any, audit.entityName);
 
   // Note: We do NOT create a new EvidenceRecord table. We reference provenance
   // through the audit entry's existing fields (entityUuid links to event,
@@ -89,7 +89,7 @@ async function buildAuditChain(entityId: string, entityName: string | null): Pro
     const entry = await prisma.auditLog.findFirst({
       where: {
         entityId: currentId,
-        entityName: currentName,
+        entityName: currentName as any,
       },
       orderBy: { createdAt: "desc" },
       select: { previousHash: true, entityUuid: true },

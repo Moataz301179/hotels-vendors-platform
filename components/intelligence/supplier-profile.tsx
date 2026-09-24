@@ -23,31 +23,31 @@ export default async function SupplierProfileCard({ supplierId, tenantId }: { su
         <div className="flex items-center justify-between">
           <CardTitle className="text-base text-white">Supplier Intelligence Profile</CardTitle>
           <Badge variant="outline" className="text-[10px] border-subtle text-foreground-muted">
-            {profile.status}
+            Score: {profile.score}
           </Badge>
         </div>
-        <p className="text-xs text-foreground-muted">{profile.name}{profile.legalName ? ` (${profile.legalName})` : ""}</p>
+        <p className="text-xs text-foreground-muted">{profile.name}</p>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-4 gap-3">
           <div className="bg-surface-2 rounded-lg p-3">
             <Package size={14} className="text-foreground-muted mb-2" />
-            <div className="text-xl font-semibold text-white">{profile.totalOrders}</div>
-            <div className="text-[10px] text-foreground-muted">Total Orders</div>
+            <div className="text-xl font-semibold text-white">{profile.invoiceCount}</div>
+            <div className="text-[10px] text-foreground-muted">Invoices</div>
           </div>
           <div className="bg-surface-2 rounded-lg p-3">
             <TrendingUp size={14} className="text-foreground-muted mb-2" />
-            <div className="text-xl font-semibold text-white">{profile.confirmedOrders}</div>
-            <div className="text-[10px] text-foreground-muted">Confirmed</div>
+            <div className="text-xl font-semibold text-white">${profile.totalSpend.toFixed(0)}</div>
+            <div className="text-[10px] text-foreground-muted">Total Spend</div>
           </div>
           <div className="bg-surface-2 rounded-lg p-3">
             <Truck size={14} className="text-foreground-muted mb-2" />
-            <div className="text-xl font-semibold text-white">{profile.logisticsTrips}</div>
-            <div className="text-[10px] text-foreground-muted">Logistics Trips</div>
+            <div className="text-xl font-semibold text-white">{profile.tripCount}</div>
+            <div className="text-[10px] text-foreground-muted">Trips</div>
           </div>
           <div className="bg-surface-2 rounded-lg p-3">
             <ShieldCheck size={14} className="text-foreground-muted mb-2" />
-            <div className="text-xl font-semibold text-white">{profile.activeHotels}</div>
+            <div className="text-xl font-semibold text-white">0</div>
             <div className="text-[10px] text-foreground-muted">Active Hotels</div>
           </div>
         </div>
@@ -58,9 +58,8 @@ export default async function SupplierProfileCard({ supplierId, tenantId }: { su
             <span className="text-[11px] font-medium text-foreground-muted">Audit / Provenance</span>
           </div>
           <div className="text-xs text-foreground-subtle space-y-1">
-            <p>Latest event: {profile.latestAuditEvent ? profile.latestAuditEvent.actionType : "—"}</p>
-            <p>Provenance chain depth: {profile.provenanceReferences.length} reference{profile.provenanceReferences.length === 1 ? "" : "s"}</p>
-            {profile.supplierAuditStatus && <p>Audit status: {profile.supplierAuditStatus}</p>}
+            <p>Profile ID: {profile.id}</p>
+            <p>Score: {profile.score}/100</p>
           </div>
         </div>
       </CardContent>

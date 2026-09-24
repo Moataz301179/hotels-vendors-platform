@@ -28,7 +28,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
       const ev = await createEvidenceRecord({
         sourceUrl: p.imageURL || "",
         sourceReference: `scrapegraphai:${data.sourceId}:${p.sku}`,
-        rawEvidenceHash: p.sku ? `sha256-${p.sku}` : null,
+        rawEvidenceHash: p.sku ? `sha256-${p.sku}` : undefined,
         extractedFact: `Discovered ${p.name} (${p.sku || "unknown"}) at price EGP ${p.priceEGP} via source ${data.sourceId}`,
         entityId: undefined,
         entityName: p.name,

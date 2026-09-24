@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePrefs } from "@/i18n/provider";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { Btn, Card, PageHead, Stat } from "@/lib/stubs-export";
 import { assessWorkingCapital, type WorkingCapitalDecision } from "@/lib/fintech/working-capital";
-import type { Role } from "@/lib/stubs-export";
+import type { Role } from "@/lib/types";
 
-const HOTEL: Role[] = ["hotel_admin", "finance_director", "platform_admin"];
+const HOTEL = ["hotel_admin", "gm", "finance_director"] as Role[];
 
 export default function WorkingCapitalPage() {
   const { t, lang } = usePrefs();

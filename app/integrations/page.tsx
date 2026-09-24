@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
 import { INTEGRATIONS } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { Btn, Card, PageHead, StatePill, Stat, T, Th, Td } from "@/lib/stubs-export";
 import { WebhookLogo, SapLogo, OracleOperaLogo, MicrosoftDynamicsLogo, CoupaLogo, CsvPortalLogo } from "@/lib/stubs-export";
-import type { Role } from "@/lib/stubs-export";
+import type { Role } from "@/lib/types";
 
-const HOTEL: Role[] = ["hotel_admin", "platform_admin"];
+const HOTEL = ["hotel_admin", "platform_admin"] as Role[];
 
 const LOGOS: Record<string, React.FC<{ className?: string }>> = {
   sap: SapLogo,

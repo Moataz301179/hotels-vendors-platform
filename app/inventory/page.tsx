@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
 import { INVENTORY } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { Btn, Card, PageHead, StatePill, Stat, T, Td, Th } from "@/lib/stubs-export";
 import { IcPlus, productById } from "@/lib/stubs-export";
-import type { Role } from "@/lib/stubs-export";
+import type { Role } from "@/lib/types";
 
-const HOTEL: Role[] = ["hotel_admin", "gm", "finance_director"];
+const HOTEL = ["hotel_admin", "gm", "finance_director"] as Role[];
 
 export default function InventoryPage() {
   const { t } = usePrefs();
