@@ -193,13 +193,11 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 64px 64px;
 }
-/* Light theme: black bands get a faint graphite grid instead */
 .dark .grid-ink { background-size: 64px 64px; }
 
 .glow-brass {
   background: radial-gradient(900px 420px at 82% -10%, rgba(255, 255, 255, 0.06), transparent 60%);
 }
-/* Air softens large dark fields with neutral light only. */
 .air-glow {
   background: radial-gradient(1100px 520px at 50% -5%, rgba(255, 255, 255, 0.045), transparent 65%);
 }
@@ -238,4 +236,105 @@
 @media (prefers-reduced-motion: reduce) {
   .anim-rise, .anim-fade, .skeleton, .pulse-dot { animation: none !important; }
   html { scroll-behavior: auto; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LEGACY CSS VARIABLE MAPPINGS
+   Maps existing page CSS variables to arena design tokens.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-canvas: #ffffff;
+  --bg-surface-1: var(--color-ink-900);
+  --bg-surface-2: var(--color-ink-850);
+  --bg-surface-3: var(--color-ink-800);
+  --bg-accent-base: var(--signal);
+  --bg-accent-light: var(--signal-bright);
+  --bg-accent-muted: var(--signal-soft);
+  --bg-border-invisible: rgba(255, 255, 255, 0.08);
+
+  --text-foreground: #111113;
+  --text-foreground-secondary: var(--color-ink-700);
+  --text-foreground-muted: var(--color-ink-500);
+  --text-accent-base: #ffffff;
+
+  --accent-base: var(--signal);
+  --accent-muted: var(--signal-soft);
+  --accent-light: var(--signal-bright);
+  --border-accent: var(--signal-bright);
+
+  --orange-base: var(--signal);
+  --orange-muted: var(--signal-soft);
+  --purple-base: var(--signal);
+  --purple-muted: var(--signal-soft);
+
+  --hero-text-rgb: 17, 17, 19;
+}
+
+.dark {
+  --bg-canvas: var(--color-ink-950);
+  --bg-surface-1: var(--color-ink-900);
+  --bg-surface-2: var(--color-ink-850);
+  --bg-surface-3: var(--color-ink-800);
+  --bg-accent-base: var(--signal);
+  --bg-accent-light: var(--signal-bright);
+  --bg-accent-muted: var(--signal-soft);
+  --bg-border-invisible: rgba(255, 255, 255, 0.08);
+
+  --text-foreground: var(--color-ink-100);
+  --text-foreground-secondary: var(--color-ink-400);
+  --text-foreground-muted: var(--color-ink-500);
+  --text-accent-base: #ffffff;
+
+  --accent-base: var(--signal);
+  --accent-muted: var(--signal-soft);
+  --accent-light: var(--signal-bright);
+  --border-accent: var(--signal-bright);
+
+  --orange-base: var(--signal);
+  --orange-muted: var(--signal-soft);
+  --purple-base: var(--signal);
+  --purple-muted: var(--signal-soft);
+
+  --hero-text-rgb: 233, 233, 237;
+}
+
+/* ── Tailwind v4 utility class aliases ── */
+@theme {
+  --color-canvas: var(--bg-canvas);
+  --color-foreground: var(--text-foreground);
+  --color-foreground-secondary: var(--text-foreground-secondary);
+  --color-foreground-muted: var(--text-foreground-muted);
+  --color-surface-1: var(--bg-surface-1);
+  --color-surface-2: var(--bg-surface-2);
+  --color-surface-3: var(--bg-surface-3);
+  --color-accent-base: var(--bg-accent-base);
+  --color-accent-light: var(--bg-accent-light);
+  --color-accent-muted: var(--bg-accent-muted);
+  --color-accent-base-text: var(--text-accent-base);
+  --color-border-accent: var(--border-accent);
+  --color-border-invisible: var(--bg-border-invisible);
+}
+
+/* ── Legacy animation classes used by existing pages ── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease both;
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-in {
+  animation: fade-in 0.4s ease both;
+}
+.animate-pulse {
+  animation: hv-pulse 1.8s ease-in-out infinite;
 }
