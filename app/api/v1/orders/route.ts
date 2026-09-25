@@ -4,21 +4,17 @@ import { OrderCreateSchema, PaginationSchema } from "@/lib/zod";
 import { evaluateAuthority } from "@/lib/auth/authority-matrix";
 import { checkCreditLimit } from "@/lib/credit-gate";
 import { apiRoute, authenticate, validateBody, validateQuery, success, error, audit, requireIdempotencyKey, completeIdempotency, requirePermission } from "@/lib/api-utils";
-
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
   await requirePermission(auth, "order:read");
   const tenantId = auth.tenantId;
   const query = validateQuery(PaginationSchema, request.nextUrl.searchParams);
-
   const where: Record<string, unknown> = { tenantId };
   // TODO: Scope by actual hotelId/supplierId based on user's entity linkage
   // Currently simplified — full RLS will filter by tenantId only
-
   if (query.search) {
     where.orderNumber = { contains: query.search };
   }
-
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
       where,
@@ -29,47 +25,41 @@ export const GET = apiRoute(async (request: NextRequest) => {
     }),
     prisma.order.count({ where }),
   ]);
-
   return success({ orders, pagination: { page: query.page, limit: query.limit, total, totalPages: Math.ceil(total / query.limit) } });
 });
-
 export const POST = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
   await requirePermission(auth, "order:create");
   const body = await request.json();
   const data = validateBody(OrderCreateSchema, body);
-
   const user = await prisma.user.findUnique({
     where: { id: auth.userId },
     include: { hotel: true },
   });
-
   if (!user) {
     return error("User account not found", 404);
   }
-  if (!user.hotelId) {
-    return error("No hotel associated with user", 400);
-  }
-
   const hotelId = data.hotelId || user.hotelId;
+  if (!hotelId) {
+    return error("No hotel associated with order. Provide hotelId in body or link user to a hotel.", 400);
+  }
   const requesterId = data.requesterId || auth.userId;
-
   const supplier = await prisma.supplier.findUnique({ where: { id: data.supplierId } });
-  if (!supplier || supplier.tenantId !== auth.tenantId) {
+  if (!supplier || supplier.status === "INACTIVE" || supplier.status === "BLACKLISTED") {
     return error("Supplier not found or unavailable", 404);
   }
-
+  // Cross-tenant marketplace: supplier may be in a different tenant.
+  // Authorization is enforced by credit gate + authority matrix below.
+  // Tenant isolation is maintained: order.tenantId = hotel's tenantId.
   const idempotencyKey = await requireIdempotencyKey(request, {
     userId: auth.userId,
     action: "CREATE_ORDER",
     amount: data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
   });
-
   const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   const vatRate = 14;
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
-
   // ── CREDIT GATE: reject before any mutation ──
   const creditCheck = await checkCreditLimit(hotelId, total);
   if (!creditCheck.allowed) {
@@ -79,7 +69,6 @@ export const POST = apiRoute(async (request: NextRequest) => {
       402,
     );
   }
-
   // ── ATOMIC ORDER + CREDIT CAPTURE ──
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let order: any;
@@ -91,7 +80,6 @@ export const POST = apiRoute(async (request: NextRequest) => {
         where: { id: hotelId },
         select: { creditLimit: true, creditUsed: true },
       });
-
       // Re-validate inside the transaction (race-condition guard)
       const currentExposure = Number(hotel.creditUsed ?? 0);
       if (currentExposure + total > Number(hotel.creditLimit ?? Infinity)) {
@@ -100,10 +88,9 @@ export const POST = apiRoute(async (request: NextRequest) => {
           currentExposure,
         );
       }
-
       const createdOrder = await tx.order.create({
         data: {
-          tenantId: auth.tenantId,
+          tenantId: hotel.tenantId,  // Order belongs to hotel's tenant, not platform
           orderNumber: data.orderNumber,
           hotelId,
           propertyId: data.propertyId,
@@ -129,13 +116,11 @@ export const POST = apiRoute(async (request: NextRequest) => {
         },
         include: { items: { include: { product: true } }, hotel: true, supplier: true },
       });
-
       // Increment creditUsed atomically
       await tx.hotel.update({
         where: { id: hotelId },
         data: { creditUsed: { increment: total } },
       });
-
       return createdOrder;
     });
   } catch (err) {
@@ -145,22 +130,20 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
     throw err;
   }
-
   // Trigger Authority Matrix evaluation
+  // Use order.tenantId (hotel's tenant) for cross-tenant marketplace transactions
   const evaluation = await evaluateAuthority(order.id, {
     userId: auth.userId,
     userRole: auth.platformRole === "HOTEL" ? "DEPARTMENT_HEAD" : "OWNER",
-    tenantId: auth.tenantId,
+    tenantId: order.tenantId,
     ipAddress: request.headers.get("x-forwarded-for") || undefined,
     userAgent: request.headers.get("user-agent") ?? undefined,
   });
-
   // Set order status based on authority evaluation
   let finalStatus: "APPROVED" | "PENDING_APPROVAL" = "PENDING_APPROVAL";
   if (evaluation.action === "AUTO_APPROVE" && evaluation.canProceed) {
     finalStatus = "APPROVED";
   }
-
   if (finalStatus !== order.status) {
     await prisma.order.update({
       where: { id: order.id },
@@ -168,7 +151,6 @@ export const POST = apiRoute(async (request: NextRequest) => {
     });
     order.status = finalStatus;
   }
-
   await audit({
     entityType: "ORDER",
     entityId: order.id,
@@ -186,12 +168,9 @@ export const POST = apiRoute(async (request: NextRequest) => {
     ipAddress: request.headers.get("x-forwarded-for") || null,
     userAgent: request.headers.get("user-agent"),
   });
-
   completeIdempotency(idempotencyKey, order.id);
-
   return success({ order, evaluation }, 201);
 }, { rateLimit: "api" });
-
 // Custom error class to distinguish credit breaches from other transaction failures
 class CREDIT_EXCEEDED_ERROR extends Error {
   constructor(

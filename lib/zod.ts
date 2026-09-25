@@ -346,7 +346,183 @@ export const isValidEgyptianPhoneSchema = z
   .min(1)
   .refine((val) => EGYPTIAN_PHONE.test(val), { message: "Invalid Egyptian phone" });
 
-/* ── Query Params ── */
+/* ── Opportunity Schemas ── */
+export const OpportunityCreateSchema = z.object({
+  type: z.enum([
+    "PRICE_DRIFT",
+    "SUPPLIER_CONCENTRATION",
+    "VOLUME_OPPORTUNITY",
+    "ALTERNATIVE_SOURCE",
+    "MAVERICK_SPEND",
+    "CONSOLIDATION",
+    "CONTRACT_VIOLATION",
+    "INVENTORY_LINKED",
+  ]),
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().optional(),
+  evidence: z.record(z.unknown()).optional(),
+  baseline: z.number().optional(),
+  currentValue: z.number().optional(),
+  potentialImpact: z.number().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  recommendedAction: z.string().optional(),
+  affectedSupplierId: z.string().cuid().optional(),
+  affectedProductId: z.string().cuid().optional(),
+  affectedCategory: z.string().optional(),
+  ownerId: z.string().cuid().optional(),
+});
+
+export const OpportunityUpdateSchema = z.object({
+  status: z.enum([
+    "DETECTED",
+    "REVIEWING",
+    "RESEARCHING",
+    "ACTION_READY",
+    "RFQ_SENT",
+    "APPROVED",
+    "EXECUTING",
+    "RESULT_PENDING",
+    "VERIFIED",
+    "CLOSED",
+  ]).optional(),
+  title: z.string().min(3).optional(),
+  description: z.string().optional(),
+  evidence: z.record(z.unknown()).optional(),
+  baseline: z.number().optional(),
+  currentValue: z.number().optional(),
+  potentialImpact: z.number().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  recommendedAction: z.string().optional(),
+  affectedSupplierId: z.string().cuid().optional(),
+  affectedProductId: z.string().cuid().optional(),
+  affectedCategory: z.string().optional(),
+  ownerId: z.string().cuid().optional(),
+  resultingTransactionId: z.string().optional(),
+  realizedResult: z.record(z.unknown()).optional(),
+  verificationState: z.string().optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update",
+});
+
+export const OpportunityStatusSchema = z.object({
+  status: z.enum([
+    "DETECTED",
+    "REVIEWING",
+    "RESEARCHING",
+    "ACTION_READY",
+    "RFQ_SENT",
+    "APPROVED",
+    "EXECUTING",
+    "RESULT_PENDING",
+    "VERIFIED",
+    "CLOSED",
+  ]),
+  reason: z.string().optional(),
+});
+
+export const OpportunityAssignSchema = z.object({
+  ownerId: z.string().cuid(),
+});
+
+export const OpportunityListSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
+
+/* ── Savings Ledger Schemas ── */
+export const SavingsCreateSchema = z.object({
+  type: z.enum(["NEGOTIATED", "REALIZED", "VERIFIED"]),
+  opportunityId: z.string().cuid().optional(),
+  baseline: z.number().optional(),
+  potentialSaving: z.number().optional(),
+  expectedSaving: z.number().optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+  evidence: z.record(z.unknown()).optional(),
+});
+
+export const SavingsUpdateSchema = z.object({
+  status: z.enum([
+    "POTENTIAL",
+    "EXPECTED",
+    "NEGOTIATED",
+    "REALIZED",
+    "VERIFIED",
+    "DISPUTED",
+    "REVERSED",
+  ]).optional(),
+  type: z.enum(["NEGOTIATED", "REALIZED", "VERIFIED"]).optional(),
+  baseline: z.number().optional(),
+  potentialSaving: z.number().optional(),
+  expectedSaving: z.number().optional(),
+  negotiatedAmount: z.number().optional(),
+  realizedAmount: z.number().optional(),
+  verifiedAmount: z.number().optional(),
+  evidence: z.record(z.unknown()).optional(),
+  transactionId: z.string().optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+  verifiedById: z.string().cuid().optional(),
+  disputeReason: z.string().min(3).optional(),
+});
+
+export const SavingsListSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum([
+    "POTENTIAL",
+    "EXPECTED",
+    "NEGOTIATED",
+    "REALIZED",
+    "VERIFIED",
+    "DISPUTED",
+    "REVERSED",
+  ]).optional(),
+  type: z.enum(["NEGOTIATED", "REALIZED", "VERIFIED"]).optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
+
+export const SavingsDisputeSchema = z.object({
+  reason: z.string().min(3, "Dispute reason must be at least 3 characters"),
+});
+
+/* ── Savings Verification Schema ── */
+export const SavingsVerifySchema = z
+  .object({
+    action: z.enum(["verify", "flag", "check"]).default("verify"),
+    reason: z.string().min(3).optional(),
+  })
+  .refine((data) => data.action !== "flag" || (data.reason && data.reason.length >= 3), {
+    message: "Reason is required when action is 'flag' and must be at least 3 characters",
+    path: ["reason"],
+  });
+
+/* ── Opportunity Convert Schema ── */
+export const OpportunityConvertSchema = z.object({
+  type: z.enum(["NEGOTIATED", "REALIZED", "VERIFIED"]).optional(),
+  baseline: z.number().optional(),
+  potentialSaving: z.number().optional(),
+  expectedSaving: z.number().optional(),
+  supplierId: z.string().cuid().optional(),
+  category: z.string().optional(),
+  productId: z.string().cuid().optional(),
+  ownerId: z.string().cuid().optional(),
+  targetStatus: z.enum(["ACTION_READY", "APPROVED", "EXECUTING"]).optional(),
+  evidence: z.record(z.unknown()).optional(),
+});
+
 export const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -354,3 +530,4 @@ export const PaginationSchema = z.object({
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
+

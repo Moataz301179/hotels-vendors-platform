@@ -81,6 +81,7 @@ model Tenant {
   refreshTokens          RefreshToken[]
   roles                  Role[]
   spendRecords           SpendRecord[]
+  spendUploadRecords     SpendUploadRecord[]
   suppliers              Supplier[]
   supplierAudits         SupplierAudit[]
   swarmJobs              SwarmJob[]
@@ -99,6 +100,8 @@ model Tenant {
   pushTokens             PushToken[]
   scheduledOrders        ScheduledOrder[]
   supportTickets         SupportTicket[]
+  opportunities          Opportunity[]
+  savingsLedger          SavingsLedger[]
 
   @@index([deletedAt], map: "Tenant_deleted_idx")
   @@index([parentTenantId], map: "Tenant_parent_idx")
@@ -284,6 +287,9 @@ model User {
   onboardingProgress     OnboardingProgress?
   pushTokens             PushToken[]
   supportTickets         SupportTicket[]
+  opportunities          Opportunity[]
+  savingsLedgers         SavingsLedger[]
+  verifiedSavingsLedgers SavingsLedger[] @relation("SavingsLedgerVerifiedBy")
 
   @@index([sector])
   @@index([tenantId])
@@ -371,11 +377,14 @@ model Supplier {
   olivCreditFacilities OlivCreditFacility[]
   orders               Order[]
   products             Product[]
+  spendUploadRecords   SpendUploadRecord[]
+  opportunities        Opportunity[]
   tenant               Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   audits               SupplierAudit[]
   users                User[]
   goodsReceiptNotes    GoodsReceiptNote[]
   scheduledOrders      ScheduledOrder[]
+  savingsLedger        SavingsLedger[]
 
   @@index([tenantId])
   @@index([city])
@@ -450,6 +459,9 @@ model Product {
   productVariations  ProductVariation[]
   reconciliationLineItems ReconciliationLineItem[] @relation("ProductReconciliationLineItems")
   scheduledOrderItems ScheduledOrderItem[]
+  opportunities          Opportunity[]
+  spendUploadRecords     SpendUploadRecord[]
+  savingsLedger          SavingsLedger[]
 
   @@index([tenantId])
   @@index([supplierId])
@@ -531,6 +543,131 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([deletedAt], map: "Order_deleted_idx")
+}
+
+enum OpportunityType {
+  PRICE_DRIFT
+  SUPPLIER_CONCENTRATION
+  VOLUME_OPPORTUNITY
+  ALTERNATIVE_SOURCE
+  MAVERICK_SPEND
+  CONSOLIDATION
+  CONTRACT_VIOLATION
+  INVENTORY_LINKED
+}
+
+enum OpportunityStatus {
+  DETECTED
+  REVIEWING
+  RESEARCHING
+  ACTION_READY
+  RFQ_SENT
+  APPROVED
+  EXECUTING
+  RESULT_PENDING
+  VERIFIED
+  CLOSED
+}
+
+model Opportunity {
+  id                    String            @id @default(cuid())
+  tenantId              String
+  type                  OpportunityType
+  status                OpportunityStatus @default(DETECTED)
+  title                 String
+  description           String?
+  evidence              Json?
+  baseline              Decimal?          @db.Decimal(14, 2)
+  currentValue          Decimal?          @db.Decimal(14, 2)
+  potentialImpact       Decimal?          @db.Decimal(14, 2)
+  confidence            Float?
+  recommendedAction     String?
+  affectedSupplierId    String?
+  affectedProductId     String?
+  affectedCategory      String?
+  ownerId               String?
+  resultingTransactionId String?
+  realizedResult        Json?
+  verificationState     String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  uuid                  String?           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt             DateTime?
+
+  tenant                Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  affectedSupplier      Supplier?         @relation(fields: [affectedSupplierId], references: [id], onDelete: SetNull)
+  affectedProduct       Product?          @relation(fields: [affectedProductId], references: [id], onDelete: SetNull)
+  owner                 User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  savingsLedgers        SavingsLedger[]
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([status])
+  @@index([ownerId])
+  @@index([affectedSupplierId])
+  @@index([createdAt])
+  @@index([deletedAt], map: "Opportunity_deleted_idx")
+}
+
+enum SavingsType {
+  NEGOTIATED
+  REALIZED
+  VERIFIED
+}
+
+enum SavingsStatus {
+  POTENTIAL
+  EXPECTED
+  NEGOTIATED
+  REALIZED
+  VERIFIED
+  DISPUTED
+  REVERSED
+}
+
+model SavingsLedger {
+  id                String        @id @default(cuid())
+  tenantId          String
+  opportunityId     String?
+  type              SavingsType
+  status            SavingsStatus @default(POTENTIAL)
+  baseline          Decimal?      @db.Decimal(14, 2)
+  potentialSaving   Decimal?      @db.Decimal(14, 2)
+  expectedSaving    Decimal?      @db.Decimal(14, 2)
+  negotiatedAmount  Decimal?      @db.Decimal(14, 2)
+  realizedAmount    Decimal?      @db.Decimal(14, 2)
+  verifiedAmount    Decimal?      @db.Decimal(14, 2)
+  evidence          Json?
+  transactionId     String?
+  supplierId        String?
+  category          String?
+  productId         String?
+  ownerId           String?
+  verifiedById      String?
+  verifiedAt        DateTime?
+  disputeReason     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  uuid              String?       @unique(map: "SavingsLedger_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt         DateTime?
+
+  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  opportunity       Opportunity?  @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  supplier          Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  product           Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  owner             User?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  verifiedBy        User?         @relation("SavingsLedgerVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([opportunityId])
+  @@index([type])
+  @@index([status])
+  @@index([supplierId])
+  @@index([category])
+  @@index([ownerId])
+  @@index([verifiedById])
+  @@index([createdAt])
+  @@index([deletedAt], map: "SavingsLedger_deleted_idx")
 }
 
 model OrderItem {
@@ -3058,6 +3195,10 @@ enum EntityName {
   RETURN_REQUEST
   CREDIT_NOTE
   PAYMENT_TERM
+  // Added for Smart Settlement Worker audit trail (2026-09-23)
+  PAYMENT
+  CREDIT_FACILITY
+  SETTLEMENT_BATCH
 }
 
 enum NotificationChannel {
@@ -3724,3 +3865,56 @@ model IntelligenceEdge {
   @@index([tenantId])
   @@index([entityUuid])
 }
+
+// ─── Spend Ingestion Pipeline ───
+
+enum SpendSourceType {
+  CSV
+  EXCEL
+  MANUAL
+  INVOICE
+}
+
+enum SpendResolutionStatus {
+  RESOLVED
+  PARTIAL
+  UNRESOLVED
+}
+
+model SpendUploadRecord {
+  id                String               @id @default(cuid())
+  tenantId          String
+  sourceType        SpendSourceType
+  rawData           Json
+  normalizedDate    DateTime?
+  supplierId        String?
+  supplierName      String               @default("Unknown")
+  productId         String?
+  productName       String?
+  sku               String?
+  category          String?
+  quantity          Int?
+  unitPrice         Decimal?             @db.Decimal(12, 2)
+  totalAmount       Decimal?             @db.Decimal(12, 2)
+  poNumber          String?
+  invoiceNumber     String?
+  resolutionStatus  SpendResolutionStatus @default(UNRESOLVED)
+  resolutionNotes   String?
+  opportunityId     String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  uuid              String?              @unique(map: "SpendUploadRecord_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt         DateTime?
+
+  supplier          Supplier?            @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  product           Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt], map: "SpendUploadRecord_deleted_idx")
+  @@index([tenantId])
+  @@index([resolutionStatus])
+  @@index([normalizedDate])
+  @@index([supplierId])
+  @@index([category])
+}
+

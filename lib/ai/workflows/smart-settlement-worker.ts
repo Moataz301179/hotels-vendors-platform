@@ -4,6 +4,13 @@
  *
  * Background worker for automated invoice settlement reconciliation.
  * Matches payments to invoices, handles factoring settlements, and reconciles credit facilities.
+ *
+ * SECURITY HARDENING (2026-09-23):
+ * - setInterval commented out — worker MUST NOT run autonomously in production
+ * - All mutations require explicit authorization context
+ * - All queries are tenant-scoped
+ * - Audit logging added before every financial state change
+ * - Idempotency keys prevent double-processing
  */
 
 import { prisma } from "@/lib/prisma";
@@ -26,35 +33,41 @@ export interface SettlementDetail {
   timestamp: Date;
 }
 
-/**
- * Start the smart settlement worker as a continuous background process.
- * Processes pending settlements every 60 seconds.
- */
-export async function startSmartSettlementWorker(): Promise<void> {
-  console.log("[Smart Settlement Worker] Started - polling every 60s");
-
-  // Run immediately once, then every 60s
-  await processSettlement();
-
-  setInterval(async () => {
-    try {
-      await processSettlement();
-    } catch (err) {
-      console.error("[Smart Settlement Worker] Cycle error:", err);
-    }
-  }, 60_000);
+/** Authorization context required for every financial mutation */
+export interface SettlementAuth {
+  /** User/admin who authorized this settlement batch */
+  authorizedBy: string;
+  /** User ID (actorId) */
+  authorizedByUserId: string;
+  /** Explicit approval reference (ticket, order, or approval ID) */
+  approvalReference: string;
+  /** Tenant scope — all queries MUST filter by this */
+  tenantId: string;
+  /** Idempotency key to prevent double-processing */
+  idempotencyKey: string;
 }
 
 /**
- * Process all pending settlements:
- * 1. Match unmatched payments to invoices
- * 2. Process factoring settlements for ACCEPTED factoring requests
- * 3. Apply credit facility repayments
- * 4. Update invoice payment statuses
+ * Start the smart settlement worker as a continuous background process.
+ * PRODUCTION HARDENED: setInterval disabled — settlements require explicit human approval.
  */
-export async function processSettlement(): Promise<SettlementResult> {
-  console.log("[Smart Settlement Worker] Processing settlements...");
+export async function startSmartSettlementWorker(): Promise<void> {
+  console.log("[Smart Settlement Worker] BLOCKED: Autonomous background processing disabled. Use processSettlement(auth) with explicit authorization.");
 
+  // HARDENED: setInterval commented out — no autonomous financial mutations
+  // setInterval(async () => {
+  //   try {
+  //     await processSettlement();
+  //   } catch (err) {
+  //     console.error("[Smart Settlement Worker] Cycle error:", err);
+  //   }
+  // }, 60_000);
+}
+
+/**
+ * Process all pending settlements — REQUIRES explicit authorization.
+ */
+export async function processSettlement(auth?: SettlementAuth): Promise<SettlementResult> {
   const result: SettlementResult = {
     processed: 0,
     matched: 0,
@@ -62,60 +75,103 @@ export async function processSettlement(): Promise<SettlementResult> {
     details: [],
   };
 
+  if (!auth) {
+    result.errors.push("BLOCKED: processSettlement requires authorization context");
+    return result;
+  }
+
+  // Validate authorization
+  if (!auth.authorizedBy || !auth.approvalReference || !auth.tenantId || !auth.idempotencyKey) {
+    result.errors.push("BLOCKED: Incomplete authorization — requires authorizedBy, approvalReference, tenantId, idempotencyKey");
+    return result;
+  }
+
+  // Idempotency check — prevent double-processing via audit log
+  const existingBatch = await prisma.auditLog.findFirst({
+    where: {
+      entityName: "SETTLEMENT_BATCH",
+      entityId: auth.idempotencyKey,
+      tenantId: auth.tenantId,
+    },
+  });
+  if (existingBatch) {
+    result.errors.push(`BLOCKED: Duplicate idempotency key ${auth.idempotencyKey} — batch already processed`);
+    return result;
+  }
+
+  // Create audit record for this batch (idempotency marker)
+  await prisma.auditLog.create({
+    data: {
+      entityName: "SETTLEMENT_BATCH",
+      entityId: auth.idempotencyKey,
+      actionType: "CREATE",
+      actorId: auth.authorizedByUserId,
+      actorRole: "ADMIN",
+      tenantId: auth.tenantId,
+      changes: {
+        authorizedBy: auth.authorizedBy,
+        approvalReference: auth.approvalReference,
+        startedAt: new Date().toISOString(),
+      },
+    },
+  });
+
   try {
-    // 1. Match unmatched payments to invoices
-    const paymentMatches = await matchPaymentsToInvoices();
+    // 1. Match unmatched payments to invoices (TENANT-SCOPED)
+    const paymentMatches = await matchPaymentsToInvoices(auth);
     result.processed += paymentMatches.processed;
     result.matched += paymentMatches.matched;
     result.details.push(...paymentMatches.details);
     result.errors.push(...paymentMatches.errors);
 
-    // 2. Process factoring settlements (invoice funded, awaiting supplier repayment)
-    const factoringSettlements = await processFactoringSettlements();
+    // 2. Process factoring settlements (TENANT-SCOPED)
+    const factoringSettlements = await processFactoringSettlements(auth);
     result.processed += factoringSettlements.processed;
     result.matched += factoringSettlements.matched;
     result.details.push(...factoringSettlements.details);
     result.errors.push(...factoringSettlements.errors);
 
-    // 3. Apply credit facility repayments
-    const creditRepayments = await applyCreditRepayments();
+    // 3. Apply credit facility repayments (TENANT-SCOPED)
+    const creditRepayments = await applyCreditRepayments(auth);
     result.processed += creditRepayments.processed;
     result.matched += creditRepayments.matched;
     result.details.push(...creditRepayments.details);
     result.errors.push(...creditRepayments.errors);
 
-    // 4. Reconcile invoice payment statuses
-    const reconciliations = await reconcileInvoiceStatuses();
+    // 4. Reconcile invoice payment statuses (TENANT-SCOPED)
+    const reconciliations = await reconcileInvoiceStatuses(auth);
     result.processed += reconciliations.processed;
     result.matched += reconciliations.matched;
     result.details.push(...reconciliations.details);
     result.errors.push(...reconciliations.errors);
 
     console.log(
-      `[Smart Settlement Worker] Cycle complete: ${result.matched}/${result.processed} matched, ${result.errors.length} errors`
+      `[Smart Settlement Worker] Cycle complete: ${result.matched}/${result.processed} matched, ${result.errors.length} errors (auth: ${auth.authorizedBy}, ref: ${auth.approvalReference})`
     );
 
     return result;
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     result.errors.push(msg);
+
     console.error("[Smart Settlement Worker] Fatal error:", err);
     return result;
   }
 }
 
 /**
- * Match unmatched payments to their invoices
+ * Match unmatched payments to their invoices — REQUIRES authorization + tenant scope.
  */
-async function matchPaymentsToInvoices(): Promise<SettlementResult> {
+async function matchPaymentsToInvoices(auth: SettlementAuth): Promise<SettlementResult> {
   const result: SettlementResult = { processed: 0, matched: 0, errors: [], details: [] };
 
-  // Find payments without invoice or with PENDING status
+  // TENANT-SCOPED: Only process payments within authorized tenant
   const unmatchedPayments = await prisma.payment.findMany({
     where: {
       status: "PENDING",
       invoiceId: { not: null },
       deletedAt: null,
+      tenantId: auth.tenantId, // TENANT SCOPING
     },
     take: 100,
   });
@@ -133,49 +189,82 @@ async function matchPaymentsToInvoices(): Promise<SettlementResult> {
         continue;
       }
 
+      // TENANT VERIFICATION: Ensure invoice belongs to same tenant
+      if (invoice.tenantId !== auth.tenantId) {
+        result.errors.push(`Payment ${payment.paymentNumber}: cross-tenant access blocked`);
+        continue;
+      }
+
       const invoiceTotal = Number(invoice.total ?? 0);
 
-      // Update payment status
+      // AUDIT LOG: Before payment status change
+      await prisma.auditLog.create({
+        data: {
+          entityName: "PAYMENT",
+          entityId: payment.id,
+          actionType: "UPDATE",
+          actorId: auth.authorizedByUserId,
+          actorRole: "ADMIN",
+          tenantId: auth.tenantId,
+          changes: {
+            previousStatus: payment.status,
+            newStatus: "PAID",
+            paidAt: new Date().toISOString(),
+            approvedBy: auth.authorizedBy,
+            approvalReference: auth.approvalReference,
+          },
+        },
+      });
+
+      // AUTHORIZED MUTATION: payment.status → PAID
       await prisma.payment.update({
-        where: { id: payment.id },
+        where: { id: payment.id, tenantId: auth.tenantId }, // TENANT-SCOPED update
         data: { status: "PAID", paidAt: new Date() },
       });
 
       // Check if fully paid
       const existingPayments = await prisma.payment.aggregate({
-        where: { invoiceId: invoice.id, status: "PAID" },
+        where: { invoiceId: invoice.id, status: "PAID", tenantId: auth.tenantId }, // TENANT-SCOPED
         _sum: { amount: true },
       });
 
       const totalPaid = Number(existingPayments._sum?.amount ?? 0);
 
-      if (totalPaid >= invoiceTotal) {
-        await prisma.invoice.update({
-          where: { id: invoice.id },
-          data: { paymentStatus: "PAID", paidDate: new Date() },
-        });
-        result.details.push({
-          invoiceId: invoice.id,
-          invoiceNumber: invoice.invoiceNumber,
-          action: "FULLY_PAID",
-          amount: totalPaid,
-          paymentId: payment.id,
-          timestamp: new Date(),
-        });
-      } else {
-        await prisma.invoice.update({
-          where: { id: invoice.id },
-          data: { paymentStatus: "PARTIALLY_PAID" },
-        });
-        result.details.push({
-          invoiceId: invoice.id,
-          invoiceNumber: invoice.invoiceNumber,
-          action: "PARTIALLY_PAID",
-          amount: totalPaid,
-          paymentId: payment.id,
-          timestamp: new Date(),
-        });
-      }
+      const newPaymentStatus = totalPaid >= invoiceTotal ? "PAID" : "PARTIALLY_PAID";
+
+      // AUDIT LOG: Before invoice status change
+      await prisma.auditLog.create({
+        data: {
+          entityName: "INVOICE",
+          entityId: invoice.id,
+          actionType: "UPDATE",
+          actorId: auth.authorizedByUserId,
+          actorRole: "ADMIN",
+          tenantId: auth.tenantId,
+          changes: {
+            previousPaymentStatus: invoice.paymentStatus,
+            newPaymentStatus: newPaymentStatus,
+            paidDate: newPaymentStatus === "PAID" ? new Date().toISOString() : null,
+            approvedBy: auth.authorizedBy,
+            approvalReference: auth.approvalReference,
+          },
+        },
+      });
+
+      // AUTHORIZED MUTATION: invoice.paymentStatus → PAID/PARTIALLY_PAID
+      await prisma.invoice.update({
+        where: { id: invoice.id, tenantId: auth.tenantId }, // TENANT-SCOPED update
+        data: { paymentStatus: newPaymentStatus, paidDate: newPaymentStatus === "PAID" ? new Date() : null },
+      });
+
+      result.details.push({
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        action: totalPaid >= invoiceTotal ? "FULLY_PAID" : "PARTIALLY_PAID",
+        amount: totalPaid,
+        paymentId: payment.id,
+        timestamp: new Date(),
+      });
 
       result.matched++;
     } catch (err) {
@@ -188,22 +277,18 @@ async function matchPaymentsToInvoices(): Promise<SettlementResult> {
 }
 
 /**
- * Process factoring settlements:
- * - Invoices funded by factoring company
- * - Supplier receives accelerated cash
- * - When hotel pays, funds go to factoring company (not supplier)
+ * Process factoring settlements — REQUIRES authorization + tenant scope.
  */
-async function processFactoringSettlements(): Promise<SettlementResult> {
+async function processFactoringSettlements(auth: SettlementAuth): Promise<SettlementResult> {
   const result: SettlementResult = { processed: 0, matched: 0, errors: [], details: [] };
 
-  // Find invoices that were factored and are now paid by hotel.
-  // "PAID" = factoring company disbursed the advance (current FactoringStatus value).
-  // Skip requests already SETTLED so each invoice is processed only once.
+  // TENANT-SCOPED: Only process invoices within authorized tenant
   const factoredInvoices = await prisma.invoice.findMany({
     where: {
       factoringStatus: "PAID",
       paymentStatus: "PAID",
       deletedAt: null,
+      tenantId: auth.tenantId, // TENANT SCOPING
       factoringRequests: { isNot: { status: "SETTLED" } },
     },
     take: 50,
@@ -213,9 +298,8 @@ async function processFactoringSettlements(): Promise<SettlementResult> {
     try {
       result.processed++;
 
-      // Find the factoring request
       const factoringRequest = await prisma.factoringRequest.findFirst({
-        where: { invoiceId: invoice.id },
+        where: { invoiceId: invoice.id, tenantId: auth.tenantId }, // TENANT-SCOPED
         include: { factoringCompany: true },
       });
 
@@ -224,10 +308,30 @@ async function processFactoringSettlements(): Promise<SettlementResult> {
         continue;
       }
 
-      // Create settlement transaction for factoring company
       const settlementAmount = Number(
         factoringRequest.disbursedAmount ?? factoringRequest.requestedAmount ?? 0
       );
+
+      // AUDIT LOG: Before payment creation
+      await prisma.auditLog.create({
+        data: {
+          entityName: "FACTORING_REQUEST",
+          entityId: factoringRequest.id,
+          actionType: "CREATE",
+          actorId: auth.authorizedByUserId,
+          actorRole: "ADMIN",
+          tenantId: auth.tenantId,
+          changes: {
+            previousStatus: factoringRequest.status,
+            newStatus: "SETTLED",
+            settlementAmount: settlementAmount,
+            approvedBy: auth.authorizedBy,
+            approvalReference: auth.approvalReference,
+          },
+        },
+      });
+
+      // AUTHORIZED MUTATION: Create settlement payment
       const payment = await prisma.payment.create({
         data: {
           paymentNumber: `SETL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -243,14 +347,13 @@ async function processFactoringSettlements(): Promise<SettlementResult> {
         },
       });
 
-      // Mark the factoring request settled (source of truth; the invoice
-      // factoringStatus stays "PAID" since FactoringStatus has no SETTLED value).
+      // AUTHORIZED MUTATION: factoringRequest.status → SETTLED
       await prisma.factoringRequest.update({
-        where: { id: factoringRequest.id },
+        where: { id: factoringRequest.id, tenantId: auth.tenantId }, // TENANT-SCOPED
         data: { status: "SETTLED", settledAt: new Date() },
       });
 
-      // Create credit transaction for audit trail
+      // AUTHORIZED MUTATION: Create credit transaction (audit trail)
       await prisma.creditTransaction.create({
         data: {
           hotelId: invoice.hotelId,
@@ -284,27 +387,25 @@ async function processFactoringSettlements(): Promise<SettlementResult> {
 }
 
 /**
- * Apply credit facility repayments:
- * When hotel pays an invoice that was funded via credit facility,
- * apply the repayment to the facility's utilized amount
+ * Apply credit facility repayments — REQUIRES authorization + tenant scope.
  */
-async function applyCreditRepayments(): Promise<SettlementResult> {
+async function applyCreditRepayments(auth: SettlementAuth): Promise<SettlementResult> {
   const result: SettlementResult = { processed: 0, matched: 0, errors: [], details: [] };
 
-  // Find active credit facilities
+  // TENANT-SCOPED: Only process facilities within authorized tenant
   const facilities = await prisma.creditFacility.findMany({
-    where: { status: "ACTIVE", deletedAt: null },
+    where: { status: "ACTIVE", deletedAt: null, tenantId: auth.tenantId }, // TENANT SCOPING
     take: 50,
   });
 
   for (const facility of facilities) {
     try {
-      // Find invoices for this hotel that were paid but not yet applied to facility
       const paidInvoices = await prisma.invoice.findMany({
         where: {
           hotelId: facility.hotelId,
           paymentStatus: "PAID",
           creditTransactions: { none: { type: "CREDIT_REPAY" } },
+          tenantId: auth.tenantId, // TENANT SCOPING
         },
         take: 20,
       });
@@ -314,7 +415,26 @@ async function applyCreditRepayments(): Promise<SettlementResult> {
 
         const invoiceTotal = Number(invoice.total ?? 0);
 
-        // Create credit transaction
+        // AUDIT LOG: Before credit facility repayment
+        await prisma.auditLog.create({
+          data: {
+            entityName: "CREDIT_FACILITY",
+            entityId: facility.id,
+            actionType: "UPDATE",
+            actorId: auth.authorizedByUserId,
+            actorRole: "ADMIN",
+            tenantId: auth.tenantId,
+            changes: {
+              operation: "decrement_utilized",
+              amount: invoiceTotal,
+              invoiceId: invoice.id,
+              approvedBy: auth.authorizedBy,
+              approvalReference: auth.approvalReference,
+            },
+          },
+        });
+
+        // AUTHORIZED MUTATION: Create credit transaction
         await prisma.creditTransaction.create({
           data: {
             hotelId: facility.hotelId,
@@ -327,9 +447,9 @@ async function applyCreditRepayments(): Promise<SettlementResult> {
           },
         });
 
-        // Reduce facility utilized amount
+        // AUTHORIZED MUTATION: Reduce facility utilized amount
         await prisma.creditFacility.update({
-          where: { id: facility.id },
+          where: { id: facility.id, tenantId: auth.tenantId }, // TENANT-SCOPED
           data: {
             utilized: { decrement: invoiceTotal },
             updatedAt: new Date(),
@@ -342,7 +462,7 @@ async function applyCreditRepayments(): Promise<SettlementResult> {
           action: "CREDIT_APPLIED",
           amount: invoiceTotal,
           creditTransactionId: (await prisma.creditTransaction.findFirst({
-            where: { invoiceId: invoice.id, type: "CREDIT_REPAY" },
+            where: { invoiceId: invoice.id, type: "CREDIT_REPAY", tenantId: auth.tenantId },
             orderBy: { createdAt: "desc" },
             select: { id: true },
           }))?.id || "",
@@ -361,18 +481,17 @@ async function applyCreditRepayments(): Promise<SettlementResult> {
 }
 
 /**
- * Reconcile invoice payment statuses:
- * Ensure paymentStatus matches actual payment records
+ * Reconcile invoice payment statuses — REQUIRES authorization + tenant scope.
  */
-async function reconcileInvoiceStatuses(): Promise<SettlementResult> {
+async function reconcileInvoiceStatuses(auth: SettlementAuth): Promise<SettlementResult> {
   const result: SettlementResult = { processed: 0, matched: 0, errors: [], details: [] };
 
-  // Find invoices where payment status might be wrong.
-  // InvoiceStatus has no CANCELLED/VOID — skip drafts and credit notes instead.
+  // TENANT-SCOPED: Only reconcile invoices within authorized tenant
   const invoices = await prisma.invoice.findMany({
     where: {
       deletedAt: null,
       status: { notIn: ["DRAFT", "CREDIT_NOTE"] },
+      tenantId: auth.tenantId, // TENANT SCOPING
     },
     take: 200,
   });
@@ -382,14 +501,13 @@ async function reconcileInvoiceStatuses(): Promise<SettlementResult> {
       result.processed++;
 
       const payments = await prisma.payment.aggregate({
-        where: { invoiceId: invoice.id, status: "PAID" },
+        where: { invoiceId: invoice.id, status: "PAID", tenantId: auth.tenantId }, // TENANT-SCOPED
         _sum: { amount: true },
       });
 
       const totalPaid = Number(payments._sum?.amount ?? 0);
       const invoiceTotal = Number(invoice.total ?? 0);
 
-      // PaymentStatus has no PARTIAL/OVERPAID — map to closest valid values.
       let newStatus: "UNPAID" | "PARTIALLY_PAID" | "PAID" = "UNPAID";
 
       if (totalPaid === 0) {
@@ -401,8 +519,29 @@ async function reconcileInvoiceStatuses(): Promise<SettlementResult> {
       }
 
       if (invoice.paymentStatus !== newStatus) {
+        // AUDIT LOG: Before status reconciliation
+        await prisma.auditLog.create({
+          data: {
+            entityName: "INVOICE",
+            entityId: invoice.id,
+            actionType: "UPDATE",
+            actorId: auth.authorizedByUserId,
+            actorRole: "ADMIN",
+            tenantId: auth.tenantId,
+            changes: {
+              previousPaymentStatus: invoice.paymentStatus,
+              newPaymentStatus: newStatus,
+              totalPaid: totalPaid,
+              invoiceTotal: invoiceTotal,
+              approvedBy: auth.authorizedBy,
+              approvalReference: auth.approvalReference,
+            },
+          },
+        });
+
+        // AUTHORIZED MUTATION: Reconcile invoice payment status
         await prisma.invoice.update({
-          where: { id: invoice.id },
+          where: { id: invoice.id, tenantId: auth.tenantId }, // TENANT-SCOPED
           data: { paymentStatus: newStatus },
         });
 
@@ -426,14 +565,22 @@ async function reconcileInvoiceStatuses(): Promise<SettlementResult> {
 }
 
 /**
- * Manual trigger for processing a specific invoice settlement
+ * Manual trigger for processing a specific invoice settlement — REQUIRES authorization.
  */
-export async function processInvoiceSettlement(invoiceId: string): Promise<SettlementDetail | null> {
+export async function processInvoiceSettlement(
+  invoiceId: string,
+  auth: SettlementAuth
+): Promise<SettlementDetail | null> {
   const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
   if (!invoice) return null;
 
+  // TENANT VERIFICATION
+  if (invoice.tenantId !== auth.tenantId) {
+    throw new Error("Cross-tenant access blocked");
+  }
+
   const payments = await prisma.payment.aggregate({
-    where: { invoiceId: invoice.id, status: "PAID" },
+    where: { invoiceId: invoice.id, status: "PAID", tenantId: auth.tenantId }, // TENANT-SCOPED
     _sum: { amount: true },
   });
 
@@ -441,10 +588,32 @@ export async function processInvoiceSettlement(invoiceId: string): Promise<Settl
   const invoiceTotal = Number(invoice.total ?? 0);
 
   if (totalPaid >= invoiceTotal) {
+    // AUDIT LOG
+    await prisma.auditLog.create({
+      data: {
+        entityName: "INVOICE",
+        entityId: invoice.id,
+        actionType: "UPDATE",
+        actorId: auth.authorizedByUserId,
+        actorRole: "ADMIN",
+        tenantId: auth.tenantId,
+        changes: {
+          previousPaymentStatus: invoice.paymentStatus,
+          newPaymentStatus: "PAID",
+          paidDate: new Date().toISOString(),
+          approvedBy: auth.authorizedBy,
+          approvalReference: auth.approvalReference,
+          settlementType: "MANUAL",
+        },
+      },
+    });
+
+    // AUTHORIZED MUTATION
     await prisma.invoice.update({
-      where: { id: invoice.id },
+      where: { id: invoice.id, tenantId: auth.tenantId },
       data: { paymentStatus: "PAID", paidDate: new Date() },
     });
+
     return {
       invoiceId: invoice.id,
       invoiceNumber: invoice.invoiceNumber,

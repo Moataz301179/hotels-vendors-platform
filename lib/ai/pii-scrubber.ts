@@ -10,7 +10,7 @@
  * - Credit card numbers (13-19 digits with optional separators)
  * - Names that appear near PII context (best-effort)
  *
- * Used before sending context to Groq/xAI (external providers).
+ * Used before sending context to any external LLM providers.
  * Ollama (local) does NOT need scrubbing.
  */
 

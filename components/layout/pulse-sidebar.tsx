@@ -82,6 +82,7 @@ const ROLE_NAV: Record<
         { icon: FileText, label: "Invoices", href: "/hotel/invoices" },
         { icon: Calculator, label: "Accounting", href: "/hotel/accounting" },
         { icon: ShoppingBag, label: "Checkout", href: "/hotel/checkout" },
+        { icon: TrendingUp, label: "Opportunities", href: "/hotel/opportunities" },
       ],
     },
     {
@@ -94,7 +95,7 @@ const ROLE_NAV: Record<
     {
       section: "COMMERCIAL",
       items: [
-        { icon: TrendingUp, label: "Opportunities", href: "/intelligence/opportunities" },
+        { icon: Eye, label: "Discovery", href: "/intelligence/discovery" },
         { icon: History, label: "Monitoring", href: "/intelligence/monitoring" },
       ],
     },

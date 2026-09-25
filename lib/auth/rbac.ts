@@ -24,7 +24,6 @@ export async function hasPermission(
   ctx: TenantContext,
   permissionCode: string
 ): Promise<boolean> {
-  // Platform Admin bypass
   if (ctx.platformRole === "ADMIN") return true;
 
   const user = await prisma.user.findUnique({
@@ -34,14 +33,38 @@ export async function hasPermission(
 
   if (!user) return false;
 
-  const rolePermission = await prisma.rolePermission.findFirst({
-    where: {
-      roleId: user.roleId,
-      permission: { code: permissionCode },
-    },
-  });
+  // Check permissions on the user's assigned role
+  if (user.roleId) {
+    const rolePermission = await prisma.rolePermission.findFirst({
+      where: {
+        roleId: user.roleId,
+        permission: { code: permissionCode },
+      },
+    });
+    if (rolePermission) return true;
+  }
 
-  return rolePermission !== null;
+  // Fallback: inherit permissions from platform-level role with the same name
+  if (user.roleId) {
+    const userRole = await prisma.role.findUnique({
+      where: { id: user.roleId },
+      select: { name: true },
+    });
+    if (userRole) {
+      const platformRolePerm = await prisma.rolePermission.findFirst({
+        where: {
+          role: {
+            tenantId: "cmpel4w0z0000crjivswqpywh",
+            name: userRole.name,
+          },
+          permission: { code: permissionCode },
+        },
+      });
+      if (platformRolePerm) return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -78,7 +101,6 @@ export async function requireAnyPermission(
  */
 export async function getUserPermissions(ctx: TenantContext): Promise<string[]> {
   if (ctx.platformRole === "ADMIN") {
-    // Admin gets all permission codes
     const all = await prisma.permission.findMany({ select: { code: true } });
     return all.map((p) => p.code);
   }
@@ -90,10 +112,35 @@ export async function getUserPermissions(ctx: TenantContext): Promise<string[]> 
 
   if (!user) return [];
 
-  const perms = await prisma.rolePermission.findMany({
-    where: { roleId: user.roleId },
-    select: { permission: { select: { code: true } } },
-  });
+  const perms = new Set<string>();
 
-  return perms.map((rp) => rp.permission.code);
+  if (user.roleId) {
+    const directPerms = await prisma.rolePermission.findMany({
+      where: { roleId: user.roleId },
+      select: { permission: { select: { code: true } } },
+    });
+    directPerms.forEach((rp) => perms.add(rp.permission.code));
+  }
+
+  // Fallback: inherit from platform-level role with the same name
+  if (user.roleId) {
+    const userRole = await prisma.role.findUnique({
+      where: { id: user.roleId },
+      select: { name: true },
+    });
+    if (userRole) {
+      const platformRolePerms = await prisma.rolePermission.findMany({
+        where: {
+          role: {
+            tenantId: "cmpel4w0z0000crjivswqpywh",
+            name: userRole.name,
+          },
+        },
+        select: { permission: { select: { code: true } } },
+      });
+      platformRolePerms.forEach((rp) => perms.add(rp.permission.code));
+    }
+  }
+
+  return Array.from(perms);
 }

@@ -1,7 +1,7 @@
 /**
  * Workspace AI Endpoint — Streaming
  * Authenticated users only. Quota-enforced. Persistent conversations.
- * Uses Ollama via Vercel AI SDK with fallback to xAI Groq.
+ * Uses Ollama via Vercel AI SDK. Fallback: non-streaming Ollama via model-router.
  */
 
 import { NextRequest, NextResponse } from "next/server";
