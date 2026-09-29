@@ -1,0 +1,167 @@
+{
+  "_meta": {
+    "created_at": "2026-09-29T01:49:00Z",
+    "created_by": "Hermes-DeepSeek Harness",
+    "source": "Master Hermes Prompt \u00a711 + Final Implementation Plan"
+  },
+  "canonical_repository": {
+    "root": "/Users/Moatazi/hotels-vendors-new",
+    "branch": "main",
+    "head": "71cc2c260f0793fac77726c7037519db3568f853",
+    "remote": "github.com/Moataz301179/hotels-vendors-new.git",
+    "verified_at": "2026-09-29T01:49:00Z"
+  },
+  "current_phase": "P1_INGESTION",
+  "phase_contract": {
+    "phase_id": "P1_INGESTION",
+    "objective": "Create the hotel data ingestion boundary: canonical schema, evidence chain types, ingestion API (parse + validate + normalize), evidence store (persistence with provenance), normalizer, TB diagnostic engine, savings calculator (with methodology enforcement), management report generator, and HTTP ingestion endpoint.",
+    "target_output": "All Phase 1 files created and type-checked. P0 corrections applied (suppliers.ts + runtime.ts). Ingestion pipeline accepts a real Excel/CSV file, parses it, validates it, normalizes it, persists it with full provenance, and produces a validation report + diagnostic output.",
+    "allowed_inputs": [
+      "New file creation in lib/hotel-data/ and app/api/v1/hotel-data/",
+      "Modification of p0/suppliers.ts, p0/runtime.ts, p0/index.ts (corrections)",
+      "TypeScript type checking via tsc or LSP"
+    ],
+    "allowed_files": [
+      "lib/hotel-data/canonical-schema.ts (CREATE)",
+      "lib/hotel-data/evidence-chain.ts (CREATE)",
+      "lib/hotel-data/ingestion-api.ts (CREATE)",
+      "lib/hotel-data/hotel-data-evidence-store.ts (CREATE)",
+      "lib/hotel-data/normalizer.ts (CREATE)",
+      "lib/hotel-data/tb-diagnostic-engine.ts (CREATE)",
+      "lib/hotel-data/savings-calculator.ts (CREATE)",
+      "lib/hotel-data/management-report-generator.ts (CREATE)",
+      "app/api/v1/hotel-data/ingest/route.ts (CREATE)",
+      "p0/suppliers.ts (MODIFY \u2014 remove loadMinimalSample)",
+      "p0/runtime.ts (MODIFY \u2014 discard workaround, rewrite)",
+      "p0/index.ts (MODIFY \u2014 update exports)",
+      "docs/implementation-state.json (UPDATE)",
+      "docs/phase1- Scope.md (CREATE \u2014 this file)"
+    ],
+    "forbidden_files": [
+      "next.config.ts",
+      "app/globals.css",
+      "app/layout.tsx",
+      "app/(marketing)/",
+      "app/(auth)/",
+      "app/(dashboard)/",
+      "app/api/v1/auth/",
+      "app/api/v1/tenants/",
+      "app/api/v1/roles/",
+      "app/api/v1/users/",
+      "lib/prisma.ts",
+      "lib/audit/",
+      "lib/fintech/",
+      "lib/eta/",
+      "lib/swarm/",
+      "data/coastal-hotels.json",
+      "data/red-sea-suppliers.json",
+      "data/egyptian-market-v2.json",
+      "data/verified_executive_leads.json",
+      "ecosystem.config.js",
+      "any VPS/Nginx/PM2 configuration"
+    ],
+    "dependencies": [
+      "Node.js runtime",
+      "npm (for test execution)",
+      "exceljs (existing dependency)",
+      "fast-csv (existing dependency)",
+      "vitest (existing dependency)",
+      "Git (for provenance)"
+    ],
+    "acceptance_tests": [
+      "All 8 new files in lib/hotel-data/ exist and are non-empty",
+      "app/api/v1/hotel-data/ingest/route.ts exists",
+      "p0/suppliers.ts no longer contains loadMinimalSample",
+      "p0/runtime.ts no longer contains checkScopeAuthorized workaround",
+      "TypeScript type checking passes on new files (no type errors in LSP)",
+      "Ingestion pipeline can parse a real Excel/CSV test file",
+      "Validation report is produced with correct structure",
+      "Evidence store persists and retrieves ingestion events",
+      "TB diagnostic produces cost pools + drill-down requests from accounts",
+      "Savings calculator correctly classifies CALCULATED_OPPORTUNITY vs SCENARIO",
+      "Management report generates actionable output from diagnostic + register"
+    ],
+    "invariants": [
+      "One canonical application root only",
+      "No legacy contamination of new code paths",
+      "p0 intelligence/evidence/security modules are supporting infrastructure, not business MVP",
+      "No fabricated data accepted as evidence",
+      "No fintech/ETA/factoring/payments introduced",
+      "No Paperclip as HV product feature",
+      "sourceCurrency preserved on every record \u2014 no EGP default",
+      "Evidence chain: SourceRecord \u2192 DerivedFact \u2192 Inference \u2192 CalculatedOpportunity \u2192 Scenario/Hypothesis",
+      "baseline - proposed valid ONLY when methodology is evidence-backed",
+      "No template files created",
+      "Parser limits (5MB/16-sheet/20K-row) are implementation constraints, not business requirements"
+    ],
+    "required_evidence": [
+      "All 8 lib/hotel-data/ files created with non-zero size",
+      "app/api/v1/hotel-data/ingest/route.ts created",
+      "p0/suppliers.ts corrected (loadMinimalSample removed)",
+      "p0/runtime.ts corrected (workaround removed)",
+      "TypeScript type errors resolved (LSP clean or acceptable)",
+      "End-to-end ingestion test: file \u2192 parse \u2192 validate \u2192 normalize \u2192 persist \u2192 diagnostic"
+    ],
+    "fail_conditions": [
+      "Any forbidden file was modified",
+      "p0 corrections not applied",
+      "TypeScript type errors prevent compilation",
+      "Ingestion pipeline fails to parse a real test file",
+      "Evidence store fails to persist/retrieve",
+      "Savings calculator produces SCENARIO for evidence-backed methodology"
+    ],
+    "block_conditions": [
+      "Required dependency missing (exceljs, vitest, etc.)",
+      "TypeScript configuration prevents module resolution",
+      "LSP diagnostics block file save"
+    ],
+    "exit_conditions": [
+      "All Phase 1 files created and non-empty",
+      "P0 corrections applied",
+      "TypeScript type checking passes (or acceptable LSP errors)",
+      "Ingestion pipeline functional (end-to-end test)",
+      "Evidence store functional",
+      "TB diagnostic functional",
+      "Savings calculator functional",
+      "Management report generator functional",
+      "Gate status = PASS",
+      "Next phase token = P1_INGESTION_COMPLETE"
+    ],
+    "next_phase_token": "P1_INGESTION_COMPLETE"
+  },
+  "contract_hash": "",
+  "gate_status": "IN_PROGRESS",
+  "evidence_references": [
+    "Repository HEAD: 71cc2c2 on main (verified via git rev-parse)",
+    "Canonical repo root: /Users/Moatazi/hotels-vendors-new (verified)",
+    "Existing P0 modules: core/types.ts, entity-resolution.ts, authorized-testing.ts, evidence/store.ts, findings/taxonomy.ts, supplier-onboarding-pipeline.ts, procurement-workflow-link.ts",
+    "Existing parser: lib/parsers/excel-parser.ts (3,925 bytes)",
+    "Existing upload route: app/api/v1/upload/route.ts (1,825 bytes)",
+    "Package.json scripts: npm run build, vitest configs present"
+  ],
+  "tests": [],
+  "files_changed": [
+    "lib/hotel-data/canonical-schema.ts (CREATE)",
+    "lib/hotel-data/evidence-chain.ts (CREATE)",
+    "lib/hotel-data/ingestion-api.ts (CREATE)",
+    "lib/hotel-data/hotel-data-evidence-store.ts (CREATE)",
+    "lib/hotel-data/normalizer.ts (CREATE)",
+    "lib/hotel-data/tb-diagnostic-engine.ts (CREATE)",
+    "lib/hotel-data/savings-calculator.ts (CREATE)",
+    "lib/hotel-data/management-report-generator.ts (CREATE)",
+    "app/api/v1/hotel-data/ingest/route.ts (CREATE)",
+    "docs/implementation-state.json (UPDATE)"
+  ],
+  "files_not_changed": [],
+  "blockers": [
+    "p0/suppliers.ts still contains fabricated loadMinimalSample fallback \u2014 must be removed before P0 runtime can be used",
+    "p0/runtime.ts still contains checkScopeAuthorized workaround \u2014 must be removed and rewritten"
+  ],
+  "known_limitations": [
+    "P0 corrections (suppliers.ts + runtime.ts) not yet applied \u2014 flagged for correction",
+    "No end-to-end test executed yet \u2014 pipeline not yet verified",
+    "No test files created yet for the new modules",
+    "Parser limits documented as implementation constraints but not independently verified"
+  ],
+  "next_phase_token": null
+}

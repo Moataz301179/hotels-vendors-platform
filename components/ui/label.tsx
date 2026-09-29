@@ -21,3 +21,4 @@ const Label = React.forwardRef<
 Label.displayName = "Label";
 
 export { Label };
+export default Label;

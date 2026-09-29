@@ -129,7 +129,7 @@ export function OlivAdCarousel() {
       style={{
         borderColor: "rgba(var(--accent-base-rgb),0.25)",
         background: "linear-gradient(135deg, rgba(12,12,18,0.96) 0%, rgba(18,18,26,0.99) 100%)",
-        backdropFilter: "blur(16px)",
+        backdropFilter: "none",
         WebkitBackdropFilter: "blur(16px)",
         boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), 0 0 40px rgba(var(--accent-base-rgb),0.12)",
       }}

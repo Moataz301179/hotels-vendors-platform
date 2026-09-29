@@ -79,3 +79,17 @@ export class SecurityIntelligenceController {
     };
   }
 }
+
+/**
+ * Standalone authorization check — mirrors SecurityIntelligenceController
+ * logic for cases where a controller instance is not available.
+ */
+export function isScopeAuthorized(
+  scope: AuthorizedTestingScope,
+  _accessType?: string,
+): boolean {
+  if (!scope.authorizedBy || scope.authorizedBy.trim().length === 0) return false;
+  if (scope.targetEntityIds.length === 0) return false;
+  if (scope.permittedActions.length === 0) return false;
+  return true;
+}

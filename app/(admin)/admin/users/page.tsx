@@ -1,175 +1,103 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Users, Search, Loader2, AlertCircle, Building2, Package, Landmark, Truck,
-} from "lucide-react";
-import { useApi } from "@/lib/hooks/use-api";
+import { useEffect, useState } from "react";
+import { usePrefs } from "@/i18n/provider";
+import { useApp } from "@/lib/store";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
+import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { IcSearch } from "@/components/icons";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  role: string;
-  platformRole: string;
-  status: string;
-  tenant: { id: string; name: string; slug: string };
-  hotel: { id: string; name: string } | null;
-  supplier: { id: string; name: string } | null;
-  lastActive: string | null;
-  createdAt: string;
-}
+export default function AdminUsersPage() {
+  const { t, lang } = usePrefs();
+  const { data } = useApp();
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
 
-interface UsersResponse {
-  users: User[];
-  pagination: { page: number; limit: number; total: number };
-}
-
-const ENTITY_ICONS: Record<string, React.ElementType> = {
-  hotel: Building2,
-  supplier: Package,
-  partner: Landmark,
-  carrier: Truck,
-};
-
-export default function UsersPage() {
-  const [q, setQ] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-
-  const queryParams = new URLSearchParams();
-  if (q.trim()) queryParams.set("search", q.trim());
-  if (roleFilter !== "all") queryParams.set("role", roleFilter);
-  queryParams.set("limit", "50");
-
-  const { data, loading, error, refetch } = useApi<UsersResponse>(
-    `/api/v1/admin/users?${queryParams.toString()}`
-  );
+  useEffect(() => {
+    const id = setTimeout(() => setLoading(false), 350);
+    return () => clearTimeout(id);
+  }, []);
 
   const users = data?.users || [];
+  const filtered = users.filter((u: any) => {
+    if (search && !u.name?.toLowerCase().includes(search.toLowerCase()) && !u.email?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (roleFilter && u.platformRole !== roleFilter) return false;
+    return true;
+  });
 
-  const formatDateTime = (date: string | null) => {
-    if (!date) return "Never";
-    return new Date(date).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  if (loading) {
+    return (
+      <RequireAuth>
+        <AppShell active="/admin/users">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="skeleton h-8 w-64 rounded-lg" />
+            <div className="skeleton h-8 w-48 rounded-lg mt-3" />
+          </div>
+        </AppShell>
+      </RequireAuth>
+    );
+  }
 
   return (
     <RequireAuth>
       <AppShell active="/admin/users">
-        <Guard roles={["platform_admin"]}>
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-semibold text-white mb-1">Users</h1>
-              <p className="text-sm text-foreground-muted">
-                {data?.pagination ? `${data.pagination.total} users` : "Platform users"}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search by name or email..."
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="w-full ps-10 pe-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white placeholder:text-foreground-muted focus:outline-none focus:border-accent transition-colors"
-                />
-              </div>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white focus:outline-none focus:border-accent"
-              >
-                <option value="all">All Roles</option>
-                <option value="platform_admin">Platform Admin</option>
-                <option value="hotel_admin">Hotel Admin</option>
-                <option value="supplier_manager">Supplier Manager</option>
-              </select>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 size={32} className="text-accent animate-spin" />
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
-                <p className="text-foreground-muted text-sm">{error}</p>
-                <button onClick={refetch} className="text-accent text-sm mt-2 hover:underline">Retry</button>
-              </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
-                <Users size={32} className="mx-auto text-foreground-muted mb-3" />
-                <h3 className="text-lg font-medium text-white mb-1">No Users Found</h3>
-                <p className="text-foreground-muted text-sm max-w-md mx-auto">
-                  No users match your search criteria. Users appear here when they register
-                  and are assigned roles.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-surface-1 border border-border-subtle rounded-xl overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border-subtle">
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">User</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Tenant</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Role</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Status</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Last Active</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-subtle">
-                    {users.map((user) => {
-                      const entityType = user.hotel ? "hotel" : user.supplier ? "supplier" : "platform";
-                      const EntityIcon = ENTITY_ICONS[entityType] || Users;
-                      return (
-                        <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5">
-                                <EntityIcon size={14} className="text-foreground-muted" />
-                              </div>
-                              <div>
-                                <div className="text-white font-medium text-sm">{user.name}</div>
-                                <div className="text-xs text-foreground-muted">{user.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-foreground-muted">{user.tenant.name}</td>
-                          <td className="px-4 py-3">
-                            <span className="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
-                              {user.platformRole}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              user.status === "ACTIVE"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                : "bg-gray-500/10 text-gray-400 border border-gray-500/20"
-                            }`}>
-                              {user.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-foreground-muted">
-                            {formatDateTime(user.lastActive)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-medium">{t("admin.userManagement")}</h2>
+          <Input
+            type="text"
+            placeholder={t("admin.searchUsers")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-64"
+          />
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("admin.name")}</TableHead>
+              <TableHead>{t("admin.email")}</TableHead>
+              <TableHead>{t("admin.role")}</TableHead>
+              <TableHead>{t("admin.tenant")}</TableHead>
+              <TableHead>{t("admin.status")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((u: any) => (
+              <TableRow key={u.id}>
+                <TableCell className="font-medium">{u.name}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{u.platformRole || "user"}</Badge>
+                </TableCell>
+                <TableCell>{u.tenant?.name || "-"}</TableCell>
+                <TableCell>
+                  <Badge variant={u.status === "active" ? "default" : "destructive"}>
+                    {u.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted py-8">
+                  {t("admin.noUsers")}
+                </TableCell>
+              </TableRow>
             )}
-          </div>
-        </Guard>
+          </TableBody>
+        </Table>
       </AppShell>
     </RequireAuth>
   );

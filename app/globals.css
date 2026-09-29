@@ -7,7 +7,7 @@
   --font-display: "Plus Jakarta Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
 
   /* Near-black architectural ink scale */
-  --color-ink-950: #0a0a0b;
+  --color-ink-950: #0a0a0a;
   --color-ink-900: #111113;
   --color-ink-850: #16161a;
   --color-ink-800: #1d1d22;
@@ -19,45 +19,23 @@
   --color-ink-200: #c8c8cf;
   --color-ink-100: #e9e9ed;
 
-  /* Warm paper / fog light surfaces */
-  --color-fog-50: #faf9f6;
-  --color-fog-100: #f4f2ec;
-  --color-fog-200: #ebe8df;
-  --color-fog-300: #ddd9cc;
-
   /* Hairlines */
   --color-line: #e3e1d7;
   --color-linedark: #26262c;
 
-  /* Neutral interface emphasis. Legacy utility names remain internal, but
-   * render as graphite so the product is fundamentally black/white/grey. */
-  --color-brass-200: #e9ebeb;
-  --color-brass-300: #c9cdce;
-  --color-brass-400: #7d8587;
-  --color-brass-500: #17191a;
-  --color-brass-600: #303436;
-  --color-brass-700: #202426;
-
-  /* Rare brand signal: turquoise in light mode. */
-  --signal: #008f9b;
-  --signal-bright: #24dce5;
-  --signal-soft: rgba(0, 143, 155, 0.10);
-  --signal-glow: rgba(36, 220, 229, 0.18);
+  /* Brand signal: HotelsVendors red — ONLY accent color */
+  --signal: #ff3d00;
+  --signal-bright: #ff5a2e;
+  --signal-soft: rgba(255, 61, 0, 0.10);
+  --signal-glow: rgba(255, 61, 0, 0.20);
 }
 
 .dark {
-  --color-brass-200: #eeeeef;
-  --color-brass-300: #c9c9ce;
-  --color-brass-400: #898991;
-  --color-brass-500: #3d3d43;
-  --color-brass-600: #b6b6bd;
-  --color-brass-700: #dedee2;
-
-  /* Rare brand signal: neon violet in dark mode. */
-  --signal: #bd69ff;
-  --signal-bright: #d7a2ff;
-  --signal-soft: rgba(189, 105, 255, 0.10);
-  --signal-glow: rgba(189, 105, 255, 0.20);
+  /* Brand signal: HotelsVendors red — matches light mode */
+  --signal: #ff3d00;
+  --signal-bright: #ff5a2e;
+  --signal-soft: rgba(255, 61, 0, 0.10);
+  --signal-glow: rgba(255, 61, 0, 0.20);
 }
 
 @layer base {
@@ -87,36 +65,32 @@
 
 /* ============================================================
    SURFACE LADDER
-   Light theme: white / warm fog / grey / near-black anchors.
-   Dark theme:  #0a0a0b page → #111113 elevated → #000 anchor,
-   with a wider spacing scale so large dark areas breathe.
-   ============================================================ */
+   Dark-first: #0a0a0a page → #111113 elevated → #000 anchor
+   ═══════════════════════════════════════════════════════════════ */
 
-.sf-page { background-color: #ffffff; }
-.dark .sf-page { background-color: #0a0a0b; }
+.sf-page { background-color: #0a0a0a; }
+.dark .sf-page { background-color: #0a0a0a; }
 
-.sf-alt { background-color: var(--color-fog-50); }
+.sf-alt { background-color: #111113; }
 .dark .sf-alt { background-color: #111113; }
 
-.sf-grey { background-color: var(--color-fog-200); }
+.sf-grey { background-color: #16161a; }
 .dark .sf-grey { background-color: #16161a; }
 
-/* Translucent page surface for sticky headers */
+/* Sticky header surface — opaque dark, NO glass */
 .sf-glass {
-  background-color: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
+  background-color: rgba(10, 10, 10, 0.92);
 }
-.dark .sf-glass { background-color: rgba(10, 10, 11, 0.94); }
 
-/* Architectural black band — the "meaningful black surface" */
+/* Architectural black band */
 .sf-ink {
   background-color: #111113;
   color: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 61, 0, 0.06);
 }
 .dark .sf-ink {
   background-color: #000000;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 61, 0, 0.08);
 }
 
 /* Deepest band (hero / closing CTA) */
@@ -126,41 +100,36 @@
 }
 .dark .sf-void {
   background-color: #000000;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 61, 0, 0.07);
 }
 
-/* ---------- Whitespace rhythm: dark is airier ---------- */
+/* ---------- Whitespace rhythm ---------- */
 .band { padding-block: clamp(3rem, 5.5vw, 5rem); }
 .dark .band { padding-block: clamp(4.25rem, 8vw, 7.5rem); }
 
 .band-lg { padding-block: clamp(3.5rem, 7vw, 6.5rem); }
 .dark .band-lg { padding-block: clamp(5rem, 9.5vw, 9rem); }
 
-/* Grid gutters open up in dark so content floats on the black field */
 .grid-air { gap: 1rem; }
 .dark .grid-air { gap: 1.625rem; }
 
 .grid-air-lg { gap: 1.25rem; }
 .dark .grid-air-lg { gap: 2rem; }
 
-/* Cards breathe more in dark mode */
 .pad-card { padding: 1.25rem; }
 .dark .pad-card { padding: 1.75rem; }
 
 .pad-card-lg { padding: 1.5rem; }
 .dark .pad-card-lg { padding: 2.25rem; }
 
-/* Stack spacing inside cards / lists */
 .stack-air > * + * { margin-top: 0.75rem; }
 .dark .stack-air > * + * { margin-top: 1.125rem; }
 
-/* Shell main block */
 .main-pad { padding-block: 2rem 3rem; }
 @media (min-width: 1024px) { .main-pad { padding-block: 2.5rem 4rem; } }
 .dark .main-pad { padding-block: 2.75rem 4rem; }
 @media (min-width: 1024px) { .dark .main-pad { padding-block: 3.5rem 5.5rem; } }
 
-/* Section inner container */
 .shell { margin-inline: auto; width: 100%; max-width: 1400px; padding-inline: 1rem; }
 @media (min-width: 640px) { .shell { padding-inline: 1.5rem; } }
 
@@ -189,20 +158,21 @@
 
 .grid-ink {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 61, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 61, 0, 0.04) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 .dark .grid-ink { background-size: 64px 64px; }
 
-.glow-brass {
-  background: radial-gradient(900px 420px at 82% -10%, rgba(255, 255, 255, 0.06), transparent 60%);
+/* Soft red glow for hero sections only */
+.glow-signal {
+  background: radial-gradient(900px 420px at 82% -10%, rgba(255, 61, 0, 0.08), transparent 60%);
 }
 .air-glow {
-  background: radial-gradient(1100px 520px at 50% -5%, rgba(255, 255, 255, 0.045), transparent 65%);
+  background: radial-gradient(1100px 520px at 50% -5%, rgba(255, 61, 0, 0.05), transparent 65%);
 }
 
-/* Rare signal helpers: use for micro-retouches, never broad surfaces. */
+/* Signal helpers — micro-retouches only, never broad surfaces */
 .text-signal { color: var(--signal-bright); }
 .border-signal { border-color: var(--signal); }
 .bg-signal { background-color: var(--signal); }
@@ -224,14 +194,15 @@
 .hairline-b { border-bottom: 1px solid var(--color-line); }
 .dark .hairline-b { border-bottom: 1px solid var(--color-linedark); }
 
+/* NO BOLD — font-weight: 400 per locked design standard */
 .kicker {
   font-size: 0.6875rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 400;
 }
 
-* { scrollbar-width: thin; scrollbar-color: rgba(120, 120, 130, 0.35) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 61, 0, 0.35) transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-rise, .anim-fade, .skeleton, .pulse-dot { animation: none !important; }
@@ -239,22 +210,21 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LEGACY CSS VARIABLE MAPPINGS
-   Maps existing page CSS variables to arena design tokens.
+   CSS VARIABLE MAPPINGS
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --bg-canvas: #ffffff;
+  --bg-canvas: #0a0a0a;
   --bg-surface-1: var(--color-ink-900);
   --bg-surface-2: var(--color-ink-850);
   --bg-surface-3: var(--color-ink-800);
   --bg-accent-base: var(--signal);
   --bg-accent-light: var(--signal-bright);
   --bg-accent-muted: var(--signal-soft);
-  --bg-border-invisible: rgba(255, 255, 255, 0.08);
+  --bg-border-invisible: rgba(255, 61, 0, 0.08);
 
-  --text-foreground: #111113;
-  --text-foreground-secondary: var(--color-ink-700);
+  --text-foreground: #e9e9ed;
+  --text-foreground-secondary: var(--color-ink-400);
   --text-foreground-muted: var(--color-ink-500);
   --text-accent-base: #ffffff;
 
@@ -263,12 +233,7 @@
   --accent-light: var(--signal-bright);
   --border-accent: var(--signal-bright);
 
-  --orange-base: var(--signal);
-  --orange-muted: var(--signal-soft);
-  --purple-base: var(--signal);
-  --purple-muted: var(--signal-soft);
-
-  --hero-text-rgb: 17, 17, 19;
+  --hero-text-rgb: 233, 233, 237;
 }
 
 .dark {
@@ -279,7 +244,7 @@
   --bg-accent-base: var(--signal);
   --bg-accent-light: var(--signal-bright);
   --bg-accent-muted: var(--signal-soft);
-  --bg-border-invisible: rgba(255, 255, 255, 0.08);
+  --bg-border-invisible: rgba(255, 61, 0, 0.08);
 
   --text-foreground: var(--color-ink-100);
   --text-foreground-secondary: var(--color-ink-400);
@@ -290,11 +255,6 @@
   --accent-muted: var(--signal-soft);
   --accent-light: var(--signal-bright);
   --border-accent: var(--signal-bright);
-
-  --orange-base: var(--signal);
-  --orange-muted: var(--signal-soft);
-  --purple-base: var(--signal);
-  --purple-muted: var(--signal-soft);
 
   --hero-text-rgb: 233, 233, 237;
 }

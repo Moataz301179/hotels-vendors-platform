@@ -28,7 +28,7 @@ export class EntityResolutionEngine {
   // In production, feeds into graph database (see /docs/intelligence-graph-spec.md planned).
   resolve(
     candidates: ResolutionCandidate[],
-  ): EntityReference | { resolved: false; reason: string; candidates: ResolutionCandidate[] } {
+  ): EntityReference | { resolved: false; reason: string; candidates: ResolutionCandidate[] } | { resolved: true; resolvedId: string; displayNames: string[]; aliases: string[]; entityType: string; identifiers: Record<string, unknown>; confidence: ConfidenceScore; geographicSignals?: Record<string, unknown>; temporalSignals?: { firstSeen: string; lastUpdated: string } } {
     if (candidates.length === 0) {
       return { resolved: false, reason: 'no_candidates', candidates };
     }
@@ -49,6 +49,7 @@ export class EntityResolutionEngine {
       };
     }
     return {
+      resolved: true,
       resolvedId: `entity_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       displayNames: [best.entityRef.displayNames?.[0] || 'unverified_entity'],
       aliases: best.entityRef.aliases || [],

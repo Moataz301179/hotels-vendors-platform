@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Fira_Code, Cairo } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { NotificationProvider } from "@/components/notifications/notification-context";
@@ -18,26 +17,8 @@ if (typeof window === "undefined") {
   initServer();
 }
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
-});
 
-const firaCode = Fira_Code({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
 
-const cairo = Cairo({
-  subsets: ["arabic", "latin"],
-  variable: "--font-arabic",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.hotelsvendors.com"),
@@ -134,7 +115,7 @@ export default function RootLayout({
     <html
       lang="en"
       dir="ltr"
-      className={`h-full ${plusJakarta.variable} ${firaCode.variable} ${cairo.variable}`}
+      className="h-full"
     >
       <head>
         <link rel="dns-prefetch" href="https://www.hotelsvendors.com" />

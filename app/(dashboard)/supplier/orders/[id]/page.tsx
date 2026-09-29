@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { usePrefs } from "@/i18n/provider";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import OrderDetail from "@/components/OrderDetail";
-import { IcArrow } from "@/components/icons";
+
 
 export default function SupplierOrderDetailPage() {
   const params = useParams<{ id: string }>();

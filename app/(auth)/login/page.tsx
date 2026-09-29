@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { Btn, Field, TextInput } from "@/components/ui";
 import PublicHeader from "@/components/PublicHeader";
 import { IcLock, Logo } from "@/components/icons";
+import { Button as Btn } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Input, default as TextInput } from "@/components/ui/input";
+import { Badge as StatePill } from "@/components/ui/badge";
+import { Label, default as Field } from "@/components/ui/label";
 
 export default function LoginPage() {
   const { t, lang } = usePrefs();

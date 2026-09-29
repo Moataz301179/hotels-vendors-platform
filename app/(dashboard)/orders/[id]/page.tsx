@@ -5,8 +5,7 @@ import { useParams } from "next/navigation";
 import { usePrefs } from "@/i18n/provider";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import OrderDetail from "@/components/OrderDetail";
-import { btnCls } from "@/components/ui";
-import { IcArrow } from "@/components/icons";
+import { buttonVariants as btnCls } from "@/components/ui/button";
 import type { Role } from "@/lib/types";
 
 const HOTEL: Role[] = ["hotel_admin", "gm", "finance_director"];

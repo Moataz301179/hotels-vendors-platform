@@ -52,6 +52,7 @@ export const IcLock = (p: P) => <S {...p}><rect x="5" y="10.5" width="14" height
 export const IcOut = (p: P) => <S {...p}><path d="M14.5 8V5.5h-11v13h11V16M9.5 12h11M17.5 8.5 21 12l-3.5 3.5" /></S>;
 export const IcGrid = (p: P) => <S {...p}><rect x="3.5" y="3.5" width="7" height="7" /><rect x="13.5" y="3.5" width="7" height="7" /><rect x="3.5" y="13.5" width="7" height="7" /><rect x="13.5" y="13.5" width="7" height="7" /></S>;
 export const IcPin = (p: P) => <S {...p}><path d="M12 21.5S5 14.8 5 9.8a7 7 0 0 1 14 0c0 5-7 11.7-7 11.7Z" /><circle cx="12" cy="9.8" r="2.6" /></S>;
+export const IcMapPin = (p: P) => <S {...p}><path d="M12 21.5S5 14.8 5 9.8a7 7 0 0 1 14 0c0 5-7 11.7-7 11.7Z" /><circle cx="12" cy="9.8" r="2.6" /></S>;
 export const IcPhone = (p: P) => <S {...p}><path d="M5 3.5h4l1.5 4.5-2.3 1.7a12 12 0 0 0 6.1 6.1l1.7-2.3 4.5 1.5v4a1.5 1.5 0 0 1-1.6 1.5C9.6 20 4 14.4 3.5 5.1A1.5 1.5 0 0 1 5 3.5Z" /></S>;
 export const IcMail = (p: P) => <S {...p}><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></S>;
 export const IcCard = (p: P) => <S {...p}><rect x="2.5" y="5" width="19" height="14" rx="2" /><path d="M2.5 9.5h19M6 15h4" /></S>;

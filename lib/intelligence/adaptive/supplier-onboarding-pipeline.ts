@@ -64,6 +64,7 @@ export function validateSupplierReadiness(record: SupplierOnboardingRecord): {
 export function computeOnboardingProgress(record: SupplierOnboardingRecord): number {
   const stateOrder: SupplierLifecycleState[] = ['DISCOVERED', 'VERIFIED', 'ONBOARDED', 'ACTIVE', 'TRANSACTING'];
   const currentIndex = stateOrder.indexOf(record.state);
+  if (currentIndex < 0) return 0; // unknown state
   return Math.round((currentIndex / (stateOrder.length - 1)) * 100);
 }
 

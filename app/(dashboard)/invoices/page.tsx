@@ -1,20 +1,30 @@
+// app/invoices/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Plus, Search, FileText, Loader2, AlertCircle, Check, X,
-} from "lucide-react";
-import { useApi } from "@/lib/hooks/use-api";
-import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/shared/page-header";
+import { Badge } from "@/components/ui/badge";
+import { IcInvoice } from "@/components/icons";
+import { StatCard } from "@/components/shared/stat-card";
 
 interface Invoice {
   id: string;
   invoiceNumber: string;
-  status: string;
+  orderId: string;
+  hotelId: string;
+  supplierId: string;
+  subtotal: number;
+  vatAmount: number;
   total: number;
-  currency: string;
-  dueDate: string | null;
   issueDate: string;
+  dueDate: string | null;
+  status: string;
+  paymentStatus: string;
+  etaStatus: string;
+  factoringStatus: string;
+  createdAt: string;
   hotel: { id: string; name: string };
   supplier: { id: string; name: string };
   order: { id: string; orderNumber: string };
@@ -22,145 +32,217 @@ interface Invoice {
 
 interface InvoicesResponse {
   invoices: Invoice[];
-  pagination: { page: number; limit: number; total: number };
+  pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  ISSUED: "Issued",
+  SUBMITTED: "Submitted",
+  APPROVED: "Approved",
+  PAID: "Paid",
+  REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
+  OVERDUE: "Overdue",
+  PENDING: "Pending",
+};
+
+const STATUS_TONE: Record<string, "default" | "success" | "warning" | "error" | "outline"> = {
+  DRAFT: "default",
+  ISSUED: "outline",
+  SUBMITTED: "warning",
+  APPROVED: "success",
+  PAID: "success",
+  REJECTED: "error",
+  CANCELLED: "error",
+  OVERDUE: "error",
+  PENDING: "warning",
+};
+
 export default function InvoicesPage() {
-  const [q, setQ] = useState("");
-  const [filter, setFilter] = useState("all");
+  const router = useRouter();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
 
-  const queryParams = new URLSearchParams();
-  if (q.trim()) queryParams.set("search", q.trim());
-  if (filter !== "all") queryParams.set("status", filter);
-  queryParams.set("limit", "50");
-
-  const { data, loading, error, refetch } = useApi<InvoicesResponse>(
-    `/api/v1/invoices?${queryParams.toString()}`
-  );
-
-  const invoices = data?.invoices || [];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "DRAFT": return "text-gray-400 bg-gray-500/10";
-      case "SUBMITTED": return "text-amber-400 bg-amber-500/10";
-      case "APPROVED": return "text-green-400 bg-green-500/10";
-      case "PAID": return "text-blue-400 bg-blue-500/10";
-      case "REJECTED": return "text-red-400 bg-red-500/10";
-      default: return "text-gray-400 bg-gray-500/10";
+  const fetchInvoices = async (p: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/v1/invoices?page=${p}&limit=${limit}`,
+        { headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) throw new Error("Failed to load invoices");
+      const data: InvoicesResponse = await res.json();
+      setInvoices(data.invoices);
+      setTotal(data.pagination.total);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "EGP",
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
+  useEffect(() => { fetchInvoices(page); }, [page]);
 
-  const formatDate = (date: string | null) => {
-    if (!date) return "—";
-    return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  };
+  const totalPages = Math.ceil(total / limit);
 
   return (
-    <RequireAuth>
-      <AppShell active="/invoices">
-        <Guard roles={["hotel_admin", "gm", "finance_director", "supplier_manager", "platform_admin"]}>
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-white mb-1">Invoices</h1>
-                <p className="text-sm text-foreground-muted">
-                  {data?.pagination ? `${data.pagination.total} total invoices` : "Invoice management"}
-                </p>
-              </div>
-              <button className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors">
-                <Plus size={16} />
-                New Invoice
-              </button>
-            </div>
+    <DashboardShell role="hotel">
+      <PageHeader
+        title="Invoices"
+        description="View and manage billing invoices for procurement orders"
+        action={
+          <Button size="sm" asChild>
+            <a href="/api/v1/invoices">Export</a>
+          </Button>
+        }
+      />
 
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search by invoice #..."
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="w-full ps-10 pe-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white placeholder:text-foreground-muted focus:outline-none focus:border-accent transition-colors"
-                />
-              </div>
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-2 bg-surface-1 border border-border-subtle rounded-xl text-white focus:outline-none focus:border-accent"
-              >
-                <option value="all">All Status</option>
-                <option value="DRAFT">Draft</option>
-                <option value="SUBMITTED">Submitted</option>
-                <option value="APPROVED">Approved</option>
-                <option value="PAID">Paid</option>
-                <option value="REJECTED">Rejected</option>
-              </select>
-            </div>
+      {/* Summary */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <StatCard
+          title="Total Invoices"
+          value={total}
+          icon={IcInvoice}
+        />
+        <StatCard
+          title="Issued"
+          value={invoices.filter((i) => i.status === "ISSUED").length}
+          icon={IcInvoice}
+        />
+        <StatCard
+          title="Approved"
+          value={invoices.filter((i) => i.status === "APPROVED").length}
+          icon={IcInvoice}
+        />
+        <StatCard
+          title="Pending Payment"
+          value={invoices.filter((i) => i.paymentStatus === "UNPAID").length}
+          icon={IcInvoice}
+        />
+      </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 size={32} className="text-accent animate-spin" />
+      {error && (
+        <Card className="p-4 mb-6 border-red-500/30 bg-red-500/5">
+          <p className="text-sm text-red-300">{error}</p>
+        </Card>
+      )}
+
+      {loading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i} className="p-4">
+              <div className="flex gap-4">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-5 w-28" />
               </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
-                <p className="text-foreground-muted text-sm">{error}</p>
-                <button onClick={refetch} className="text-accent text-sm mt-2 hover:underline">Retry</button>
-              </div>
-            ) : invoices.length === 0 ? (
-              <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
-                <FileText size={32} className="mx-auto text-foreground-muted mb-3" />
-                <h3 className="text-lg font-medium text-white mb-1">No Invoices Yet</h3>
-                <p className="text-foreground-muted text-sm max-w-md mx-auto">
-                  Invoices are created from delivered orders. When suppliers submit invoices,
-                  they will appear here for review and approval.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-surface-1 border border-border-subtle rounded-xl overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border-subtle">
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Invoice</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Order</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Party</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Due</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Amount</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-foreground-muted uppercase">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-subtle">
-                    {invoices.map((invoice) => (
-                      <tr key={invoice.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-4 py-3 text-white font-medium">{invoice.invoiceNumber}</td>
-                        <td className="px-4 py-3 text-sm text-foreground-muted">{invoice.order.orderNumber}</td>
-                        <td className="px-4 py-3 text-sm text-foreground-secondary">{invoice.supplier.name}</td>
-                        <td className="px-4 py-3 text-sm text-foreground-muted">{formatDate(invoice.dueDate)}</td>
-                        <td className="px-4 py-3 text-right font-medium text-white">{formatMoney(invoice.total)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-1 text-xs rounded ${getStatusColor(invoice.status)}`}>
-                            {invoice.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            </Card>
+          ))}
+        </div>
+      ) : invoices.length === 0 ? (
+        <Card className="p-12 text-center">
+          <IcInvoice className="h-10 w-10 text-slate-500 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-white mb-1">No invoices yet</h3>
+          <p className="text-sm text-slate-400 mb-4">
+            Invoices will appear here once procurement orders are billed.
+          </p>
+          <Button size="sm" variant="outline" asChild>
+            <a href="/orders">Browse Orders</a>
+          </Button>
+        </Card>
+      ) : (
+        <Card className="p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Order</TableHead>
+                  <TableHead>Supplier / Hotel</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Issue Date</TableHead>
+                  <TableHead>Due Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoices.map((inv) => (
+                  <TableRow key={inv.id} className="cursor-pointer hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white">{inv.invoiceNumber}</span>
+                        <span className="text-xs text-slate-500">{inv.id.slice(0, 8)}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 text-sm text-slate-300 font-mono text-xs">
+                      {inv.order.orderNumber ?? "—"}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="text-sm text-white">{inv.supplier.name}</div>
+                      <div className="text-xs text-slate-500">{inv.hotel.name}</div>
+                    </td>
+                    <td className="py-3.5 px-4 text-sm font-medium text-white text-right">
+                      EGP {inv.total.toLocaleString("en-EG", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge
+                        variant={STATUS_TONE[inv.status] || "default"}
+                        className="text-xs"
+                      >
+                        {STATUS_LABELS[inv.status] ?? inv.status}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4 text-sm text-slate-400">
+                      {inv.issueDate ? new Date(inv.issueDate).toLocaleDateString("en-EG") : "—"}
+                    </td>
+                    <td className="py-3.5 px-4 text-sm text-slate-400">
+                      {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString("en-EG") : "—"}
+                    </td>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </Guard>
-      </AppShell>
-    </RequireAuth>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 gap-3">
+          <p className="text-xs text-slate-500">
+            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total} invoices
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Previous
+            </Button>
+            <span className="text-xs text-slate-400 px-2">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </DashboardShell>
   );
 }

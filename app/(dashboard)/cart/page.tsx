@@ -1,224 +1,254 @@
+// app/cart/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import {
-  Plus, Trash2, Loader2, AlertCircle, ShoppingCart, Package,
-} from "lucide-react";
-import { useApi } from "@/lib/hooks/use-api";
-import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  notes: string | null;
-  unitPrice: number | null;
-  product: {
-    id: string;
-    name: string;
-    sku: string;
-    category: string;
-    unitPrice: number;
-    stockQuantity: number;
-    supplier: { id: string; name: string; city: string };
-  };
-}
-
-interface CartResponse {
-  cart: {
-    id: string;
-    items: CartItem[];
-  };
-}
+import { useEffect, useState } from "react";
+import { useCart } from "@/components/cart/cart-context";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/shared/page-header";
+import { Btn } from "@/components/ui/button";
+import { IcCart, IcPlus, IcMinus, IcBox } from "@/components/icons";
+import { Trash2, Minus, Plus, ArrowRight } from "lucide-react";
+import { StatCard } from "@/components/shared/stat-card";
 
 export default function CartPage() {
-  const { data, loading, error, refetch } = useApi<CartResponse>("/api/v1/cart");
-  const [submitting, setSubmitting] = useState(false);
+  const { items, totalItems, totalPrice, subtotal, removeItem, updateQuantity, clearCart } = useCart();
+  const [loading, setLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
-  const cart = data?.cart;
-  const items = cart?.items || [];
-
-  const handleAdd = async (productId: string) => {
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+    setLoading(true);
+    setCheckoutError(null);
     try {
-      await fetch("/api/v1/cart", {
+      const res = await fetch("/api/v1/checkout", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, quantity: 1 }),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            id: i.id,
+            productId: i.productId,
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice ?? i.price,
+            supplierId: i.supplierId,
+          })),
+          subtotal,
+          total: totalPrice,
+        }),
       });
-      refetch();
-    } catch {
-      // Error handled by useApi
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Checkout failed");
+      }
+      setCheckoutSuccess(true);
+      clearCart();
+    } catch (e) {
+      setCheckoutError(e instanceof Error ? e.message : "Checkout failed");
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleUpdate = async (itemId: string, quantity: number) => {
-    try {
-      await fetch("/api/v1/cart", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId, quantity }),
-      });
-      refetch();
-    } catch {
-      // Error handled by useApi
-    }
-  };
-
-  const handleRemove = async (itemId: string) => {
-    try {
-      await fetch(`/api/v1/cart?itemId=${itemId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      refetch();
-    } catch {
-      // Error handled by useApi
-    }
-  };
-
-  const handleClear = async () => {
-    try {
-      await fetch("/api/v1/cart", {
-        method: "DELETE",
-        credentials: "include",
-      });
-      refetch();
-    } catch {
-      // Error handled by useApi
-    }
-  };
-
-  const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "EGP",
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const total = items.reduce((sum, item) => sum + (item.unitPrice || item.product?.unitPrice || 0) * item.quantity, 0);
 
   return (
-    <RequireAuth>
-      <AppShell active="/cart">
-        <Guard roles={["hotel_admin", "gm", "finance_director"]}>
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-white mb-1">Cart</h1>
-                <p className="text-sm text-foreground-muted">
-                  {items.length} items in cart
-                </p>
-              </div>
-              {items.length > 0 && (
-                <button
-                  onClick={handleClear}
-                  className="text-foreground-muted hover:text-red-400 text-sm transition-colors"
-                >
-                  Clear Cart
-                </button>
-              )}
-            </div>
+    <DashboardShell role="hotel">
+      <PageHeader
+        title="Shopping Cart"
+        description={`${totalItems} item${totalItems !== 1 ? "s" : ""} in your cart`}
+        action={
+          items.length > 0 ? (
+            <Button size="sm" variant="outline" onClick={clearCart}>
+              <IcTrash className="h-4 w-4" /> Clear Cart
+            </Button>
+          ) : null
+        }
+      />
 
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 size={32} className="text-accent animate-spin" />
+      {checkoutSuccess && (
+        <Card className="p-4 mb-6 border-emerald-500/30 bg-emerald-500/5">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-emerald-300">Order placed successfully</p>
+              <p className="text-xs text-emerald-400/70">You will be redirected to confirm your order shortly.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {checkoutError && (
+        <Card className="p-4 mb-6 border-red-500/30 bg-red-500/5">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg className="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-red-300">Checkout error</p>
+              <p className="text-xs text-red-400/70">{checkoutError}</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Cart items */}
+        <div className="lg:col-span-2">
+          {items.length === 0 ? (
+            <Card className="p-12 text-center">
+              <div className="h-14 w-14 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto mb-4">
+                <IcCart className="h-7 w-7 text-slate-500" />
               </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertCircle size={24} className="mx-auto text-amber-400 mb-2" />
-                <p className="text-foreground-muted text-sm">{error}</p>
-              </div>
-            ) : items.length === 0 ? (
-              <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
-                <ShoppingCart size={32} className="mx-auto text-foreground-muted mb-3" />
-                <h3 className="text-lg font-medium text-white mb-1">Cart Empty</h3>
-                <p className="text-foreground-muted text-sm max-w-md mx-auto mb-4">
-                  Browse the marketplace and add products to your cart.
-                </p>
-                <Link
-                  href="/marketplace"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors"
-                >
-                  Browse Marketplace
-                </Link>
-              </div>
-            ) : (
-              <div className="grid items-start gap-6 xl:grid-cols-3">
-                <div className="space-y-4 xl:col-span-2">
-                  {items.map((item) => {
-                    const price = item.unitPrice || item.product?.unitPrice || 0;
-                    return (
-                      <div key={item.id} className="bg-surface-1 border border-border-subtle rounded-xl p-4 flex items-center gap-4">
-                        <div className="w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center">
-                          <Package size={20} className="text-foreground-muted" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Link href={`/marketplace/${item.productId}`} className="text-white font-medium hover:text-accent transition-colors">
-                            {item.product?.name}
-                          </Link>
-                          <div className="text-xs text-foreground-muted">
-                            {item.product?.supplier?.name} • {item.product?.sku}
-                          </div>
-                          <div className="text-accent font-semibold mt-1">{formatMoney(price)}</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleUpdate(item.id, Math.max(1, item.quantity - 1))}
-                            className="w-8 h-8 flex items-center justify-center rounded border border-border-subtle hover:bg-white/5 transition-colors"
-                          >
-                            -
-                          </button>
-                          <span className="w-12 text-center text-white">{item.quantity}</span>
-                          <button
-                            onClick={() => handleUpdate(item.id, item.quantity + 1)}
-                            className="w-8 h-8 flex items-center justify-center rounded border border-border-subtle hover:bg-white/5 transition-colors"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div className="w-24 text-right text-white font-semibold">
-                          {formatMoney(price * item.quantity)}
+              <h3 className="text-lg font-semibold text-white mb-1">Your cart is empty</h3>
+              <p className="text-sm text-slate-400 mb-4">
+                Browse the marketplace to add products to your cart.
+              </p>
+              <Button size="sm" variant="outline" asChild>
+                <a href="/marketplace">Browse Marketplace</a>
+              </Button>
+            </Card>
+          ) : (
+            <Card className="p-0 overflow-hidden">
+              <div className="divide-y divide-slate-700/30">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex gap-4 p-4 hover:bg-white/[0.02] transition-colors"
+                  >
+                    {/* Product image placeholder */}
+                    <div className="h-16 w-16 rounded-lg bg-slate-800/60 flex items-center justify-center shrink-0 border border-slate-700/30">
+                      <IcBox className="h-6 w-6 text-slate-500" />
+                    </div>
+
+                    {/* Product details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="text-sm font-medium text-white truncate">
+                            {item.name}
+                          </h4>
+                          {item.supplierName && (
+                            <p className="text-xs text-slate-500 mt-0.5">{item.supplierName}</p>
+                          )}
+                          {item.sku && (
+                            <p className="text-xs text-slate-600 font-mono mt-0.5">SKU: {item.sku}</p>
+                          )}
                         </div>
                         <button
-                          onClick={() => handleRemove(item.id)}
-                          className="text-foreground-muted hover:text-red-400 transition-colors"
+                          onClick={() => removeItem(item.id)}
+                          className="text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                          title="Remove item"
                         >
-                          <Trash2 size={16} />
+                          <IcTrash className="h-4 w-4" />
                         </button>
                       </div>
-                    );
-                  })}
-                </div>
 
-                <div className="bg-surface-1 border border-border-subtle rounded-xl p-5 xl:sticky xl:top-24 h-fit">
-                  <h2 className="text-white font-semibold mb-4">Order Summary</h2>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between text-foreground-muted">
-                      <span>Subtotal</span>
-                      <span>{formatMoney(total)}</span>
-                    </div>
-                    <div className="flex justify-between text-foreground-muted">
-                      <span>VAT (14%)</span>
-                      <span>{formatMoney(total * 0.14)}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-border-subtle pt-2 text-white font-semibold">
-                      <span>Total</span>
-                      <span>{formatMoney(total * 1.14)}</span>
+                      <div className="flex items-center justify-between mt-3">
+                        {/* Quantity controls */}
+                        <div className="flex items-center border border-slate-700/40 rounded-md overflow-hidden">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="px-2.5 py-1.5 text-slate-300 hover:bg-white/5 transition-colors"
+                            disabled={item.quantity <= 1}
+                          >
+                            <IcMinus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="px-3 py-1.5 text-sm text-white font-medium min-w-[3rem] text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="px-2.5 py-1.5 text-slate-300 hover:bg-white/5 transition-colors"
+                          >
+                            <IcPlus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Price */}
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-white">
+                            EGP {(item.price * item.quantity).toLocaleString("en-EG", { minimumFractionDigits: 2 })}
+                          </div>
+                          {item.unitPrice && item.unitPrice !== item.price && (
+                            <div className="text-xs text-slate-500">
+                              EGP {item.unitPrice.toLocaleString("en-EG", { minimumFractionDigits: 2 })} / unit
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <button className="w-full mt-4 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors">
-                    Submit for Approval
-                  </button>
-                </div>
+                ))}
               </div>
-            )}
-          </div>
-        </Guard>
-      </AppShell>
-    </RequireAuth>
+            </Card>
+          )}
+        </div>
+
+        {/* Order summary */}
+        <div className="lg:col-span-1">
+          <Card className="p-5 sticky top-24">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">
+              Order Summary
+            </h3>
+
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Subtotal ({totalItems} items)</span>
+                <span className="text-white font-medium">
+                  EGP {subtotal.toLocaleString("en-EG", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Shipping</span>
+                <span className="text-slate-300">Calculated at checkout</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">VAT (14%)</span>
+                <span className="text-white font-medium">
+                  EGP {(subtotal * 0.14).toLocaleString("en-EG", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="border-t border-slate-700/30 pt-3 flex items-center justify-between">
+                <span className="text-base font-semibold text-white">Total</span>
+                <span className="text-base font-medium text-signal">
+                  EGP {totalPrice.toLocaleString("en-EG", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Button
+                size="sm"
+                className="w-full h-11 text-base"
+                onClick={handleCheckout}
+                disabled={items.length === 0 || loading}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Processing...
+                  </span>
+                ) : "Proceed to Checkout"}
+              </Button>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-700/30">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <IcBox className="h-3.5 w-3.5" />
+                Shipping & handling calculated after order confirmation
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </DashboardShell>
   );
 }
