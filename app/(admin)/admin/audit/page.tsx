@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { usePrefs } from "@/i18n/provider";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Skeleton, Input } from "@/components/ui";
 import {
   Table,
   TableHeader,
@@ -12,8 +12,7 @@ import {
   TableRow,
   TableCell,
   TableHead,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui";
 import { IcHistory } from "@/components/icons";
 import { PageHeader } from "@/components/shared/page-header";
 
@@ -22,21 +21,35 @@ export default function AdminAuditPage() {
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = setTimeout(() => {
-      setEntries([
-        { id: "1", action: "order.approve", actor: "admin@hv.com", timestamp: "2026-09-29T12:00:00Z", details: "Approved order #HV-2847" },
-        { id: "2", action: "eta.submit", actor: "system", timestamp: "2026-09-29T11:45:00Z", details: "Submitted invoice INV-0042 to ETA" },
-        { id: "3", action: "user.login", actor: "supplier@hv.com", timestamp: "2026-09-29T10:30:00Z", details: "Login from 187.77.181.3" },
-      ]);
-      setLoading(false);
-    }, 350);
-    return () => clearTimeout(id);
+    const controller = new AbortController();
+    const fetchAuditLog = async () => {
+      try {
+        const res = await fetch("/api/v1/admin/audit-log?limit=200", {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        setEntries(data.entries ?? []);
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
+        setError(e instanceof Error ? e.message : "Failed to load audit log");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAuditLog();
+    return () => controller.abort();
   }, []);
 
-  const filtered = entries.filter((e) =>
-    !search || JSON.stringify(e).toLowerCase().includes(search.toLowerCase())
+  const filtered = entries.filter(
+    (e) =>
+      !search ||
+      JSON.stringify(e).toLowerCase().includes(search.toLowerCase())
   );
 
   if (loading) {
@@ -45,7 +58,7 @@ export default function AdminAuditPage() {
         <AppShell active="/admin/audit">
           <PageHeader title={t("admin.auditLog")} description={t("admin.auditDesc")} />
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-12 rounded-lg" />
             ))}
           </div>
@@ -65,26 +78,42 @@ export default function AdminAuditPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="mb-4 w-64"
         />
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("admin.action")}</TableHead>
-              <TableHead>{t("admin.actor")}</TableHead>
-              <TableHead>{t("admin.time")}</TableHead>
-              <TableHead>{t("admin.details")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-medium">{e.action}</TableCell>
-                <TableCell>{e.actor}</TableCell>
-                <TableCell className="text-muted text-xs">{e.timestamp}</TableCell>
-                <TableCell>{e.details}</TableCell>
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            {error}
+          </div>
+        )}
+        {filtered.length === 0 && !loading ? (
+          <Card className="p-8">
+            <div className="text-center">
+              <IcHistory className="mx-auto h-8 w-8 text-ink-300" />
+              <p className="mt-3 text-sm text-ink-500">{t("admin.noAuditEntries")}</p>
+            </div>
+          </Card>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("admin.action")}</TableHead>
+                <TableHead>{t("admin.actor")}</TableHead>
+                <TableHead>{t("admin.time")}</TableHead>
+                <TableHead>{t("admin.details")}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((e) => (
+                <TableRow key={e.id}>
+                  <TableCell className="font-medium">{e.action}</TableCell>
+                  <TableCell>{e.actor}</TableCell>
+                  <TableCell className="text-muted text-xs">
+                    {e.timestamp}
+                  </TableCell>
+                  <TableCell>{e.details}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </AppShell>
     </RequireAuth>
   );

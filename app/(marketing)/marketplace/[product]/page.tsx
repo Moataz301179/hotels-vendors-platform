@@ -6,10 +6,7 @@ import { usePrefs } from "@/i18n/provider";
 import { useApp } from "@/lib/store";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { IcCart, IcPen } from "@/components/icons";
-import { Button as Btn } from "@/components/ui/button";
-import { Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle } from "@/components/ui/card";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge as StatePill } from "@/components/ui/badge";
+import { Button as Btn, Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle, Card, CardHeader, CardTitle, CardDescription, CardContent, Badge as StatePill } from "@/components/ui";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ product: string }> }) {
   const { t, lang } = usePrefs();

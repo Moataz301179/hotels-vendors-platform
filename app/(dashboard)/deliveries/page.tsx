@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
 import { IcTruck, IcClock, IcMapPin, IcCheck, IcAlert, IcMail } from "@/components/icons";
 import { StatCard } from "@/components/shared/stat-card";

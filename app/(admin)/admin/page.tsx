@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePrefs } from "@/i18n/provider";
 import { useApp } from "@/lib/store";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"; import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"; import { Skeleton } from "@/components/ui";
 import { IcBuilding, IcUsers, IcChart, IcHistory, IcTruck, IcArrow, IcAlert } from "@/components/icons";
 import { Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle } from "@/components/ui/card";
 

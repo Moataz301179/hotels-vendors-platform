@@ -1,20 +1,26 @@
 "use client";
-
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/stubs-export";
-import { hotelById } from "@/lib/stubs-export";
-import { fmtDate, fmtMoney } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
-import { EmptyState, PageHead, StatePill, T, Td, Th } from "@/lib/stubs-export";
-import { IcBox } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
+import { EmptyState, PageHead, StatePill, T, Td, Th } from "@/components/ui";
+import { IcBox } from "@/components/ui/icons";
 
+function fmtDate(date: string, lang: string): string {
+  return new Date(date).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtMoney(amount: number, lang: string): string {
+  return new Intl.NumberFormat(lang === "ar" ? "ar-EG" : "en-US", { style: "currency", currency: "EGP", maximumFractionDigits: 0 }).format(amount);
+}
+
+function hotelById(id: string): { name: string } | undefined {
+  return undefined;
+}
 export default function SupplierOrdersPage() {
   const { t, lang } = usePrefs();
   const { data, user } = useApp();
   const [filter, setFilter] = useState("all");
-
   const list = useMemo(() => {
     let out = data.orders.filter((o) => o.supplierId === user?.orgId && o.approval.state !== "rejected");
     if (filter === "open") out = out.filter((o) => o.fulfillment !== "delivered");
@@ -22,14 +28,12 @@ export default function SupplierOrdersPage() {
     if (filter === "ack") out = out.filter((o) => o.fulfillment === "none");
     return out;
   }, [data.orders, user, filter]);
-
   const chips = [
     { id: "all", label: t("orders.fAll") },
     { id: "ack", label: t("central.needAck") },
     { id: "open", label: t("orders.fActive") },
     { id: "delivered", label: t("state.delivered") },
   ];
-
   return (
     <RequireAuth>
       <AppShell active="/supplier-central/orders">

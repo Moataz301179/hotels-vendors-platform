@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/cart-context";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Btn } from "@/components/ui/button";
+import { Button, Btn } from "@/components/ui";
 import { IcCart, IcPlus, IcMinus, IcBox } from "@/components/icons";
 import { Trash2, Minus, Plus, ArrowRight } from "lucide-react";
 import { StatCard } from "@/components/shared/stat-card";

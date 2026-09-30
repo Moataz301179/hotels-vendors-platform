@@ -150,6 +150,10 @@ export const en = {
     org: "Organization", roleLabel: "Role",
     pilotNote: "Pilot environment. In production this screen binds to the HotelsVendors authentication and RBAC service — see the integration boundary in Settings.",
     welcome: "Welcome back",
+    signIn: "Sign In",
+    subtitle: "Access your procurement workspace",
+    submit: "Sign In",
+    noAccount: "Don't have an account? Register",
   },
 
   market: {
@@ -685,6 +689,10 @@ export const ar: Dict = {
     org: "الجهة", roleLabel: "الدور",
     pilotNote: "بيئة تجربة. في الإنتاج يرتبط هذا الشاش بخدمة المصادقة وأذونات الأدوار في HotelsVendors — انظر حد التكامل في الإعدادات.",
     welcome: "مرحباً بعودتك",
+    signIn: "تسجيل الدخول",
+    subtitle: "دخول إلى مساحة المشتريات الخاصة بك",
+    submit: "تسجيل الدخول",
+    noAccount: "ليس لديك حساب؟ سجّل الآن",
   },
 
   market: {

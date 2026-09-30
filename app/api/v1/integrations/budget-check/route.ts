@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { integrationEngine } from "@/lib/stubs-export";
+import { integrationEngine } from '@/lib/integrations/engine';
 
 export async function POST(request: Request) {
   try {
@@ -10,3 +10,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
+

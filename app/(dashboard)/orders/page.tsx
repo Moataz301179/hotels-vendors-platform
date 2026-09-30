@@ -6,7 +6,7 @@ import { usePrefs } from "@/i18n/provider";
 import { useApp } from "@/lib/store";
 import { fmtDate } from "@/lib/format";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
 

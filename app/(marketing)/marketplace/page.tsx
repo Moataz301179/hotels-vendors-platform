@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState, useMemo } from "react";
 import { usePrefs } from "@/i18n/provider";
 import { useApp } from "@/lib/store";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 import { IcSearch } from "@/components/icons";
-import { Button as Btn } from "@/components/ui/button";
-import { Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle } from "@/components/ui/card";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge as StatePill } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input as TextInput } from "@/components/ui/input";
+import { Button as Btn } from "@/components/ui";
+import { Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle } from "@/components/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui";
+import { StatePill } from "@/components/ui";
+import { Skeleton } from "@/components/ui";
+import { TextInput } from "@/components/ui";
 
 const CATEGORIES = [
   { id: "all", name: "All", nameAr: "الكل" },

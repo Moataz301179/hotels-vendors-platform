@@ -1,13 +1,12 @@
 "use client";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell"
+import { Btn, Card, PageHead, StatePill, Stat } from "@/components/ui"
 
 import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { VENDOR_SCORECARDS, supplierById } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
-import { Btn, Card, PageHead, StatePill, Stat } from "@/lib/stubs-export";
-import type { Role } from "@/lib/stubs-export";
+import { VENDOR_SCORECARDS, supplierById } from "./data";
 
-const HOTEL: Role[] = ["hotel_admin", "gm", "finance_director", "platform_admin"];
+const HOTEL: string[] = ["hotel_admin", "gm", "finance_director", "platform_admin"];
 
 export default function VendorManagementPage() {
   const { t } = usePrefs();

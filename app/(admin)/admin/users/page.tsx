@@ -1,54 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/store";
-import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Badge, badgeVariants } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableHead,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { IcSearch } from "@/components/icons";
+import AppShell, { RequireAuth } from "@/components/AppShell";
+import { Badge, Card, CardContent, Skeleton, Table, TableHeader, TableBody, TableRow, TableCell, TableHead, Input } from "@/components/ui";
+
+interface ApiUser {
+  id: string;
+  name: string;
+  email: string;
+  platformRole: string;
+  status: string;
+  tenant: { id: string; name: string; slug: string } | null;
+  lastActive: string | null;
+}
 
 export default function AdminUsersPage() {
   const { t, lang } = usePrefs();
-  const { data } = useApp();
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<ApiUser[]>([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = setTimeout(() => setLoading(false), 350);
-    return () => clearTimeout(id);
-  }, []);
+    const controller = new AbortController();
+    const fetchUsers = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (search) params.set("search", search);
+        if (roleFilter) params.set("role", roleFilter);
+        params.set("limit", "200");
+        const res = await fetch(`/api/v1/admin/users?${params}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.success) {
+          setUsers(json.data.users);
+        } else {
+          setError(json.error || "Failed to load users");
+        }
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
+        setError(e instanceof Error ? e.message : "Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+    return () => controller.abort();
+  }, [search, roleFilter]);
 
-  const users = data?.users || [];
-  const filtered = users.filter((u: any) => {
-    if (search && !u.name?.toLowerCase().includes(search.toLowerCase()) && !u.email?.toLowerCase().includes(search.toLowerCase())) return false;
-    if (roleFilter && u.platformRole !== roleFilter) return false;
-    return true;
-  });
-
-  if (loading) {
-    return (
-      <RequireAuth>
-        <AppShell active="/admin/users">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="skeleton h-8 w-64 rounded-lg" />
-            <div className="skeleton h-8 w-48 rounded-lg mt-3" />
-          </div>
-        </AppShell>
-      </RequireAuth>
-    );
-  }
+  const filtered =
+    roleFilter || search
+      ? users.filter((u) => {
+          if (search && !u.name?.toLowerCase().includes(search.toLowerCase()) && !u.email?.toLowerCase().includes(search.toLowerCase())) return false;
+          if (roleFilter && u.platformRole !== roleFilter) return false;
+          return true;
+        })
+      : users;
 
   return (
     <RequireAuth>
@@ -63,42 +74,65 @@ export default function AdminUsersPage() {
             className="w-64"
           />
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("admin.name")}</TableHead>
-              <TableHead>{t("admin.email")}</TableHead>
-              <TableHead>{t("admin.role")}</TableHead>
-              <TableHead>{t("admin.tenant")}</TableHead>
-              <TableHead>{t("admin.status")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((u: any) => (
-              <TableRow key={u.id}>
-                <TableCell className="font-medium">{u.name}</TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{u.platformRole || "user"}</Badge>
-                </TableCell>
-                <TableCell>{u.tenant?.name || "-"}</TableCell>
-                <TableCell>
-                  <Badge variant={u.status === "active" ? "default" : "destructive"}>
-                    {u.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted py-8">
-                  {t("admin.noUsers")}
-                </TableCell>
-              </TableRow>
+        <Card>
+          <CardContent className="p-0">
+            {error && (
+              <div className="px-4 py-3 text-sm text-rose-400 bg-rose-500/10 border-b border-rose-500/20">
+                {error}
+              </div>
             )}
-          </TableBody>
-        </Table>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("admin.name")}</TableHead>
+                  <TableHead>{t("admin.email")}</TableHead>
+                  <TableHead>{t("admin.role")}</TableHead>
+                  <TableHead>{t("admin.tenant")}</TableHead>
+                  <TableHead>{t("admin.status")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  [1, 2, 3, 4, 5].map((i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted py-8">
+                      {t("admin.noUsers")}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.name}</TableCell>
+                      <TableCell className="text-muted text-xs">{u.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{u.platformRole || "user"}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted text-xs">
+                        {u.tenant?.name || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={u.status === "active" ? "default" : "error"}>
+                          {u.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </AppShell>
     </RequireAuth>
   );
 }
+

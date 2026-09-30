@@ -2,7 +2,7 @@
 
 import { getSupplierProfile } from "@/lib/intelligence/supplier-profile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { TrendingUp, Package, Truck, FileCheck, ShieldCheck } from "lucide-react";
 
 export default async function SupplierProfileCard({ supplierId, tenantId }: { supplierId: string; tenantId: string }) {

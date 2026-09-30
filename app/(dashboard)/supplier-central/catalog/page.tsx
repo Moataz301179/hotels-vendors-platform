@@ -1,41 +1,38 @@
 "use client";
-
 import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/stubs-export";
-import { CATEGORIES } from "@/lib/stubs-export";
-import { fmtMoney } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
-import {
-  Btn,
-  Card,
-  Field,
-  Img,
-  Modal,
-  PageHead,
-  Select,
-  StatePill,
-  T,
-  Td,
-  TextArea,
-  TextInput,
-  Th,
-  Toggle,
-} from "@/lib/stubs-export";
-import { IcCheck, IcPlus, IcX } from "@/lib/stubs-export";
-import type { Product } from "@/lib/stubs-export";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
+import { Btn, Card, Field, Img, Modal, PageHead, Select, StatePill, T, Td, TextArea, TextInput, Th, Toggle } from "@/components/ui";
+import { IcCheck, IcPlus, IcX } from "@/components/ui/icons";
 
+type Product = {
+  id: string;
+  sku: string;
+  name: string;
+  nameAr: string;
+  categoryId: string;
+  supplierId: string;
+  unit: string;
+  unitAr: string;
+  price: number;
+  moq: number;
+  leadDays: number;
+  stock: string;
+  img: string;
+  alt: string;
+  desc: string;
+  descAr: string;
+  specs: { k: string; kAr: string; v: string }[];
+};
 export default function CatalogPage() {
   const { t, lang } = usePrefs();
   const { data, user, upsertProduct, toggleProductListed, toast } = useApp();
   const orgId = user?.orgId ?? "";
   const mine = data.products.filter((p) => p.supplierId === orgId);
   const nm = (e: string, a: string) => (lang === "ar" ? a : e);
-
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", category: "fbn", unit: "", price: "", moq: "1", leadDays: "3", desc: "" });
   const [err, setErr] = useState<Record<string, string>>({});
-
   const create = () => {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = t("common.required");
@@ -69,7 +66,6 @@ export default function CatalogPage() {
     setForm({ name: "", category: "fbn", unit: "", price: "", moq: "1", leadDays: "3", desc: "" });
     toast(t("central.saveDone"));
   };
-
   return (
     <RequireAuth>
       <AppShell active="/supplier-central/catalog">
@@ -84,7 +80,6 @@ export default function CatalogPage() {
               </Btn>
             }
           />
-
           <T minWidth="min-w-[860px]">
             <thead>
               <tr>
@@ -151,7 +146,6 @@ export default function CatalogPage() {
               ))}
             </tbody>
           </T>
-
           <Modal
             open={open}
             onClose={() => setOpen(false)}

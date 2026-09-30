@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
 
 const FINANCING_OPTIONS = [30, 60, 90, 120] as const;
 const MINIMUM_EGP = 5000;

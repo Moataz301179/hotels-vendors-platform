@@ -1,15 +1,13 @@
 "use client";
+import AppShell, { Guard, RequireAuth } from "@/components/AppShell"
+import { Btn, Card, PageHead, StatePill, T, Td, Th } from "@/components/ui"
 
 import { useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { RFQS, categoryById } from "@/lib/stubs-export";
-import { fmtDate } from "@/lib/stubs-export";
-import AppShell, { Guard, RequireAuth } from "@/lib/stubs-export";
-import { Btn, Card, PageHead, StatePill, T, Td, Th } from "@/lib/stubs-export";
-import { IcPlus } from "@/lib/stubs-export";
-import type { Role } from "@/lib/stubs-export";
+import { RFQS, categoryById, fmtDate } from "./data";
+import { IcPlus } from "@/components/ui/icons";
 
-const HOTEL: Role[] = ["hotel_admin", "gm", "finance_director"];
+const HOTEL: string[] = ["hotel_admin", "gm", "finance_director"];
 
 export default function SourcingPage() {
   const { t, lang } = usePrefs();

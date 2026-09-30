@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { integrationEngine } from "@/lib/stubs-export";
+import { integrationEngine } from '@/lib/integrations/engine';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -4,12 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, CheckCircle2, Mail, Send, Zap, ShieldCheck, Smartphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
+import { Textarea } from "@/components/ui";
+import { Label } from "@/components/ui";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui";
+import { Separator } from "@/components/ui";
 
 export default function InviteSupplierPage() {
   const [step, setStep] = useState<"form" | "success">("form");
@@ -41,7 +41,6 @@ export default function InviteSupplierPage() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsSubmitting(false);
     setStep("success");

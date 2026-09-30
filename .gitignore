@@ -66,8 +66,13 @@ crew/
 # ad-hoc SQL dumps — real migrations live in prisma/migrations/
 /schema-v6-*.sql
 
+# Redis dump files — generated runtime artifacts, never commit
+*.rdb
+
 # macOS
 .DS_Store
 **/.DS_Store
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+*.rdb
+mktemp(5792) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)

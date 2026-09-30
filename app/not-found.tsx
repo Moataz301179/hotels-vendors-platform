@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePrefs } from "@/i18n/provider";
-import { buttonVariants as btnCls } from "@/components/ui/button";
+import { btnCls } from "@/components/ui";
 import { IcAlert } from "@/components/icons";
 
 export default function NotFound() {

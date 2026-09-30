@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { integrationEngine } from "@/lib/stubs-export";
+import { integrationEngine } from '@/lib/integrations/engine';
 
 export async function POST(request: Request) {
   try {
@@ -16,3 +16,4 @@ export async function POST(request: Request) {
 export async function GET() {
   return NextResponse.json(integrationEngine.getSyncJobs());
 }
+
