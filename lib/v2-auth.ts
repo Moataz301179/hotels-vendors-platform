@@ -1,10 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import { DEFAULT_NEW_USER_PLATFORM_ROLE, getVerifiedPrimaryEmail } from '@/lib/v2-identity';
-
-function isActiveActor(user: { status: string; deletedAt: Date | null } | null) {
-  return Boolean(user && user.status === 'ACTIVE' && !user.deletedAt);
-}
+import { DEFAULT_NEW_USER_PLATFORM_ROLE, getVerifiedPrimaryEmail, isActiveActor } from '@/lib/v2-identity';
 
 export async function getActor() {
   const { userId } = await auth();

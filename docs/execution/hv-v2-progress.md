@@ -11,11 +11,11 @@ Updated: 2026-10-02
 - [VERIFIED] Original V2 auth trusted Clerk `unsafeMetadata` for new-user role assignment and did not verify the primary email.
 
 ## Tasks
-- [IN_REVIEW] HV-SEC-001 — Actor provisioning now requires a verified primary email, uses a fixed least-privilege HOTEL default, rejects inactive/deleted accounts, transacts tenant/role/user creation, and handles duplicate first-login races. Four focused identity tests pass. Broader auth integration tests and review remain before merge/deploy.
+- [IN_REVIEW] HV-SEC-001 — Actor provisioning now requires a verified primary email, uses a fixed least-privilege HOTEL default, rejects inactive/deleted accounts, transacts tenant/role/user creation, and handles duplicate first-login races. Five focused identity tests pass. Broader auth integration tests and review remain before merge/deploy.
 - [VERIFIED] HV-BASE-001a — Dependencies installed in isolated worktree; Prisma schema validation and client generation pass.
 - [VERIFIED] HV-BASE-001b — TypeScript passes; active V2 lint passes; `git diff --check` passes; CI workflow YAML parses.
 - [VERIFIED] HV-BASE-001c — Production build passes with local-only dummy DATABASE_URL/Clerk values and an ephemeral SESSION_SECRET. This proves compilation/build only, not live DB or Clerk connectivity.
-- [IN_REVIEW] HV-CI-001 — Added `.github/workflows/ci.yml` for locked install, Prisma validation/generation, P0 tests, type-check, active V2 lint and production build. Not yet pushed or verified by GitHub Actions.
+- [VERIFIED] HV-CI-001 — Added `.github/workflows/ci.yml` for locked install, Prisma validation/generation, P0 tests, type-check, active V2 lint and production build. GitHub Actions run `37009563593` passed all steps; another run is required after the expanded tests.
 - [VERIFIED] HV-UI-001 — Removed dead product-detail links, replaced loose `any` types in active pages, switched logo rendering to Next Image, filters public catalog to active verified suppliers, and labels unavailable RFQ/funding flows honestly.
 - [BLOCKED] HV-OPS-001 — Live PM2/release/build ID reconciliation requires production host-key identity to be verified through a trusted channel.
 - [TODO] HV-PROC-001 — Implement a real demand/RFQ/quote/order/fulfillment/outcome vertical slice.
@@ -25,7 +25,7 @@ Updated: 2026-10-02
 - [TODO] HV-OPS-002 — Prove audit integrity, monitoring, backup/restore and rollback.
 
 ## Verification run
-- `npm test`: PASS, 1 test file / 4 tests.
+- `npm test`: PASS, 1 test file / 5 tests.
 - `npx tsc --noEmit`: PASS.
 - `npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts tests/p0`: PASS.
 - `npx prisma validate`: PASS.
@@ -41,5 +41,7 @@ Updated: 2026-10-02
 ## CI feedback after PR creation
 - [BLOCKED → IN_PROGRESS] First GitHub Actions run failed at `npm ci`: the repo's existing lockfile resolves Zod 4, while `ollama-ai-provider@1.2.0` declares an optional Zod 3 peer. Local install had silently inherited `legacy-peer-deps=true` from the machine's global npm config.
 - [IN_PROGRESS] Added a project-level `.npmrc` with `legacy-peer-deps=true` so clean CI installs use the same resolver setting as the existing lockfile. This makes the workaround explicit; the dependency conflict remains documented for future cleanup.
-- Next: rerun GitHub Actions and inspect the exact workflow/run result before claiming CI is green.
 - [IN_PROGRESS] Second CI run reached lint after install, Prisma and tests passed, but the repository had no checked-in ESLint flat config; local lint had silently inherited `/Users/Moatazi/eslint.config.mjs`, which does not exist on CI. Added a repository-owned `eslint.config.mjs` with Next Core Web Vitals/TypeScript presets and explicit legacy/release ignores. Local lint now passes using only the repository config. Push and verify the next GitHub Actions run.
+- [VERIFIED] CI remediation: the third GitHub Actions run passed every step (locked install, Prisma validation/generation, P0 tests, TypeScript, ESLint, production build). Run: `37009563593`; PR check is green.
+- [IN_PROGRESS] Expanded P0 identity tests to cover inactive, suspended and deleted actors; local test/type/lint/schema/build gates pass after the change. Push and verify a fresh GitHub Actions run.
+- [BLOCKED] Deployment safety: the workflow on `main` (`.github/workflows/deploy-production.yml`) targets `/var/www/hv-release-production`, stops `hotels-vendors-production` on port 3008, and trusts `ssh-keyscan` output without pinning a trusted host key. It does not match the last recorded V2 release/process (V2 release path, `hotels-vendors-v2-final`, port 3011). Do not trigger it or change production until the live target and host key are verified.

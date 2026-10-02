@@ -17,3 +17,10 @@ export function getVerifiedPrimaryEmail(primary: ClerkPrimaryEmail): string | nu
  * Never derive authorization roles from Clerk unsafeMetadata or client input.
  */
 export const DEFAULT_NEW_USER_PLATFORM_ROLE = 'HOTEL' as const;
+
+export type ApplicationActorState = { status: string; deletedAt: Date | null } | null;
+
+/** Only active, non-deleted application users may access tenant data. */
+export function isActiveActor(user: ApplicationActorState): boolean {
+  return Boolean(user && user.status === 'ACTIVE' && !user.deletedAt);
+}

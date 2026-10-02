@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_NEW_USER_PLATFORM_ROLE, getVerifiedPrimaryEmail } from '../../lib/v2-identity';
+import { DEFAULT_NEW_USER_PLATFORM_ROLE, getVerifiedPrimaryEmail, isActiveActor } from '../../lib/v2-identity';
 
 describe('V2 trusted identity provisioning', () => {
   it('accepts and normalizes a verified primary email', () => {
@@ -25,5 +25,13 @@ describe('V2 trusted identity provisioning', () => {
 
   it('assigns least-privilege HOTEL as the only self-service default role', () => {
     expect(DEFAULT_NEW_USER_PLATFORM_ROLE).toBe('HOTEL');
+  });
+
+  it('accepts only active, non-deleted application actors', () => {
+    expect(isActiveActor({ status: 'ACTIVE', deletedAt: null })).toBe(true);
+    expect(isActiveActor({ status: 'INACTIVE', deletedAt: null })).toBe(false);
+    expect(isActiveActor({ status: 'SUSPENDED', deletedAt: null })).toBe(false);
+    expect(isActiveActor({ status: 'ACTIVE', deletedAt: new Date('2026-01-01T00:00:00Z') })).toBe(false);
+    expect(isActiveActor(null)).toBe(false);
   });
 });
