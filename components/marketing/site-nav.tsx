@@ -21,30 +21,26 @@ interface NavGroup {
 
 function getGroups(ar: boolean): NavGroup[] {
   return [
-    {
-      label: ar ? "المنتجات" : "Products",
-      items: [
-        { href: "/marketplace", label: ar ? "السوق" : "Marketplace", desc: ar ? "تصفح موردي الفنادق والكتالوج" : "Browse hotel suppliers & catalog" },
-        { href: "/#invo", label: "INVO", desc: ar ? "طبقة سوق الموردين" : "Vendor marketplace sub-layer" },
-        { href: "/compliance", label: ar ? "الامتثال" : "Compliance", desc: ar ? "الفوترة الإلكترونية و FRA" : "ETA e-invoicing & FRA" },
-      ],
-    },
-    {
-      label: ar ? "التمويل" : "Financing",
-      items: [
-        { href: "/factoring-service", label: ar ? "تمويل الفواتير" : "Invoice Factoring", desc: ar ? "تمويل فواتير غير ارتجاعي" : "Non-recourse invoice financing" },
-        { href: "/financing/oliv", label: " " + (ar ? "التمويل" : "Financing"), desc: ar ? "خط ائتمان يصل إلى 10 مليون ج.م" : "Up to EGP 10M credit line" },
-        { href: "/oliv/referral", label: " " + (ar ? "إحالة" : "Referral"), desc: ar ? "احصل على إحالة ومعالجة أولوية" : "Get referred & priority processing" },
-      ],
-    },
-    {
-      label: ar ? "الحلول" : "Solutions",
-      items: [
-        { href: "/hotels/join", label: ar ? "للفنادق" : "For Hotels", desc: ar ? "المشتريات وإدارة المصروفات" : "Procurement & spend management" },
-        { href: "/suppliers/join", label: ar ? "للموردين" : "For Suppliers", desc: ar ? "اعرض منتجاتك واحصل على أموالك خلال 48 ساعة" : "List products & get paid in 48h" },
-        { href: "/#how", label: ar ? "كيف تعمل" : "How It Works", desc: ar ? "نظرة عامة على المنصة وسير العمل" : "Platform overview & workflow" },
-      ],
-    },
+    { label: ar ? "المشتريات" : "Procurement", items: [
+      { href: "/marketplace", label: ar ? "السوق" : "Marketplace", desc: ar ? "كتالوج الموردين والشراء الفندقي" : "Hospitality catalog & purchasing" },
+      { href: "/rfq", label: "RFQ", desc: ar ? "اطلب وقارن عروض الموردين" : "Request & compare supplier quotes" },
+      { href: "/orders", label: ar ? "الطلبات" : "Orders", desc: ar ? "دورة الطلب من الشراء إلى الاستلام" : "From purchase order to receiving" },
+    ] },
+    { label: ar ? "الظل الافتراضي" : "Virtual Shadow", items: [
+      { href: "/intelligence", label: ar ? "مركز الإشارات" : "Signal Center", desc: ar ? "اكتشاف التسربات والفرص" : "Find leaks, needs & opportunities" },
+      { href: "/intelligence/findings", label: ar ? "الاكتشافات" : "Findings", desc: ar ? "أدلة وتحليلات قابلة للتنفيذ" : "Evidence-backed findings" },
+      { href: "/intelligence/opportunities", label: ar ? "الفرص" : "Opportunities", desc: ar ? "حوّل الإشارة إلى إجراء" : "Turn signals into action" },
+    ] },
+    { label: ar ? "رأس المال" : "Capital Signals", items: [
+      { href: "/working-capital", label: ar ? "التدفق النقدي" : "Cashflow", desc: ar ? "رؤية احتياج السيولة" : "See working-capital needs" },
+      { href: "/factoring-service", label: ar ? "إحالات التمويل" : "Funding Referrals", desc: ar ? "إحالة لمقدمي التمويل" : "Qualified external funding referrals" },
+      { href: "/financing/oliv", label: "Oliv", desc: ar ? "شريك تمويل خارجي" : "External funding partner" },
+    ] },
+    { label: ar ? "الشبكة" : "Network", items: [
+      { href: "/hotels/join", label: ar ? "للفنادق" : "For Hotels", desc: ar ? "المشتريات والمصروفات" : "Procurement & spend" },
+      { href: "/suppliers/join", label: ar ? "للموردين" : "For Suppliers", desc: ar ? "الكتالوج والطلبات" : "Catalog & orders" },
+      { href: "/shipping", label: ar ? "لشركات النقل" : "For Carriers", desc: ar ? "التسليم والتتبع" : "Delivery & ETA" },
+    ] },
   ];
 }
 
@@ -154,7 +150,7 @@ export function SiteNav() {
           href="/register"
           className={`text-sm px-4 py-2 font-semibold cursor-pointer rounded-md bg-accent-base text-surface ${ar ? "font-cairo" : ""}`}
         >
-          {ar ? "جرّب التجربة" : "Try the Demo"}
+          {ar ? "ابدأ الآن" : "Get Started"}
         </Link>
       </div>
 
@@ -216,7 +212,7 @@ export function SiteNav() {
               onClick={() => setOpen(false)}
               className={`text-sm px-4 py-2 font-semibold rounded-md bg-accent-base text-surface text-center ${ar ? "font-cairo" : ""}`}
             >
-            {ar ? "جرّب التجربة" : "Try the Demo"}
+            {ar ? "ابدأ الآن" : "Get Started"}
           </Link>
         </div>
       )}

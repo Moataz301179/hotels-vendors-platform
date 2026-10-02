@@ -8,25 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { csrfMiddleware } from "@/lib/security/csrf";
 
-const SESSION_COOKIE = "hv_session";
 const CSRF_COOKIE = "hv_csrf";
-
-const _sessionSecret = process.env.SESSION_SECRET;
-if (!_sessionSecret) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "FATAL: SESSION_SECRET environment variable is required in production. " +
-      "Generate one with: openssl rand -hex 32"
-    );
-  }
-  console.warn("[Auth] WARNING: Using development fallback for SESSION_SECRET. Do NOT deploy without setting SESSION_SECRET.");
-}
-const SECRET = new TextEncoder().encode(
-  _sessionSecret || "dev-secret-do-not-use-in-production"
-);
 
 /* ── Route Configuration ── */
 
@@ -140,20 +125,6 @@ function isApiPath(path: string): boolean {
   return path.startsWith("/api/");
 }
 
-async function verifySession(token: string) {
-  try {
-    const { payload } = await jwtVerify(token, SECRET, {
-      clockTolerance: 60,
-    });
-    const userId = payload.userId as string;
-    const platformRole = payload.platformRole as string;
-    const tenantId = payload.tenantId as string;
-    if (!userId || !platformRole || !tenantId) return null;
-    return { userId, platformRole, tenantId };
-  } catch {
-    return null;
-  }
-}
 
 /* ── Middleware ── */
 
@@ -183,7 +154,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export async function middleware(request: NextRequest) {
+export default clerkMiddleware(async (auth, request: NextRequest) => {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") || "";
 
@@ -219,116 +190,48 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(NextResponse.next());
   }
 
-  // Read session cookie
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  // Clerk is the only application identity source. Legacy hv_session cookies are ignored.
+  const { userId, sessionClaims } = await auth();
+  const platformRole = String((sessionClaims as any)?.platformRole || "");
+  const tenantId = String((sessionClaims as any)?.tenantId || "");
 
-  // ── API routes: require valid session ──
   if (isApiPath(pathname)) {
-    if (!token) {
+    if (!userId) {
       return addSecurityHeaders(NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }));
     }
-    const session = await verifySession(token);
-    if (!session) {
-      return addSecurityHeaders(NextResponse.json({ success: false, error: "Invalid or expired session" }, { status: 401 }));
-    }
     const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-user-id", session.userId);
-    requestHeaders.set("x-tenant-id", session.tenantId);
-    requestHeaders.set("x-platform-role", session.platformRole);
-    // NOTE: x-session-token intentionally NOT set — prevents JWT leak via headers
+    requestHeaders.set("x-user-id", userId);
+    if (tenantId && tenantId !== "undefined" && tenantId !== "null") requestHeaders.set("x-tenant-id", tenantId);
+    if (platformRole && platformRole !== "undefined") requestHeaders.set("x-platform-role", platformRole);
 
-    // CSRF protection for state-changing API routes (skip only login/register and webhooks)
     const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(request.method);
-    const isExemptPath = pathname === "/api/v1/auth/login" ||
-      pathname === "/api/v1/auth/register" ||
-      pathname === "/api/v1/oliv/webhook" ||
-      pathname.startsWith("/api/webhooks");
+    const isExemptPath = pathname === "/api/v1/auth/login" || pathname === "/api/v1/auth/register" || pathname === "/api/v1/oliv/webhook" || pathname.startsWith("/api/webhooks");
     if (isStateChanging && !isExemptPath) {
       const csrfResult = await csrfMiddleware(request);
       if (csrfResult) return addSecurityHeaders(csrfResult);
     }
-
     return addSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
   }
 
-  // No token on protected route → redirect to login
-  if (!token && isProtectedPath(pathname)) {
+  if (isProtectedPath(pathname) && !userId) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return addSecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
-  // No token on non-protected route → allow through
-  if (!token) {
-    return addSecurityHeaders(NextResponse.next());
-  }
-
-  // Verify token
-  const session = await verifySession(token);
-
-  // Invalid/expired token on protected route → clear cookie, redirect to login
-  if (!session && isProtectedPath(pathname)) {
-    const response = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.delete(SESSION_COOKIE);
-    return addSecurityHeaders(response);
-  }
-
-  // Invalid token on non-protected route → allow through (will fail at API layer if needed)
-  if (!session) {
-    return addSecurityHeaders(NextResponse.next());
-  }
-
-  const { userId, platformRole, tenantId } = session;
-
-  // Inject tenant + auth headers into the request for downstream handlers
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-user-id", userId);
-  requestHeaders.set("x-tenant-id", tenantId);
-  requestHeaders.set("x-platform-role", platformRole);
-
-  // Redirect /dashboard (non-existent) to role-specific dashboard
-  if (pathname === "/dashboard") {
-    const target = ROLE_DEFAULT_PATH[platformRole] || "/hotel";
-    return addSecurityHeaders(NextResponse.redirect(new URL(target, request.url)));
-  }
-
-  // Role-based route guards
-  if (isProtectedPath(pathname)) {
-    // ADMIN can access everything
-    if (platformRole === "ADMIN") {
-      return addSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
-    }
-
-    // Check if user has access to this route
-    const allowedRoutes = ROLE_ROUTES[platformRole] || [];
-    const hasAccess = allowedRoutes.some((route) =>
-      pathname.startsWith(route)
-    );
-
-    if (!hasAccess) {
-      // Redirect to their default dashboard
-      const target = ROLE_DEFAULT_PATH[platformRole] || "/hotel";
-      return addSecurityHeaders(NextResponse.redirect(new URL(target, request.url)));
-    }
-  }
+  if (userId) requestHeaders.set("x-user-id", userId);
+  if (tenantId && tenantId !== "undefined" && tenantId !== "null") requestHeaders.set("x-tenant-id", tenantId);
+  if (platformRole && platformRole !== "undefined") requestHeaders.set("x-platform-role", platformRole);
 
   const response = addSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
-
-  // Set CSRF cookie for page routes (non-API) so frontend JS can read it
   if (!isApiPath(pathname) && !request.cookies.get(CSRF_COOKIE)?.value) {
     const { generateCsrfToken } = await import("@/lib/security/csrf");
     const csrfToken = await generateCsrfToken();
-    response.cookies.set(CSRF_COOKIE, csrfToken, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60,
-    });
+    response.cookies.set(CSRF_COOKIE, csrfToken, { httpOnly: false, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/", maxAge: 60 * 60 });
   }
-
   return response;
-}
+});
 
 /* ── Matcher ── */
 

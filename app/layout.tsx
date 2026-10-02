@@ -23,11 +23,11 @@ if (typeof window === "undefined") {
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.hotelsvendors.com"),
   title: {
-    default: "HotelsVendors — B2B Procurement & Fintech for Egyptian Hospitality",
+    default: "HotelsVendors — Hospitality Procurement Intelligence & Network",
     template: "%s | HotelsVendors",
   },
   description:
-    "Egypt's B2B hospitality procurement platform. AI demand forecasting, embedded factoring, ETA e-invoicing, and shared logistics for hotel chains.",
+    "HotelsVendors connects Hotels, Suppliers, Carriers and Funders around procurement intelligence, savings signals, operational workflows and external capital referrals.",
   keywords: [
     "B2B hospitality procurement Egypt",
     "automated factoring lines Cairo",
@@ -52,15 +52,15 @@ export const metadata: Metadata = {
     locale: "en_EG",
     url: "https://www.hotelsvendors.com",
     siteName: "HotelsVendors",
-    title: "HotelsVendors — B2B Procurement & Fintech for Egyptian Hospitality",
+    title: "HotelsVendors — Hospitality Procurement Intelligence & Network",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance. Purpose-built for Egyptian coastal hotel chains.",
+      "Procurement intelligence, money-leak detection, supplier opportunities, operational workflows and external funding referrals for Egyptian hospitality.",
     images: [
       {
         url: "/logo-white.svg",
         width: 1200,
         height: 630,
-        alt: "HotelsVendors — The Market Changer",
+        alt: "HotelsVendors — Hospitality Procurement Intelligence & Network",
       },
     ],
   },
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "HotelsVendors — B2B Procurement & Fintech",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance.",
+      "Procurement intelligence, savings signals and external funding referrals for Egyptian hospitality.",
     images: ["/logo-white.svg"],
     creator: "@hotelsvendors",
   },

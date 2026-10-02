@@ -1,0 +1,89 @@
+name: HotelsVendors Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type DEPLOY to deploy main to production
+        required: true
+        type: string
+  push:
+    branches: [main]
+
+concurrency:
+  group: hv-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+      CLERK_SECRET_KEY: sk_test_placeholder
+      SESSION_SECRET: ci-only-not-used-by-clerk
+      REDIS_URL: redis://127.0.0.1:6379
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: ci, POSTGRES_PASSWORD: ci, POSTGRES_DB: ci }
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: [6379:6379]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
+      - name: Package standalone release
+        run: |
+          set -euo pipefail
+          rm -rf deploy && mkdir -p deploy
+          cp -a .next/standalone/. deploy/
+          mkdir -p deploy/.next
+          cp -a .next/static deploy/.next/static
+          cp -a public deploy/public
+          tar -C deploy -czf hv-release.tgz .
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          test -n "$SSH_KEY" -a -n "$VPS_HOST" -a -n "$VPS_USER"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+      - name: Upload release
+        env: { VPS_HOST: ${{ secrets.VPS_HOST }}, VPS_USER: ${{ secrets.VPS_USER }} }
+        run: scp hv-release.tgz "$VPS_USER@$VPS_HOST:/tmp/hv-release-${GITHUB_SHA}.tgz"
+      - name: Activate release and verify
+        env: { VPS_HOST: ${{ secrets.VPS_HOST }}, VPS_USER: ${{ secrets.VPS_USER }} }
+        run: |
+          ssh "$VPS_USER@$VPS_HOST" "GITHUB_SHA=$GITHUB_SHA bash -s" <<'REMOTE'
+          set -euo pipefail
+          RELEASE=/var/www/hv-release-production
+          BACKUP=/var/www/hv-release-production-backup-${GITHUB_SHA::12}
+          ARCHIVE=/tmp/hv-release-${GITHUB_SHA}.tgz
+          test -s "$ARCHIVE"
+          cp -a "$RELEASE" "$BACKUP"
+          pm2 stop hotels-vendors-production || true
+          find "$RELEASE" -mindepth 1 -maxdepth 1 ! -name .env -exec rm -rf {} +
+          tar -xzf "$ARCHIVE" -C "$RELEASE"
+          rm -f "$ARCHIVE"
+          cd "$RELEASE"
+          PORT=3008 pm2 restart hotels-vendors-production --update-env
+          sleep 3
+          test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/)" = "200"
+          test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/api/health)" = "200"
+          pm2 save
+          REMOTE

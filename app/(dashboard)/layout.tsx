@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
 import { redirect } from "next/navigation";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { prisma } from "@/lib/prisma";
-import { getJwtSecret } from "@/lib/session";
 
 const SESSION_COOKIE = "hv_session";
 
@@ -20,48 +18,25 @@ export const metadata: Metadata = {
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-
-  if (!token) {
-    redirect("/login");
-  }
-
-  let role: string | null = null;
-  let userId: string | null = null;
-  try {
-    const { payload } = await jwtVerify(token, getJwtSecret(), { clockTolerance: 60 });
-    role = (payload.platformRole as string)?.toLowerCase() || null;
-    userId = payload.userId as string || null;
-  } catch {
-    redirect("/login");
-  }
-
-  if (!role) {
-    redirect("/login");
-  }
+  const authResult = await auth();
+  const userId = authResult.userId || null;
+  const clerkUser = userId ? await currentUser() : null;
+  const email = clerkUser?.emailAddresses[0]?.emailAddress || null;
+  if (!userId || !email) redirect("/login");
+  const dbUser = email ? await prisma.user.findUnique({ where: { email }, select: { platformRole: true, role: true } }) : null;
+  const role = dbUser?.platformRole || "HOTEL";
 
   let userData = null;
-  if (userId) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: { tenant: { select: { name: true } } },
-      });
-      if (user) {
-        userData = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          platformRole: user.platformRole,
-          tenantName: user.tenant?.name,
-          createdAt: user.createdAt.toISOString(),
-        };
-      }
-    } catch {
-      // Silently fail
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { tenant: { select: { name: true } } },
+    });
+    if (user) {
+      userData = { id: user.id, name: user.name, email: user.email, role: user.role, platformRole: user.platformRole, tenantName: user.tenant?.name, createdAt: user.createdAt.toISOString() };
     }
+  } catch {
+    // DB unavailable: keep Clerk identity active and render the workspace shell.
   }
 
   const validRole = role as "admin" | "hotel" | "supplier" | "factoring" | "shipping" | "marketing";
@@ -75,3 +50,4 @@ export default async function DashboardLayout({
     </DashboardShell>
   );
 }
+

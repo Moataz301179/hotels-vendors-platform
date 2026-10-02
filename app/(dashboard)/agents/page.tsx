@@ -1,8 +1,11 @@
-export const dynamic = "force-dynamic";
+import type { Metadata } from "next";
+import { getCurrentUser } from "@/lib/auth/server-auth";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/invo/status-badge";
 import { KPICard, KPIGrid } from "@/components/invo/kpi-card";
 import { Bot, Play, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { requirePermission } from "@/lib/auth/rbac";
 
 const BG_CARD = "var(--bg-surface-1)";
 const BORDER = "rgba(255,255,255,0.06)";
@@ -12,13 +15,35 @@ const TEXT_MUTED = "#6C757D";
 const ACCENT_ORANGE = "var(--accent-base)";
 
 const AGENT_PIPELINE = [
-  { id: "agent_1_ingestion", name: "Ingestion", desc: "Parse and validate incoming invoices", icon: "📥" },
-  { id: "agent_2_compliance", name: "Compliance", desc: "ETA, fraud, and compliance checks", icon: "🛡️" },
-  { id: "agent_3_signoff", name: "Sign-off", desc: "Delivery confirmation and approval", icon: "✅" },
-  { id: "agent_4_routing", name: "Routing", desc: "Route to factoring or payment", icon: "🔀" },
+  { id: "agent_1_ingestion", name: "Ingestion", desc: "Parse and validate incoming invoices", icon: "\uD83D\uDCE5" },
+  { id: "agent_2_compliance", name: "Compliance", desc: "ETA, fraud, and compliance checks", icon: "\uD83D\uDDEF" },
+  { id: "agent_3_signoff", name: "Sign-off", desc: "Delivery confirmation and approval", icon: "\u2705" },
+  { id: "agent_4_routing", name: "Routing", desc: "Route to factoring or payment", icon: "\uD83D\uDDFA" },
 ];
 
+export const metadata: Metadata = {
+  title: "Agent System — Hotels Vendors",
+  description: "AI agent orchestration dashboard",
+};
+
 export default async function AgentsPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const userId = user.id;
+  const platformRole = user.platformRole;
+  const auth = { userId, platformRole, tenantId: user.tenantId };
+  try {
+    await requirePermission(auth, "agent:read");
+  } catch {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center", color: TEXT_SECONDARY }}>
+        <AlertTriangle className="w-8 h-8 mx-auto mb-3" style={{ color: "#FF3D00" }} />
+        <h2 style={{ color: TEXT_PRIMARY, marginBottom: "0.5rem" }}>Access Denied</h2>
+        <p style={{ color: TEXT_SECONDARY }}>You do not have permission to view the Agent System.</p>
+      </div>
+    );
+  }
+
   const supabase = await createClient();
 
   const [auditRes, alertsRes] = await Promise.all([

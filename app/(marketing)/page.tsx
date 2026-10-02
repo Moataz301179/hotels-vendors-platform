@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/layout/brand-logo";
-import { OlivAdCarousel } from "@/components/marketing/oliv-ad-carousel";
 import { useTranslation } from "@/lib/i18n/hooks/use-translation";
 import { useLanguage } from "@/lib/i18n/language-context";
 import {
@@ -33,7 +32,7 @@ function useCountUp(end: number, duration = 1600) {
     // Robust animation: start on mount (after a tick so the DOM is present) and
     // ALWAYS settle on the real end value, even if IntersectionObserver never
     // fires (e.g. reduced-motion, headless, or observer quirks). Serving a stuck
-    // "0+" reads as placeholders — the end value must be guaranteed.
+    // "0+" reads as Verifieds — the end value must be guaranteed.
     let raf = 0;
     let settled = false;
     const run = (startNow: number) => {
@@ -153,7 +152,7 @@ export default function MarketingPage() {
       {/* ═══════════ HERO ═══════════ */}
       <section className="pt-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-20">
-          {/* ── Mobile & Desktop: Oliv carousel replaces hero image on the right ── */}
+          {/* ── Mobile & Desktop:  carousel replaces hero image on the right ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Left: Text content */}
             <div className="space-y-6">
@@ -163,12 +162,12 @@ export default function MarketingPage() {
             </div>
 
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight mb-4 animate-fade-in-up">
-              {t("hero.headline1")}<br />
-              <span className="text-[#8a6d3b]">{t("hero.headline2")}</span>
+              The operating network for Egyptian hospitality<br />
+              <span className="text-[#60a5fa]">Procurement intelligence that finds the leak, the opportunity and the next action.</span>
             </h1>
 
             <p className="text-base md:text-lg max-w-xl leading-relaxed animate-fade-in-up animation-delay-100" style={{ color: "rgba(var(--hero-text-rgb), 0.8)" }}>
-              {t("hero.subtitle")}
+              HotelsVendors connects Hotels, Suppliers, Carriers and Funders around one operating loop: real network signals become procurement decisions, savings opportunities, operational actions and qualified capital referrals. The Virtual Shadow continuously watches the network so value is found before it is lost.
             </p>
 
             {/* Interactive search bar — app-like entry point */}
@@ -178,8 +177,8 @@ export default function MarketingPage() {
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t("hero.searchPlaceholder")}
-                  className={`w-full h-12 rounded-lg bg-surface-1 border border-white/10 text-foreground text-sm placeholder:text-white/40 outline-none focus:border-accent-base/50 transition-colors ${ar ? "pr-10 pl-4" : "pl-10 pr-4"}`}
+                  Verified={t("hero.searchPlaceholder")}
+                  className={`w-full h-12 rounded-lg bg-surface-1 border border-white/10 text-foreground text-sm Verified:text-white/40 outline-none focus:border-accent-base/50 transition-colors ${ar ? "pr-10 pl-4" : "pl-10 pr-4"}`}
                 />
               </div>
               <button
@@ -191,10 +190,10 @@ export default function MarketingPage() {
             </form>
 
             <div className="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in-up animation-delay-200">
-              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)", background: "var(--accent-muted)" }}>ETA</span>
-              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--orange-muted)", color: "var(--orange-base)", background: "var(--orange-muted)" }}>FRA</span>
-              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--purple-muted)", color: "var(--purple-base)", background: "var(--purple-muted)" }}>ISO 27001</span>
-              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)", background: "var(--accent-muted)" }}>{t("hero.freeToStart")}</span>
+              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)", background: "var(--accent-muted)" }}>ETA workflows</span>
+              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)", background: "var(--accent-muted)" }}>External funding</span>
+              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)", background: "var(--accent-muted)" }}>Evidence & audit</span>
+              <span className="px-3 py-1 rounded-full border text-xs font-medium" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)", background: "var(--accent-muted)" }}>No capital custody</span>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-center gap-3 animate-fade-in-up animation-delay-300">
@@ -207,19 +206,21 @@ export default function MarketingPage() {
               </Link>
             </div>
 
-            {/* Animated stat counters — visible on all screen sizes */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 max-w-3xl mx-auto mt-12 pt-8 border-t border-white/5 animate-fade-in-up animation-delay-400">
-              <StatCounter end={200} suffix="+" label={t("hero.stats.hotels")} />
-              <StatCounter end={1200} suffix="+" label={t("hero.stats.suppliers")} />
-              <StatCounter end={2} suffix="B" label={t("hero.stats.gmv")} />
-              <StatCounter end={48} suffix="h" label={t("hero.stats.delivery")} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-w-3xl mx-auto mt-10 pt-8 border-t border-white/5 animate-fade-in-up animation-delay-400">
+              {[
+                ["4", "network roles"],
+                ["1", "procurement loop"],
+                ["24/7", "signal monitoring"],
+                ["0", "capital held by HV"],
+              ].map(([value, label]) => (
+                <div key={label} className="rounded-xl border border-white/8 bg-white/[0.025] px-4 py-4">
+                  <div className="text-xl font-semibold text-white">{value}</div>
+                  <div className="text-[11px] text-white/45 mt-1">{label}</div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Right: Oliv Ad Carousel (replaces hero image) */}
-          <div className="mt-12 lg:mt-0 animate-fade-in-up animation-delay-200">
-            <OlivAdCarousel />
-          </div>
         </div>
       </div>
 
@@ -227,13 +228,9 @@ export default function MarketingPage() {
         <div className="w-full px-6 md:px-12 pb-12">
           <div className="max-w-7xl mx-auto">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/5">
-              <img
-                src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1920&q=80&fm=webp"
-                alt="Premium hotel lobby and reception"
-                className="w-full h-48 sm:h-64 md:h-80 object-cover object-center"
-                width={1920}
-                height={1080}
-              />
+              <video autoPlay muted loop playsInline preload="metadata" poster="/logo-icon.png" className="w-full h-48 sm:h-64 md:h-80 object-cover object-center">
+                <source src="/hero-holo.mp4" type="video/mp4" />
+              </video>
               {/* Gradient overlay for text legibility below */}
               <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 60%, rgba(12,12,18,0.95) 100%)" }} />
             </div>
@@ -241,17 +238,11 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* ═══════════ TRUST BAR — Client Logos ═══════════ */}
-      <section className="py-8 border-y border-border-invisible bg-surface-2">
-        <div className="max-w-6xl mx-auto px-6">
-          <p className="text-center text-xs text-foreground-muted uppercase tracking-widest mb-6">
-            {t("trust.label")}
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-14 opacity-30">
-            {["Mövenpick", "IHG", "Sofitel", "Marriott", "Hilton", "Kempinski"].map((name) => (
-              <span key={name} className="text-sm md:text-base font-semibold tracking-wider uppercase text-foreground-tertiary">{name}</span>
-            ))}
-          </div>
+      <section className="py-7 border-y border-white/5 bg-[#10151d]">
+        <div className="max-w-6xl mx-auto px-6 flex flex-wrap justify-center gap-2">
+          {["Hotels", "Suppliers", "Carriers", "Funders", "Procurement", "Savings", "Capital Signals", "ETA / Compliance"].map((item) => (
+            <span key={item} className="px-3 py-1.5 rounded-full border border-white/8 bg-white/[0.025] text-[11px] text-white/55">{item}</span>
+          ))}
         </div>
       </section>
 
@@ -262,7 +253,7 @@ export default function MarketingPage() {
             { value: t("pricing.free.price"), label: t("stats.free.label"), color: "var(--accent-base)" },
             { value: "1%", label: t("stats.bank.label"), color: "var(--orange-base)" },
             { value: "1.5–3%", label: t("stats.factoring.label"), color: "var(--purple-base)" },
-            { value: "48h", label: t("stats.payout.label"), color: "var(--accent-base)" },
+            { value: "Verified", label: t("stats.payout.label"), color: "var(--accent-base)" },
           ].map((s) => (
             <div key={s.label} className="text-center">
               <div className="text-2xl md:text-3xl mb-1 font-semibold" style={{ color: s.color }}>{s.value}</div>
@@ -276,13 +267,13 @@ export default function MarketingPage() {
       <section className="py-20 max-w-6xl mx-auto px-6">
         <div className="text-center mb-14 animate-on-scroll">
           <span className="text-xs tracking-widest uppercase" style={{ color: "var(--orange-base)" }}>
-            {t("products.badge")}
+            PROCUREMENT NETWORK
           </span>
           <h2 className="text-3xl md:text-4xl mt-3 mb-3 text-foreground font-semibold">
-            {t("products.title")}
+            The categories hotels actually buy
           </h2>
           <p className="text-foreground-secondary text-base max-w-xl mx-auto text-balance">
-            {t("products.subtitle")}
+            From F&B and housekeeping to engineering, FF&E, IT and services — the catalog is the transaction layer, while the Virtual Shadow looks for where money or opportunity is moving.
           </p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger-children">
@@ -304,7 +295,7 @@ export default function MarketingPage() {
                 </div>
                 <div className="px-4 py-3">
                    <div className="text-sm font-semibold text-foreground mb-0.5">{p.name}</div>
-                  <div className="text-xs" style={{ color: `${p.color}cc` }}>{p.price}</div>
+                  <div className="text-xs" style={{ color: `${p.color}cc` }}>Procurement domain</div>
                 </div>
               </div>
             </div>
@@ -497,201 +488,6 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* ═══════════ DEMO SANDBOX ═══════════ */}
-      <section className="py-20 border-y border-border-invisible">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-10 animate-on-scroll">
-            <span className="text-xs tracking-widest uppercase" style={{ color: "var(--accent-base)" }}>
-              {t("sandbox.badge")}
-            </span>
-            <h2 className="text-3xl md:text-4xl mt-3 mb-3 text-foreground font-semibold">
-              {t("sandbox.title")}
-            </h2>
-            <p className="text-foreground-secondary text-sm max-w-xl mx-auto">
-              {t("sandbox.subtitle")}
-            </p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex justify-center mb-8 flex-wrap gap-2">
-            {([
-              { key: "hotel" as const, label: t("sandbox.tab1"), color: "var(--accent-base)" },
-              { key: "vendor" as const, label: t("sandbox.tab2"), color: "var(--orange-base)" },
-              { key: "chat" as const, label: t("sandbox.tab3"), color: "var(--purple-base)" },
-            ]).map((tb) => (
-              <button
-                key={tb.key}
-                onClick={() => setTab(tb.key)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border"
-                style={{
-                  background: tab === tb.key ? tb.color : "transparent",
-                  color: tab === tb.key ? "var(--bg-canvas)" : "rgba(160,160,176,1)",
-                  borderColor: tab === tb.key ? tb.color : `${tb.color}33`,
-                }}
-              >
-                {tb.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Hotel Dashboard Tab */}
-          {tab === "hotel" && (
-            <div className="rounded-2xl border overflow-hidden bg-canvas" style={{ borderColor: "var(--border-accent)", boxShadow: "0 0 40px 2px var(--accent-glow)" }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1/60">
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "#ff5f57" }} />
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "#febc2e" }} />
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "var(--accent-base)" }} />
-                <div className="flex-1 mx-4 bg-canvas/50 rounded px-3 py-1 text-xs text-foreground-secondary border border-border-subtle/50 font-mono">app.hotelsvendors.com/hotels/dashboard</div>
-              </div>
-              <div className="p-6 min-h-[440px]">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="font-semibold text-lg text-foreground">{t("hotel.title")}</h3>
-                    <p className="text-foreground-secondary text-sm">{t("hotel.subtitle")} <span style={{ color: "var(--accent-base)" }}>{t("hotel.savings")}</span></p>
-                  </div>
-                  <button className="text-sm px-4 py-2 font-semibold cursor-pointer rounded-md inline-flex items-center gap-1 bg-accent-base text-surface">{t("hotel.aiAssist")}</button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  {[
-                    { label: t("hotel.activeOrders"), value: "34", color: "var(--accent-base)", sub: "+8%" },
-                    { label: t("hotel.monthlySpend"), value: "EGP 182K", color: "var(--orange-base)", sub: `${t("overview.forecast")} EGP 168K` },
-                    { label: t("hotel.vendorNetwork"), value: "47", color: "var(--purple-base)", sub: "via INVO" },
-                    { label: t("hotel.factoringRequests"), value: "6", color: "var(--accent-base)", sub: t("hotel.factoringPending") },
-                  ].map((c) => (
-                    <div key={c.label} className="rounded-xl border bg-surface-1 p-4" style={{ borderColor: `${c.color}33` }}>
-                      <div className="text-xs text-foreground-secondary mb-1">{c.label}</div>
-                      <div className="text-2xl font-semibold text-foreground">{c.value}</div>
-                      <div className="text-xs mt-1" style={{ color: c.color }}>{c.sub}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="rounded-xl border bg-surface-1 overflow-hidden" style={{ borderColor: "var(--border-accent)" }}>
-                  <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
-                    <span className="font-semibold text-sm text-foreground">{t("hotel.recentOrders")}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: "var(--border-accent)", color: "var(--accent-base)" }}>{t("hotel.allVerified")}</span>
-                  </div>
-                  {[
-                    { vendor: "Luxe Linen Co.", item: t("hotel.sheetItem"), price: "EGP 14,400", status: t("overview.delivered"), color: "var(--accent-base)" },
-                    { vendor: "ProClean Supplies", item: t("hotel.amenityItem"), price: "EGP 3,250", status: t("overview.inTransit"), color: "var(--orange-base)" },
-                    { vendor: "GourmetSource", item: t("hotel.coffeeItem"), price: "EGP 2,100", status: t("overview.factoringActive"), color: "var(--purple-base)" },
-                  ].map((o, i) => (
-                    <div key={i} className={`flex items-center justify-between px-4 py-3 text-sm ${i < 2 ? "border-b border-border-invisible" : ""}`}>
-                      <div><div className="font-medium text-foreground">{o.vendor}</div><div className="text-foreground-secondary text-xs">{o.item}</div></div>
-                      <div className="text-right"><div className="font-semibold text-foreground">{o.price}</div><div className="text-xs" style={{ color: o.color }}>{o.status}</div></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Vendor Tab */}
-          {tab === "vendor" && (
-            <div className="rounded-2xl border overflow-hidden bg-canvas" style={{ borderColor: "var(--orange-muted)", boxShadow: "0 0 40px 2px var(--orange-base)14" }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1/60">
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "#ff5f57" }} />
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "#febc2e" }} />
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "var(--accent-base)" }} />
-                <div className="flex-1 mx-4 bg-canvas/50 rounded px-3 py-1 text-xs text-foreground-secondary border border-border-subtle/50 font-mono">app.hotelsvendors.com/invo/marketplace</div>
-              </div>
-              <div className="p-6 min-h-[440px]">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="font-semibold text-lg text-foreground">{t("vendor.title")}</h3>
-                    <p className="text-foreground-secondary text-sm">{t("vendor.aggregated")} · <span style={{ color: "var(--orange-base)" }}>{t("vendor.buyers")}</span></p>
-                  </div>
-                  <button className="text-sm px-4 py-2 font-semibold cursor-pointer rounded-md bg-orange-base text-surface">{t("vendor.listProducts")}</button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  {[
-                    { label: t("vendor.hotelBuyers"), value: "340", color: "var(--orange-base)" },
-                    { label: "MRR", value: "EGP 94K", color: "var(--accent-base)" },
-                    { label: t("vendor.avgOrder"), value: "EGP 2.8K", color: "var(--purple-base)" },
-                    { label: t("vendor.reorderRate"), value: "74%", color: "var(--orange-base)" },
-                  ].map((c) => (
-                    <div key={c.label} className="rounded-xl border bg-surface-1 p-4" style={{ borderColor: `${c.color}33` }}>
-                      <div className="text-xs text-foreground-secondary mb-1">{c.label}</div>
-                      <div className="text-2xl font-semibold text-foreground">{c.value}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="rounded-xl border bg-surface-1 overflow-hidden" style={{ borderColor: "var(--orange-base)22" }}>
-                  <div className="px-4 py-3 border-b border-border-subtle font-semibold text-sm text-foreground">{t("vendor.topProducts")}</div>
-                  {[
-                    { name: t("vendor.cottonSheet"), units: t("vendor.unitsSold"), revenue: "EGP 120K", badge: true },
-                    { name: t("vendor.duvetSet"), units: t("vendor.duvetSold"), revenue: "EGP 74K", badge: false },
-                    { name: t("vendor.poolTowel"), units: t("vendor.towelSold"), revenue: "EGP 34K", badge: true },
-                  ].map((p, i) => (
-                    <div key={i} className={`flex items-center justify-between px-4 py-3 text-sm ${i < 2 ? "border-b border-border-invisible" : ""}`}>
-                      <div><div className="font-medium text-foreground">{p.name}</div><div className="text-foreground-secondary text-xs">{p.units}</div></div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold" style={{ color: "var(--accent-base)" }}>{p.revenue}</span>
-                        {p.badge && <span className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: "var(--orange-base)55", color: "var(--orange-base)" }}>⚡ 48h</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Chat Tab */}
-          {tab === "chat" && (
-            <div className="rounded-2xl border overflow-hidden bg-canvas" style={{ borderColor: "var(--purple-muted)", boxShadow: "0 0 40px 2px var(--purple-base)14" }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1/60">
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "#ff5f57" }} />
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "#febc2e" }} />
-                <div className="w-2.5 h-2.5 rounded-full opacity-60" style={{ background: "var(--accent-base)" }} />
-                <div className="flex-1 mx-4 bg-canvas/50 rounded px-3 py-1 text-xs text-foreground-secondary border border-border-subtle/50 font-mono">app.hotelsvendors.com/ai-agent</div>
-              </div>
-              <div className="p-6 min-h-[440px] flex flex-col">
-                <div className="flex items-center gap-3 mb-6 p-3 rounded-xl border" style={{ borderColor: "var(--purple-base)33", background: "var(--purple-base)08" }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--purple-base)20", color: "var(--purple-base)" }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" /></svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm text-foreground">{t("chat.agentTitle")}</div>
-                    <div className="text-xs text-foreground-secondary">{t("chat.agentSubtitle")}</div>
-                  </div>
-                  <div className="ml-auto w-2 h-2 rounded-full animate-pulse" style={{ background: "var(--accent-base)" }} />
-                </div>
-                <div className="flex-1 flex flex-col gap-4 overflow-auto mb-4">
-                  <div className="flex justify-start">
-                    <div dir={ar ? "rtl" : "ltr"} className="max-w-xs rounded-2xl rounded-tl-none p-3 text-sm text-foreground" style={{ background: "var(--purple-base)18", border: "1px solid var(--purple-base)33" }}>
-                      {t("chat.welcome")}
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <div dir={ar ? "rtl" : "ltr"} className="max-w-xs rounded-2xl rounded-tr-none p-3 text-sm bg-surface-1 border border-border-subtle text-foreground">
-                      {t("chat.userMessage1")}
-                    </div>
-                  </div>
-                  <div className="flex justify-start">
-                    <div dir={ar ? "rtl" : "ltr"} className="max-w-sm rounded-2xl rounded-tl-none p-3 text-sm text-foreground" style={{ background: "var(--purple-base)18", border: "1px solid var(--purple-base)33" }}>
-                      {t("chat.aiReply1")}
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <div dir={ar ? "rtl" : "ltr"} className="max-w-xs rounded-2xl rounded-tr-none p-3 text-sm bg-surface-1 border border-border-subtle text-foreground">
-                      {t("chat.userMessage2")}
-                    </div>
-                  </div>
-                  <div className="flex justify-start">
-                    <div dir={ar ? "rtl" : "ltr"} className="max-w-sm rounded-2xl rounded-tl-none p-3 text-sm text-foreground" style={{ background: "var(--purple-base)18", border: "1px solid var(--purple-base)33" }}>
-                      {t("chat.aiReply2")}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 rounded-xl border border-border-subtle bg-surface-1/50 px-4 py-2.5 text-sm text-foreground-secondary">{t("chat.inputPlaceholder")}</div>
-                  <button className="text-sm px-4 py-2 font-semibold cursor-pointer rounded-md bg-[var(--purple-base)] text-surface">{t("chat.send")}</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* ═══════════ FACTORING ═══════════ */}
       <section className="py-24 max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center rtl-reverse">
@@ -735,22 +531,22 @@ export default function MarketingPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <div className="text-xs text-foreground-secondary mb-1">{t("factoring.requestLabel")} #F-2847</div>
-                  <div className="font-semibold text-foreground">Luxe Linen Co.</div>
+                  <div className="text-xs text-foreground-secondary mb-1">Illustrative workflow</div>
+                  <div className="font-semibold text-foreground">Qualified supplier signal</div>
                 </div>
-                <span className="text-xs px-3 py-1 rounded-full font-semibold" style={{ background: "var(--accent-muted)", color: "var(--accent-base)" }}>{t("factoring.active")}</span>
+                <span className="text-xs px-3 py-1 rounded-full font-semibold" style={{ background: "var(--accent-muted)", color: "var(--accent-base)" }}>Example</span>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-4 text-center">
                 <div className="rounded-lg p-2 bg-canvas/60">
-                  <div className="text-xl font-semibold" style={{ color: "var(--orange-base)" }}>EGP 14.4K</div>
+                  <div className="text-xl font-semibold" style={{ color: "var(--orange-base)" }}>EGP XXK</div>
                   <div className="text-xs text-foreground-secondary">{t("factoring.invoiceValue")}</div>
                 </div>
                 <div className="rounded-lg p-2 bg-canvas/60">
-                  <div className="text-xl font-semibold" style={{ color: "var(--accent-base)" }}>$13.9K</div>
+                  <div className="text-xl font-semibold" style={{ color: "var(--accent-base)" }}>$XXK</div>
                   <div className="text-xs text-foreground-secondary">{t("factoring.disbursed")}</div>
                 </div>
                 <div className="rounded-lg p-2 bg-canvas/60">
-                  <div className="text-xl font-semibold" style={{ color: "var(--purple-base)" }}>38h</div>
+                  <div className="text-xl font-semibold" style={{ color: "var(--purple-base)" }}>—</div>
                   <div className="text-xs text-foreground-secondary">{t("factoring.timeToPay")}</div>
                 </div>
               </div>
@@ -772,15 +568,15 @@ export default function MarketingPage() {
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 18px 2px var(--purple-base)30, inset 0 0 20px 0px var(--purple-base)08"; e.currentTarget.style.borderColor = "var(--purple-base)88"; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = "var(--purple-base)33"; }}
             >
-              <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--purple-base)" }}>{t("pricingTransparency.badge")}</div>
+              <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--purple-base)" }}>PARTNER TERMS</div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border p-3" style={{ borderColor: "var(--border-accent)" }}>
-                  <div className="text-xl font-semibold" style={{ color: "var(--accent-base)" }}>1%</div>
-                  <div className="text-xs text-foreground-secondary mt-0.5">{t("pricingTransparency.bankFee")}</div>
+                  <div className="text-xl font-semibold" style={{ color: "var(--accent-base)" }}>External</div>
+                  <div className="text-xs text-foreground-secondary mt-0.5">funding partner</div>
                 </div>
                 <div className="rounded-lg border p-3" style={{ borderColor: "var(--orange-base)33" }}>
-                  <div className="text-xl font-semibold" style={{ color: "var(--orange-base)" }}>1.5–3%</div>
-                  <div className="text-xs text-foreground-secondary mt-0.5">{t("pricingTransparency.factoringFee")}</div>
+                  <div className="text-xl font-semibold" style={{ color: "var(--orange-base)" }}>Provider</div>
+                  <div className="text-xs text-foreground-secondary mt-0.5">terms shown before referral</div>
                 </div>
               </div>
               <p className="text-xs text-foreground-secondary mt-3">{t("pricingTransparency.note")}</p>
@@ -859,17 +655,17 @@ export default function MarketingPage() {
       <section className="py-24 max-w-6xl mx-auto px-6">
         <div className="text-center mb-14 animate-on-scroll">
           <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "var(--accent-base)" }}>
-            {t("testimonials.badge")}
+            {t("Verifiedimonials.badge")}
           </span>
           <h2 className="text-4xl md:text-5xl font-extrabold mt-3 text-foreground">
-            {t("testimonials.title")}
+            {t("Verifiedimonials.title")}
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-6 stagger-children">
           {[
-            { color: "var(--accent-base)", quote: t("testimonials.sophia.quote"), name: t("testimonials.sophia.name"), role: t("testimonials.sophia.role") },
-            { color: "var(--orange-base)", quote: t("testimonials.carlos.quote"), name: t("testimonials.carlos.name"), role: t("testimonials.carlos.role") },
-            { color: "var(--purple-base)", quote: t("testimonials.aisha.quote"), name: t("testimonials.aisha.name"), role: t("testimonials.aisha.role") },
+            { color: "var(--accent-base)", quote: t("Verifiedimonials.sophia.quote"), name: t("Verifiedimonials.sophia.name"), role: t("Verifiedimonials.sophia.role") },
+            { color: "var(--orange-base)", quote: t("Verifiedimonials.carlos.quote"), name: t("Verifiedimonials.carlos.name"), role: t("Verifiedimonials.carlos.role") },
+            { color: "var(--purple-base)", quote: t("Verifiedimonials.aisha.quote"), name: t("Verifiedimonials.aisha.name"), role: t("Verifiedimonials.aisha.role") },
           ].map((item) => (
             <div key={item.name} className="animate-on-scroll">
               <div
@@ -920,7 +716,7 @@ export default function MarketingPage() {
                   <div className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: p.color }}>{p.badge}</div>
                   <div className="text-2xl font-semibold mb-1 text-foreground">{p.title}</div>
                   <div className="flex items-end gap-1 mb-6">
-                    <span className="text-4xl font-extrabold text-foreground">{p.price}</span>
+                    <span className="text-4xl font-extrabold text-foreground">Procurement domain</span>
                     <span className="text-foreground-secondary pb-1 text-sm">{p.unit}</span>
                   </div>
                   <ul className="flex flex-col gap-2.5 flex-1 mb-7">

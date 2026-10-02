@@ -29,32 +29,7 @@
   --signal-soft: rgba(59, 130, 246, 0.12);
   --signal-glow: rgba(59, 130, 246, 0.24);
 }
-/* ═══════════════════════════════════════════════════════════════
-   SUPPLEMENTARY PALETTE — DealRay-inspired accent system
-   Adds functional accent colors for cards, badges, states.
-   Brand signal (#ff3d00) remains the ONLY primary accent.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Success — sustainable green for positive states */
---accent-success: #22c55e;
---accent-success-soft: rgba(34, 197, 94, 0.10);
---accent-success-glow: rgba(34, 197, 94, 0.18);
-
-/* Warning — amber for attention states */
---accent-warning: #f59e0b;
---accent-warning-soft: rgba(245, 158, 11, 0.10);
-
-/* Error — cool red for destructive states (distinct from brand signal) */
---accent-error: #ef4444;
---accent-error-soft: rgba(239, 68, 68, 0.10);
-
-/* Info — cool blue for informational states */
---accent-info: #3b82f6;
---accent-info-soft: rgba(59, 130, 246, 0.10);
-
-/* Surface highlight — warm ivory for light cards on dark (unused in dark mode) */
---surface-highlight: #fafaf9;
-
+:root {
 /* ═══════════════════════════════════════════════════════════════
    CARD TOKENS — consistent card language across marketing + dashboard
    ═══════════════════════════════════════════════════════════════ */
@@ -121,6 +96,8 @@
 --dash-header-height: 56px;
 --dash-cell-padding: 0.625rem 0.875rem;
 --dash-table-stripe: rgba(255, 255, 255, 0.02);
+
+}
 
 
 .dark {
@@ -315,6 +292,17 @@ a:hover svg, button:hover svg, [role="button"]:hover svg { color: var(--accent-b
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
+  --accent-success: #22c55e;
+  --accent-success-soft: rgba(34, 197, 94, 0.10);
+  --accent-success-glow: rgba(34, 197, 94, 0.18);
+  --accent-warning: #f59e0b;
+  --accent-warning-soft: rgba(245, 158, 11, 0.10);
+  --accent-error: #ef4444;
+  --accent-error-soft: rgba(239, 68, 68, 0.10);
+  --accent-info: #3b82f6;
+  --accent-info-soft: rgba(59, 130, 246, 0.10);
+  --surface-highlight: #fafaf9;
+
   --bg-canvas: #0a0a0a;
   --bg-surface-1: #10151D;
   --bg-surface-2: var(--color-ink-850);
