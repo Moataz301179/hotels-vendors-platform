@@ -1,0 +1,1 @@
+import {Marketplace} from '@/components/v2/marketplace';export default function AppMarketplace(){return <><div className="eyebrow">Procurement</div><h1 style={{fontSize:42,letterSpacing:'-.05em',margin:'8px 0'}}>Live supply</h1><p className="muted">Only active database records are shown.</p><Marketplace/></>}

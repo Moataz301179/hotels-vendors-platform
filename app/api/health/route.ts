@@ -1,12 +1,1 @@
-import { db } from "@/db";
-
-export const dynamic = "force-dynamic";
-
-export async function GET() {
-  try {
-    await db.$queryRawUnsafe("select 1");
-    return Response.json({ ok: true });
-  } catch {
-    return Response.json({ ok: false }, { status: 500 });
-  }
-}
+import {NextResponse} from 'next/server';export async function GET(){return NextResponse.json({ok:true,service:'hotelsvendors',version:'v2',time:new Date().toISOString()})}

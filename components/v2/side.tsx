@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export function Side(){return <aside className="side"><p className="eyebrow" style={{padding:'0 13px 10px'}}>Workspace</p><Link href="/dashboard">Overview</Link><Link href="/intelligence">Virtual Shadow</Link><Link href="/workspace/marketplace">Procurement</Link><Link href="/orders">Orders</Link><Link href="/suppliers">Suppliers</Link><Link href="/carrier">Carriers</Link><Link href="/funding">Funding signals</Link></aside>}

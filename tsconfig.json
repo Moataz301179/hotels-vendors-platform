@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -13,16 +16,35 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./*"] }
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "allowJs": true
   },
   "include": [
     "next-env.d.ts",
-    "app/**/*.ts", "app/**/*.tsx",
-    "components/**/*.ts", "components/**/*.tsx",
-    "lib/**/*.ts", "lib/**/*.tsx",
-    "prisma/schema.prisma",
-    ".next/types/**/*.ts", ".next/dev/types/**/*.ts"
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/v2/**/*.ts",
+    "components/v2/**/*.tsx",
+    "lib/prisma.ts",
+    "lib/v2-auth.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "prisma/seed.ts", "prisma/seed-*.ts"]
+  "exclude": [
+    "node_modules",
+    "legacy-app",
+    "current",
+    "prisma",
+    "tests",
+    "scripts"
+  ]
 }

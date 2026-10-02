@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {prisma} from '@/lib/prisma';import {getActor} from '@/lib/v2-auth';
+export async function GET(){const user=await getActor();if(!user)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});const orders=await prisma.order.findMany({where:{tenantId:user.tenantId,deletedAt:null},select:{id:true,orderNumber:true,status:true,currency:true,total:true,createdAt:true,supplier:{select:{name:true}},hotel:{select:{name:true}}},orderBy:{createdAt:'desc'},take:50});return NextResponse.json({orders})}
