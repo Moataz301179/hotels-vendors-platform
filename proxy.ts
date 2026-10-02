@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 const PUBLIC_PATHS = new Set([
   "/", "/login", "/register", "/sign-up", "/auth-complete", "/forgot-password",
   "/verify-email", "/catalog", "/sandbox", "/demo", "/hotels", "/hotels/join",
-  "/marketplace", "/api/v2/marketplace", "/suppliers/join", "/about", "/pricing", "/solutions",
+  "/marketplace", "/platform", "/solutions", "/api/v2/marketplace", "/suppliers/join", "/about", "/pricing", "/solutions",
   "/contact", "/become-supplier", "/social-media", "/offline", "/help", "/flow",
   "/financing/oliv", "/oliv/referral", "/factoring-service", "/api/health", "/api/v1/products",
   "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture",
