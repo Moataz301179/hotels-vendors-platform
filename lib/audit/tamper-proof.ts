@@ -7,8 +7,18 @@
  * If any entry is modified, the chain breaks and is detectable.
  */
 
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+
+
+/** Canonical JSON so JSONB key ordering cannot change a chain hash. */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).filter((key) => record[key] !== undefined).sort();
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
+}
 
 // ─────────────────────────────────────────
 // 1. HASH CHAIN
@@ -72,37 +82,48 @@ export async function appendAuditEntry(params: {
   return prisma.$transaction(async (tx) => {
     // Serialize append operations so concurrent requests cannot fork the hash chain.
     await tx.$executeRawUnsafe("SELECT pg_advisory_xact_lock(4815162342)");
-    const previousEntry = await tx.auditLog.findFirst({ orderBy: { createdAt: "desc" }, select: { hash: true } });
+    const previousEntry = await tx.auditLog.findFirst({ orderBy: { createdAt: "desc" }, select: { hash: true, createdAt: true } });
     const previousHash = previousEntry?.hash || "genesis";
+
+    // AuditLog is protected by an append-only database trigger. Compute the final
+    // hash before INSERT; creating a placeholder then UPDATEing it is forbidden.
+    const id = randomUUID();
+    // TIMESTAMP(3) is millisecond-precision; make timestamps strictly increasing
+    // so verification can reconstruct insertion order from createdAt alone.
+    const createdAt = new Date(Math.max(Date.now(), (previousEntry?.createdAt.getTime() ?? 0) + 1));
+    const normalizedChanges = typeof changes === "string" ? JSON.parse(changes) : changes;
+    const hash = computeEntryHash({
+      id,
+      entityName: entityName ?? null,
+      entityId,
+      actionType: actionType ?? null,
+      actorId,
+      actorRole,
+      changes: normalizedChanges == null ? null : stableStringify(normalizedChanges),
+      ipAddress,
+      userAgent,
+      createdAt,
+      previousHash,
+    });
+
     const entry = await tx.auditLog.create({
       data: {
+        id,
         entityName: entityName as never,
         entityId,
         actionType: actionType as never,
         tenantId,
         actorId,
         actorRole,
-        changes: typeof changes === "string" ? JSON.parse(changes) : changes,
+        changes: normalizedChanges,
         ipAddress,
         userAgent,
         previousHash,
-        hash: "pending",
+        hash,
+        createdAt,
       },
+      select: { id: true },
     });
-    const hash = computeEntryHash({
-      id: entry.id,
-      entityName: entry.entityName as string | null,
-      entityId: entry.entityId,
-      actionType: entry.actionType as string | null,
-      actorId: entry.actorId,
-      actorRole: entry.actorRole,
-      changes: entry.changes ? JSON.stringify(entry.changes) : null,
-      ipAddress: entry.ipAddress,
-      userAgent: entry.userAgent,
-      createdAt: entry.createdAt,
-      previousHash,
-    });
-    await tx.auditLog.update({ where: { id: entry.id }, data: { hash } });
     return entry.id;
   });
 }
@@ -143,7 +164,7 @@ export async function verifyAuditChain(): Promise<VerificationResult> {
       actionType: entry.actionType as string | null,
       actorId: entry.actorId,
       actorRole: entry.actorRole,
-      changes: entry.changes ? JSON.stringify(entry.changes) : null,
+      changes: entry.changes ? stableStringify(entry.changes) : null,
       ipAddress: entry.ipAddress,
       userAgent: entry.userAgent,
       createdAt: entry.createdAt,

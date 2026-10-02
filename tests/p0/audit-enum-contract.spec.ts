@@ -34,6 +34,15 @@ describe("tamper-evident audit enum contract", () => {
     expect(violations).toEqual([]);
   });
 
+  it("computes the final hash before the append-only insert and never updates an audit row", () => {
+    const source = readFileSync(join(root, "lib/audit/tamper-proof.ts"), "utf8");
+    expect(source).toContain("const hash = computeEntryHash");
+    expect(source).toContain("hash,");
+    expect(source).not.toContain("tx.auditLog.update");
+    expect(source).toContain("pg_advisory_xact_lock(4815162342)");
+    expect(source).toContain("previousEntry?.createdAt.getTime() ?? 0) + 1");
+  });
+
   it("has an additive PostgreSQL migration for the newly supported audit values", () => {
     const migration = readFileSync(join(root, "prisma/migrations/20261002180000_expand_audit_enums/migration.sql"), "utf8");
     expect(migration).toContain('ALTER TYPE "EntityName" ADD VALUE IF NOT EXISTS');
