@@ -20,7 +20,7 @@ function isPublic(pathname: string) {
   return PUBLIC_PATHS.has(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 function isProtectedPage(pathname: string) {
-  return ["/hotel", "/supplier", "/factoring", "/shipping", "/carrier", "/admin", "/marketing", "/analytics", "/ai-agents", "/procurement", "/orders", "/payments", "/scheduler", "/security", "/dispute", "/settings", "/eta", "/onboarding", "/intelligence", "/agents", "/jarvis", "/dashboard", "/workspace"].some((p) => pathname.startsWith(p));
+  return ["/hotel", "/supplier", "/factoring", "/shipping", "/carrier", "/admin", "/marketing", "/analytics", "/ai-agents", "/procurement", "/orders", "/payments", "/scheduler", "/security", "/dispute", "/settings", "/eta", "/onboarding", "/intelligence", "/agents", "/jarvis", "/dashboard", "/workspace", "/suppliers"].some((p) => pathname.startsWith(p));
 }
 function addSecurityHeaders(response: NextResponse) {
   response.headers.set("X-Frame-Options", "DENY");
