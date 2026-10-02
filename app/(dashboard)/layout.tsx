@@ -24,7 +24,8 @@ export default async function DashboardLayout({
   const email = clerkUser?.emailAddresses[0]?.emailAddress || null;
   if (!userId || !email) redirect("/login");
   const dbUser = email ? await prisma.user.findUnique({ where: { email }, select: { platformRole: true, role: true } }) : null;
-  const role = dbUser?.platformRole || "HOTEL";
+  if (!dbUser) redirect("/onboarding");
+  const role = dbUser.platformRole;
 
   let userData = null;
   try {
