@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "HotelsVendors — Egypt's B2B Hospitality Procurement Infrastructure",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance. Purpose-built for Egyptian coastal hotel chains.",
+      "Signal-driven procurement. Embedded reverse factoring. ETA e-invoicing compliance. Purpose-built for Egyptian coastal hotel chains.",
     type: "website",
     locale: "en_EG",
     alternateLocale: "ar_EG",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "HotelsVendors — Egypt's B2B Hospitality Procurement Infrastructure",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance.",
+      "Signal-driven procurement. Embedded reverse factoring. ETA e-invoicing compliance.",
   },
   alternates: {
     canonical: "https://www.hotelsvendors.com",
@@ -59,7 +59,7 @@ const JSON_LD = {
   },
   "url": "https://hotelsvendors.com",
   "logo": "https://hotelsvendors.com/logo-white.svg",
-  "description": "Egypt's B2B hospitality procurement infrastructure platform. AI-automated demand forecasting, embedded reverse factoring, ETA e-invoicing compliance, and shared-route coastal logistics.",
+  "description": "Egypt's B2B hospitality procurement infrastructure platform. Demand and spend signals, external funding referrals, ETA e-invoicing compliance, and shared-route coastal logistics.",
   "address": {
     "@type": "PostalAddress",
     "addressCountry": "EG",

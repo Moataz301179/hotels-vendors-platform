@@ -251,8 +251,8 @@ export default function MarketingPage() {
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { value: t("pricing.free.price"), label: t("stats.free.label"), color: "var(--accent-base)" },
-            { value: "1%", label: t("stats.bank.label"), color: "var(--orange-base)" },
-            { value: "1.5–3%", label: t("stats.factoring.label"), color: "var(--purple-base)" },
+            { value: "External", label: t("stats.bank.label"), color: "var(--orange-base)" },
+            { value: "Provider terms", label: t("stats.factoring.label"), color: "var(--purple-base)" },
             { value: "Verified", label: t("stats.payout.label"), color: "var(--accent-base)" },
           ].map((s) => (
             <div key={s.label} className="text-center">
@@ -702,8 +702,8 @@ export default function MarketingPage() {
           <div className="grid md:grid-cols-3 gap-6 stagger-children">
             {[
               { color: "var(--accent-base)", badge: t("pricing.free.badge"), title: t("pricing.free.title"), price: t("pricing.free.price"), unit: t("pricing.free.unit"), features: [t("pricing.free.f1"), t("pricing.free.f2"), t("pricing.free.f3"), t("pricing.free.f4"), t("pricing.free.f5")] },
-              { color: "var(--orange-base)", badge: t("pricing.bank.badge"), title: t("pricing.bank.title"), price: "1%", unit: t("pricing.bank.unit"), highlight: true, features: [t("pricing.bank.f1"), t("pricing.bank.f2"), t("pricing.bank.f3"), t("pricing.bank.f4"), t("pricing.bank.f5")] },
-              { color: "var(--purple-base)", badge: t("pricing.factoring.badge"), title: t("pricing.factoring.title"), price: "1.5–3%", unit: t("pricing.factoring.unit"), features: [t("pricing.factoring.f1"), t("pricing.factoring.f2"), t("pricing.factoring.f3"), t("pricing.factoring.f4"), t("pricing.factoring.f5")] },
+              { color: "var(--orange-base)", badge: t("pricing.bank.badge"), title: t("pricing.bank.title"), price: "External", unit: t("pricing.bank.unit"), highlight: true, features: [t("pricing.bank.f1"), t("pricing.bank.f2"), t("pricing.bank.f3"), t("pricing.bank.f4"), t("pricing.bank.f5")] },
+              { color: "var(--purple-base)", badge: t("pricing.factoring.badge"), title: t("pricing.factoring.title"), price: "Provider terms", unit: t("pricing.factoring.unit"), features: [t("pricing.factoring.f1"), t("pricing.factoring.f2"), t("pricing.factoring.f3"), t("pricing.factoring.f4"), t("pricing.factoring.f5")] },
             ].map((p) => (
               <div key={p.title} className="animate-on-scroll">
                 <div
