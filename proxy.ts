@@ -7,7 +7,7 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = new Set([
-  "/", "/login", "/register", "/sign-up", "/auth-complete", "/forgot-password",
+  "/", "/login", "/register", "/sign-in", "/sign-up", "/auth-complete", "/forgot-password",
   "/verify-email", "/catalog", "/sandbox", "/demo", "/hotels", "/hotels/join",
   "/marketplace", "/platform", "/solutions", "/api/v2/marketplace", "/suppliers/join", "/about", "/pricing", "/solutions",
   "/contact", "/become-supplier", "/social-media", "/offline", "/help", "/flow",
