@@ -11,16 +11,13 @@ const PUBLIC_PATHS = new Set([
   "/verify-email", "/catalog", "/sandbox", "/demo", "/hotels", "/hotels/join",
   "/marketplace", "/platform", "/solutions", "/api/v2/marketplace", "/suppliers/join", "/about", "/pricing", "/solutions",
   "/contact", "/become-supplier", "/social-media", "/offline", "/help", "/flow",
-  "/financing/oliv", "/oliv/referral", "/factoring-service", "/api/health", "/api/v1/products",
+  "/financing/oliv", "/oliv/referral", "/factoring-service", "/api/health", "/api/ready", "/api/v1/products",
   "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture",
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/static", "/favicon", "/logo", "/videos", "/manifest.json", "/sw.js", "/robots.txt", "/sitemap", "/api/webhooks"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.has(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
-}
-function isProtectedPage(pathname: string) {
-  return ["/hotel", "/supplier", "/factoring", "/shipping", "/carrier", "/admin", "/marketing", "/analytics", "/ai-agents", "/procurement", "/orders", "/payments", "/scheduler", "/security", "/dispute", "/settings", "/eta", "/onboarding", "/intelligence", "/agents", "/jarvis", "/dashboard", "/workspace", "/suppliers"].some((p) => pathname.startsWith(p));
 }
 function addSecurityHeaders(response: NextResponse) {
   response.headers.set("X-Frame-Options", "DENY");

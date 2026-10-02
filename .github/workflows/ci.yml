@@ -1,0 +1,48 @@
+name: HotelsVendors V2 CI
+
+on:
+  push:
+    branches: [main, production-transformation]
+  pull_request:
+    branches: [main, production-transformation]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hv-v2-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify clean V2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/hv_ci
+      SESSION_SECRET: ci-only-not-for-production
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_ZXhhbXBsZS5jb20k
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate Prisma schema
+        run: npx prisma validate
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Run P0 tests
+        run: npm test
+      - name: Type-check application
+        run: npx tsc --noEmit
+      - name: Lint active V2 application
+        run: npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts lib/v2-readiness.ts proxy.ts tests/p0
+      - name: Build production bundle
+        run: npm run build
