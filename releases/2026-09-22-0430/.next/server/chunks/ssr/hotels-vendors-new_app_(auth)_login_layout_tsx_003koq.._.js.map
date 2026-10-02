@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "debugId": "3a38c3ba-d7d0-eb10-aed9-c602f056f191",
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["../../../../../hotels-vendors-new/app/%28auth%29/login/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n\nexport const metadata: Metadata = {\n  robots: { index: false, follow: false },\n};\n\nexport default function LoginLayout({ children }: { children: React.ReactNode }) {\n  return <>{children}</>;\n}\n"],"names":["metadata","robots","index","follow","LoginLayout","children"],"mappings":"0EAMe,SAASI,AAAY,UAAEC,CAAQ,CAAiC,EAC7E,MAAO,CAAA,EAAA,EAAA,GAAA,EAAA,EAAA,QAAA,CAAA,UAAGA,GACZ,eANkC,CAChCJ,OAAQ,CAAEC,MAAO,GAAOC,QAAQ,CAAM,CACxC"}}]
-}

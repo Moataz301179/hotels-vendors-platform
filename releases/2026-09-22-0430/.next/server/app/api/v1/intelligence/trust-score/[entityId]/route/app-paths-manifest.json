@@ -1,3 +1,0 @@
-{
-  "/api/v1/intelligence/trust-score/[entityId]/route": "app/api/v1/intelligence/trust-score/[entityId]/route.js"
-}
