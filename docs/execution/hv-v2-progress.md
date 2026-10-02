@@ -19,7 +19,7 @@ Updated: 2026-10-02
 - [BLOCKED] HV-DB-001 — Production `public` schema does not match the V2 Prisma schema or migration directory. Full read-only findings are in `docs/execution/hv-v2-db-reconciliation.md`. No migrations have been run.
 - [BLOCKED] HV-DEPLOY-001 — The workflow on `main` targets legacy `/var/www/hv-release-production`, PM2 `hotels-vendors-production` and port 3008, and uses unpinned `ssh-keyscan`. Do not trigger it; it does not target the verified active V2 release/process.
 - [IN_PROGRESS] HV-PROC-001 — Added authenticated Hotel-only RFQ creation/listing at `/api/v2/rfqs`, backed by `RfqRequest`, tenant-scoped and audit-recorded. Marketplace now starts a real RFQ from an active verified supplier product. Quote response/selection, order conversion and savings outcome remain pending.
-- [TODO] HV-SHADOW-001 — Implement the full evidence → opportunity → action → outcome pipeline.
+- [IN_PROGRESS] HV-SHADOW-001 — Added a server-authorized opportunity transition endpoint with explicit state-machine gates, tenant scoping, audit events, and verified-outcome savings ledger creation. Intelligence UI now exposes the next permitted action. Evidence ingestion and production verification remain blocked by the missing production intelligence tables.
 - [TODO] HV-ROLES-001 — Verify functional, server-authorized Hotel, Supplier, Carrier and Funder workflows.
 - [TODO] HV-REV-001 — Implement separate auditable commercial and external funding-referral events.
 - [TODO] HV-OPS-002 — Prove audit integrity, monitoring, backup/restore and rollback.
@@ -35,7 +35,7 @@ Updated: 2026-10-02
 
 ## Local verification (latest uncommitted readiness work)
 - `npm test`: PASS, 2 test files / 7 tests.
-- `npm run build`: PASS after RFQ implementation; build exposes `/api/v2/rfqs`.
+- `npm run build`: PASS after RFQ + Shadow transition implementation; build exposes `/api/v2/rfqs` and `/api/v2/opportunities/[id]/transition`.
 - `npx tsc --noEmit`: PASS.
 - `npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts lib/v2-readiness.ts proxy.ts tests/p0`: PASS.
 - `npx prisma validate`: PASS.
