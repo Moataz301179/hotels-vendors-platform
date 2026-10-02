@@ -16,7 +16,7 @@ concurrency:
 jobs:
   verify:
     name: Verify clean V2
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       CI: 'true'
@@ -26,9 +26,9 @@ jobs:
       CLERK_SECRET_KEY: sk_test_ZXhhbXBsZS5jb20k
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
