@@ -26,6 +26,8 @@ Present under the Prisma model's expected name: `Tenant`, `User`, `Product`, `Su
 Missing under the expected Prisma model names: `Opportunity`, `SavingsLedger`, `EvidenceRecord`, `IntelligenceEdge`, `SpendUploadRecord`.
 Missing Prisma enum types: `OpportunityType`, `OpportunityStatus`, `SavingsType`, `SavingsStatus`, `SpendSourceType`, `SpendResolutionStatus`. The Prisma schema defines 102 enums; `public` has 98 enum types and also contains two enum types not present in the current schema (`EtaSubmissionStatus`, `ResponseStatus`).
 
+A scalar-column comparison found three additional model/table differences: `Lead` is missing `dataClassification`, `rawEvidence` and `retrievalTimestamp`; `Hotel` and `Supplier` each have an extra `taxIdSearch` column. The extra columns are not automatically destructive, but they confirm the live schema is not identical to the checked-in schema.
+
 Several similarly named legacy tables exist under different names, but they are not drop-in equivalents. Read-only counts were zero for `opportunity_packages`, `savings_ledger`, `evidence_records`, `intelligence_edge`, `spend_upload_record`, `need_findings`, `network_insights` and `intelligence_updates`. Their columns differ from the current Prisma model shapes, so adding `@@map` attributes without a reviewed compatibility migration would be unsafe.
 
 The active `/api/v2/opportunities` handler queries `Opportunity`; authenticated calls may fail until the schema is reconciled. Missing opportunity, savings and evidence models also block proving the intended Virtual Shadow outcome loop.
