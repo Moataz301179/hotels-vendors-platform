@@ -67,65 +67,44 @@ export async function appendAuditEntry(params: {
   ipAddress?: string | null;
   userAgent?: string | null;
 }): Promise<string> {
-  const {
-    entityName,
-    entityId,
-    actionType,
-    tenantId,
-    actorId = null,
-    actorRole = null,
-    changes = null,
-    ipAddress = null,
-    userAgent = null,
-  } = params;
+  const { entityName, entityId, actionType, tenantId, actorId = null, actorRole = null, changes = null, ipAddress = null, userAgent = null } = params;
 
-  // Get previous entry's hash
-  const previousEntry = await prisma.auditLog.findFirst({
-    orderBy: { createdAt: "desc" },
-    select: { hash: true },
-  });
-
-  const previousHash = previousEntry?.hash || "genesis";
-
-  // Create entry
-  const entry = await prisma.auditLog.create({
-    data: {
-      entityName: entityName as never,
-      entityId,
-      actionType: actionType as never,
-      tenantId,
-      actorId,
-      actorRole,
-      changes: typeof changes === "string" ? JSON.parse(changes) : changes,
-      ipAddress,
-      userAgent,
+  return prisma.$transaction(async (tx) => {
+    // Serialize append operations so concurrent requests cannot fork the hash chain.
+    await tx.$executeRawUnsafe("SELECT pg_advisory_xact_lock(4815162342)");
+    const previousEntry = await tx.auditLog.findFirst({ orderBy: { createdAt: "desc" }, select: { hash: true } });
+    const previousHash = previousEntry?.hash || "genesis";
+    const entry = await tx.auditLog.create({
+      data: {
+        entityName: entityName as never,
+        entityId,
+        actionType: actionType as never,
+        tenantId,
+        actorId,
+        actorRole,
+        changes: typeof changes === "string" ? JSON.parse(changes) : changes,
+        ipAddress,
+        userAgent,
+        previousHash,
+        hash: "pending",
+      },
+    });
+    const hash = computeEntryHash({
+      id: entry.id,
+      entityName: entry.entityName as string | null,
+      entityId: entry.entityId,
+      actionType: entry.actionType as string | null,
+      actorId: entry.actorId,
+      actorRole: entry.actorRole,
+      changes: entry.changes ? JSON.stringify(entry.changes) : null,
+      ipAddress: entry.ipAddress,
+      userAgent: entry.userAgent,
+      createdAt: entry.createdAt,
       previousHash,
-      hash: "pending", // Will update after computing
-    },
+    });
+    await tx.auditLog.update({ where: { id: entry.id }, data: { hash } });
+    return entry.id;
   });
-
-  // Compute hash
-  const hash = computeEntryHash({
-    id: entry.id,
-    entityName: entry.entityName as string | null,
-    entityId: entry.entityId,
-    actionType: entry.actionType as string | null,
-    actorId: entry.actorId,
-    actorRole: entry.actorRole,
-    changes: entry.changes ? JSON.stringify(entry.changes) : null,
-    ipAddress: entry.ipAddress,
-    userAgent: entry.userAgent,
-    createdAt: entry.createdAt,
-    previousHash,
-  });
-
-  // Update with hash
-  await prisma.auditLog.update({
-    where: { id: entry.id },
-    data: { hash },
-  });
-
-  return entry.id;
 }
 
 // ─────────────────────────────────────────

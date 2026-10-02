@@ -1,14 +1,10 @@
 /**
- * Server-Side Authentication Helpers
- *
- * G2: RBAC IS SERVER-SIDE ONLY
- * These helpers run exclusively on the server (Server Components, Server Actions, API Routes).
- * The client NEVER decides what it can access.
+ * Canonical server-side identity for HotelsVendors.
+ * Clerk is the authentication authority. The local User/Tenant records are
+ * the authorization/business identity layer.
  */
-
-import { cookies } from "next/headers";
 import { cache } from "react";
-import { verifySession } from "@/lib/session";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 export interface ServerUser {
@@ -24,69 +20,41 @@ export interface ServerUser {
   canOverride: boolean;
 }
 
-/**
- * Get the current authenticated user from the session cookie.
- * Cached per request to avoid multiple DB queries.
- * Returns null if not authenticated.
- */
 export const getCurrentUser = cache(async (): Promise<ServerUser | null> => {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("hv_session")?.value;
-  if (!token) return null;
+  const { userId } = await auth();
+  if (!userId) return null;
 
-  const session = await verifySession(token);
-  if (!session) return null;
+  const clerkUser = await currentUser();
+  const email = clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress;
+  if (!email) return null;
 
   const user = await prisma.user.findUnique({
-    where: { id: session.userId },
+    where: { email },
     select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      platformRole: true,
-      tenantId: true,
-      hotelId: true,
-      supplierId: true,
-      factoringCompanyId: true,
-      canOverride: true,
+      id: true, email: true, name: true, role: true, platformRole: true,
+      tenantId: true, hotelId: true, supplierId: true, factoringCompanyId: true, canOverride: true,
     },
   });
-
-  if (!user) return null;
-
-  return user as ServerUser;
+  return user as ServerUser | null;
 });
 
-/**
- * Require authentication. Throws if not authenticated.
- * Use in Server Components that require login.
- */
 export async function requireAuth(): Promise<ServerUser> {
   const user = await getCurrentUser();
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  if (!user) throw new Error("Unauthorized");
   return user;
 }
 
-/**
- * Check if user has a specific platform role.
- */
 export async function hasRole(role: string): Promise<boolean> {
   const user = await getCurrentUser();
   return user?.platformRole === role || user?.platformRole === "ADMIN";
 }
 
-/**
- * Get role-specific dashboard path.
- */
 export function getDashboardPath(platformRole: string): string {
   const paths: Record<string, string> = {
     HOTEL: "/hotel",
     SUPPLIER: "/supplier",
     FACTORING: "/factoring",
-    SHIPPING: "/shipping",
+    SHIPPING: "/carrier",
     ADMIN: "/admin",
     MARKETING: "/marketing",
   };

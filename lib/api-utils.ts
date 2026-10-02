@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createHash } from "crypto";
-import { verifySession, getSessionToken } from "@/lib/session";
+import { getCurrentUser } from "@/lib/auth/server-auth";
 import { captureException } from "@sentry/nextjs";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { checkIdempotencyKey, completeIdempotency as completeRedisIdempotency } from "@/lib/redis";
@@ -33,17 +33,16 @@ function hashIpAddress(ip: string | null): string | null {
 // 1. TENANT ISOLATION
 // ─────────────────────────────────────────
 
-export function getTenantId(request: NextRequest): string | null {
-  // DEPRECATED: Do not use. Tenant ID must come from the JWT session.
-  return request.headers.get("x-tenant-id");
+export function getTenantId(_request: NextRequest): string | null {
+  // Tenant identity is resolved server-side from the authenticated Clerk user.
+  // Client-supplied tenant headers are intentionally ignored.
+  return null;
 }
 
-export function requireTenantId(request: NextRequest): string {
-  const tenantId = getTenantId(request);
-  if (!tenantId) {
-    throw new ApiError("Missing x-tenant-id header", 400);
-  }
-  return tenantId;
+export async function requireTenantId(_request: NextRequest): Promise<string> {
+  const user = await getCurrentUser();
+  if (!user?.tenantId) throw new ApiError("Tenant context unavailable", 401);
+  return user.tenantId;
 }
 
 export function getBearerToken(request: NextRequest): string | null {
@@ -76,21 +75,10 @@ export interface AuthContext {
   tenantId: string;
 }
 
-export async function authenticate(request: NextRequest): Promise<AuthContext> {
-  // Primary: read from session cookie
-  let token = await getSessionToken();
-
-  if (!token) {
-    throw new ApiError("Unauthorized", 401);
-  }
-
-  const session = await verifySession(token);
-  if (!session) {
-    throw new ApiError("Invalid or expired session", 401);
-  }
-
-  // Tenant ID comes from the JWT session — NEVER trust client-sent headers
-  return { userId: session.userId, platformRole: session.platformRole, tenantId: session.tenantId };
+export async function authenticate(_request: NextRequest): Promise<AuthContext> {
+  const user = await getCurrentUser();
+  if (!user) throw new ApiError("Unauthorized", 401);
+  return { userId: user.id, platformRole: user.platformRole, tenantId: user.tenantId };
 }
 
 export async function optionalAuth(request: NextRequest): Promise<AuthContext | null> {

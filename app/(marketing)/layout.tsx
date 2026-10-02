@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SiteNav } from "@/components/marketing/site-nav";
 import { SiteFooter } from "@/components/marketing/site-footer";
-import { SupplierOnboardingBot } from "@/components/ai-assistant/supplier-onboarding-chatbot";
 
 export const metadata: Metadata = {
-  title: "HotelsVendors — B2B Procurement & Fintech for Egyptian Hospitality",
+  title: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
   description:
-    "Egypt's B2B hospitality procurement platform. AI demand forecasting, embedded factoring, ETA e-invoicing, and shared logistics for hotel chains.",
+    "Hospitality procurement intelligence connecting Hotels, Suppliers, Carriers and Funders around evidence, action and measurable outcomes.",
   keywords: [
     "B2B hospitality procurement Egypt",
     "automated factoring lines Cairo",
@@ -24,18 +23,18 @@ export const metadata: Metadata = {
     "سلسلة التوريد الفندقية",
   ],
   openGraph: {
-    title: "HotelsVendors — Egypt's B2B Hospitality Procurement Infrastructure",
+    title: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance. Purpose-built for Egyptian coastal hotel chains.",
+      "Evidence-led procurement intelligence for Hotels, Suppliers, Carriers and Funders. External funders remain responsible for financing decisions.",
     type: "website",
     locale: "en_EG",
     alternateLocale: "ar_EG",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HotelsVendors — Egypt's B2B Hospitality Procurement Infrastructure",
+    title: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance.",
+      "Evidence-led procurement intelligence for Hotels, Suppliers, Carriers and Funders.",
   },
   alternates: {
     canonical: "https://www.hotelsvendors.com",
@@ -59,7 +58,7 @@ const JSON_LD = {
   },
   "url": "https://hotelsvendors.com",
   "logo": "https://hotelsvendors.com/logo-white.svg",
-  "description": "Egypt's B2B hospitality procurement infrastructure platform. AI-automated demand forecasting, embedded reverse factoring, ETA e-invoicing compliance, and shared-route coastal logistics.",
+  "description": "Evidence-led procurement intelligence for hospitality: watch, find, act and measure outcomes.",
   "address": {
     "@type": "PostalAddress",
     "addressCountry": "EG",
@@ -110,7 +109,6 @@ export default function MarketingLayout({
       <SiteNav />
       <main id="main-content">{children}</main>
       <SiteFooter />
-      <SupplierOnboardingBot />
     </ThemeProvider>
   );
 }

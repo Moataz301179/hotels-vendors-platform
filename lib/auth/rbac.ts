@@ -54,7 +54,7 @@ export async function hasPermission(
       const platformRolePerm = await prisma.rolePermission.findFirst({
         where: {
           role: {
-            tenantId: "cmpel4w0z0000crjivswqpywh",
+            isGlobal: true,
             name: userRole.name,
           },
           permission: { code: permissionCode },
@@ -132,7 +132,7 @@ export async function getUserPermissions(ctx: TenantContext): Promise<string[]> 
       const platformRolePerms = await prisma.rolePermission.findMany({
         where: {
           role: {
-            tenantId: "cmpel4w0z0000crjivswqpywh",
+            isGlobal: true,
             name: userRole.name,
           },
         },

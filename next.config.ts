@@ -13,11 +13,6 @@ if (!process.env.SESSION_SECRET) {
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  fontLoaders: [{ loader: 'default', options: { basePath: '/' } }],
-  // TEMP DISABLE: font optimization disabled for build
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

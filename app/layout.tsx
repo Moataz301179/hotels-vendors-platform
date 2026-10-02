@@ -23,7 +23,7 @@ if (typeof window === "undefined") {
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.hotelsvendors.com"),
   title: {
-    default: "HotelsVendors — B2B Procurement & Fintech for Egyptian Hospitality",
+    default: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
     template: "%s | HotelsVendors",
   },
   description:
@@ -52,23 +52,23 @@ export const metadata: Metadata = {
     locale: "en_EG",
     url: "https://www.hotelsvendors.com",
     siteName: "HotelsVendors",
-    title: "HotelsVendors — B2B Procurement & Fintech for Egyptian Hospitality",
+    title: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance. Purpose-built for Egyptian coastal hotel chains.",
+      "Evidence-led procurement intelligence connecting Hotels, Suppliers, Carriers and Funders.",
     images: [
       {
         url: "/logo-white.svg",
         width: 1200,
         height: 630,
-        alt: "HotelsVendors — The Market Changer",
+        alt: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HotelsVendors — B2B Procurement & Fintech",
+    title: "HotelsVendors — Your Virtual Shadow for Smarter Procurement",
     description:
-      "AI-automated procurement. Embedded reverse factoring. ETA e-invoicing compliance.",
+      "Evidence-led procurement intelligence for hospitality.",
     images: ["/logo-white.svg"],
     creator: "@hotelsvendors",
   },
@@ -170,7 +170,7 @@ export default function RootLayout({
               url: "https://www.hotelsvendors.com",
               logo: "https://www.hotelsvendors.com/logo-white.svg",
               description:
-                "Egypt's B2B hospitality procurement infrastructure platform. AI-automated demand forecasting, embedded reverse factoring, ETA e-invoicing compliance, and shared-route coastal logistics.",
+                "Evidence-led procurement intelligence for hospitality: watch, find, act and measure outcomes.",
               sameAs: [
                 "https://linkedin.com/company/hotelsvendors",
                 "https://twitter.com/hotelsvendors",
@@ -202,11 +202,13 @@ export default function RootLayout({
         <SkipLink />
         <LanguageProvider>
           <PrefsProvider>
-            <AppProvider>
-              <NotificationProvider>
-                <ClerkProvider><ThemeProvider>{children}<ToastHost /><Assistant /></ThemeProvider></ClerkProvider>
-              </NotificationProvider>
-            </AppProvider>
+            <ClerkProvider>
+              <AppProvider>
+                <NotificationProvider>
+                  <ThemeProvider>{children}<ToastHost /><Assistant /></ThemeProvider>
+                </NotificationProvider>
+              </AppProvider>
+            </ClerkProvider>
           </PrefsProvider>
         </LanguageProvider>
         <CookieConsentBanner />
