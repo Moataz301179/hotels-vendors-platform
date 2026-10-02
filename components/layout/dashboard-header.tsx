@@ -43,7 +43,7 @@ export function DashboardHeader({ role, user, onMenuClick, onCmdOpen }: Dashboar
   const { totalItems, toggleCart } = useCart();
 
   return (
-    <header className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 bg-surface-1/90 backdrop-blur-xl border-b border-border-default">
+    <header className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 bg-[#232831] text-white border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
       {/* Left: Mobile Menu + Logo */}
       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
         <button
@@ -54,8 +54,8 @@ export function DashboardHeader({ role, user, onMenuClick, onCmdOpen }: Dashboar
           <Menu size={20} />
         </button>
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <BrandLogo variant="dark" size="md" showText={false} />
-          <span className="text-sm font-semibold text-white uppercase hidden lg:block" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+          <BrandLogo variant="light" size="md" showText={false} />
+          <span className="text-sm font-semibold text-white uppercase hidden lg:block whitespace-nowrap" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
             Hotels Vendors
           </span>
         </Link>

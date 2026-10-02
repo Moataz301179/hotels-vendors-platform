@@ -16,8 +16,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  fontLoaders: [{ loader: 'default', options: { basePath: '/' } }],
-  // TEMP DISABLE: font optimization disabled for build
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
@@ -26,78 +24,23 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.gravatar.com" },
     ],
   },
-
-  // Disable aggressive static page caching — we control cache at nginx level
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=0, must-revalidate",
-          },
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
         ],
       },
       {
         source: "/api/:path*",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-        ],
-      },
-      // Global CORS for all /api/v1/ routes
-      {
-        source: "/api/v1/:path*",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: process.env.NEXT_PUBLIC_APP_URL || "",
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-          },
-          {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization, X-Idempotency-Key",
-          },
-          {
-            key: "Access-Control-Max-Age",
-            value: "86400",
-          },
-        ],
-      },
-      // CORS for AI streaming endpoints — tighter origin (fail-closed)
-      {
-        source: "/api/v1/ai/:path*",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: process.env.VERCEL_URL
-              ? `https://${process.env.VERCEL_URL}`
-              : process.env.NEXT_PUBLIC_APP_URL ?? "",
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, OPTIONS",
-          },
-          {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
-          },
-          {
-            key: "Access-Control-Allow-Credentials",
-            value: "true",
-          },
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
         ],
       },
     ];
   },
 };
-
 export default withSentryConfig(nextConfig, {
   silent: true,
   org: process.env.SENTRY_ORG,

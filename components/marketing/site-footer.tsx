@@ -86,14 +86,14 @@ export function SiteFooter() {
   ];
 
   return (
-    <footer className={`border-t py-12 px-6 ${ar ? "font-cairo" : ""}`} style={{ borderColor: "#8a6d3b33", backgroundColor: "#0c0c12" }}>
+    <footer className={`border-t py-12 px-6 bg-black text-white ${ar ? "font-cairo" : ""}`} style={{ borderColor: "rgba(255,255,255,0.10)", backgroundColor: "#000000" }}>
       <div className="max-w-6xl mx-auto">
         {/* Top: brand + about + socials + store badges */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Brand + About + Founder */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-3" dir="ltr">
-              <BrandLogo variant="dark" size="md" showText={false} />
+              <BrandLogo variant="light" size="md" showText={false} />
               <span className="font-semibold text-white uppercase text-[15px]" style={{ letterSpacing: "0.2em" }}>
                 Hotels Vendors
               </span>
@@ -111,7 +111,7 @@ export function SiteFooter() {
                   : "Built by Restaurants for E-Marketing, Cairo, Egypt — founded to unbundle the Egyptian hospitality supply chain."}
               </p>
               <p className="text-sm text-white/70 mt-1">
-                <span className="text-[#8a6d3b] font-semibold">{ar ? "المؤسس :" : "Founder: "}</span>
+                <span className="text-[var(--accent-base)] font-semibold">{ar ? "المؤسس :" : "Founder: "}</span>
                 {ar ? "معتز إبراهيم" : "Moataz Ibrahim"}
               </p>
             </div>
@@ -125,7 +125,7 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                  className="hv-hover-accent w-9 h-9 rounded-lg flex items-center justify-center text-white/70 hover:text-[var(--accent-base)] transition-colors"
                   style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
                 >
                   <Icon size={17} />
@@ -145,7 +145,7 @@ export function SiteFooter() {
             <ul className="flex flex-col gap-2 text-sm">
               <li><Link href="/marketplace" className="text-white/50 hover:text-white transition-colors">HotelsVendors</Link></li>
               <li><Link href="/sandbox" className="text-white/50 hover:text-white transition-colors">{ar ? "تجربة المنصة" : "Sandbox"}</Link></li>
-              <li><Link href="/financing" className="text-white/50 hover:text-white transition-colors">Oliv {ar ? "التمويل" : "Financing"}</Link></li>
+              <li><Link href="/financing" className="text-white/50 hover:text-white transition-colors"> {ar ? "التمويل" : "Financing"}</Link></li>
               <li><Link href="/suppliers/join" className="text-white/50 hover:text-white transition-colors">{ar ? "للموردين" : "For Suppliers"}</Link></li>
               <li><Link href="/hotels/join" className="text-white/50 hover:text-white transition-colors">{ar ? "للفنادق" : "For Hotels"}</Link></li>
               <li><Link href="/eta-compliance" className="text-white/50 hover:text-white transition-colors">{ar ? "الامتثال الضريبي" : "ETA Compliance"}</Link></li>

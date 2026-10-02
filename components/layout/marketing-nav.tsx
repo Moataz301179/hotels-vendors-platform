@@ -27,13 +27,13 @@ export function MarketingNav() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 nav-border ${
         scrolled
-          ? "bg-canvas/95 backdrop-blur-sm border-b border-border-subtle"
-          : "bg-transparent"
+          ? "bg-[#232831] border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+          : "bg-[#232831] border-b border-white/10"
       }`}
     >
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 relative z-10">
-          <BrandLogo variant="dark" size="sm" showText={false} />
+          <BrandLogo variant="light" size="sm" showText={false} />
           <span className="font-semibold text-[15px] text-white uppercase" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
             Hotels Vendors
           </span>
@@ -44,7 +44,7 @@ export function MarketingNav() {
             <Link
               key={item.label}
               href={item.href}
-              className="px-4 py-2 text-[14px] font-medium rounded-lg text-foreground-tertiary hover:text-white transition-colors"
+              className="px-4 py-2 text-[14px] font-medium rounded-lg text-foreground-tertiary hover:text-[var(--accent-base)] transition-colors"
             >
               {item.label}
             </Link>
@@ -54,7 +54,7 @@ export function MarketingNav() {
         <div className="hidden lg:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-[14px] font-medium text-foreground-tertiary hover:text-white transition-colors"
+            className="text-[14px] font-medium text-foreground-tertiary hover:text-[var(--accent-base)] transition-colors"
           >
             Sign In
           </Link>
@@ -68,7 +68,7 @@ export function MarketingNav() {
         </div>
 
         <button
-          className="lg:hidden p-2 rounded-lg text-foreground-tertiary hover:text-white transition-colors"
+          className="lg:hidden p-2 rounded-lg text-foreground-tertiary hover:text-[var(--accent-base)] transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -82,7 +82,7 @@ export function MarketingNav() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="block py-2.5 text-[14px] font-medium text-foreground-tertiary hover:text-white transition-colors"
+                className="block py-2.5 text-[14px] font-medium text-foreground-tertiary hover:text-[var(--accent-base)] transition-colors"
                 onClick={() => setMobileOpen(false)}
               >
                 {item.label}

@@ -7,8 +7,8 @@
   --font-display: "Plus Jakarta Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
 
   /* Near-black architectural ink scale */
-  --color-ink-950: #0a0a0a;
-  --color-ink-900: #111113;
+  --color-ink-950: #080B10;
+  --color-ink-900: #10151D;
   --color-ink-850: #16161a;
   --color-ink-800: #1d1d22;
   --color-ink-700: #27272e;
@@ -23,19 +23,112 @@
   --color-line: #e3e1d7;
   --color-linedark: #26262c;
 
-  /* Brand signal: HotelsVendors red — ONLY accent color */
-  --signal: #ff3d00;
-  --signal-bright: #ff5a2e;
-  --signal-soft: rgba(255, 61, 0, 0.10);
-  --signal-glow: rgba(255, 61, 0, 0.20);
+  /* Primary brand interaction accent — blue */
+  --signal: #3b82f6;
+  --signal-bright: #60a5fa;
+  --signal-soft: rgba(59, 130, 246, 0.12);
+  --signal-glow: rgba(59, 130, 246, 0.24);
 }
+/* ═══════════════════════════════════════════════════════════════
+   SUPPLEMENTARY PALETTE — DealRay-inspired accent system
+   Adds functional accent colors for cards, badges, states.
+   Brand signal (#ff3d00) remains the ONLY primary accent.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Success — sustainable green for positive states */
+--accent-success: #22c55e;
+--accent-success-soft: rgba(34, 197, 94, 0.10);
+--accent-success-glow: rgba(34, 197, 94, 0.18);
+
+/* Warning — amber for attention states */
+--accent-warning: #f59e0b;
+--accent-warning-soft: rgba(245, 158, 11, 0.10);
+
+/* Error — cool red for destructive states (distinct from brand signal) */
+--accent-error: #ef4444;
+--accent-error-soft: rgba(239, 68, 68, 0.10);
+
+/* Info — cool blue for informational states */
+--accent-info: #3b82f6;
+--accent-info-soft: rgba(59, 130, 246, 0.10);
+
+/* Surface highlight — warm ivory for light cards on dark (unused in dark mode) */
+--surface-highlight: #fafaf9;
+
+/* ═══════════════════════════════════════════════════════════════
+   CARD TOKENS — consistent card language across marketing + dashboard
+   ═══════════════════════════════════════════════════════════════ */
+
+--card-border: rgba(255, 255, 255, 0.06);
+--card-border-hover: rgba(255, 255, 255, 0.10);
+--card-bg: #12121a;
+--card-bg-elevated: #16161e;
+--card-radius-sm: 0.375rem;
+--card-radius-md: 0.5rem;
+--card-radius-lg: 0.75rem;
+--card-radius-xl: 1rem;
+--card-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+--card-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+--card-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.6);
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT TOKENS — shared UI component language
+   ═══════════════════════════════════════════════════════════════ */
+
+--btn-radius: 0.375rem;
+--btn-padding-y: 0.5rem;
+--btn-padding-x: 1rem;
+--input-radius: 0.375rem;
+--input-border: rgba(255, 255, 255, 0.08);
+--input-border-focus: var(--signal);
+--badge-radius: 0.25rem;
+--badge-padding: 0.125rem 0.5rem;
+--modal-radius: 0.75rem;
+--modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+--table-radius: 0.5rem;
+--table-border: rgba(255, 255, 255, 0.06);
+--divider: rgba(255, 255, 255, 0.06);
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPOGRAPHY REFINEMENTS — editorial scale
+   ═══════════════════════════════════════════════════════════════ */
+
+--text-xs: 0.6875rem;    /* 11px — labels, captions */
+--text-sm: 0.75rem;      /* 12px — secondary text */
+--text-base: 0.8125rem;  /* 13px — body (compact B2B) */
+--text-lg: 0.875rem;     /* 14px — lead text */
+--text-xl: 1rem;         /* 16px — section subheads */
+--text-2xl: 1.125rem;   /* 18px — card titles */
+--text-3xl: 1.25rem;    /* 20px — section heads */
+--text-4xl: 1.5rem;     /* 24px — page heads */
+--text-5xl: 1.875rem;   /* 30px — hero sub */
+--text-6xl: 2.25rem;    /* 36px — hero */
+--text-7xl: 3rem;       /* 48px — display */
+
+--leading-tight: 1.1;
+--leading-snug: 1.2;
+--leading-normal: 1.35;
+--leading-relaxed: 1.5;
+
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD-SPECIFIC TOKENS
+   Operational density for authenticated areas.
+   ═══════════════════════════════════════════════════════════════ */
+
+--dash-panel-bg: #0e0e14;
+--dash-panel-border: rgba(255, 255, 255, 0.05);
+--dash-sidebar-width: 240px;
+--dash-header-height: 56px;
+--dash-cell-padding: 0.625rem 0.875rem;
+--dash-table-stripe: rgba(255, 255, 255, 0.02);
+
 
 .dark {
-  /* Brand signal: HotelsVendors red — matches light mode */
-  --signal: #ff3d00;
-  --signal-bright: #ff5a2e;
-  --signal-soft: rgba(255, 61, 0, 0.10);
-  --signal-glow: rgba(255, 61, 0, 0.20);
+  /* Primary brand interaction accent — blue */
+  --signal: #3b82f6;
+  --signal-bright: #60a5fa;
+  --signal-soft: rgba(59, 130, 246, 0.12);
+  --signal-glow: rgba(59, 130, 246, 0.24);
 }
 
 @layer base {
@@ -78,10 +171,6 @@
 .dark .sf-grey { background-color: #16161a; }
 
 /* Sticky header surface — opaque dark, NO glass */
-.sf-glass {
-  background-color: rgba(10, 10, 10, 0.92);
-}
-
 /* Architectural black band */
 .sf-ink {
   background-color: #111113;
@@ -202,7 +291,19 @@
   font-weight: 400;
 }
 
-* { scrollbar-width: thin; scrollbar-color: rgba(255, 61, 0, 0.35) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(59, 130, 246, 0.35) transparent; }
+
+/* Premium contrast surfaces + universal interaction accent */
+.hv-card-surface { background: #f1f3f5; }
+.dark .hv-card-surface { background: #171b22; }
+.hv-section-surface { background: #f6f7f8; }
+.dark .hv-section-surface { background: #10141a; }
+.hv-hover-accent { transition: color .2s ease, background-color .2s ease, border-color .2s ease, transform .2s ease; }
+.hv-hover-accent:hover { color: var(--accent-base) !important; border-color: color-mix(in srgb, var(--accent-base) 42%, transparent) !important; }
+.hv-hover-accent:hover svg { color: var(--accent-base) !important; }
+
+/* Interactive links/icons use the same blue signal on hover. */
+a:hover svg, button:hover svg, [role="button"]:hover svg { color: var(--accent-base); }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-rise, .anim-fade, .skeleton, .pulse-dot { animation: none !important; }
@@ -215,17 +316,17 @@
 
 :root {
   --bg-canvas: #0a0a0a;
-  --bg-surface-1: var(--color-ink-900);
+  --bg-surface-1: #10151D;
   --bg-surface-2: var(--color-ink-850);
   --bg-surface-3: var(--color-ink-800);
-  --bg-accent-base: var(--signal);
-  --bg-accent-light: var(--signal-bright);
-  --bg-accent-muted: var(--signal-soft);
-  --bg-border-invisible: rgba(255, 61, 0, 0.08);
+  --bg-accent-base: #3b82f6;
+  --bg-accent-light: #60a5fa;
+  --bg-accent-muted: rgba(59, 130, 246, 0.12);
+  --bg-border-invisible: rgba(54, 214, 181, 0.08);
 
   --text-foreground: #e9e9ed;
-  --text-foreground-secondary: var(--color-ink-400);
-  --text-foreground-muted: var(--color-ink-500);
+  --text-foreground-secondary: #8E9AAA;
+  --text-foreground-muted: #8E9AAA;
   --text-accent-base: #ffffff;
 
   --accent-base: var(--signal);
@@ -237,18 +338,18 @@
 }
 
 .dark {
-  --bg-canvas: var(--color-ink-950);
-  --bg-surface-1: var(--color-ink-900);
+  --bg-canvas: #080B10;
+  --bg-surface-1: #10151D;
   --bg-surface-2: var(--color-ink-850);
   --bg-surface-3: var(--color-ink-800);
-  --bg-accent-base: var(--signal);
-  --bg-accent-light: var(--signal-bright);
-  --bg-accent-muted: var(--signal-soft);
-  --bg-border-invisible: rgba(255, 61, 0, 0.08);
+  --bg-accent-base: #3b82f6;
+  --bg-accent-light: #60a5fa;
+  --bg-accent-muted: rgba(59, 130, 246, 0.12);
+  --bg-border-invisible: rgba(54, 214, 181, 0.08);
 
-  --text-foreground: var(--color-ink-100);
-  --text-foreground-secondary: var(--color-ink-400);
-  --text-foreground-muted: var(--color-ink-500);
+  --text-foreground: #F4F7FA;
+  --text-foreground-secondary: #8E9AAA;
+  --text-foreground-muted: #8E9AAA;
   --text-accent-base: #ffffff;
 
   --accent-base: var(--signal);

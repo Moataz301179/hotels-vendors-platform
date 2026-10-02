@@ -33,8 +33,8 @@ function getGroups(ar: boolean): NavGroup[] {
       label: ar ? "التمويل" : "Financing",
       items: [
         { href: "/factoring-service", label: ar ? "تمويل الفواتير" : "Invoice Factoring", desc: ar ? "تمويل فواتير غير ارتجاعي" : "Non-recourse invoice financing" },
-        { href: "/financing/oliv", label: "Oliv " + (ar ? "التمويل" : "Financing"), desc: ar ? "خط ائتمان يصل إلى 10 مليون ج.م" : "Up to EGP 10M credit line" },
-        { href: "/oliv/referral", label: "Oliv " + (ar ? "إحالة" : "Referral"), desc: ar ? "احصل على إحالة ومعالجة أولوية" : "Get referred & priority processing" },
+        { href: "/financing/oliv", label: " " + (ar ? "التمويل" : "Financing"), desc: ar ? "خط ائتمان يصل إلى 10 مليون ج.م" : "Up to EGP 10M credit line" },
+        { href: "/oliv/referral", label: " " + (ar ? "إحالة" : "Referral"), desc: ar ? "احصل على إحالة ومعالجة أولوية" : "Get referred & priority processing" },
       ],
     },
     {
@@ -57,7 +57,7 @@ function DropdownMenu({ group, ar }: { group: NavGroup; ar: boolean }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button className={`flex items-center gap-1 text-sm text-white/50 hover:text-white transition-colors cursor-pointer bg-transparent border-0 font-sans ${ar ? "font-cairo" : ""}`}>
+      <button className={`flex items-center gap-1 text-sm text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer bg-transparent border-0 font-sans ${ar ? "font-cairo" : ""}`}>
         {group.label}
         <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -102,19 +102,20 @@ export function SiteNav() {
     return () => observer.disconnect();
   }, []);
 
-  const isLight = theme === "light";
-  const logoVariant = isLight ? "dark" : "light";
-  const textColor = isLight ? "var(--foreground)" : "var(--foreground)";
+  // Public navigation stays on the dark-charcoal brand surface.
+  // The white wordmark remains readable on every page and theme state.
+  const logoVariant = "light" as const;
+  const textColor = "#ffffff";
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 border-b border-border-subtle bg-canvas/90 backdrop-blur-xl ${ar ? "font-cairo" : ""}`}>
-      <Link href="/" className="flex items-center gap-2.5 shrink-0 rtl:order-last" dir="ltr">
+    <nav className={`sticky top-0 left-0 right-0 z-50 flex min-h-[72px] items-center justify-between px-5 md:px-10 lg:px-12 py-3 border-b border-white/10 bg-[#232831] text-white shadow-[0_8px_30px_rgba(0,0,0,0.18)] ${ar ? "font-cairo" : ""}`}>
+      <Link href="/" className="flex min-w-fit items-center gap-3 shrink-0 rtl:order-last" dir="ltr">
         {/* Mobile: icon-only, smaller */}
         <BrandLogo variant={logoVariant} size="sm" showText={false} className="md:hidden" />
         {/* Desktop: icon + wordmark */}
         <span className="hidden md:flex items-center gap-2.5">
           <BrandLogo variant={logoVariant} size="md" showText={false} />
-          <span className="font-semibold uppercase text-[15px]" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: textColor }}>
+          <span className="font-semibold uppercase text-[15px] whitespace-nowrap text-white" style={{ letterSpacing: "0.16em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: textColor }}>
             Hotels Vendors
           </span>
         </span>
@@ -127,13 +128,13 @@ export function SiteNav() {
         ))}
         <Link
           href="/sandbox"
-          className="text-sm text-white/50 hover:text-white transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+          className="text-sm text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
           {ar ? "التمثيل الذكي" : "Sandbox"}
         </Link>
         <Link
           href="/pricing"
-          className="text-sm text-white/50 hover:text-white transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+          className="text-sm text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
           {ar ? "الأسعار" : "Pricing"}
         </Link>
@@ -145,7 +146,7 @@ export function SiteNav() {
         <ThemeModeToggle variant="icon" />
         <Link
           href="/login"
-          className="text-sm px-4 py-2 text-white/50 hover:text-white transition-colors cursor-pointer bg-transparent font-sans"
+          className="text-sm px-4 py-2 text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer bg-transparent font-sans"
         >
           {ar ? "تسجيل الدخول" : "Sign In"}
         </Link>
