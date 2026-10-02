@@ -37,3 +37,8 @@ Updated: 2026-10-02
 - The Prisma `OpportunityType` enum has no funding type; a dedicated referral model/workflow and conversion ledger are still required.
 - No production database changes or deployments have been performed.
 - Tasks remain incomplete until their acceptance criteria and relevant tests are verified.
+
+## CI feedback after PR creation
+- [BLOCKED → IN_PROGRESS] First GitHub Actions run failed at `npm ci`: the repo's existing lockfile resolves Zod 4, while `ollama-ai-provider@1.2.0` declares an optional Zod 3 peer. Local install had silently inherited `legacy-peer-deps=true` from the machine's global npm config.
+- [IN_PROGRESS] Added a project-level `.npmrc` with `legacy-peer-deps=true` so clean CI installs use the same resolver setting as the existing lockfile. This makes the workaround explicit; the dependency conflict remains documented for future cleanup.
+- Next: rerun GitHub Actions and inspect the exact workflow/run result before claiming CI is green.
