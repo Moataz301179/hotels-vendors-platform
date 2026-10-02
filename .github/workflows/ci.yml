@@ -1,0 +1,54 @@
+name: HotelsVendors CI
+on:
+  pull_request:
+  push:
+    branches: [main, production-transformation, hotfix/**]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hv-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://hv_ci:hv_ci@127.0.0.1:5432/hv_ci?schema=public
+      NEXT_PUBLIC_APP_URL: https://hotelsvendors.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Prisma client and schema validation
+        run: |
+          npx prisma generate
+          npx prisma validate
+      - name: Unit and contract tests
+        run: npm test -- --reporter=dot
+      - name: Ingestion evidence E2E tests
+        run: npm run test:e2e -- --reporter=dot
+      - name: Lint changed security and packaging surfaces
+        run: npx eslint proxy.ts tests/p0/production-shell-contract.spec.ts
+      - name: Production dependency audit (block high/critical runtime advisories)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Production build
+        run: npm run build
+        env:
+          NODE_ENV: production
+          SESSION_SECRET: ci-only-not-for-production-0123456789abcdef0123456789abcdef
+      - name: Package standalone static and public assets
+        run: ./scripts/package-standalone.sh
+      - name: Upload verified standalone build
+        uses: actions/upload-artifact@v4
+        with:
+          name: hotelsvendors-standalone-${{ github.sha }}
+          path: |
+            .next/standalone/**
+            .next/static/**
+            public/**
+          if-no-files-found: error
+          retention-days: 7

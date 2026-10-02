@@ -35,6 +35,12 @@ describe("production shell and authorization contracts", () => {
     }
   });
 
+  it("allows Clerk blob workers while keeping the script policy explicit", () => {
+    const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
+    expect(proxy).toContain("worker-src 'self' blob:");
+    expect(proxy).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+  });
+
   it("allows Clerk API connections in the response CSP", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
     expect(proxy).toContain("connect-src");
