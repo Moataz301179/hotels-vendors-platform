@@ -83,6 +83,7 @@ model Tenant {
   spendRecords           SpendRecord[]
   spendUploadRecords     SpendUploadRecord[]
   suppliers              Supplier[]
+  procurementQuotes      ProcurementQuote[]
   supplierAudits         SupplierAudit[]
   swarmJobs              SwarmJob[]
   swarmMemories          SwarmMemory[]
@@ -289,6 +290,7 @@ model User {
   supportTickets         SupportTicket[]
   opportunities          Opportunity[]
   savingsLedgers         SavingsLedger[]
+  procurementQuotes      ProcurementQuote[]
   verifiedSavingsLedgers SavingsLedger[] @relation("SavingsLedgerVerifiedBy")
 
   @@index([sector])
@@ -385,6 +387,7 @@ model Supplier {
   goodsReceiptNotes    GoodsReceiptNote[]
   scheduledOrders      ScheduledOrder[]
   savingsLedger        SavingsLedger[]
+  procurementQuotes    ProcurementQuote[]
 
   @@index([tenantId])
   @@index([city])
@@ -3521,11 +3524,40 @@ model RfqRequest {
   updatedAt         DateTime  @updatedAt
   uuid              String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt         DateTime?
+  quotes            ProcurementQuote[]
 
   @@index([buyerId])
   @@index([status])
   @@index([supplierId])
   @@index([tenantId])
+}
+
+model ProcurementQuote {
+  id              String      @id @default(cuid())
+  rfqId           String
+  tenantId        String
+  supplierId      String
+  buyerId         String
+  unitPrice       Decimal     @db.Decimal(12, 2)
+  quantity        Int
+  currency        String      @default("EGP")
+  leadTimeDays    Int?
+  deliveryFee     Decimal?    @db.Decimal(12, 2)
+  validUntil      DateTime?
+  notes           String?
+  status          QuoteStatus @default(SUBMITTED)
+  submittedAt     DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  uuid            String?     @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt       DateTime?
+  rfq             RfqRequest  @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplier        Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  buyer           User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, rfqId])
+  @@index([supplierId, status])
+  @@index([buyerId, status])
 }
 
 model OnboardingProgress {
@@ -3731,6 +3763,14 @@ enum ReconciliationStatus {
   APPROVED
   REJECTED
   ADJUSTED
+}
+
+enum QuoteStatus {
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
 }
 
 enum RfqStatus {
