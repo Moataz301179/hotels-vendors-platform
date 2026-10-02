@@ -13,7 +13,7 @@ Updated: 2026-10-02
 
 ## Tasks
 - [IN_REVIEW] HV-SEC-001 — Actor provisioning now requires a verified primary email, fixes self-service role to least-privilege HOTEL, rejects inactive/deleted actors, creates tenant/role/user in a transaction, and handles concurrent first-login races. Five focused identity tests pass. End-to-end Clerk integration and role-elevation approval flow remain outstanding.
-- [VERIFIED] HV-CI-001 — Added a repository-owned CI workflow, `.npmrc` for deterministic locked installs, and `eslint.config.mjs`. GitHub Actions run `37009563593` passed install, Prisma validation/generation, tests, TypeScript, ESLint and production build. A fresh run is required after the latest readiness changes.
+- [VERIFIED] HV-CI-001 — Added a repository-owned CI workflow, `.npmrc` for deterministic locked installs, and `eslint.config.mjs`. Latest GitHub Actions run `37011796356` passed locked install, Prisma validation/generation, all 7 tests, TypeScript, ESLint and production build.
 - [VERIFIED] HV-UI-001 — Removed dead product-detail links, replaced loose `any` types in active V2 pages, switched logo rendering to Next Image, restricts public catalog to active verified suppliers, and labels unavailable RFQ/funding workflows honestly.
 - [IN_PROGRESS] HV-READY-001 — Added `/api/ready`, which checks required V2 tables and returns 503 when the configured database schema is incomplete. Added unit tests for required-table detection; local tests/build pass. Not deployed.
 - [BLOCKED] HV-DB-001 — Production `public` schema does not match the V2 Prisma schema or migration directory. Full read-only findings are in `docs/execution/hv-v2-db-reconciliation.md`. No migrations have been run.
