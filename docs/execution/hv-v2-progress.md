@@ -42,3 +42,5 @@ Updated: 2026-10-02
 
 ## Hard safety boundary
 No production database changes, schema migrations or application deployments have been performed. Do not run `migrate deploy`, `db push`, destructive SQL, or the existing legacy deployment workflow until schema provenance, a reviewed migration plan, a verified backup/restore path and the correct V2 deployment target are established.
+
+- [IN_REVIEW] HV-API-001 — Removed the fake `complete: true` onboarding response; onboarding now reads persisted progress and reports incomplete when no record exists. The opportunities API returns a controlled 503 for missing table/column errors, and the suppliers page no longer converts database failures into an empty list. Local tests, TypeScript, lint, Prisma validation and build pass; push and verify CI.
