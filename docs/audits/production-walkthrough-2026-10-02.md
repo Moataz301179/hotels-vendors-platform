@@ -14,6 +14,11 @@ This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actio
 - Fix applied in source: allow the configured Clerk instance, Clerk account/API domains, Clerk telemetry, Clerk WebSocket endpoints, Clerk images, and the challenge frame origin. **Must verify in a deployed browser session**; header presence alone is not proof that sign-in works.
 - Unauthenticated API requests returned `401`, and protected pages redirected to `/login?redirect_url=...`. This proves the unauthenticated boundary is active; it does not prove successful sign-in, account provisioning, role-based authorization, or logout/session expiry.
 
+### P0 — audit-log enum mismatch can break business mutations
+
+- `appendAuditEntry` writes domain values such as `OPPORTUNITY`, `PROCUREMENT_QUOTE`, `SHIPMENT`, `ONBOARDING`, `DETECTED`, `SUBMITTED` and `STATUS_CHANGED`, but those values were absent from the Prisma `EntityName`/`ActionType` enums. Prisma can reject the audit write after the preceding business mutation has already occurred, producing a 500 response despite a partial write.
+- Fix prepared in source: expand the enums and add an additive PostgreSQL migration using `ADD VALUE IF NOT EXISTS`. This must be applied and tested against production before the next release; until then, quote/RFQ/shipment/opportunity/evidence actions remain at risk.
+
 ### P0 — authorization and evidence controls need additional hardening
 
 - `app/api/v2/opportunities/route.ts` allows any authenticated tenant member to request opportunity status changes. The handler has tenant scoping and transition checks, but no role/permission gate for approval/verification, and the `VERIFIED` transition does not require a validated evidence record before writing a savings ledger. A user-supplied realized amount can be persisted. This is a verified code-level gap; do not treat savings as verified until this workflow is gated and tested.
@@ -57,6 +62,7 @@ This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actio
 9. Make evidence provenance/confidence server-assigned and restrict opportunity mutations to hotel/admin roles.
 10. Add P0 shell-contract tests for shared footer, Clerk CSP, role gates and footer route validity.
 11. Let unknown page paths reach the real 404 route rather than redirecting every unknown path to login; known workspace routes and non-public APIs remain authenticated.
+12. Expand the Prisma audit enums and add a safe additive migration for every domain action/entity written by `appendAuditEntry`.
 
 ## Required release gates before declaring complete
 
