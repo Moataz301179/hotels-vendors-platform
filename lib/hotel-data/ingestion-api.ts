@@ -285,7 +285,8 @@ export async function parseFile(
   // Excel workbook
   const wb = new ExcelJS.Workbook();
   try {
-    const arrayBuffer = buffer instanceof Buffer ? new Uint8Array(buffer) : (buffer as ArrayBuffer); await wb.xlsx.load(arrayBuffer);
+    // ExcelJS expects a Node Buffer here. Converting it to Uint8Array breaks its ZIP parser.
+    await wb.xlsx.load(buffer);
   } catch (e) {
     return { rows: [], sheetName: '', error: `Failed to parse spreadsheet: ${(e as Error).message || 'invalid file'}` };
   }

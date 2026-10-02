@@ -13,6 +13,7 @@ export async function GET(){
 
 export async function PATCH(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
+ if(user.platformRole!=="HOTEL"&&user.platformRole!=="ADMIN")return NextResponse.json({error:"HOTEL_ROLE_REQUIRED"},{status:403});
  const b=await req.json().catch(()=>null);const id=String(b?.id||"");const to=String(b?.status||"");
  if(!id||!(to in transitions))return NextResponse.json({error:"id and valid status are required"},{status:400});
  const row=await prisma.opportunity.findFirst({where:{id,tenantId:user.tenantId,deletedAt:null}});if(!row)return NextResponse.json({error:"Opportunity not found"},{status:404});

@@ -7,24 +7,28 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { ingest } from '../../lib/hotel-data/ingestion-api';
+import type { IngestionRecord } from '../../lib/hotel-data/canonical-schema';
 import { HotelDataEvidenceStore } from '../../lib/hotel-data/hotel-data-evidence-store';
 
 const fixturePath = join(process.cwd(), 'data', 'hotel-data-evidence', 'test-fixtures', 'tb-sample.xlsx');
+let testDataPath: string;
 
 describe('E2E: Hotel Data Ingestion Pipeline', () => {
   let evidenceStore: HotelDataEvidenceStore;
 
   beforeAll(() => {
-    evidenceStore = new HotelDataEvidenceStore({
-      dataPath: join(process.cwd(), 'tests', 'hotel-data', 'e2e-evidence-store'),
-    });
+    // Use an isolated temporary store: tests must never clear or rewrite committed fixtures.
+    testDataPath = mkdtempSync(join(tmpdir(), 'hv-evidence-e2e-'));
+    evidenceStore = new HotelDataEvidenceStore({ dataPath: testDataPath });
   });
 
   afterAll(() => {
     evidenceStore.clear();
+    rmSync(testDataPath, { recursive: true, force: true });
   });
 
   // =========================================================================
@@ -43,7 +47,6 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
 
     // --- ingestionId ---
     expect(result.ingestionId).toBeTruthy();
-    const ingestionId = result.ingestionId;
 
     // --- file hash (SHA-256) ---
     expect(result.fileHash).toBeTruthy();
@@ -60,7 +63,7 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
     // --- source currency preserved (not defaulted) ---
     expect(result.detectedSourceCurrency).toBe('EGP');
 
-    console.log(`\n  ✓ GATE 1: ingestionId=${ingestionId}`);
+    console.log(`\n  ✓ GATE 1: ingestionId=${result.ingestionId}`);
     console.log(`    fileHash: ${result.fileHash}`);
     console.log(`    fileSizeBytes: ${result.fileSizeBytes}`);
     console.log(`    detectedSourceCurrency: ${result.detectedSourceCurrency}`);
@@ -82,11 +85,9 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
       },
     });
 
-    const ingestionId = result.ingestionId;
 
     // --- Verify read-back ---
     // record the ingest() ingestionId BEFORE storeIngestion overwrites it
-    const ingestIngestionId = result.ingestionId;
 
     const stored = evidenceStore.storeIngestion(
       'TEST-HOTEL-001',
@@ -94,7 +95,7 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
       'TB_EXPORT_PILOT',
       new Date().toISOString(),
       buffer,
-      result.normalizedTransactions as any,
+      result.normalizedTransactions as unknown as IngestionRecord[],
       {
         totalRecords: result.normalizedTransactions.length,
         validRecords: result.normalizedTransactions.length,

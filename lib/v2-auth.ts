@@ -1,6 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import type { PlatformRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 
 export async function getActor() {
   const { userId } = await auth();
@@ -31,5 +32,13 @@ export async function getActor() {
 export async function requireActor() {
   const user = await getActor();
   if (!user) throw new Error("UNAUTHENTICATED");
+  return user;
+}
+
+/** Server-side page gate. Sidebar visibility is not authorization. */
+export async function requireActorRole(allowedRoles: PlatformRole[]) {
+  const user = await getActor();
+  if (!user) redirect("/login");
+  if (!allowedRoles.includes(user.platformRole)) redirect("/dashboard?access=denied");
   return user;
 }

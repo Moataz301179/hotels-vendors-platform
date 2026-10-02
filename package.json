@@ -17,7 +17,8 @@
     "swarm": "tsx scripts/swarm-dev.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

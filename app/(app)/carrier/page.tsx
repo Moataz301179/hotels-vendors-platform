@@ -1,2 +1,3 @@
+import { requireActorRole } from "@/lib/v2-auth";
 import {CarrierConsole} from '@/components/v2/carrier-console';
-export default function Carrier(){return <><div className="eyebrow">Carrier workspace</div><h1 style={{fontSize:42,letterSpacing:'-.05em',margin:'8px 0'}}>Fulfillment network</h1><p className="muted" style={{maxWidth:760}}>Plan and track delivery movements linked to real purchase orders. No synthetic assignments are displayed.</p><CarrierConsole/></>}
+export default async function Carrier(){await requireActorRole(['SHIPPING', 'ADMIN']);return <><div className="eyebrow">Carrier workspace</div><h1 style={{fontSize:42,letterSpacing:'-.05em',margin:'8px 0'}}>Fulfillment network</h1><p className="muted" style={{maxWidth:760}}>Plan and track delivery movements linked to real purchase orders. No synthetic assignments are displayed.</p><CarrierConsole/></>}

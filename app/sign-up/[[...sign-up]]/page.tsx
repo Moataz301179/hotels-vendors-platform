@@ -15,7 +15,7 @@ export default function SignUpPage() {
             </button>
           ))}
         </div>
-        <SignUp unsafeMetadata={{ platformRole: role }} forceRedirectUrl="/dashboard" />
+        <SignUp unsafeMetadata={{ platformRole: role }} fallbackRedirectUrl="/dashboard" />
       </div>
     </main>
   );
