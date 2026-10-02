@@ -1,6 +1,6 @@
 # HotelsVendors V2 System
 
-The V2 application is deliberately isolated from the legacy route tree. The previous application is preserved under `legacy-app/` for reference/rollback but is not part of the V2 build graph.
+The V2 application is deliberately isolated from the legacy route tree. The previous application is retained in Git history for rollback/reference but is not part of the V2 build graph.
 
 ## Runtime
 
