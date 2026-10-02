@@ -3,45 +3,42 @@
 Updated: 2026-10-02
 
 ## Verified baseline
-- [VERIFIED] Isolated worktree: `/Users/Moatazi/hv-v2-work`.
-- [VERIFIED] Repository/branch: `Moataz301179/hotels-vendors-platform`, `production-transformation`.
-- [VERIFIED] Starting HEAD: `3db4fd31c2e12c1479c5a0f0a559d4abd819e203`; worktree was clean at clone.
-- [VERIFIED] Public checks: homepage 200, logo 200, health 200, unauthenticated `/api/v2/me` 401, `/dashboard` redirects to login.
-- [BLOCKED] Production SSH: host key verification failed and no known-host entry exists. Do not bypass host-key verification.
-- [VERIFIED] Original V2 auth trusted Clerk `unsafeMetadata` for new-user role assignment and did not verify the primary email.
+- Repository: `Moataz301179/hotels-vendors-platform`.
+- Isolated working copy: `/Users/Moatazi/hv-v2-work`.
+- Source baseline: `production-transformation` at `3db4fd31c2e12c1479c5a0f0a559d4abd819e203`; the clone was clean at creation.
+- Live V2 release: `/var/www/hv-v2-d176033-20261002`; PM2 `hotels-vendors-v2-final`, online, port 3011; Nginx upstream `localhost:3011`; live build ID `jVoXFLZkM1D95FXO6oJL2` matches the recorded baseline.
+- SSH host identity was verified using the existing trusted known_hosts entry for the server's current IP. No host-key verification bypass was used.
+- Nginx config test passed. Direct health check on port 3011 returned HTTP 200.
+- The active V2 and retained legacy `.env` files were mode 644; both were changed to mode 600 and verified. The active process remained online and healthy.
 
 ## Tasks
-- [IN_REVIEW] HV-SEC-001 — Actor provisioning now requires a verified primary email, uses a fixed least-privilege HOTEL default, rejects inactive/deleted accounts, transacts tenant/role/user creation, and handles duplicate first-login races. Five focused identity tests pass. Broader auth integration tests and review remain before merge/deploy.
-- [VERIFIED] HV-BASE-001a — Dependencies installed in isolated worktree; Prisma schema validation and client generation pass.
-- [VERIFIED] HV-BASE-001b — TypeScript passes; active V2 lint passes; `git diff --check` passes; CI workflow YAML parses.
-- [VERIFIED] HV-BASE-001c — Production build passes with local-only dummy DATABASE_URL/Clerk values and an ephemeral SESSION_SECRET. This proves compilation/build only, not live DB or Clerk connectivity.
-- [VERIFIED] HV-CI-001 — Added `.github/workflows/ci.yml` for locked install, Prisma validation/generation, P0 tests, type-check, active V2 lint and production build. GitHub Actions run `37009563593` passed all steps; another run is required after the expanded tests.
-- [VERIFIED] HV-UI-001 — Removed dead product-detail links, replaced loose `any` types in active pages, switched logo rendering to Next Image, filters public catalog to active verified suppliers, and labels unavailable RFQ/funding flows honestly.
-- [BLOCKED] HV-OPS-001 — Live PM2/release/build ID reconciliation requires production host-key identity to be verified through a trusted channel.
-- [TODO] HV-PROC-001 — Implement a real demand/RFQ/quote/order/fulfillment/outcome vertical slice.
-- [TODO] HV-SHADOW-001 — Verify and implement evidence-to-opportunity-to-outcome traceability.
-- [TODO] HV-ROLES-001 — Verify functional, server-authorized workflows for Hotels, Suppliers, Carriers and Funders.
-- [TODO] HV-REV-001 — Implement distinct, auditable commercial/revenue events.
+- [IN_REVIEW] HV-SEC-001 — Actor provisioning now requires a verified primary email, fixes self-service role to least-privilege HOTEL, rejects inactive/deleted actors, creates tenant/role/user in a transaction, and handles concurrent first-login races. Five focused identity tests pass. End-to-end Clerk integration and role-elevation approval flow remain outstanding.
+- [VERIFIED] HV-CI-001 — Added a repository-owned CI workflow, `.npmrc` for deterministic locked installs, and `eslint.config.mjs`. GitHub Actions run `37009563593` passed install, Prisma validation/generation, tests, TypeScript, ESLint and production build. A fresh run is required after the latest readiness changes.
+- [VERIFIED] HV-UI-001 — Removed dead product-detail links, replaced loose `any` types in active V2 pages, switched logo rendering to Next Image, restricts public catalog to active verified suppliers, and labels unavailable RFQ/funding workflows honestly.
+- [IN_PROGRESS] HV-READY-001 — Added `/api/ready`, which checks required V2 tables and returns 503 when the configured database schema is incomplete. Added unit tests for required-table detection; local tests/build pass. Not deployed.
+- [BLOCKED] HV-DB-001 — Production `public` schema does not match the V2 Prisma schema or migration directory. Full read-only findings are in `docs/execution/hv-v2-db-reconciliation.md`. No migrations have been run.
+- [BLOCKED] HV-DEPLOY-001 — The workflow on `main` targets legacy `/var/www/hv-release-production`, PM2 `hotels-vendors-production` and port 3008, and uses unpinned `ssh-keyscan`. Do not trigger it; it does not target the verified active V2 release/process.
+- [TODO] HV-PROC-001 — Implement and verify a complete procurement-to-savings journey.
+- [TODO] HV-SHADOW-001 — Implement the full evidence → opportunity → action → outcome pipeline.
+- [TODO] HV-ROLES-001 — Verify functional, server-authorized Hotel, Supplier, Carrier and Funder workflows.
+- [TODO] HV-REV-001 — Implement separate auditable commercial and external funding-referral events.
 - [TODO] HV-OPS-002 — Prove audit integrity, monitoring, backup/restore and rollback.
 
-## Verification run
-- `npm test`: PASS, 1 test file / 5 tests.
+## Production data and schema evidence (read-only)
+- Public catalog API returns HTTP 200 with zero products.
+- Database row counts in `public`: Tenant 1, User 1, Hotel 1, Supplier 0, Product 0, Order 0, AuditLog 0, SpendRecord 0.
+- `public` has 124 tables versus 115 models in the V2 Prisma schema. Missing expected model tables: `Opportunity`, `SavingsLedger`, `EvidenceRecord`, `IntelligenceEdge`, `SpendUploadRecord`.
+- Six Prisma enum types are missing; two database enum types are not in the current Prisma schema.
+- Similar legacy tables exist under different names with zero rows and incompatible columns. Do not map or overwrite them without a reviewed forward migration.
+- Database migration history includes September/October migrations absent from the clean branch, while the branch contains a phone-OTP migration absent from the active DB history.
+
+## Local verification (latest uncommitted readiness work)
+- `npm test`: PASS, 2 test files / 7 tests.
 - `npx tsc --noEmit`: PASS.
-- `npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts tests/p0`: PASS.
+- `npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts lib/v2-readiness.ts proxy.ts tests/p0`: PASS.
 - `npx prisma validate`: PASS.
-- `git diff --check`: PASS.
-- `npm run build`: PASS with isolated placeholder environment variables; no production credentials used.
+- `git diff --check`: PASS before the latest documentation edits; rerun before commit.
+- `npm run build`: PASS with local-only placeholder DB/Clerk values and an ephemeral build secret. This does not prove live DB readiness.
 
-## Constraints and known gaps
-- The active V2 catalog is read-only; RFQ submission is not implemented.
-- The Prisma `OpportunityType` enum has no funding type; a dedicated referral model/workflow and conversion ledger are still required.
-- No production database changes or deployments have been performed.
-- Tasks remain incomplete until their acceptance criteria and relevant tests are verified.
-
-## CI feedback after PR creation
-- [BLOCKED → IN_PROGRESS] First GitHub Actions run failed at `npm ci`: the repo's existing lockfile resolves Zod 4, while `ollama-ai-provider@1.2.0` declares an optional Zod 3 peer. Local install had silently inherited `legacy-peer-deps=true` from the machine's global npm config.
-- [IN_PROGRESS] Added a project-level `.npmrc` with `legacy-peer-deps=true` so clean CI installs use the same resolver setting as the existing lockfile. This makes the workaround explicit; the dependency conflict remains documented for future cleanup.
-- [IN_PROGRESS] Second CI run reached lint after install, Prisma and tests passed, but the repository had no checked-in ESLint flat config; local lint had silently inherited `/Users/Moatazi/eslint.config.mjs`, which does not exist on CI. Added a repository-owned `eslint.config.mjs` with Next Core Web Vitals/TypeScript presets and explicit legacy/release ignores. Local lint now passes using only the repository config. Push and verify the next GitHub Actions run.
-- [VERIFIED] CI remediation: the third GitHub Actions run passed every step (locked install, Prisma validation/generation, P0 tests, TypeScript, ESLint, production build). Run: `37009563593`; PR check is green.
-- [IN_PROGRESS] Expanded P0 identity tests to cover inactive, suspended and deleted actors; local test/type/lint/schema/build gates pass after the change. Push and verify a fresh GitHub Actions run.
-- [BLOCKED] Deployment safety: the workflow on `main` (`.github/workflows/deploy-production.yml`) targets `/var/www/hv-release-production`, stops `hotels-vendors-production` on port 3008, and trusts `ssh-keyscan` output without pinning a trusted host key. It does not match the last recorded V2 release/process (V2 release path, `hotels-vendors-v2-final`, port 3011). Do not trigger it or change production until the live target and host key are verified.
+## Hard safety boundary
+No production database changes, schema migrations or application deployments have been performed. Do not run `migrate deploy`, `db push`, destructive SQL, or the existing legacy deployment workflow until schema provenance, a reviewed migration plan, a verified backup/restore path and the correct V2 deployment target are established.

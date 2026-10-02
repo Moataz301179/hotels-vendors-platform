@@ -43,6 +43,6 @@ jobs:
       - name: Type-check application
         run: npx tsc --noEmit
       - name: Lint active V2 application
-        run: npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts tests/p0
+        run: npx eslint app components/v2 lib/v2-auth.ts lib/v2-identity.ts lib/v2-readiness.ts proxy.ts tests/p0
       - name: Build production bundle
         run: npm run build
