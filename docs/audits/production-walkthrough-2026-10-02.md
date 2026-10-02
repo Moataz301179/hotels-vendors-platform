@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-Audit target: `https://hotelsvendors.com`, source checkout `/private/tmp/hv-transform`, branch `production-transformation`, deployed release reported by PM2 as `/var/www/hv-v2-0026617-20261002`. Checks included source route inventory, live HTTP headers/statuses, auth middleware/CSP inspection, V2 API handler review, shared layout review, test/lint/build commands, and production process/nginx mapping.
+Audit target: `https://hotelsvendors.com`, source checkout `/private/tmp/hv-transform`, branch `production-transformation`, deployed release after the UI/auth remediation pass: `/var/www/hv-v2-a60948d-20261002` (PM2 `hotels-vendors-next-a60948d`, port 3014). The prior release `/var/www/hv-v2-0026617-20261002` remains available on port 3013 for rollback. Checks included source route inventory, live HTTP headers/statuses, auth middleware/CSP inspection, V2 API handler review, shared layout review, test/lint/build commands, and production process/nginx mapping.
 
 This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actions still require a real test account and browser session; no credentials were supplied in this task.
 
@@ -17,7 +17,7 @@ This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actio
 ### P0 — audit-log enum mismatch can break business mutations
 
 - `appendAuditEntry` writes domain values such as `OPPORTUNITY`, `PROCUREMENT_QUOTE`, `SHIPMENT`, `ONBOARDING`, `DETECTED`, `SUBMITTED` and `STATUS_CHANGED`, but those values were absent from the Prisma `EntityName`/`ActionType` enums. Prisma can reject the audit write after the preceding business mutation has already occurred, producing a 500 response despite a partial write.
-- Fix prepared in source: expand the enums and add an additive PostgreSQL migration using `ADD VALUE IF NOT EXISTS`. This must be applied and tested against production before the next release; until then, quote/RFQ/shipment/opportunity/evidence actions remain at risk.
+- Fix prepared in source: expand the enums and add an additive PostgreSQL migration using `ADD VALUE IF NOT EXISTS`. The first production migration attempt was blocked by an older failed phone/OTP migration; no audit-enum values were applied in that attempt. The phone/OTP migration is now being repaired idempotently against verified live objects before retrying.
 
 ### P0 — authorization and evidence controls need additional hardening
 
@@ -42,9 +42,9 @@ This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actio
 
 ### P1 — quality gates are not production-grade
 
-- `npm run build` passed after the shared chrome, role-gate, evidence-provenance, ingestion and unknown-route middleware fixes.
-- Local standalone HTTP smoke test: `/`, `/marketplace`, `/platform`, `/solutions`, `/login` and `/register` returned 200 with the shared footer and Clerk CSP; protected workspace routes returned 307 to login when signed out; `/api/v2/me` returned 401; an unknown page route returned a real 404 with the shared footer.
-- Default `npm test` runs only `tests/p0/**/*.spec.ts`; current result was 1 file / 3 tests passed. It deliberately excludes broader suites. An attempted direct run of the ingestion E2E test was rejected by the config rather than executed.
+- Linux production build passed after the shared chrome, role-gate, evidence-provenance, ingestion and unknown-route middleware fixes. The new release was canary-tested and is live behind Nginx on port 3014; the previous release remains online for rollback.
+- Production HTTP smoke test: `/`, `/marketplace`, `/platform`, `/solutions`, `/login` and `/register` returned 200 with the shared footer and Clerk CSP; protected workspace routes redirected to login when signed out; `/api/v2/me` returned 401; an unknown page route returned a real 404 with the shared footer. The signed-in Clerk session and role matrix remain untested.
+- Default `npm test` runs only `tests/p0/**/*.spec.ts`; after adding shell and audit-enum contracts, 2 files / 7 tests pass. It deliberately excludes broader suites. An attempted direct run of the ingestion E2E test was rejected by the config rather than executed.
 - `npm run lint` reported 134 errors and 347 warnings across 444 checked files; 47 files had errors. Most errors are pre-existing and include React effect/state patterns, unsafe `any`, purity, and unescaped JSX text. The changed files themselves had zero lint errors (one image optimization warning).
 - No `.github/workflows/*` files are tracked in this checkout, so there is no repository CI workflow enforcing build/test/security checks.
 - Fixes applied in source: a separate `test:e2e` config/script and temporary test evidence storage so E2E tests do not clear committed test data. The E2E suite initially exposed a parser bug: the ingestion API converted the Node `Buffer` to a `Uint8Array` that ExcelJS could not parse. It now passes the `Buffer` directly; all 4 ingestion E2E tests pass and verify 25 normalized rows from the workbook.
@@ -66,7 +66,7 @@ This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actio
 
 ## Required release gates before declaring complete
 
-- [ ] Production build passes after all current changes.
+- [x] Linux production build passes for the deployed UI/auth/ingestion remediation release.
 - [x] P0 shell-contract tests pass: 2 files / 7 tests.
 - [x] Ingestion E2E tests pass: 1 file / 4 tests, including 25 normalized records.
 - [ ] Full lint debt remains: 134 errors and 347 warnings across 444 files in the baseline run; changed files lint clean, but global lint is not green.
@@ -77,9 +77,10 @@ This is a first walkthrough pass, not a sign-off. Authenticated end-to-end actio
 - [ ] Test all dashboard/API loading, error, empty and retry states.
 - [ ] Implement the missing core operational workflows rather than linking to non-existent routes.
 - [ ] Test desktop and mobile header/footer, brand asset, page overflow, keyboard navigation, contrast and console errors.
-- [ ] Deploy to a new immutable release, verify the active PM2 cwd/upstream, then run the same smoke suite against production.
+- [x] Deploy to a new immutable release, verify the active PM2 cwd/upstream, and run the smoke suite against production.
+- [ ] Resolve the historical failed phone/OTP migration safely, apply the audit-enum migration, and confirm `prisma migrate status` is clean.
 - [ ] Perform a rollback rehearsal and verify DB migration/backup recovery before production sign-off.
 
 ## Status
 
-**Not production sign-off.** The shared chrome/CSP/test-isolation fixes are source changes only at this point. Full authentication, role matrix, business workflow, visual browser and deployment verification remain open until tested.
+**Not production sign-off.** The shared chrome/CSP/role-gate/test-isolation fixes are deployed and HTTP-smoke-tested. Full authentication, role matrix, business workflow, visual browser and migration-history verification remain open until tested.

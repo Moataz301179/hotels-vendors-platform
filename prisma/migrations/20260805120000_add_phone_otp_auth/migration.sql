@@ -1,8 +1,10 @@
--- AlterTable
-ALTER TABLE "User" ADD COLUMN     "phoneVerifiedAt" TIMESTAMP(3),
-ADD COLUMN     "refreshTokenHash" TEXT;
--- CreateTable
-CREATE TABLE "OtpVerification" (
+-- Idempotent repair of the phone/OTP schema. The production database already
+-- contains these fields and indexes from an earlier schema sync, so the
+-- migration must be safe both on a fresh database and on that live database.
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phoneVerifiedAt" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "refreshTokenHash" TEXT;
+
+CREATE TABLE IF NOT EXISTS "OtpVerification" (
     "id" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "purpose" TEXT NOT NULL,
@@ -16,11 +18,8 @@ CREATE TABLE "OtpVerification" (
     "deletedAt" TIMESTAMP(3),
     CONSTRAINT "OtpVerification_pkey" PRIMARY KEY ("id")
 );
--- CreateIndex
-CREATE UNIQUE INDEX "OtpVerification_uuid_uniq" ON "OtpVerification"("uuid");
--- CreateIndex
-CREATE INDEX "OtpVerification_phone_purpose_createdAt_idx" ON "OtpVerification"("phone", "purpose", "createdAt");
--- CreateIndex
-CREATE INDEX "OtpVerification_deleted_idx" ON "OtpVerification"("deletedAt");
--- CreateIndex
-CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "OtpVerification_phone_key" ON "OtpVerification"("phone");
+CREATE INDEX IF NOT EXISTS "OtpVerification_phone_purpose_createdAt_idx" ON "OtpVerification"("phone", "purpose", "createdAt");
+CREATE INDEX IF NOT EXISTS "OtpVerification_deletedAt_idx" ON "OtpVerification"("deletedAt");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_phone_key" ON "User"("phone");
