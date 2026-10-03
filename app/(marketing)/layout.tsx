@@ -5,9 +5,9 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SupplierOnboardingBot } from "@/components/ai-assistant/supplier-onboarding-chatbot";
 
 export const metadata: Metadata = {
-  title: "HotelsVendors — B2B Procurement & Fintech for Egyptian Hospitality",
+  title: "HotelsVendors — Hospitality Business Network & Virtual Shadow",
   description:
-    "Egypt's B2B hospitality procurement platform. AI demand forecasting, embedded factoring, ETA e-invoicing, and shared logistics for hotel chains.",
+    "Connect hotels, suppliers, carriers and external funders. HotelsVendors Virtual Shadow surfaces evidence-backed procurement leaks, savings and business opportunities across the hospitality network.",
   keywords: [
     "B2B hospitality procurement Egypt",
     "automated factoring lines Cairo",
@@ -24,18 +24,18 @@ export const metadata: Metadata = {
     "سلسلة التوريد الفندقية",
   ],
   openGraph: {
-    title: "HotelsVendors — Egypt's B2B Hospitality Procurement Infrastructure",
+    title: "HotelsVendors — Hospitality Business Network & Virtual Shadow",
     description:
-      "Signal-driven procurement. Embedded reverse factoring. ETA e-invoicing compliance. Purpose-built for Egyptian coastal hotel chains.",
+      "A connected hospitality business network with a Virtual Shadow for evidence-backed procurement, savings and commercial opportunities. External funders retain all financing decisions.",
     type: "website",
     locale: "en_EG",
     alternateLocale: "ar_EG",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HotelsVendors — Egypt's B2B Hospitality Procurement Infrastructure",
+    title: "HotelsVendors — Hospitality Business Network & Virtual Shadow",
     description:
-      "Signal-driven procurement. Embedded reverse factoring. ETA e-invoicing compliance.",
+      "Evidence-backed procurement signals, savings opportunities and commercial connections across the hospitality network.",
   },
   alternates: {
     canonical: "https://www.hotelsvendors.com",
@@ -59,7 +59,7 @@ const JSON_LD = {
   },
   "url": "https://hotelsvendors.com",
   "logo": "https://hotelsvendors.com/logo-white.svg",
-  "description": "Egypt's B2B hospitality procurement infrastructure platform. Demand and spend signals, external funding referrals, ETA e-invoicing compliance, and shared-route coastal logistics.",
+  "description": "A hospitality business network connecting hotels, suppliers, carriers and external funders, with a Virtual Shadow for evidence-backed commercial opportunities.",
   "address": {
     "@type": "PostalAddress",
     "addressCountry": "EG",

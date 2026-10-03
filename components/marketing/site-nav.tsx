@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
-import { ThemeModeToggle, getStoredMode } from "@/components/theme/mode-toggle";
+import { ThemeModeToggle } from "@/components/theme/mode-toggle";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 interface DropdownItem {
@@ -53,7 +53,7 @@ function DropdownMenu({ group, ar }: { group: NavGroup; ar: boolean }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button className={`flex items-center gap-1 text-sm text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer bg-transparent border-0 font-sans ${ar ? "font-cairo" : ""}`}>
+      <button className={`flex items-center gap-1 text-sm text-white/75 hover:text-[var(--accent-base)] transition-colors cursor-pointer bg-transparent border-0 font-sans ${ar ? "font-cairo" : ""}`}>
         {group.label}
         <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -70,7 +70,7 @@ function DropdownMenu({ group, ar }: { group: NavGroup; ar: boolean }) {
               >
                 <span className="text-sm text-white/80">{item.label}</span>
                 {item.desc && (
-                  <span className="text-xs text-white/35">{item.desc}</span>
+                  <span className="text-xs text-white/55">{item.desc}</span>
                 )}
               </Link>
             ))}
@@ -83,20 +83,9 @@ function DropdownMenu({ group, ar }: { group: NavGroup; ar: boolean }) {
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const { locale } = useLanguage();
   const ar = locale === "ar";
   const groups = getGroups(ar);
-
-  useEffect(() => {
-    setTheme(getStoredMode());
-    const observer = new MutationObserver(() => {
-      const isLight = document.documentElement.getAttribute("data-theme") === "light";
-      setTheme(isLight ? "light" : "dark");
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
 
   // Public navigation stays on the dark-charcoal brand surface.
   // The white wordmark remains readable on every page and theme state.
@@ -124,13 +113,13 @@ export function SiteNav() {
         ))}
         <Link
           href="/sandbox"
-          className="text-sm text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+          className="text-sm text-white/75 hover:text-[var(--accent-base)] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
           {ar ? "التمثيل الذكي" : "Sandbox"}
         </Link>
         <Link
           href="/pricing"
-          className="text-sm text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+          className="text-sm text-white/75 hover:text-[var(--accent-base)] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
           {ar ? "الأسعار" : "Pricing"}
         </Link>
@@ -142,7 +131,7 @@ export function SiteNav() {
         <ThemeModeToggle variant="icon" />
         <Link
           href="/login"
-          className="text-sm px-4 py-2 text-white/50 hover:text-[var(--accent-base)] transition-colors cursor-pointer bg-transparent font-sans"
+          className="text-sm px-4 py-2 text-white/75 hover:text-[var(--accent-base)] transition-colors cursor-pointer bg-transparent font-sans"
         >
           {ar ? "تسجيل الدخول" : "Sign In"}
         </Link>
@@ -157,7 +146,7 @@ export function SiteNav() {
       {/* Mobile toggle */}
       <button
         onClick={() => setOpen(!open)}
-        className="md:hidden text-white/50 cursor-pointer bg-transparent border-0 p-2 flex-shrink-0 ml-auto"
+        className="md:hidden text-white/75 cursor-pointer bg-transparent border-0 p-2 flex-shrink-0 ml-auto"
         aria-label="Toggle menu"
       >
         {open ? <X size={20} /> : <Menu size={20} />}
@@ -168,13 +157,13 @@ export function SiteNav() {
         <div className="absolute top-full left-0 right-0 border-b border-border-subtle px-6 py-4 flex flex-col gap-4 md:hidden bg-surface-1">
           {groups.map((g) => (
             <div key={g.label} className="flex flex-col gap-1">
-              <span className="text-xs text-white/30 uppercase tracking-widest font-semibold">{g.label}</span>
+              <span className="text-xs text-white/50 uppercase tracking-widest font-semibold">{g.label}</span>
               {g.items.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`text-sm text-white/50 hover:text-white pl-3 ${ar ? "font-cairo" : ""}`}
+                  className={`text-sm text-white/75 hover:text-white pl-3 ${ar ? "font-cairo" : ""}`}
                 >
                   {item.label}
                 </Link>
@@ -187,7 +176,7 @@ export function SiteNav() {
             <Link
               href="/pricing"
               onClick={() => setOpen(false)}
-              className="text-sm text-white/50 hover:text-white"
+              className="text-sm text-white/75 hover:text-white"
             >
               {ar ? "الأسعار" : "Pricing"}
             </Link>
@@ -196,14 +185,14 @@ export function SiteNav() {
           <Link
             href="/sandbox"
             onClick={() => setOpen(false)}
-            className="text-sm text-white/50 hover:text-white"
+            className="text-sm text-white/75 hover:text-white"
           >
             {ar ? "التمثيل الذكي" : "Sandbox"}
           </Link>
           <Link
             href="/login"
             onClick={() => setOpen(false)}
-            className="text-sm text-white/50 hover:text-white"
+            className="text-sm text-white/75 hover:text-white"
           >
             {ar ? "تسجيل الدخول" : "Sign In"}
           </Link>

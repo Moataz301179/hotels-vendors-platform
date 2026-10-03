@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface BrandLogoProps {
@@ -24,17 +25,18 @@ export function BrandLogo({
   showTagline = false,
 }: BrandLogoProps) {
   const dims = SIZE_MAP[size];
-  const logoSrc = variant === "dark" ? "/logo-colored.svg" : "/logo-white.svg";
+  const logoSrc = variant === "dark" ? "/logo-colored.svg" : "/logo-icon.svg";
 
   return (
     <div className={cn("inline-flex flex-col items-center shrink-0", className)}>
-      <img
+      <Image
         src={logoSrc}
         alt="HotelsVendors"
         width={dims.icon}
         height={dims.icon}
         className="object-contain shrink-0"
         style={{ width: dims.icon, height: dims.icon }}
+        unoptimized
       />
       {showText && (
         <div className="flex flex-col items-center gap-1 mt-2">
