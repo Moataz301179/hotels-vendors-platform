@@ -4,6 +4,7 @@
  * never from client-supplied tenant or role headers.
  */
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = new Set([
@@ -36,7 +37,25 @@ function addSecurityHeaders(response: NextResponse) {
   return response;
 }
 
-export default clerkMiddleware(async (auth, request: NextRequest) => {
+const authMiddleware = clerkMiddleware(async (auth, request: NextRequest) => {
+  const { pathname, search } = request.nextUrl;
+  const { isAuthenticated } = await auth();
+  if (!isAuthenticated) {
+    if (pathname.startsWith("/api/")) {
+      return addSecurityHeaders(NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }));
+    }
+    const url = new URL("/login", request.url);
+    url.searchParams.set("redirect_url", `${pathname}${search}`);
+    return addSecurityHeaders(NextResponse.redirect(url));
+  }
+  return addSecurityHeaders(NextResponse.next());
+});
+
+// Do not run Clerk's request authentication pipeline on public pages/assets.
+// It is unnecessary for these routes and can stall SSR when Clerk config/network
+// is unhealthy. Protected requests still pass through verified Clerk auth below;
+// the session-cookie check is only an early routing optimization, never proof of identity.
+export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname, search } = request.nextUrl;
   const host = request.headers.get("host") || "";
 
@@ -46,27 +65,25 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     else if (!pathname.startsWith("/invo") && !pathname.startsWith("/api/")) url.pathname = `/invo${pathname}`;
     return addSecurityHeaders(NextResponse.rewrite(url));
   }
-  if (pathname === "/demo" || pathname.startsWith("/demo/")) return addSecurityHeaders(NextResponse.redirect(new URL("/sandbox", request.url)));
+  if (pathname === "/demo" || pathname.startsWith("/demo/")) {
+    return addSecurityHeaders(NextResponse.redirect(new URL("/sandbox", request.url)));
+  }
   if (isPublic(pathname)) return addSecurityHeaders(NextResponse.next());
 
-  // Authenticate known workspace routes and every non-public API route. Unknown
-  // page paths should reach Next's real 404 page instead of being mistaken for
-  // a protected workspace URL and redirected to sign-in.
   const isApiPath = pathname.startsWith("/api/") || pathname.startsWith("/trpc/");
   if (!isApiPath && !isProtectedPage(pathname)) return addSecurityHeaders(NextResponse.next());
 
-  const { isAuthenticated } = await auth();
-  if (!isAuthenticated) {
-    if (pathname.startsWith("/api/")) return addSecurityHeaders(NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }));
+  if (!request.cookies.get("__session")?.value) {
+    if (isApiPath) {
+      return addSecurityHeaders(NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }));
+    }
     const url = new URL("/login", request.url);
     url.searchParams.set("redirect_url", `${pathname}${search}`);
     return addSecurityHeaders(NextResponse.redirect(url));
   }
 
-  // Do not make role decisions at the edge. The resource/API boundary performs
-  // the authoritative tenant + permission check using the verified Clerk user.
-  return addSecurityHeaders(NextResponse.next());
-});
+  return authMiddleware(request, event);
+}
 
 export const config = {
   matcher: [
