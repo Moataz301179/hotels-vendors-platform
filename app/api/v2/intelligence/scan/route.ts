@@ -5,7 +5,7 @@ import {getActor} from '@/lib/v2-auth';
 import {appendAuditEntry} from '@/lib/audit/tamper-proof';
 type Row={orderId:string;quantity:number;unitPrice:number;supplierId:string;supplierName:string};
 export async function POST(){const u=await getActor();if(!u)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});if(u.platformRole!=='HOTEL'&&u.platformRole!=='ADMIN')return NextResponse.json({error:'HOTEL_ROLE_REQUIRED'},{status:403});
- const orders=await prisma.order.findMany({where:{tenantId:u.tenantId,deletedAt:null,status:{notIn:['DRAFT','CANCELLED','REJECTED']}},include:{items:{select:{productId:true,quantity:true,unitPrice:true}},supplier:{select:{id:true,name:true}}},orderBy:{createdAt:'desc'},take:500});
+ const orders=await prisma.order.findMany({where:{tenantId:u.tenantId,deletedAt:null,currency:'EGP',status:{in:['DELIVERED','PARTIALLY_DELIVERED']}},include:{items:{select:{productId:true,quantity:true,unitPrice:true}},supplier:{select:{id:true,name:true}}},orderBy:{createdAt:'desc'},take:500});
  const byProduct=new Map<string,Row[]>();
  for(const o of orders)for(const i of o.items){const a=byProduct.get(i.productId)||[];a.push({orderId:o.id,quantity:i.quantity,unitPrice:Number(i.unitPrice||0),supplierId:o.supplier.id,supplierName:o.supplier.name});byProduct.set(i.productId,a)}
  const created:Array<{id:string;title:string}>=[]; 

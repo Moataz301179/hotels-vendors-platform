@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { Brand } from "@/components/v2/brand";
 import { useState } from "react";
 import { useAuth, UserButton } from "@clerk/nextjs";
 import { ArrowUpRight } from "lucide-react";
@@ -14,7 +14,7 @@ export function Nav() {
     <header className="nav">
       <div className="shell nav-inner">
         <Link href="/" className="brand" aria-label="HotelsVendors home" onClick={closeMenu}>
-          <Image src="/logo-white.svg" alt="HotelsVendors" width={154} height={34} priority />
+          <Brand />
         </Link>
         <nav id="hv-main-navigation" className={`nav-links${menuOpen ? " nav-links-open" : ""}`} aria-label="Main navigation">
           <Link href="/platform" onClick={closeMenu}>Platform</Link>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { Brand } from "@/components/v2/brand";
 
 const platformLinks = [
   { label: "Platform overview", href: "/platform" },
@@ -18,7 +18,7 @@ export function SiteFooter() {
       <div className="hv-site-footer-inner">
         <div className="hv-footer-brand">
           <Link href="/" className="hv-footer-logo" aria-label="HotelsVendors home">
-            <Image src="/logo-white.svg" alt="HotelsVendors" width={145} height={31} />
+            <Brand />
           </Link>
           <p>A connected commercial network for hospitality. Virtual Shadow surfaces evidence-backed signals; each organization keeps control of its workflows, permissions and decisions.</p>
         </div>

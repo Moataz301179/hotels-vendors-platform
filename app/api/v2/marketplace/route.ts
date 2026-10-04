@@ -9,8 +9,8 @@ export async function GET(req: Request) {
   const networkScope = user.platformRole === "HOTEL" || user.platformRole === "ADMIN";
   const products = await prisma.product.findMany({
     where: {
-      ...(networkScope ? { supplier: { status:"ACTIVE", isVerified:true } } : { tenantId:user.tenantId }),
-      status: "ACTIVE", deletedAt: null,
+      ...(networkScope ? { supplier: { status:"ACTIVE", isVerified:true, deletedAt:null } } : { tenantId:user.tenantId }),
+      status: "ACTIVE", deletedAt: null, source:{not:"FIXTURE"},
       ...(q ? { OR: [{ name:{contains:q,mode:"insensitive"} }, { sku:{contains:q,mode:"insensitive"} }] } : {})
     },
     select: { id:true,uuid:true,sku:true,name:true,description:true,category:true,unitOfMeasure:true,unitPrice:true,basePrice:true,stockQuantity:true,leadTimeDays:true,supplier:{select:{id:true,name:true,isVerified:true,tenantId:true}} },

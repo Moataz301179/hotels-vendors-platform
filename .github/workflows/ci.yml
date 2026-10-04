@@ -2,7 +2,7 @@ name: HotelsVendors CI
 
 on:
   push:
-    branches: [main, production-transformation, release/demand-network-20261005]
+    branches: [main, production-transformation, release/demand-network-20261005, release/premium-mvp-20261005]
   pull_request:
     branches: [main, production-transformation]
 

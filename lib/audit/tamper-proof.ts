@@ -9,6 +9,7 @@
 
 import { createHash, randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 
 /** Canonical JSON so JSONB key ordering cannot change a chain hash. */
@@ -76,10 +77,10 @@ export async function appendAuditEntry(params: {
   changes?: Record<string, unknown> | string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
-}): Promise<string> {
+}, transaction?: Prisma.TransactionClient): Promise<string> {
   const { entityName, entityId, actionType, tenantId, actorId = null, actorRole = null, changes = null, ipAddress = null, userAgent = null } = params;
 
-  return prisma.$transaction(async (tx) => {
+  const append = async (tx: Prisma.TransactionClient) => {
     // Serialize append operations so concurrent requests cannot fork the hash chain.
     await tx.$executeRawUnsafe("SELECT pg_advisory_xact_lock(4815162342)");
     const previousEntry = await tx.auditLog.findFirst({ orderBy: { createdAt: "desc" }, select: { hash: true, createdAt: true } });
@@ -125,7 +126,8 @@ export async function appendAuditEntry(params: {
       select: { id: true },
     });
     return entry.id;
-  });
+  };
+  return transaction ? append(transaction) : prisma.$transaction(append);
 }
 
 // ─────────────────────────────────────────

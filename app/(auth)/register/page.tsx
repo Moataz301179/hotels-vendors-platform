@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { Brand } from '@/components/v2/brand';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ClerkLoaded, ClerkLoading, SignUp } from '@clerk/nextjs';
@@ -17,7 +17,7 @@ export default function Register() {
     <main className="hv-auth-page">
       <div className="hv-auth-shell">
         <section className="hv-auth-story">
-          <Link href="/" className="hv-auth-logo" aria-label="HotelsVendors home"><Image src="/logo-white.svg" alt="HotelsVendors" width={154} height={34} priority /></Link>
+          <Link href="/" className="hv-auth-logo" aria-label="HotelsVendors home"><Brand /></Link>
           <div className="hv-auth-story-copy"><h1>Start with your organization.</h1><p>Connect to the commercial network and give the Virtual Shadow the context it needs to surface useful signals—not generic alerts.</p></div>
           <div className="hv-auth-trust"><span><ShieldCheck size={17}/></span><div><strong>Separate workspaces. Clear permissions.</strong><p>Hotels and suppliers can self-register. Carriers and funders join through controlled partner onboarding.</p></div></div>
         </section>
