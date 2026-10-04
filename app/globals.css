@@ -43,7 +43,7 @@ button{color:inherit}
 img,svg,video{max-width:100%}
 .shell{width:min(1320px,calc(100% - 64px));margin-inline:auto;padding:0}
 .nav{height:72px;background:var(--charcoal);color:#fff;display:flex;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 5px 18px rgba(13,20,26,.08)}
-.nav-inner{display:flex;align-items:center;justify-content:space-between;width:100%;gap:28px;min-width:0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:28px;min-width:0}
 .brand{display:flex;align-items:center;white-space:nowrap;flex:none}
 .brand img{display:block;width:154px;height:34px;object-fit:contain;object-position:left center}
 .nav-links{display:flex;align-items:center;gap:clamp(16px,2.2vw,30px);font-size:13px;font-weight:600;color:#c8d0d7;white-space:nowrap}

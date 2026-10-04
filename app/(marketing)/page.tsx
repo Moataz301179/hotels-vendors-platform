@@ -94,7 +94,7 @@ export default function MarketingPage() {
               <p className="hv-hero-lead">HotelsVendors connects hotels, suppliers, carriers and funders. The Virtual Shadow reads authorized business signals and turns them into evidence-backed savings and opportunities—with the next move routed to the right participant.</p>
               <div className="hv-hero-actions">
                 <Link href="/register" className="hv-button hv-button-primary">Join the network <ArrowRight size={16} /></Link>
-                <Link href="/intelligence" className="hv-button hv-button-text">Explore Virtual Shadow <ArrowUpRight size={16} /></Link>
+                <Link href="#virtual-shadow" className="hv-button hv-button-text">Explore Virtual Shadow <ArrowUpRight size={16} /></Link>
               </div>
             </div>
           </div>
