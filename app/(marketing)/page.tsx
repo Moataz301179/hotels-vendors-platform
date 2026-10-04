@@ -42,7 +42,7 @@ function SignalFolio() {
           <path className="hv-route-active" d="M24 28 H736" />
           <path className="hv-route-tick" d="M24 18 V38 M261 18 V38 M499 18 V38 M736 18 V38" />
         </svg>
-        {signalSteps.map((item, index) => <button type="button" key={item.title} className={'hv-route-point' + (active === index ? ' is-active' : '') + (index < active ? ' is-passed' : '')} style={{ left: (index / 3 * 100) + '%' }} aria-label={'Inspect ' + item.title} aria-pressed={active === index} onClick={() => setActive(index)} onMouseEnter={() => setActive(index)}><span className="hv-route-dot">{index < active ? <Check size={11} /> : String(index + 1).padStart(2, "0")}</span></button>)}
+        {signalSteps.map((item, index) => <span key={item.title} className={'hv-route-point' + (active === index ? ' is-active' : '') + (index < active ? ' is-passed' : '')} style={{ left: (index / 3 * 100) + '%' }}><span className="hv-route-dot">{index < active ? <Check size={11} /> : String(index + 1).padStart(2, "0")}</span></span>)}
       </div>
       <div className="hv-folio-columns">
         {signalSteps.map((item, index) => <button type="button" key={item.title} className={'hv-folio-column' + (active === index ? ' is-active' : '')} onClick={() => setActive(index)} onFocus={() => setActive(index)} aria-pressed={active === index}>
@@ -66,7 +66,7 @@ function SignalFolio() {
 
 export default function MarketingPage() {
   return (
-    <div className="hv-home">
+    <main className="hv-home">
       <section className="hv-hero">
         <div className="hv-shell hv-hero-shell">
           <div className="hv-hero-intro">
@@ -113,6 +113,6 @@ export default function MarketingPage() {
       <section className="hv-final-section">
         <div className="hv-shell hv-final-panel"><div className="hv-final-rule"/><div className="hv-final-copy"><h2>Find the signal.<br /><em>Move the business.</em></h2><p>Join the network and give evidence-backed opportunities a clear path to action. Each organization keeps control; external funders make funding decisions.</p></div><div className="hv-final-actions"><Link href="/register" className="hv-button hv-button-primary">Join the network <ArrowRight size={16}/></Link><Link href="/login" className="hv-final-login">Already have an account? Sign in <ArrowUpRight size={15}/></Link></div><div className="hv-final-index">FOUR ACTORS / ONE NETWORK</div></div>
       </section>
-    </div>
+    </main>
   );
 }
