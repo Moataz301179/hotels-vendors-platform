@@ -76,3 +76,7 @@ crew/
 .playwright-cli/
 *.rdb
 mktemp(5792) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - No such file or directory (2)
+
+# generated deployment release artifacts
+/releases/
+current
