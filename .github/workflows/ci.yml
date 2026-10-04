@@ -50,6 +50,31 @@ jobs:
           cp -a .next/static release/.next/static
           cp -a public release/public
           tar -czf hv-standalone.tgz -C release .
+      - name: Smoke-test packaged standalone runtime
+        run: |
+          set -euo pipefail
+          PORT=3100 HOSTNAME=127.0.0.1 NODE_ENV=production node release/server.js >/tmp/hv-smoke.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 2 http://127.0.0.1:3100/api/health >/tmp/hv-health.json; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then cat /tmp/hv-smoke.log; exit 1; fi
+          grep -q '"ok":true' /tmp/hv-health.json
+          for path in / /login /register /marketplace /platform /solutions; do
+            status=$(curl -sS --max-time 10 -o /tmp/hv-smoke-page.html -w '%{http_code}' "http://127.0.0.1:3100$path")
+            if [ "$status" != '200' ]; then echo "Unexpected HTTP $status for $path"; cat /tmp/hv-smoke.log; exit 1; fi
+          done
+          curl -fsS --max-time 10 http://127.0.0.1:3100/ -o /tmp/hv-home.html
+          grep -q 'See where the' /tmp/hv-home.html
+          grep -q 'A shadow across the trade' /tmp/hv-home.html
+          css=$(grep -oE 'href="[^"]+\.css[^"]*"' /tmp/hv-home.html | sed -n '1p' | cut -d'"' -f2)
+          test -n "$css"
+          curl -fsS --max-time 10 "http://127.0.0.1:3100$css" -o /dev/null
+          status=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/intelligence)
+          test "$status" = '307'
       - uses: actions/upload-artifact@v4
         with:
           name: hv-standalone-${{ github.sha }}

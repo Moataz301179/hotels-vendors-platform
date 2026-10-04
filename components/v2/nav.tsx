@@ -19,7 +19,7 @@ export function Nav() {
         <nav id="hv-main-navigation" className={`nav-links${menuOpen ? " nav-links-open" : ""}`} aria-label="Main navigation">
           <Link href="/platform" onClick={closeMenu}>Platform</Link>
           <Link href="/marketplace" onClick={closeMenu}>Marketplace</Link>
-          <Link href="/intelligence" onClick={closeMenu}>Virtual Shadow</Link>
+          <Link href="/#virtual-shadow" onClick={closeMenu}>Virtual Shadow</Link>
           <Link href="/solutions" onClick={closeMenu}>Solutions</Link>
         </nav>
         <div className="nav-actions">
