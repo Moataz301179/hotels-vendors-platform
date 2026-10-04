@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
-    name: 'hotels-vendors',
-    cwd: '/var/www/hv-deploy',
+    name: 'hotels-vendors-production',
+    cwd: '/var/www/hv-release-production',
     script: '.next/standalone/server.js',
     instances: 1,
     autorestart: true,
@@ -9,7 +9,7 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 3008
     }
   }]
 };
