@@ -22,7 +22,7 @@ function isPublic(pathname: string) {
 }
 const PROTECTED_PAGE_PREFIXES = [
   "/dashboard", "/admin", "/carrier", "/funding", "/intelligence",
-  "/onboarding", "/orders", "/suppliers", "/workspace", "/settings",
+  "/demand-aggregation", "/onboarding", "/orders", "/suppliers", "/workspace", "/settings",
 ];
 function isProtectedPage(pathname: string) {
   return PROTECTED_PAGE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
