@@ -2,7 +2,7 @@ name: HotelsVendors CI
 
 on:
   push:
-    branches: [main, production-transformation]
+    branches: [main, production-transformation, release/demand-network-20261005]
   pull_request:
     branches: [main, production-transformation]
 
@@ -19,6 +19,7 @@ jobs:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       CLERK_SECRET_KEY: sk_test_placeholder
       SESSION_SECRET: ci-only-not-used-by-clerk
+      NEXT_PUBLIC_APP_URL: https://www.hotelsvendors.com
       REDIS_URL: redis://127.0.0.1:6379
     services:
       postgres:
@@ -42,6 +43,7 @@ jobs:
           cache: npm
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
+      - run: npm test
       - run: npm run build
       - name: Package standalone runtime
         run: |
@@ -75,6 +77,10 @@ jobs:
           curl -fsS --max-time 10 "http://127.0.0.1:3100$css" -o /dev/null
           status=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/intelligence)
           test "$status" = '307'
+          status=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/demand-aggregation)
+          test "$status" = '307'
+          status=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/v2/demand)
+          test "$status" = '401'
       - uses: actions/upload-artifact@v4
         with:
           name: hv-standalone-${{ github.sha }}
