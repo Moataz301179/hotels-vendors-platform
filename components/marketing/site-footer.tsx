@@ -1,14 +1,12 @@
-"use client";
-
 import Link from "next/link";
-import { BrandLogo } from "@/components/layout/brand-logo";
+import Image from "next/image";
 
 const platformLinks = [
   { label: "Platform overview", href: "/platform" },
   { label: "Procurement network", href: "/marketplace" },
+  { label: "Virtual Shadow", href: "/intelligence" },
   { label: "Solutions", href: "/solutions" },
 ];
-
 const accountLinks = [
   { label: "Sign in", href: "/login" },
   { label: "Join the network", href: "/register" },
@@ -19,32 +17,15 @@ export function SiteFooter() {
     <footer className="hv-site-footer">
       <div className="hv-site-footer-inner">
         <div className="hv-footer-brand">
-          <div className="hv-footer-logo" dir="ltr">
-            <BrandLogo variant="light" size="md" showText={false} />
-            <span>HotelsVendors</span>
-          </div>
-          <p>
-            Your Virtual Shadow for smarter procurement — connecting Hotels,
-            Suppliers, Carriers and Funders around evidence, action and measurable outcomes.
-          </p>
+          <Link href="/" className="hv-footer-logo" aria-label="HotelsVendors home">
+            <Image src="/logo-white.svg" alt="HotelsVendors" width={145} height={31} />
+          </Link>
+          <p>A connected commercial network for hospitality. Virtual Shadow surfaces evidence-backed signals; each organization keeps control of its workflows, permissions and decisions.</p>
         </div>
-        <div>
-          <h3>Platform</h3>
-          <nav aria-label="Platform links">
-            {platformLinks.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
-          </nav>
-        </div>
-        <div>
-          <h3>Account</h3>
-          <nav aria-label="Account links">
-            {accountLinks.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}
-          </nav>
-        </div>
+        <div><h3>EXPLORE</h3><nav aria-label="Platform links">{platformLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</nav></div>
+        <div><h3>YOUR ACCOUNT</h3><nav aria-label="Account links">{accountLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</nav></div>
       </div>
-      <div className="hv-footer-bottom">
-        <span>© {new Date().getFullYear()} HotelsVendors. Evidence over assumptions.</span>
-        <span>Financing decisions remain with external funders.</span>
-      </div>
+      <div className="hv-footer-bottom"><span>© {new Date().getFullYear()} HotelsVendors. Evidence over assumptions.</span><span>Financing decisions remain with external funders.</span></div>
     </footer>
   );
 }

@@ -1,138 +1,134 @@
 "use client";
 
-import "./home.css";
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, ChevronRight, CircleDollarSign, FileCheck2, GitBranch, Network, PackageCheck, ScanSearch, ShieldCheck, Truck, Waves, Zap } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, CircleDollarSign, Network, PackageCheck, ScanSearch, Truck, Waves } from "lucide-react";
+import "./home.css";
 
-const roles = [
-  { icon: Building2, title: "Hotels", desc: "Control demand, purchasing and approvals." },
-  { icon: PackageCheck, title: "Suppliers", desc: "Win qualified demand and manage orders." },
-  { icon: Truck, title: "Carriers", desc: "Coordinate delivery, exceptions and proof." },
-  { icon: CircleDollarSign, title: "Funders", desc: "Receive consented referrals with context." },
+const actors = [
+  { title: "Hotels", job: "Control demand, purchasing and approvals.", href: "/register", icon: Building2, access: "Hotel workspace" },
+  { title: "Suppliers", job: "Reach relevant demand and respond to real needs.", href: "/register", icon: PackageCheck, access: "Supplier workspace" },
+  { title: "Carriers", job: "Coordinate fulfillment, delivery and exceptions.", href: "/platform", icon: Truck, access: "Verified partner access" },
+  { title: "Funders", job: "Review consented opportunities and make independent decisions.", href: "/platform", icon: CircleDollarSign, access: "Verified partner access" },
 ];
 
-const stages = [
-  { n: "01", title: "Observe", desc: "Read authorized business activity and trusted market signals." },
-  { n: "02", title: "Detect", desc: "Find price variance, repeat demand, leakage and emerging opportunities." },
-  { n: "03", title: "Decide", desc: "Show the evidence, confidence and next action to the right actor." },
-  { n: "04", title: "Measure", desc: "Track action and outcome instead of counting alerts." },
+const signalSteps = [
+  { title: "Source activity", tag: "HOTEL DEMAND", summary: "Recurring purchase pattern", detail: "A recurring purchasing pattern is observed in an authorized business workflow.", evidence: "Source record · time · business identity" },
+  { title: "Connected context", tag: "SUPPLIER OFFER", summary: "Relevant supplier terms", detail: "Relevant supplier terms and comparable offers are brought into the same view where available.", evidence: "Offer source · item match · terms" },
+  { title: "Potential finding", tag: "PRICE VARIANCE", summary: "Possible cost difference", detail: "A possible cost difference is surfaced for review—not presented as guaranteed savings.", evidence: "Comparison basis · confidence · limits" },
+  { title: "Next action", tag: "REVIEW & DECIDE", summary: "Validate and record", detail: "The finding is routed to the authorized participant to validate and act on it.", evidence: "Owner · decision · outcome trail" },
 ];
+
+const outcomes = [
+  { title: "Money leaks", description: "Spot recurring price variance, avoidable cost and purchasing patterns worth checking.", result: "Evidence before action" },
+  { title: "Network opportunities", description: "Connect hotel demand, supplier capacity and fulfillment context where a real fit exists.", result: "A relevant next connection" },
+  { title: "Cash-flow signals", description: "Surface contextual signals that a business may choose to share with an external funding partner.", result: "The funder decides" },
+];
+
+function SignalFolio() {
+  const [active, setActive] = useState(2);
+  const step = signalSteps[active];
+  return (
+    <div className="hv-folio" aria-label="Illustrative Virtual Shadow signal path">
+      <div className="hv-folio-head">
+        <div className="hv-folio-brand"><span className="hv-folio-mark"><Waves size={16} /></span><div><strong>VIRTUAL SHADOW</strong><small>Signal folio / commercial context</small></div></div>
+        <span className="hv-folio-stamp">ILLUSTRATIVE</span>
+      </div>
+      <div className="hv-folio-rule"><span /></div>
+      <div className="hv-folio-route" aria-hidden="true">
+        <svg viewBox="0 0 760 54" preserveAspectRatio="none">
+          <path className="hv-route-base" d="M24 28 H736" />
+          <path className="hv-route-active" d="M24 28 H736" />
+          <path className="hv-route-tick" d="M24 18 V38 M261 18 V38 M499 18 V38 M736 18 V38" />
+        </svg>
+        {signalSteps.map((item, index) => <button type="button" key={item.title} className={'hv-route-point' + (active === index ? ' is-active' : '') + (index < active ? ' is-passed' : '')} style={{ left: (index / 3 * 100) + '%' }} aria-label={'Inspect ' + item.title} aria-pressed={active === index} onClick={() => setActive(index)} onMouseEnter={() => setActive(index)}><span className="hv-route-dot">{index < active ? <Check size={11} /> : String(index + 1).padStart(2, "0")}</span></button>)}
+      </div>
+      <div className="hv-folio-columns">
+        {signalSteps.map((item, index) => <button type="button" key={item.title} className={'hv-folio-column' + (active === index ? ' is-active' : '')} onClick={() => setActive(index)} onFocus={() => setActive(index)} aria-pressed={active === index}>
+          <span className="hv-folio-column-index">{String(index + 1).padStart(2, "0")}</span>
+          <span className="hv-folio-column-tag">{item.tag}</span>
+          <strong>{item.title}</strong>
+          <span className="hv-folio-column-summary">{item.summary}</span>
+          <span className="hv-folio-column-line" />
+          <span className="hv-folio-column-hint">{index === 0 ? "Observed" : index === 1 ? "Related" : index === 2 ? "To validate" : "Human decision"}</span>
+        </button>)}
+      </div>
+      <div className="hv-folio-detail" aria-live="polite">
+        <div className="hv-folio-detail-mark"><ScanSearch size={18} /></div>
+        <div className="hv-folio-detail-copy"><span>{step.tag}</span><strong>{step.detail}</strong><small>{step.evidence}</small></div>
+        <span className="hv-folio-confidence"><i /> Evidence-led<br />not a verdict</span>
+      </div>
+      <div className="hv-folio-foot"><span>01 / SIGNAL PATH</span><span>Illustrative scenario — not live customer data</span></div>
+    </div>
+  );
+}
+
+function NetworkMap() {
+  return <div className="hv-network-map" aria-label="Four actor hospitality network connected by Virtual Shadow">
+    <svg className="hv-network-lines" viewBox="0 0 700 260" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M95 55 C220 55 220 130 350 130 S485 55 605 55" />
+      <path d="M95 205 C220 205 220 130 350 130 S485 205 605 205" />
+      <path d="M95 55 C145 100 145 160 95 205" />
+      <path d="M605 55 C555 100 555 160 605 205" />
+      <path className="hv-network-signal" d="M95 55 C220 55 220 130 350 130 S485 205 605 205" />
+    </svg>
+    <div className="hv-map-actor actor-hotel"><Building2 size={17}/><span>Hotel demand</span></div>
+    <div className="hv-map-actor actor-supplier"><PackageCheck size={17}/><span>Supplier capacity</span></div>
+    <div className="hv-map-actor actor-carrier"><Truck size={17}/><span>Fulfillment</span></div>
+    <div className="hv-map-actor actor-funder"><CircleDollarSign size={17}/><span>External capital</span></div>
+    <div className="hv-map-center"><span><Waves size={23}/></span><strong>Virtual Shadow</strong><small>Signals · evidence · next action</small></div>
+    <div className="hv-map-caption"><span className="hv-map-key" />One connected network. Separate permissions and decisions.</div>
+  </div>;
+}
 
 export default function MarketingPage() {
   return (
     <div className="hv-home">
       <section className="hv-hero">
-        <div className="hv-hero-grid" aria-hidden="true" />
-        <div className="hv-shell hv-hero-layout">
-          <div className="hv-hero-copy">
-            <div className="hv-eyebrow"><span className="hv-live-dot" /> THE HOSPITALITY BUSINESS NETWORK</div>
-            <h1>Find the leak.<br /><span>See the opportunity.</span><br />Move the business.</h1>
-            <p className="hv-hero-lead">HotelsVendors connects hotels, suppliers, carriers and funders in one operating network — with a Virtual Shadow that watches authorized signals across the ecosystem and turns them into evidence-backed actions.</p>
-            <div className="hv-hero-actions">
-              <Link href="/register" className="hv-button hv-button-primary">Join the network <ArrowRight size={17} /></Link>
-              <Link href="/intelligence" className="hv-button hv-button-secondary">Explore Virtual Shadow <ArrowUpRight size={17} /></Link>
+        <div className="hv-shell hv-hero-shell">
+          <div className="hv-hero-intro">
+            <div className="hv-hero-copy">
+              <h1>See where the <em>money moves.</em></h1>
             </div>
-            <div className="hv-proofline">
-              <span><ShieldCheck size={16} /> Tenant-scoped evidence</span>
-              <span><FileCheck2 size={16} /> Auditable actions</span>
-              <span><GitBranch size={16} /> Partner-owned decisions</span>
+            <div className="hv-hero-context">
+              <p className="hv-hero-lead">HotelsVendors connects hotels, suppliers, carriers and funders. The Virtual Shadow reads authorized business signals and turns them into evidence-backed savings and opportunities—with the next move routed to the right participant.</p>
+              <div className="hv-hero-actions">
+                <Link href="/register" className="hv-button hv-button-primary">Join the network <ArrowRight size={16} /></Link>
+                <Link href="/intelligence" className="hv-button hv-button-text">Explore Virtual Shadow <ArrowUpRight size={16} /></Link>
+              </div>
             </div>
           </div>
-
-          <div className="hv-shadow-stage" aria-label="Virtual Shadow intelligence visualization">
-            <div className="hv-stage-top"><span><span className="hv-live-dot" /> VIRTUAL SHADOW</span><span className="hv-stage-mode">SIGNAL WORKSPACE</span></div>
-            <div className="hv-orbit hv-orbit-one" />
-            <div className="hv-orbit hv-orbit-two" />
-            <div className="hv-orbit hv-orbit-three" />
-            <div className="hv-shadow-core">
-              <div className="hv-core-mark"><Waves size={31} strokeWidth={1.5} /></div>
-              <span className="hv-core-label">NETWORK SIGNAL</span>
-              <span className="hv-core-sub">Observe · Connect · Act</span>
-            </div>
-            <div className="hv-node hv-node-hotel"><Building2 size={17}/><span>Hotel demand</span></div>
-            <div className="hv-node hv-node-supplier"><PackageCheck size={17}/><span>Supplier offer</span></div>
-            <div className="hv-node hv-node-carrier"><Truck size={17}/><span>Delivery signal</span></div>
-            <div className="hv-node hv-node-funder"><CircleDollarSign size={17}/><span>Capital signal</span></div>
-            <div className="hv-signal-card">
-              <div className="hv-signal-card-head"><ScanSearch size={15} /> SIGNAL PATH <span className="hv-evidence-tag">EVIDENCE FIRST</span></div>
-              <div className="hv-signal-line"><span className="hv-signal-index">01</span><div><strong>Pattern detected</strong><small>Price variance / repeat demand</small></div><ChevronRight size={15}/></div>
-              <div className="hv-signal-line"><span className="hv-signal-index">02</span><div><strong>Context attached</strong><small>Source · time · confidence</small></div><ChevronRight size={15}/></div>
-              <div className="hv-signal-line"><span className="hv-signal-index">03</span><div><strong>Action routed</strong><small>Relevant business workspace</small></div><ArrowUpRight size={15}/></div>
-            </div>
-            <div className="hv-stage-foot"><span>CONNECTED NETWORK</span><span>ACCESS-CONTROLLED BY DESIGN</span></div>
-          </div>
-        </div>
-        <div className="hv-shell hv-hero-bottom">
-          <span>ONE CONNECTED OPERATING LOOP</span>
-          <div><i /> Procurement <b>→</b> Evidence <b>→</b> Opportunity <b>→</b> Measurable outcome</div>
+          <div className="hv-hero-product"><SignalFolio /></div>
         </div>
       </section>
 
-      <section className="hv-roles-section">
+      <section className="hv-actors-section" aria-labelledby="hv-actors-title">
         <div className="hv-shell">
-          <div className="hv-section-intro hv-section-intro-row">
-            <div><div className="hv-kicker">ONE NETWORK · FOUR ACTORS</div><h2>Every participant sees<br/>the work that belongs to them.</h2></div>
-            <p>One shared commercial environment. Separate permissions, workflows and evidence for every organization.</p>
-          </div>
-          <div className="hv-roles-grid">
-            {roles.map(({icon: Icon, title, desc}, i) => <article className="hv-role" key={title}><div className="hv-role-top"><span className="hv-role-icon"><Icon size={20}/></span><span className="hv-role-number">0{i+1}</span></div><h3>{title}</h3><p>{desc}</p><div className="hv-role-rule"/></article>)}
+          <div className="hv-section-heading"><div><h2 id="hv-actors-title">One commercial environment.<br /><em>Four distinct roles.</em></h2></div><p>Every organization gets the workflows and information it is authorized to see. The network connects the work without flattening permissions.</p></div>
+          <div className="hv-actor-list">
+            {actors.map(({title, job, href, icon: Icon, access}) => <Link className="hv-actor-row" href={href} key={title}><span className="hv-actor-icon"><Icon size={19} strokeWidth={1.7}/></span><span className="hv-actor-name">{title}</span><span className="hv-actor-job">{job}</span><span className="hv-actor-access">{access}</span><ArrowUpRight size={17} className="hv-actor-arrow"/></Link>)}
           </div>
         </div>
       </section>
 
-      <section className="hv-shadow-section">
-        <div className="hv-shell hv-shadow-content">
-          <div className="hv-shadow-art">
-            <div className="hv-art-label">FROM SIGNAL TO BUSINESS VALUE</div>
-            <div className="hv-art-network">
-              <div className="hv-art-ring ring-a"/><div className="hv-art-ring ring-b"/><div className="hv-art-ring ring-c"/>
-              <div className="hv-art-center"><Waves size={36}/><span>VIRTUAL<br/>SHADOW</span></div>
-              <span className="hv-art-point p-a"/><span className="hv-art-point p-b"/><span className="hv-art-point p-c"/><span className="hv-art-point p-d"/>
-              <span className="hv-art-label-node l-a">DEMAND</span><span className="hv-art-label-node l-b">PRICE</span><span className="hv-art-label-node l-c">SUPPLY</span><span className="hv-art-label-node l-d">CASH FLOW</span>
-            </div>
-            <div className="hv-art-footer"><span><span className="hv-live-dot"/> SIGNAL ENGINE</span><span>NO BLACK-BOX VERDICTS</span></div>
-          </div>
-          <div className="hv-shadow-copy">
-            <div className="hv-kicker">THE DIFFERENTIATOR</div>
-            <h2>A Virtual Shadow<br/>that works across<br/><em>the business network.</em></h2>
-            <p>Not another dashboard full of charts. The Virtual Shadow looks for patterns that matter to real operations, then shows the source, the reasoning and the next practical move.</p>
-            <ul className="hv-check-list">
-              <li><Check size={17}/> Money leaks and avoidable cost</li>
-              <li><Check size={17}/> Supplier, demand and fulfillment opportunities</li>
-              <li><Check size={17}/> Cash-flow signals and consented external referrals</li>
-              <li><Check size={17}/> Findings linked to actions and measured outcomes</li>
-            </ul>
-            <Link href="/intelligence" className="hv-text-link">See how the Shadow works <ArrowRight size={17}/></Link>
-          </div>
+      <section className="hv-shadow-section" id="virtual-shadow">
+        <div className="hv-shell hv-shadow-layout">
+          <div className="hv-shadow-story"><h2>A shadow across the trade.<br /><em>Not another dashboard.</em></h2><p>The Virtual Shadow connects context that normally sits in separate workflows. It surfaces a finding with its source, reasoning, confidence and next action—so a person can validate it instead of trusting a black-box verdict.</p><Link href="/intelligence" className="hv-inline-link">Explore the intelligence workspace <ArrowRight size={16}/></Link><div className="hv-shadow-note"><span><BadgeCheck size={16}/></span><p><strong>Evidence before assertion.</strong> Observed facts, estimates and inferences must remain distinguishable.</p></div></div>
+          <NetworkMap />
         </div>
       </section>
 
-      <section className="hv-method-section">
+      <section className="hv-outcomes-section">
         <div className="hv-shell">
-          <div className="hv-section-intro hv-centered">
-            <div className="hv-kicker">FROM OBSERVATION TO OUTCOME</div>
-            <h2>Intelligence only matters<br/>when it changes what happens next.</h2>
-            <p>Every signal should lead to a traceable business decision — or be clearly marked as informational.</p>
-          </div>
-          <div className="hv-stages">
-            {stages.map((stage, i) => <article className="hv-stage" key={stage.n}><div className="hv-stage-number">{stage.n}<span>{i === 0 ? <ScanSearch size={18}/> : i === 1 ? <Zap size={18}/> : i === 2 ? <ArrowDownRight size={18}/> : <BadgeCheck size={18}/>}</span></div><h3>{stage.title}</h3><p>{stage.desc}</p>{i < stages.length-1 && <div className="hv-stage-connector"><ArrowRight size={16}/></div>}</article>)}
+          <div className="hv-section-heading hv-outcomes-heading"><div><h2>Signals worth<br /><em>doing something about.</em></h2></div><p>A finding is useful when its evidence is clear, its limits are honest and a participant has a practical next step.</p></div>
+          <div className="hv-outcome-ledger">
+            {outcomes.map((item, index) => <article className="hv-outcome-row" key={item.title}><span className="hv-outcome-mark">{index === 0 ? <ScanSearch size={20}/> : index === 1 ? <Network size={20}/> : <CircleDollarSign size={20}/>}</span><div className="hv-outcome-title"><h3>{item.title}</h3><span>{item.result}</span></div><p>{item.description}</p><ArrowDownRight size={19} className="hv-outcome-arrow"/></article>)}
           </div>
         </div>
       </section>
 
-      <section className="hv-control-section">
-        <div className="hv-shell hv-control-grid">
-          <div><div className="hv-kicker">TRUST IS PART OF THE PRODUCT</div><h2>Useful intelligence.<br/><span>Controlled access.</span></h2><p>Business information stays within authorized scopes. HotelsVendors connects commercial workflows and evidence; it does not become a lender or make funding decisions.</p><Link href="/platform" className="hv-text-link">Explore the operating model <ArrowRight size={17}/></Link></div>
-          <div className="hv-controls">
-            <div className="hv-control-row"><span className="hv-control-icon"><ShieldCheck size={20}/></span><div><strong>Tenant-level boundaries</strong><p>Organizations only access permitted records and workflows.</p></div><Check size={17} className="hv-control-check"/></div>
-            <div className="hv-control-row"><span className="hv-control-icon"><FileCheck2 size={20}/></span><div><strong>Evidence and audit trail</strong><p>Findings and material actions should be explainable and traceable.</p></div><Check size={17} className="hv-control-check"/></div>
-            <div className="hv-control-row"><span className="hv-control-icon"><Network size={20}/></span><div><strong>Clear partner boundaries</strong><p>External funders retain underwriting, approval and contracting decisions.</p></div><Check size={17} className="hv-control-check"/></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="hv-cta-section">
-        <div className="hv-shell hv-cta-panel"><div><div className="hv-kicker">MAKE THE NETWORK WORK FOR YOU</div><h2>Find the business.<br/><span>Close the loop.</span></h2><p>Start with your organization. Connect the right workflow. Turn the next signal into a decision you can act on.</p></div><div className="hv-cta-actions"><Link href="/register" className="hv-button hv-button-primary">Get started <ArrowRight size={17}/></Link><Link href="/login" className="hv-button hv-button-ghost">Already have an account</Link></div><div className="hv-cta-orb" aria-hidden="true"/></div>
+      <section className="hv-final-section">
+        <div className="hv-shell hv-final-panel"><div className="hv-final-rule"/><div className="hv-final-copy"><h2>Find the signal.<br /><em>Move the business.</em></h2><p>Join the network and give evidence-backed opportunities a clear path to action. Each organization keeps control; external funders make funding decisions.</p></div><div className="hv-final-actions"><Link href="/register" className="hv-button hv-button-primary">Join the network <ArrowRight size={16}/></Link><Link href="/login" className="hv-final-login">Already have an account? Sign in <ArrowUpRight size={15}/></Link></div><div className="hv-final-index">FOUR ACTORS / ONE NETWORK</div></div>
       </section>
     </div>
   );
