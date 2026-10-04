@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       CLERK_SECRET_KEY: sk_test_placeholder
       SESSION_SECRET: ci-only-not-used-by-clerk
       REDIS_URL: redis://127.0.0.1:6379
@@ -43,3 +43,15 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
       - run: npm run build
+      - name: Package standalone runtime
+        run: |
+          mkdir -p release/.next
+          cp -a .next/standalone/. release/
+          cp -a .next/static release/.next/static
+          cp -a public release/public
+          tar -czf hv-standalone.tgz -C release .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hv-standalone-${{ github.sha }}
+          path: hv-standalone.tgz
+          retention-days: 1
