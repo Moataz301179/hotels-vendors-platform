@@ -1,3 +1,0 @@
-{
-  "/api/v1/payments/instapay-callback/route": "app/api/v1/payments/instapay-callback/route.js"
-}
