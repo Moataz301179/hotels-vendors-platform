@@ -16,7 +16,9 @@ export async function getActor() {
   // Signup role is onboarding intent only. After provisioning, DB platformRole is authoritative.
   // ADMIN can never be self-provisioned from Clerk metadata.
   const requestedRole = String(cu.unsafeMetadata?.platformRole || "HOTEL").toUpperCase();
-  const platformRole: PlatformRole = ["HOTEL","SUPPLIER","FACTORING","SHIPPING"].includes(requestedRole)
+  // Public Clerk metadata is user-editable. Only hotel and supplier are public signup roles;
+  // carriers and funders must be provisioned through controlled partner onboarding.
+  const platformRole: PlatformRole = ["HOTEL", "SUPPLIER"].includes(requestedRole)
     ? requestedRole as PlatformRole : "HOTEL";
   const slug = `hv-${userId.slice(-12).toLowerCase()}`;
   const tenant = await prisma.tenant.create({

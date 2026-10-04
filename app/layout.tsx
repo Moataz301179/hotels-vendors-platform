@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
+import { Archivo, Source_Sans_3 } from 'next/font/google';
 import './globals.css';
+
+const bodyFont = Source_Sans_3({ subsets: ['latin'], variable: '--font-body', display: 'swap', weight: 'variable' });
+const displayFont = Archivo({ subsets: ['latin'], variable: '--font-display', display: 'swap', weight: 'variable' });
 export const metadata: Metadata = {
   title: 'HotelsVendors — Hospitality Business Network & Virtual Shadow',
   description: 'Connect hotels, suppliers, carriers and external funders. The Virtual Shadow surfaces evidence-backed procurement leaks, savings and commercial opportunities across the hospitality network.',
@@ -11,4 +15,4 @@ export const metadata: Metadata = {
     url: 'https://www.hotelsvendors.com',
   },
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <ClerkProvider><html lang="en"><body>{children}</body></html></ClerkProvider>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <ClerkProvider><html lang="en"><body className={`${bodyFont.variable} ${displayFont.variable}`}>{children}</body></html></ClerkProvider>}
