@@ -44,6 +44,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
       - run: npm test
+      - name: Check lint and accessibility rules
+        run: npm run lint
       - run: npm run build
       - name: Package standalone runtime
         run: |
