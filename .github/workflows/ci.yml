@@ -70,8 +70,13 @@ jobs:
             if [ "$status" != '200' ]; then echo "Unexpected HTTP $status for $path"; cat /tmp/hv-smoke.log; exit 1; fi
           done
           curl -fsS --max-time 10 http://127.0.0.1:3100/ -o /tmp/hv-home.html
-          grep -q 'See where the' /tmp/hv-home.html
-          grep -q 'A shadow across the trade' /tmp/hv-home.html
+          grep -q 'Source smarter.' /tmp/hv-home.html
+          grep -q 'HV Volume Deals' /tmp/hv-home.html
+          grep -q 'Market Compass' /tmp/hv-home.html
+          for path in /audit /security; do
+            test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' \"http://127.0.0.1:3100$path\")" = '307'
+          done
+          test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/v2/audit)" = '401'
           css=$(grep -oE 'href="[^"]+\.css[^"]*"' /tmp/hv-home.html | sed -n '1p' | cut -d'"' -f2)
           test -n "$css"
           curl -fsS --max-time 10 "http://127.0.0.1:3100$css" -o /dev/null
