@@ -3,10 +3,10 @@
  * Declares Organization, SoftwareApplication (web + HOVIN mobile), and WebSite.
  * NO-FAKE-DATA: no ratings/reviews/counts are emitted.
  */
-import { organizationJsonLd, softwareJsonLd, hovinMobileJsonLd, webSiteJsonLd } from "@/lib/schema";
+import { organizationJsonLd, webSiteJsonLd } from "@/lib/schema";
 
 export function JsonLd() {
-  const blocks = [organizationJsonLd(), softwareJsonLd(), hovinMobileJsonLd(), webSiteJsonLd()];
+  const blocks = [organizationJsonLd(), webSiteJsonLd()];
   return (
     <>
       {blocks.map((block, i) => (

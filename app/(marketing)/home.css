@@ -82,3 +82,24 @@
 .hv-folio-column-index,.hv-folio-column-hint,.hv-folio-foot,.hv-folio-detail-copy small,.hv-folio-brand small,.hv-folio-stamp,.hv-folio-confidence,.hv-actor-access,.hv-outcome-title span{color:#4e5c65}.hv-folio-column-summary,.hv-actor-job,.hv-outcome-row>p,.hv-shadow-note p{}.hv-final-index{color:#c1cbd4;}.hv-final-login{min-height:44px}
 
 .hv-volume-actions{display:flex;flex-wrap:wrap;align-items:center;gap:20px;margin-top:24px}.hv-volume-note{font-size:14px;line-height:1.7;color:#4e5c65;max-width:780px;margin-top:20px}
+
+/* Full-width section surfaces; the inner layout shell stays transparent. */
+#market-compass.hv-shadow-section{background:#d1d5db;overflow:visible}
+#market-compass .hv-shell.hv-shadow-layout{background:transparent;padding:40px}
+.hv-final-panel{background:#e5e7eb;color:#111827}
+.hv-final-copy h2{color:#111827}
+.hv-final-copy p{color:#374151}
+.hv-final-login,.hv-final-login:hover{color:#374151}
+.hv-final-index{color:#59656d}
+@media(max-width:900px){#market-compass .hv-shell.hv-shadow-layout{padding:28px}}
+@media(max-width:640px){#market-compass .hv-shell.hv-shadow-layout{padding:16px}}
+
+/* Use the same neutral palette for every large homepage surface. */
+.hv-network-map{background:#e5e7eb;color:#111827;border-color:#cbd5e1}
+.hv-network-map:before{background:linear-gradient(90deg,rgba(31,41,55,.08) 1px,transparent 1px),linear-gradient(rgba(31,41,55,.08) 1px,transparent 1px)}
+.hv-network-lines path{stroke:rgba(55,65,81,.3)}
+.hv-map-actor{background:#f9fafb;border-color:#cbd5e1;color:#111827}
+.hv-map-actor svg,.hv-map-actor .hv-map-key{color:#315f8b}
+.hv-map-caption{color:#4b5563}
+.hv-map-center{background:#fff;color:#111827}
+.hv-final-copy h2 em{color:inherit}

@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, PackageCheck, RefreshCw, SearchCheck } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
+import { publicPageMetadata } from '@/lib/seo';
+
+export const metadata = publicPageMetadata(
+  'Hospitality Supplier Sourcing',
+  'Discover active, verified hospitality supplier listings and connect with relevant sourcing opportunities through the HotelsVendors procurement network.',
+  '/marketplace',
+);
 
 // Public listings must reflect verified live records at request time, not build-time database access.
 export const dynamic = 'force-dynamic';

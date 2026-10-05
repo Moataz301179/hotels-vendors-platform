@@ -1,5 +1,12 @@
 import Link from 'next/link';
 import { ArrowRight, CircleDollarSign, Network, ScanSearch, Truck } from 'lucide-react';
+import { publicPageMetadata } from '@/lib/seo';
+
+export const metadata = publicPageMetadata(
+  'Hospitality Procurement Network Solutions',
+  'See how hotels, suppliers, carriers and independent funding partners use HotelsVendors for hospitality sourcing, procurement and fulfillment workflows.',
+  '/solutions',
+);
 
 const solutions = [
   { href: '/intelligence', action: 'Review price signals', title: 'Market Compass', text: 'Compare real purchasing context, surface price variance and route findings for review.', icon: ScanSearch, result: 'Evidence to validate' },

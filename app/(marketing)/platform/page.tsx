@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ArrowUpRight, Building2, CircleDollarSign, PackageCheck, Truck } from 'lucide-react';
+import { publicPageMetadata } from '@/lib/seo';
+
+export const metadata = publicPageMetadata(
+  'Hospitality Procurement Platform',
+  'Explore how HotelsVendors connects hotel purchasing, supplier sourcing, fulfillment and evidence-backed Market Compass recommendations.',
+  '/platform',
+);
 
 const actors = [
   { title: 'Hotels', text: 'Manage purchasing, compare offers, control approvals and review spend signals.', href: '/dashboard', icon: Building2 },
