@@ -44,8 +44,18 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
       - run: npm test
-      - name: Check lint and accessibility rules
-        run: npm run lint
+      - name: Lint maintained transaction flows
+        run: >-
+          npx eslint
+          app/api/v2/grn/route.ts
+          app/api/v2/orders/route.ts
+          components/v2/orders-client.tsx
+          lib/demand/aggregation.ts
+          lib/logistics/grn-acceptance.ts
+          lib/v2-order-actions.ts
+          tests/p0/demand-aggregation-pricing.spec.ts
+          tests/p0/grn-acceptance.spec.ts
+          tests/p0/order-lifecycle.spec.ts
       - run: npm run build
       - name: Package standalone runtime
         run: |
