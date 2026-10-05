@@ -1,0 +1,7 @@
+Quarantined repository artifact: mobile gitlink
+-----------------------------------------------
+
+The release branch contained the gitlink SHA fe0e021fa4043860d0a9a4e68bd1c2985a44c92e at path "mobile".
+That commit does not exist in Moataz301179/hotels-vendors-mobile, and this repository has no .gitmodules file to resolve a submodule URL. GitHub Actions reported a submodule cleanup error after the job.
+
+The maintained mobile app is the separate repository https://github.com/Moataz301179/hotels-vendors-mobile (main at audit time: cc795a940ce5bd5383177efd42beab26e298325f). This file preserves the invalid pointer and reason for removal. Remove this note only after release deployment and mobile integration are verified.
