@@ -74,7 +74,7 @@ jobs:
           grep -q 'HV Volume Deals' /tmp/hv-home.html
           grep -q 'Market Compass' /tmp/hv-home.html
           for path in /audit /security; do
-            test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' \"http://127.0.0.1:3100$path\")" = '307'
+            test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3100$path")" = '307'
           done
           test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/v2/audit)" = '401'
           css=$(grep -oE 'href="[^"]+\.css[^"]*"' /tmp/hv-home.html | sed -n '1p' | cut -d'"' -f2)
