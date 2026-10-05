@@ -21,7 +21,7 @@ function isPublic(pathname: string) {
   return PUBLIC_PATHS.has(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 const PROTECTED_PAGE_PREFIXES = [
-  "/dashboard", "/admin", "/carrier", "/funding", "/intelligence",
+  "/dashboard", "/admin", "/audit", "/security", "/carrier", "/funding", "/intelligence",
   "/demand-aggregation", "/onboarding", "/orders", "/suppliers", "/workspace", "/settings",
 ];
 function isProtectedPage(pathname: string) {
