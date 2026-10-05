@@ -9,6 +9,7 @@
  */
 
 import * as crypto from "crypto";
+import {requireLiveFunderConfiguration} from "@/lib/fintech/external-only";
 import type {
   FactoringPartnerAdapter,
   InvoiceDataForPartner,
@@ -151,7 +152,7 @@ function generateHmac(data: string): string {
 }
 
 export function verifyOlivWebhook(payload: OlivWebhookPayload): boolean {
-  if (USE_MOCK) return true;
+  if (USE_MOCK) return false;
   if (!OLIV_WEBHOOK_SECRET) return false;
 
   const { event, timestamp, data } = payload;
@@ -215,7 +216,7 @@ async function olivFetch<T>(path: string, options: RequestInit = {}): Promise<T>
 export async function submitInvoiceForFactoring(
   submission: OlivInvoiceSubmission
 ): Promise<OlivSubmissionResponse> {
-  if (USE_MOCK) return _mockSubmitInvoice(submission);
+  requireLiveFunderConfiguration(!!OLIV_API_KEY && !!OLIV_WEBHOOK_SECRET, USE_MOCK);
   return olivFetch<OlivSubmissionResponse>("/v1/factoring/invoices", {
     method: "POST",
     body: JSON.stringify(submission),
@@ -223,7 +224,7 @@ export async function submitInvoiceForFactoring(
 }
 
 export async function getFactoringStatus(factoringRequestId: string): Promise<OlivFactoringRequestDetails> {
-  if (USE_MOCK) return _mockFactoringStatus(factoringRequestId);
+  requireLiveFunderConfiguration(!!OLIV_API_KEY && !!OLIV_WEBHOOK_SECRET, USE_MOCK);
   return olivFetch<OlivFactoringRequestDetails>(`/v1/factoring/requests/${factoringRequestId}`);
 }
 
@@ -276,11 +277,7 @@ export async function handleOlivWebhook(
   signature?: string
 ): Promise<OlivStatusUpdate | Record<string, unknown> | null> {
   try {
-    if (typeof rawPayload === "object" && rawPayload !== null && !("event" in rawPayload)) {
-      const event = rawPayload as { type?: string; orderId?: string; status?: string; amount?: number };
-      console.log("[Oliv Webhook] Received:", event.type, event.orderId);
-      return rawPayload as Record<string, unknown>;
-    }
+    if (typeof rawPayload !== "string") return null;
 
     const payload: OlivWebhookPayload = JSON.parse(rawPayload as string);
     if (signature) payload.signature = signature;
@@ -297,72 +294,10 @@ export async function handleOlivWebhook(
 }
 
 // ============================================================================
-// 6. MOCK IMPLEMENTATIONS
-// ============================================================================
-
-async function _mockSubmitInvoice(_submission: OlivInvoiceSubmission): Promise<OlivSubmissionResponse> {
-  await _simulateLatency(500);
-  const factoringRequestId = `OLIV-${crypto.randomUUID()}`;
-  return {
-    factoringRequestId,
-    status: "INITIALIZED",
-    submittedAt: new Date().toISOString(),
-    estimatedDecisionDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    advanceRate: 0.90,
-    discountRate: 0.02,
-    platformFeeRate: 0.005,
-  };
-}
-
-async function _mockFactoringStatus(factoringRequestId: string): Promise<OlivFactoringRequestDetails> {
-  await _simulateLatency(200);
-  const hash = factoringRequestId.split("-").pop() || "";
-  const stateIndex = parseInt(hash, 36) % 7;
-  const states: OlivFactoringStatus[] = [
-    "INITIALIZED", "UNDER_REVIEW", "APPROVED", "DISBURSED", "MATURED", "REJECTED", "CANCELLED",
-  ];
-  const status = states[stateIndex] || "INITIALIZED";
-
-  return {
-    factoringRequestId,
-    invoiceId: `INV-${factoringRequestId}`,
-    status,
-    submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    advanceRate: 0.90,
-    discountRate: 0.02,
-    platformFeeRate: 0.005,
-    requestedAmount: 100000,
-    approvedAmount: ["APPROVED", "DISBURSED", "MATURED"].includes(status) ? 90000 : undefined,
-    disbursedAmount: ["DISBURSED", "MATURED"].includes(status) ? 90000 : undefined,
-    disbursedAt: ["DISBURSED", "MATURED"].includes(status) ? new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-    maturityDate: "MATURED" === status ? new Date().toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    settledAt: "MATURED" === status ? new Date().toISOString() : undefined,
-    hotelPaidAt: "MATURED" === status ? new Date().toISOString() : undefined,
-    rejectionReason: status === "REJECTED" ? "Insufficient credit history" : undefined,
-    riskScore: 45,
-    riskTier: "LOW",
-  };
-}
-
-function _simulateLatency(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// ============================================================================
 // 7. FACTORING PARTNER ADAPTER
 // ============================================================================
 
-const OLIV_CONFIG = {
-  standardAdvanceRate: 0.88,
-  standardDiscountRate: 0.025,
-  highRiskAdvanceRate: 0.82,
-  highRiskDiscountRate: 0.035,
-  minInvoiceAmount: 5000,
-  maxInvoiceAmount: 5_000_000,
-  standardSettlementDays: 90,
-  highRiskSettlementDays: 60,
-};
+
 
 export class OlivFinanceAdapter implements FactoringPartnerAdapter {
   id = "oliv_finance";
@@ -370,7 +305,7 @@ export class OlivFinanceAdapter implements FactoringPartnerAdapter {
   type = "PAYMENT_RAIL" as const;
 
   async checkEligibility(invoice: InvoiceDataForPartner): Promise<PartnerOffer> {
-    if (USE_MOCK) return this._mockEligibility(invoice);
+    requireLiveFunderConfiguration(!!OLIV_API_KEY && !!OLIV_WEBHOOK_SECRET, USE_MOCK);
     const res = await olivFetch<{ eligible: boolean; max_advance_rate: number; discount_rate: number; inquiry_id: string; estimated_disbursement?: number; rejection_reason?: string }>(
       "/inquiries", {
         method: "POST",
@@ -401,7 +336,7 @@ export class OlivFinanceAdapter implements FactoringPartnerAdapter {
     partnerFundingId: string;
     estimatedDisbursementDate: string;
   }> {
-    if (USE_MOCK) return this._mockSubmit(invoice);
+    requireLiveFunderConfiguration(!!OLIV_API_KEY && !!OLIV_WEBHOOK_SECRET, USE_MOCK);
     const res = await olivFetch<{
       instruction_id: string;
       funding_id: string;
@@ -427,7 +362,7 @@ export class OlivFinanceAdapter implements FactoringPartnerAdapter {
   }
 
   async trackInstruction(instructionId: string) {
-    if (USE_MOCK) return this._mockTrack(instructionId);
+    requireLiveFunderConfiguration(!!OLIV_API_KEY && !!OLIV_WEBHOOK_SECRET, USE_MOCK);
     try {
       const res = await olivFetch<{ status: string; disbursed_at?: string; settled_at?: string }>(
         `/instructions/${instructionId}/status`
@@ -443,6 +378,9 @@ export class OlivFinanceAdapter implements FactoringPartnerAdapter {
   }
 
   async handleWebhook(payload: unknown): Promise<WebhookResult> {
+    const envelope=payload as {rawBody?:string;signature?:string};
+    if(!envelope?.rawBody || !await handleOlivWebhook(envelope.rawBody,envelope.signature))return {processed:false,eventType:"UNVERIFIED",updates:{}};
+    payload=JSON.parse(envelope.rawBody);
     const event = payload as Record<string, unknown>;
     const eventType = (event.event_type as string) || "UNKNOWN";
     switch (eventType) {
@@ -455,24 +393,6 @@ export class OlivFinanceAdapter implements FactoringPartnerAdapter {
       default:
         return { processed: true, eventType, instructionId: (event.instruction_id as string) || undefined, updates: event };
     }
-  }
-
-  private async _mockEligibility(invoice: InvoiceDataForPartner): Promise<PartnerOffer> {
-    await _simulateLatency(400);
-    if (invoice.grossAmount < OLIV_CONFIG.minInvoiceAmount) {
-      return { eligible: false, partnerId: this.id, partnerName: this.name, maxAdvanceRate: 0, discountRate: 0,     responseId: `oliv_${crypto.randomUUID()}`, rejectionReason: `Below Oliv minimum of ${OLIV_CONFIG.minInvoiceAmount} EGP` };
-    }
-    return { eligible: true, partnerId: this.id, partnerName: this.name, maxAdvanceRate: OLIV_CONFIG.standardAdvanceRate, discountRate: OLIV_CONFIG.standardDiscountRate,     responseId: `oliv_${crypto.randomUUID()}`, estimatedDisbursement: invoice.grossAmount * OLIV_CONFIG.standardAdvanceRate };
-  }
-
-  private async _mockSubmit(_invoice: InvoiceDataForPartner) {
-    await _simulateLatency(600);
-    return { success: true,     instructionId: `oliv_inst_${crypto.randomUUID()}`, partnerFundingId: `oliv_fund_${crypto.randomUUID()}`, estimatedDisbursementDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() };
-  }
-
-  private async _mockTrack(_instructionId: string) {
-    await _simulateLatency(250);
-    return { status: "DISBURSED" as const, disbursedAt: new Date() };
   }
 }
 

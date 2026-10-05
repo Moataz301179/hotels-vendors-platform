@@ -1,36 +1,3 @@
-'use client';
-
-import { Brand } from '@/components/v2/brand';
 import Link from 'next/link';
-import { useState } from 'react';
-import { ClerkLoaded, ClerkLoading, SignUp } from '@clerk/nextjs';
-import { ArrowUpRight, Building2, PackageCheck, ShieldCheck } from 'lucide-react';
-
-const roles = [
-  { value: 'HOTEL', title: 'Hotel', detail: 'Purchasing, approvals and spend visibility', icon: Building2 },
-  { value: 'SUPPLIER', title: 'Supplier', detail: 'Qualified demand, offers and orders', icon: PackageCheck },
-] as const;
-
-export default function Register() {
-  const [role, setRole] = useState<'HOTEL' | 'SUPPLIER'>('HOTEL');
-  return (
-    <main className="hv-auth-page">
-      <div className="hv-auth-shell">
-        <section className="hv-auth-story">
-          <Link href="/" className="hv-auth-logo" aria-label="HotelsVendors home"><Brand /></Link>
-          <div className="hv-auth-story-copy"><h1>Start with your organization.</h1><p>Connect to the commercial network and give the Market Compass the context it needs to surface useful signals—not generic alerts.</p></div>
-          <div className="hv-auth-trust"><span><ShieldCheck size={17}/></span><div><strong>Separate workspaces. Clear permissions.</strong><p>Hotels and suppliers can self-register. Carriers and funders join through controlled partner onboarding.</p></div></div>
-        </section>
-        <section className="hv-auth-form-panel" aria-labelledby="hv-register-title">
-          <div className="hv-auth-form-heading"><h2 id="hv-register-title">Join HotelsVendors</h2><p>Choose the workspace that matches your organization.</p></div>
-          <div className="hv-role-select" role="group" aria-label="Organization type">
-            {roles.map(({value,title,detail,icon:Icon}) => <button type="button" key={value} className={'hv-role-option'+(role===value?' is-selected':'')} aria-pressed={role===value} onClick={() => setRole(value)}><Icon size={20}/><span><strong>{title}</strong><small>{detail}</small></span><i aria-hidden="true" /></button>)}
-          </div>
-          <div className="hv-clerk-wrap"><ClerkLoaded><SignUp unsafeMetadata={{ platformRole: role }} fallbackRedirectUrl="/dashboard" appearance={{ variables: { colorPrimary: '#356fb6', colorBackground: '#fbfbf8', borderRadius: '3px' } }} /></ClerkLoaded><ClerkLoading><div className="hv-clerk-loading" role="status"><span aria-hidden="true" />Loading secure sign-up form…</div></ClerkLoading><noscript><div className="hv-clerk-loading">Enable JavaScript to load the secure sign-up form.</div></noscript></div>
-          <p className="hv-auth-switch">Already part of the network? <Link href="/login">Sign in <ArrowUpRight size={13}/></Link></p>
-          <p className="hv-auth-legal">By continuing, you are creating an organization workspace. Access to partner-only roles is reviewed separately.</p>
-        </section>
-      </div>
-    </main>
-  );
-}
+import {Brand} from '@/components/v2/brand';
+export default function Register(){return <main className="hv-public-page"><section className="hv-public-hero"><div className="shell"><Link href="/" aria-label="HotelsVendors home"><Brand/></Link><h1>Join your business workspace.</h1><p>Choose your organization’s activity. Each workspace has its own onboarding and server-enforced permissions.</p></div></section><section className="hv-public-section"><div className="shell entry-grid"><Link className="card entry-card" href="/hotels/signup"><h2>Hotels</h2><p>Combine demand, source supply and manage purchasing approvals.</p><span>Start hotel registration →</span></Link><Link className="card entry-card" href="/suppliers/signup"><h2>Suppliers</h2><p>Publish eligible products and respond to assigned requests.</p><span>Start supplier registration →</span></Link><Link className="card entry-card" href="/carriers/portal"><h2>Carriers</h2><p>Existing verified transport partners use controlled access.</p><span>Open carrier portal →</span></Link><Link className="card entry-card" href="/funders/portal"><h2>Funders</h2><p>Institutional partners retain every financing decision.</p><span>Open funder portal →</span></Link></div></section></main>}

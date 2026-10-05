@@ -7,10 +7,10 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, CircleDollarSig
 import "./home.css";
 
 const actors = [
-  { title: "Hotels", job: "Control demand, purchasing and approvals.", href: "/register", icon: Building2, access: "Hotel workspace" },
-  { title: "Suppliers", job: "Reach relevant demand and respond to real needs.", href: "/register", icon: PackageCheck, access: "Supplier workspace" },
-  { title: "Carriers", job: "Coordinate fulfillment, delivery and exceptions.", href: "/platform", icon: Truck, access: "Verified partner access" },
-  { title: "Funders", job: "Review consented opportunities and make independent decisions.", href: "/platform", icon: CircleDollarSign, access: "Verified partner access" },
+  { title: "Hotels", job: "Control demand, purchasing and approvals.", href: "/hotels/signup", icon: Building2, access: "Hotel workspace" },
+  { title: "Suppliers", job: "Reach relevant demand and respond to real needs.", href: "/suppliers/signup", icon: PackageCheck, access: "Supplier workspace" },
+  { title: "Carriers", job: "Coordinate fulfillment, delivery and exceptions.", href: "/carriers/portal", icon: Truck, access: "Verified partner access" },
+  { title: "Funders", job: "Review consented opportunities and make independent decisions.", href: "/funders/portal", icon: CircleDollarSign, access: "Verified partner access" },
 ];
 
 const signalSteps = [

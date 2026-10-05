@@ -65,7 +65,7 @@ jobs:
           done
           if [ "$ready" -ne 1 ]; then cat /tmp/hv-smoke.log; exit 1; fi
           grep -q '"ok":true' /tmp/hv-health.json
-          for path in / /login /register /marketplace /platform /solutions; do
+          for path in / /login /register /marketplace /platform /solutions /security-overview /hotels/signup /suppliers/signup /carriers/portal /funders/portal /solutions/hotels /solutions/suppliers /solutions/carriers /solutions/funders; do
             status=$(curl -sS --max-time 10 -o /tmp/hv-smoke-page.html -w '%{http_code}' "http://127.0.0.1:3100$path")
             if [ "$status" != '200' ]; then echo "Unexpected HTTP $status for $path"; cat /tmp/hv-smoke.log; exit 1; fi
           done
@@ -77,6 +77,7 @@ jobs:
             test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3100$path")" = '307'
           done
           test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/v2/audit)" = '401'
+          test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/api/v2/funders)" = '401'
           css=$(grep -oE 'href="[^"]+\.css[^"]*"' /tmp/hv-home.html | sed -n '1p' | cut -d'"' -f2)
           test -n "$css"
           curl -fsS --max-time 10 "http://127.0.0.1:3100$css" -o /dev/null

@@ -9,6 +9,7 @@
  * - Settlement tracking
  */
 
+import {rejectNativeFunding} from "@/lib/fintech/external-only";
 import { Queue, Worker, Job } from "bullmq";
 import { getRedisConnection } from "@/lib/queues/connection";
 import { prisma } from "@/lib/prisma";
@@ -51,10 +52,11 @@ export function createFactoringWorker(): Worker {
   return new Worker<FactoringJobPayload>(
     "factoring-disbursement",
     async (job) => {
+      rejectNativeFunding();
       const { factoringRequestId, tenantId, action } = job.data;
 
       const request = await prisma.factoringRequest.findUnique({
-        where: { id: factoringRequestId },
+        where: { id: factoringRequestId, tenantId },
         include: {
           invoice: { include: { hotel: true, supplier: true, order: true } },
           factoringCompany: true,
