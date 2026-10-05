@@ -7,7 +7,7 @@ export type ReceiptValidation =
 
 export function validateReceipt(
   items: ReceiptOrderLine[],
-  previouslyReceived: Record<string, number>,
+  previouslyAccepted: Record<string, number>,
   input: ReceiptLineInput[],
 ): ReceiptValidation {
   if (!Array.isArray(input) || input.length !== items.length) return { ok: false, error: "Receipt must include each purchase order line exactly once." };
@@ -28,16 +28,17 @@ export function validateReceipt(
     if (!Number.isSafeInteger(received) || received < 0 || !Number.isSafeInteger(accepted) || accepted < 0 || accepted > received) {
       return { ok: false, error: "Received and accepted quantities must be valid whole numbers, and accepted cannot exceed received." };
     }
-    const prior = previouslyReceived[item.id] ?? 0;
-    if (!Number.isSafeInteger(prior) || prior < 0 || prior + received > item.quantity) return { ok: false, error: "Receipt quantity exceeds the remaining purchase order quantity." };
+    const prior = previouslyAccepted[item.id] ?? 0;
+    if (!Number.isSafeInteger(prior) || prior < 0 || prior + accepted > item.quantity) return { ok: false, error: "Accepted quantity exceeds the remaining purchase order quantity." };
     const rejected = received - accepted;
     const reason = line.rejectionReason?.trim() || null;
     if (rejected > 0 && !reason) return { ok: false, error: "A rejection reason is required for rejected units." };
-    if (received > 0 && accepted === 0 && rejected === 0) return { ok: false, error: "Received units must be accepted or rejected." };
+    if (line.expiryDate && !Number.isFinite(Date.parse(line.expiryDate))) return { ok: false, error: "Expiry dates must be valid dates." };
+    if (received > item.quantity - prior) return { ok: false, error: "Received quantity exceeds the remaining purchase order quantity." };
     totalReceived += received;
     totalAccepted += accepted;
     totalRejected += rejected;
-    if (prior + received < item.quantity) allComplete = false;
+    if (prior + accepted < item.quantity) allComplete = false;
     lines.push({ ...line, rejectionReason: reason, productId: item.productId, orderedQuantity: item.quantity, rejectedQuantity: rejected });
   }
 

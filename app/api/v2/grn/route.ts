@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${body.orderId}, 0))`;
       const order = await tx.order.findFirst({
         where: { id: body.orderId, tenantId: actor.tenantId, deletedAt: null },
-        include: { items: { where: { deletedAt: null }, select: { id: true, productId: true, quantity: true } } },
+        include: { items: { where: { deletedAt: null }, select: { id: true, productId: true, quantity: true, receivedQuantity: true } } },
       });
       if (!order) return { error: "ORDER_NOT_FOUND", status: 404 as const };
       if (!order.paymentGuaranteed || !["IN_TRANSIT", "PARTIALLY_DELIVERED"].includes(order.status)) {
@@ -32,10 +33,11 @@ export async function POST(req: Request) {
 
       const priorRows = await tx.grnLineItem.findMany({
         where: { grn: { orderId: order.id, deletedAt: null } },
-        select: { orderItemId: true, receivedQuantity: true },
+        select: { orderItemId: true, acceptedQuantity: true },
       });
       const prior: Record<string, number> = {};
-      for (const row of priorRows) prior[row.orderItemId] = (prior[row.orderItemId] || 0) + row.receivedQuantity;
+      for (const row of priorRows) prior[row.orderItemId] = (prior[row.orderItemId] || 0) + row.acceptedQuantity;
+      for (const item of order.items) prior[item.id] = Math.max(prior[item.id] || 0, item.receivedQuantity || 0);
 
       const checked = validateReceipt(order.items, prior, body.lines as ReceiptLineInput[]);
       if (!checked.ok) return { error: checked.error, status: 400 as const };
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
       const now = new Date();
       const grn = await tx.goodsReceiptNote.create({
         data: {
-          grnNumber: `GRN-${now.getTime().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+          grnNumber: `GRN-${now.getTime().toString(36).toUpperCase()}-${randomUUID().slice(0, 8).toUpperCase()}`,
           status: checked.grnStatus,
           orderId: order.id,
           hotelId: order.hotelId,
@@ -70,8 +72,8 @@ export async function POST(req: Request) {
       });
 
       for (const line of checked.lines) {
-        const cumulative = (prior[line.orderItemId] || 0) + line.receivedQuantity;
-        await tx.orderItem.update({ where: { id: line.orderItemId }, data: { receivedQuantity: cumulative } });
+        const cumulativeAccepted = (prior[line.orderItemId] || 0) + line.acceptedQuantity;
+        await tx.orderItem.update({ where: { id: line.orderItemId }, data: { receivedQuantity: cumulativeAccepted } });
       }
       const changed = await tx.order.updateMany({
         where: { id: order.id, status: order.status, deletedAt: null },
