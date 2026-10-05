@@ -1,0 +1,11 @@
+import {describe,expect,it} from 'vitest';
+import {validateReceipt} from '@/lib/logistics/grn-acceptance';
+
+const items=[{id:'line-a',productId:'product-a',quantity:10},{id:'line-b',productId:'product-b',quantity:4}];
+describe('goods receipt validation',()=>{
+ it('records partial receipts without closing outstanding order lines',()=>{const result=validateReceipt(items,{},[{orderItemId:'line-a',receivedQuantity:3,acceptedQuantity:3},{orderItemId:'line-b',receivedQuantity:0,acceptedQuantity:0}]);expect(result).toMatchObject({ok:true,grnStatus:'ACCEPTED',orderStatus:'PARTIALLY_DELIVERED'})});
+ it('closes only after every ordered unit has been accounted for',()=>{const result=validateReceipt(items,{'line-a':7},[{orderItemId:'line-a',receivedQuantity:3,acceptedQuantity:3},{orderItemId:'line-b',receivedQuantity:4,acceptedQuantity:4}]);expect(result).toMatchObject({ok:true,orderStatus:'DELIVERED'})});
+ it('requires rejection reasons and records rejected quantities',()=>{expect(validateReceipt(items,{},[{orderItemId:'line-a',receivedQuantity:1,acceptedQuantity:0},{orderItemId:'line-b',receivedQuantity:0,acceptedQuantity:0}])).toMatchObject({ok:false});expect(validateReceipt(items,{},[{orderItemId:'line-a',receivedQuantity:1,acceptedQuantity:0,rejectionReason:'damaged'},{orderItemId:'line-b',receivedQuantity:0,acceptedQuantity:0}])).toMatchObject({ok:true,grnStatus:'REJECTED'})});
+ it('rejects duplicates, missing lines, surplus, and invalid counts',()=>{expect(validateReceipt(items,{},[{orderItemId:'line-a',receivedQuantity:1,acceptedQuantity:1},{orderItemId:'line-a',receivedQuantity:0,acceptedQuantity:0}])).toMatchObject({ok:false});expect(validateReceipt(items,{},[{orderItemId:'line-a',receivedQuantity:11,acceptedQuantity:11},{orderItemId:'line-b',receivedQuantity:0,acceptedQuantity:0}])).toMatchObject({ok:false});expect(validateReceipt(items,{},[{orderItemId:'line-a',receivedQuantity:-1,acceptedQuantity:0},{orderItemId:'line-b',receivedQuantity:0,acceptedQuantity:0}])).toMatchObject({ok:false})});
+ it('prevents cumulative over-receipt across partial deliveries',()=>expect(validateReceipt(items,{'line-a':9},[{orderItemId:'line-a',receivedQuantity:2,acceptedQuantity:2},{orderItemId:'line-b',receivedQuantity:0,acceptedQuantity:0}])).toMatchObject({ok:false}));
+});

@@ -7,7 +7,7 @@ import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 
 export async function GET(){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
- const orders=await prisma.order.findMany({where:{...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId}),deletedAt:null},include:{supplier:{select:{name:true}},hotel:{select:{name:true}},items:{include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
+ const orders=await prisma.order.findMany({where:{...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId}),deletedAt:null},include:{supplier:{select:{name:true}},hotel:{select:{name:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
  return NextResponse.json({orders:orders.map(order=>({...order,allowedActions:orderActions(user,order)}))});
 }
 

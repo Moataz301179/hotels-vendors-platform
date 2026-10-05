@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 export type DemandAggregate = {
   productId: string; sku: string; productName: string; category: string; unitOfMeasure: string; currency: string; pricedQuantity: number; unpricedQuantity: number;
   supplierCount: number; hotelCount: number; propertyCount: number; requestedQuantity: number;
-  currentSpend: number; weightedUnitPrice: number; deliveryFrom: string | null; deliveryTo: string | null;
+  currentSpend: number; weightedUnitPrice: number | null; deliveryFrom: string | null; deliveryTo: string | null;
   locations: string[]; volumeDealSignal: "HIGH" | "MEDIUM" | "LOW";
 };
 

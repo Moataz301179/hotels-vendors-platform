@@ -6,6 +6,6 @@ export function orderActions(actor:Actor,order:Order):string[]{
  if(actor.tenantId!==order.tenantId)return [];
  const approver=actor.platformRole==='ADMIN'||(actor.platformRole==='HOTEL'&&['OWNER','REGIONAL_GM','GM','FINANCIAL_CONTROLLER'].includes(actor.role));
  if(approver&&order.status==='PENDING_APPROVAL')return ['APPROVED','REJECTED'];
- if(order.paymentGuaranteed&&(approver||(actor.platformRole==='HOTEL'&&actor.role==='RECEIVING_CLERK'))&&['CONFIRMED','IN_TRANSIT','PARTIALLY_DELIVERED'].includes(order.status))return ['DELIVERED'];
+ if(order.paymentGuaranteed&&(approver||(actor.platformRole==='HOTEL'&&actor.role==='RECEIVING_CLERK'))&&['IN_TRANSIT','PARTIALLY_DELIVERED'].includes(order.status))return ['RECEIVE'];
  return [];
 }
