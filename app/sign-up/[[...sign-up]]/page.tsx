@@ -1,22 +1,8 @@
-'use client';
-import { SignUp } from '@clerk/nextjs';
-import { useState } from 'react';
+import type { Metadata } from 'next';
 
-export default function SignUpPage() {
-  const [role, setRole] = useState('HOTEL');
-  return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#232831' }}>
-      <div>
-        <div style={{ color: '#fff', fontWeight: 700, fontSize: 22, textAlign: 'center', marginBottom: 20 }}>Join HotelsVendors</div>
-        <div style={{ background: '#fff', padding: 8, borderRadius: 12, display: 'flex', gap: 4, marginBottom: 12 }}>
-          {['HOTEL', 'SUPPLIER', 'SHIPPING', 'FACTORING'].map((r) => (
-            <button key={r} onClick={() => setRole(r)} style={{ flex: 1, border: 0, borderRadius: 8, padding: 8, fontSize: 10, fontWeight: 700, background: role === r ? '#0071e3' : 'transparent', color: role === r ? '#fff' : '#555' }}>
-              {r}
-            </button>
-          ))}
-        </div>
-        <SignUp unsafeMetadata={{ platformRole: role }} fallbackRedirectUrl="/dashboard" />
-      </div>
-    </main>
-  );
-}
+export const metadata: Metadata = {
+  title: 'Create your account',
+  robots: { index: false, follow: false },
+};
+
+export { default } from '../../(auth)/register/page';

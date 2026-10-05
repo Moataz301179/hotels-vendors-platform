@@ -1,3 +1,4 @@
+import {rejectNativeFunding} from "./external-only";
 /**
  * Factoring Partner Bridge — Payment Orchestration Layer
  * Hotels Vendors
@@ -138,26 +139,7 @@ export function getAllPartners(): FactoringPartnerAdapter[] {
  */
 export async function getPartnerOffers(
   invoice: InvoiceDataForPartner
-): Promise<PartnerOffer[]> {
-  const offers = await Promise.all(
-    getAllPartners().map(async (partner) => {
-      try {
-        return await partner.checkEligibility(invoice);
-      } catch {
-        return {
-          eligible: false,
-          partnerId: partner.id,
-          partnerName: partner.name,
-          maxAdvanceRate: 0,
-          discountRate: 0,
-          responseId: `${partner.id}_error`,
-          rejectionReason: "Partner inquiry failed",
-        } as PartnerOffer;
-      }
-    })
-  );
-  return offers;
-}
+): Promise<PartnerOffer[]> { return rejectNativeFunding(); }
 
 /**
  * Submit a factoring instruction to the chosen partner.
@@ -172,13 +154,7 @@ export async function submitFactoringInstruction(
   partnerFundingId?: string;
   estimatedDisbursementDate?: string;
   error?: string;
-}> {
-  const partner = getPartner(partnerId);
-  if (!partner) {
-    return { success: false, error: "Partner not found" };
-  }
-  return partner.submitInstruction(invoice);
-}
+}> { return rejectNativeFunding(); }
 
 /**
  * Track a factoring instruction's status.
@@ -219,33 +195,7 @@ export interface InquiryParams {
 export async function inquireAll(params: InquiryParams): Promise<{
   bestOffer: PartnerOffer | null;
   allOffers: PartnerOffer[];
-}> {
-  // Build a minimal InvoiceDataForPartner for partner inquiry.
-  // The partner only needs hotel + amount for eligibility; full data is only
-  // needed at submit time.
-  const syntheticInvoice: InvoiceDataForPartner = {
-    invoiceId: `inquiry_${Date.now()}`,
-    invoiceNumber: "INQUIRY",
-    etaUuid: params.etaUuid || "",
-    grossAmount: params.invoiceAmount,
-    currency: params.invoiceCurrency || "EGP",
-    supplier: { name: "", taxId: "", bankAccount: "", bankName: "" },
-    hotel: { name: params.hotelName, taxId: params.hotelTaxId },
-    orderId: "",
-    deliveryConfirmedAt: new Date().toISOString(),
-  };
-
-  const allOffers = await getPartnerOffers(syntheticInvoice);
-  const eligible = allOffers.filter((o) => o.eligible);
-  const bestOffer =
-    eligible.length > 0
-      ? eligible.reduce((best, o) =>
-          o.maxAdvanceRate > best.maxAdvanceRate ? o : best
-        )
-      : null;
-
-  return { bestOffer, allOffers };
-}
+}> { return rejectNativeFunding(); }
 
 /**
  * Funding execution params (from queue worker).
@@ -277,44 +227,7 @@ export async function fundThroughPartner(
   transactionReference: string;
   partnerResponse: string;
   error?: string;
-}> {
-  const invoice: InvoiceDataForPartner = {
-    invoiceId: params.invoiceId,
-    invoiceNumber: params.eligibilityResponseId,
-    etaUuid: params.etaUuid,
-    grossAmount: params.grossAmount,
-    currency: "EGP",
-    supplier: {
-      name: "",
-      taxId: params.supplierTaxId,
-      bankAccount: params.supplierBankAccount,
-      bankName: params.supplierBankName,
-    },
-    hotel: { name: "", taxId: params.hotelTaxId },
-    orderId: "",
-    deliveryConfirmedAt: new Date().toISOString(),
-  };
-
-  const result = await submitFactoringInstruction(partnerId, invoice);
-  if (!result.success) {
-    return {
-      success: false,
-      disbursedAmount: 0,
-      disbursedAt: new Date(),
-      transactionReference: "",
-      partnerResponse: "",
-      error: result.error || "Funding failed",
-    };
-  }
-
-  return {
-    success: true,
-    disbursedAmount: params.netDisbursement,
-    disbursedAt: new Date(),
-    transactionReference: result.partnerFundingId || "",
-    partnerResponse: JSON.stringify(result),
-  };
-}
+}> { return rejectNativeFunding(); }
 
 // ── Type aliases for backward compatibility with factoring-orchestrator.ts ──
 

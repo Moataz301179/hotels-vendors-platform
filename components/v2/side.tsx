@@ -1,3 +1,3 @@
-import Link from 'next/link';
 import {getActor} from '@/lib/v2-auth';
-export async function Side(){const u=await getActor();const role=u?.platformRole;return <aside className="side" aria-label="Workspace navigation"><span className="side-label">YOUR WORKSPACE</span><Link href="/dashboard">Overview</Link><Link href="/onboarding">Organization profile</Link>{(role==='HOTEL'||role==='ADMIN')&&<><Link href="/intelligence">Virtual Shadow</Link><Link href="/workspace/marketplace">Procurement</Link><Link href="/orders">Orders</Link></>}{(role==='SUPPLIER'||role==='ADMIN')&&<><Link href="/suppliers">Supplier demand</Link><Link href="/orders">Orders</Link></>}{(role==='SHIPPING'||role==='ADMIN')&&<Link href="/carrier">Carrier operations</Link>}{(role==='HOTEL'||role==='FACTORING'||role==='ADMIN')&&<Link href="/funding">Funding signals</Link>}{role==='ADMIN'&&<Link href="/admin">Admin control center</Link>}</aside>}
+import {WorkspaceNavigation} from '@/components/v2/workspace-navigation';
+export async function Side(){const u=await getActor();return <WorkspaceNavigation role={u?.platformRole??''}/>;}

@@ -9,6 +9,7 @@
 
 import { createHash, randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 
 /** Canonical JSON so JSONB key ordering cannot change a chain hash. */
@@ -76,10 +77,10 @@ export async function appendAuditEntry(params: {
   changes?: Record<string, unknown> | string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
-}): Promise<string> {
+}, transaction?: Prisma.TransactionClient): Promise<string> {
   const { entityName, entityId, actionType, tenantId, actorId = null, actorRole = null, changes = null, ipAddress = null, userAgent = null } = params;
 
-  return prisma.$transaction(async (tx) => {
+  const append = async (tx: Prisma.TransactionClient) => {
     // Serialize append operations so concurrent requests cannot fork the hash chain.
     await tx.$executeRawUnsafe("SELECT pg_advisory_xact_lock(4815162342)");
     const previousEntry = await tx.auditLog.findFirst({ orderBy: { createdAt: "desc" }, select: { hash: true, createdAt: true } });
@@ -125,7 +126,8 @@ export async function appendAuditEntry(params: {
       select: { id: true },
     });
     return entry.id;
-  });
+  };
+  return transaction ? append(transaction) : prisma.$transaction(append);
 }
 
 // ─────────────────────────────────────────
@@ -234,4 +236,16 @@ export async function exportAuditLog(params: {
     chainHash,
     verified: verification.valid,
   };
+}
+
+/** Verify this tenant's record hashes without reading or returning another tenant's records.
+ * This checks record integrity, not completeness of the global chain or external anchoring.
+ */
+export async function verifyTenantAuditRecords(tenantId: string): Promise<{valid:boolean;totalEntries:number}> {
+ const entries=await prisma.auditLog.findMany({where:{tenantId},orderBy:{createdAt:'asc'}});
+ for(const entry of entries){
+  const expected=computeEntryHash({id:entry.id,entityName:entry.entityName,entityId:entry.entityId,actionType:entry.actionType,actorId:entry.actorId,actorRole:entry.actorRole,changes:entry.changes?stableStringify(entry.changes):null,ipAddress:entry.ipAddress,userAgent:entry.userAgent,createdAt:entry.createdAt,previousHash:entry.previousHash??'genesis'});
+  if(entry.hash!==expected)return {valid:false,totalEntries:entries.length};
+ }
+ return {valid:true,totalEntries:entries.length};
 }

@@ -1,0 +1,8 @@
+'use client';
+import Link from 'next/link';
+import {ClerkLoaded,ClerkLoading,SignUp} from '@clerk/nextjs';
+import {Brand} from './brand';
+export function ActorSignup({role}:{role:'HOTEL'|'SUPPLIER'}){
+ const hotel=role==='HOTEL';
+ return <main className="hv-auth-page"><div className="hv-auth-shell"><section className="hv-auth-story"><Link href="/" aria-label="HotelsVendors home"><Brand/></Link><div className="hv-auth-story-copy"><h1>{hotel?'Bring your hotel purchasing together.':'Respond to real hospitality demand.'}</h1><p>{hotel?'Review combined purchasing history, compare supplier quotes and follow approvals.':'Connect your business profile, publish eligible catalog items and respond to assigned hotel RFQs.'}</p></div><div className="hv-auth-trust"><div><strong>Your organization controls access.</strong><p>Registration starts a {hotel?'hotel':'supplier'} workspace. Existing account roles are never changed by this page.</p></div></div></section><section className="hv-auth-form-panel"><div className="hv-auth-form-heading"><h2>Join as a {hotel?'hotel':'supplier'}</h2><p>{hotel?'For hotel groups and procurement teams.':'For businesses supplying hospitality organizations.'}</p></div><ClerkLoaded><SignUp routing="hash" unsafeMetadata={{platformRole:role}} fallbackRedirectUrl="/onboarding" appearance={{variables:{colorPrimary:'#356fb6',colorBackground:'#fbfbf8',borderRadius:'3px'}}}/></ClerkLoaded><ClerkLoading><p role="status">Loading secure registration…</p></ClerkLoading><p className="hv-auth-switch">Already registered? <Link href="/login">Sign in</Link></p><p className="hv-auth-switch"><Link href={hotel?'/suppliers/signup':'/hotels/signup'}>Looking for the {hotel?'supplier':'hotel'} workspace?</Link></p></section></div></main>;
+}

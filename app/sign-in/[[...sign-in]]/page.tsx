@@ -1,13 +1,8 @@
-'use client';
-import { SignIn } from '@clerk/nextjs';
+import type { Metadata } from 'next';
 
-export default function SignInPage() {
-  return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#232831' }}>
-      <div>
-        <div style={{ color: '#fff', fontWeight: 700, fontSize: 22, textAlign: 'center', marginBottom: 20 }}>HotelsVendors</div>
-        <SignIn fallbackRedirectUrl="/dashboard" />
-      </div>
-    </main>
-  );
-}
+export const metadata: Metadata = {
+  title: 'Sign in to your workspace',
+  robots: { index: false, follow: false },
+};
+
+export { default } from '../../(auth)/login/page';

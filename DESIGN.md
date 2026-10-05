@@ -10,6 +10,8 @@ Brand voice: **precise, commercially useful, calm**. The interface should feel l
 - Material: warm mineral paper and cool mist surfaces against charcoal; fine rules, tabular alignment, controlled asymmetry and purposeful negative space.
 - Accent: ice blue/cobalt for interactive signals and selected states; muted green only for positive/verified states; red reserved for destructive/error states.
 - The Virtual Shadow illustration must communicate actual product behavior. Label illustrative scenarios as illustrative, never imply that synthetic examples are live customer data.
+- All titles use one tone within the entire title; no colored emphasis words. The public hero uses warm paper with ink text and hospitality photography.
+- Use the shared `Brand` lockup on all active pages: official icon and canonical HotelsVendors wordmark.
 - Marketing pages persuade; product workspaces optimize scanning, decision-making and operational density. Share the same tokens, not necessarily identical layouts.
 - Use the existing official logo asset. On dark charcoal surfaces, /logo-white.svg is intentionally monochrome white.
 
