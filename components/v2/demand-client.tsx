@@ -5,11 +5,11 @@ import Link from "next/link";
 
 type Opportunity = {
   sku: string; productName: string; category: string; unitOfMeasure: string; hotelCount: number;
-  requestedQuantity: number; weightedUnitPrice: number; deliveryFrom: string | null; deliveryTo: string | null;
+  requestedQuantity: number; pricedQuantity: number; unpricedQuantity: number; currency: string; currentSpend: number; weightedUnitPrice: number | null; deliveryFrom: string | null; deliveryTo: string | null;
   volumeDealSignal: "HIGH" | "MEDIUM" | "LOW";
 };
 type Payload = {
-  data?: { demand: Opportunity[]; summary: { opportunities: number; aggregatedQuantity: number; currentSpend: number; highSignal: number } };
+  data?: { demand: Opportunity[]; summary: { opportunities: number; aggregatedQuantity: number; spendByCurrency: Array<{currency:string;amount:number}>; highSignal: number } };
   error?: string;
 };
 
@@ -46,7 +46,7 @@ export function DemandClient() {
           <div className="grid gap-4 md:grid-cols-4">
             <Metric label="Comparable products" value={data.summary.opportunities} />
             <Metric label="Recorded units" value={data.summary.aggregatedQuantity.toLocaleString()} />
-            <Metric label="Recorded spend" value={"EGP " + data.summary.currentSpend.toLocaleString()} />
+            <Metric label="Recorded spend" value={formatSpend(data.summary.spendByCurrency)} />
             <Metric label="High-volume signals" value={data.summary.highSignal} />
           </div>
           <section className="card" style={{marginTop:24,overflow:"auto"}}>
@@ -58,11 +58,11 @@ export function DemandClient() {
                   <th className="px-3 py-3">Avg. price</th><th className="px-3 py-3">Demand window</th><th className="px-3 py-3">Signal</th><th>Next action</th>
                 </tr></thead>
                 <tbody>{data.demand.map((item) => (
-                  <tr key={item.sku} className="border-b last:border-0">
+                  <tr key={item.sku + item.currency} className="border-b last:border-0">
                     <td className="px-3 py-4"><div className="font-medium">{item.productName}</div><div className="text-xs muted">{item.sku} · {item.category}</div></td>
                     <td className="px-3 py-4">{item.hotelCount}</td>
                     <td className="px-3 py-4">{item.requestedQuantity.toLocaleString()} {item.unitOfMeasure}</td>
-                    <td className="px-3 py-4">EGP {item.weightedUnitPrice.toLocaleString()}</td>
+                    <td className="px-3 py-4">{item.weightedUnitPrice === null ? "Price unavailable" : item.currency + " " + item.weightedUnitPrice.toLocaleString()}{item.unpricedQuantity > 0 && <small className="block muted">Based on {item.pricedQuantity.toLocaleString()} priced units</small>}</td>
                     <td className="px-3 py-4">{formatDate(item.deliveryFrom)}{item.deliveryTo ? " → " + formatDate(item.deliveryTo) : ""}</td>
                     <td className="px-3 py-4"><span className="rounded-full border px-2 py-1 text-xs font-medium">{item.volumeDealSignal}</span></td>
                     <td><Link className="btn btn-ghost" href={`/workspace/marketplace?product=${encodeURIComponent(item.productName)}`}>Compare supplier quotes</Link></td>
@@ -78,6 +78,7 @@ export function DemandClient() {
   );
 }
 
+function formatSpend(entries: Array<{currency:string;amount:number}>) { if (!entries.length) return "—"; return entries.map(({currency,amount}) => currency + " " + amount.toLocaleString()).join(" · "); }
 function Metric({ label, value }: { label: string; value: string | number }) {
   return <div className="demand-metric"><div className="text-xs uppercase tracking-wider muted">{label}</div><div className="mt-2 text-2xl font-semibold">{value}</div></div>;
 }

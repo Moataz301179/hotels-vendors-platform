@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { demand, summary: {
       opportunities: demand.length,
       aggregatedQuantity: demand.reduce((sum, row) => sum + row.requestedQuantity, 0),
-      currentSpend: demand.reduce((sum, row) => sum + row.currentSpend, 0),
+      spendByCurrency: [...demand.reduce((totals, row) => { totals.set(row.currency, (totals.get(row.currency) ?? 0) + row.currentSpend); return totals; }, new Map<string, number>()).entries()].map(([currency, amount]) => ({ currency, amount: Number(amount.toFixed(2)) })).sort((a, b) => a.currency.localeCompare(b.currency)),
       highSignal: demand.filter(row => row.volumeDealSignal === "HIGH").length,
     } } });
   } catch {
