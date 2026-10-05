@@ -8,7 +8,9 @@ export async function getActor() {
   if (!userId) return null;
   const cu = await currentUser();
   if (!cu) return null;
-  const email = cu.emailAddresses[0]?.emailAddress?.toLowerCase();
+  const primaryEmail = cu.emailAddresses.find(address => address.id === cu.primaryEmailAddressId);
+  // Bind database authorization only to the verified primary identity.
+  const email = primaryEmail?.verification?.status === "verified" ? primaryEmail.emailAddress.toLowerCase() : undefined;
   if (!email) return null;
   let user = await prisma.user.findUnique({ where: { email } });
   if (user) return user.status === "ACTIVE" && !user.deletedAt ? user : null;

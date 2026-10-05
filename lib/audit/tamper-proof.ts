@@ -237,3 +237,15 @@ export async function exportAuditLog(params: {
     verified: verification.valid,
   };
 }
+
+/** Verify this tenant's record hashes without reading or returning another tenant's records.
+ * This checks record integrity, not completeness of the global chain or external anchoring.
+ */
+export async function verifyTenantAuditRecords(tenantId: string): Promise<{valid:boolean;totalEntries:number}> {
+ const entries=await prisma.auditLog.findMany({where:{tenantId},orderBy:{createdAt:'asc'}});
+ for(const entry of entries){
+  const expected=computeEntryHash({id:entry.id,entityName:entry.entityName,entityId:entry.entityId,actionType:entry.actionType,actorId:entry.actorId,actorRole:entry.actorRole,changes:entry.changes?stableStringify(entry.changes):null,ipAddress:entry.ipAddress,userAgent:entry.userAgent,createdAt:entry.createdAt,previousHash:entry.previousHash??'genesis'});
+  if(entry.hash!==expected)return {valid:false,totalEntries:entries.length};
+ }
+ return {valid:true,totalEntries:entries.length};
+}

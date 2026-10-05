@@ -4,7 +4,7 @@ import { Brand } from "@/components/v2/brand";
 const platformLinks = [
   { label: "Platform overview", href: "/platform" },
   { label: "Procurement network", href: "/marketplace" },
-  { label: "Virtual Shadow", href: "/intelligence" },
+  { label: "Market Compass", href: "/intelligence" },
   { label: "Solutions", href: "/solutions" },
 ];
 const accountLinks = [
@@ -20,7 +20,7 @@ export function SiteFooter() {
           <Link href="/" className="hv-footer-logo" aria-label="HotelsVendors home">
             <Brand />
           </Link>
-          <p>A connected commercial network for hospitality. Virtual Shadow surfaces evidence-backed signals; each organization keeps control of its workflows, permissions and decisions.</p>
+          <p>A connected commercial network for hospitality. Market Compass surfaces evidence-backed signals; each organization keeps control of its workflows, permissions and decisions.</p>
         </div>
         <div><h3>EXPLORE</h3><nav aria-label="Platform links">{platformLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</nav></div>
         <div><h3>YOUR ACCOUNT</h3><nav aria-label="Account links">{accountLinks.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}</nav></div>

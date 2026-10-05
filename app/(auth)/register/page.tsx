@@ -18,7 +18,7 @@ export default function Register() {
       <div className="hv-auth-shell">
         <section className="hv-auth-story">
           <Link href="/" className="hv-auth-logo" aria-label="HotelsVendors home"><Brand /></Link>
-          <div className="hv-auth-story-copy"><h1>Start with your organization.</h1><p>Connect to the commercial network and give the Virtual Shadow the context it needs to surface useful signals—not generic alerts.</p></div>
+          <div className="hv-auth-story-copy"><h1>Start with your organization.</h1><p>Connect to the commercial network and give the Market Compass the context it needs to surface useful signals—not generic alerts.</p></div>
           <div className="hv-auth-trust"><span><ShieldCheck size={17}/></span><div><strong>Separate workspaces. Clear permissions.</strong><p>Hotels and suppliers can self-register. Carriers and funders join through controlled partner onboarding.</p></div></div>
         </section>
         <section className="hv-auth-form-panel" aria-labelledby="hv-register-title">

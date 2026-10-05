@@ -5,11 +5,11 @@ import { requestJson } from '@/lib/v2-http';
 type Metrics = { potentialSavings:number|string; verifiedSavings:number|string; rfqs:number; opportunities:number; orders:number; activeProducts:number; shipments:number; fundingRequests:number };
 type Data = { role:string; metrics:Metrics };
 const actions:Record<string,Array<[string,string,string]>>={
- HOTEL:[['Procurement','Search verified supply, request quotes and review supplier responses.','/workspace/marketplace'],['Virtual Shadow','Scan purchase history and review evidence before acting.','/intelligence'],['Demand signals','Understand repeated demand across your hotel properties.','/demand-aggregation'],['Orders','Follow recorded purchase orders and their approval status.','/orders']],
+ HOTEL:[['Procurement','Search verified supply, request quotes and review supplier responses.','/workspace/marketplace'],['Market Compass','Scan purchase history and review evidence before acting.','/intelligence'],['HV Volume Deals','Understand repeated demand across your hotel properties.','/demand-aggregation'],['Orders','Follow recorded purchase orders and their approval status.','/orders']],
  SUPPLIER:[['Supplier workspace','Respond to assigned hotel requests and manage your catalog.','/suppliers'],['Orders','Follow orders placed with your supplier account.','/orders']],
  SHIPPING:[['Carrier operations','Record shipment plans and review your fulfillment activity.','/carrier']],
  FACTORING:[['Funding records','Review authorized funding records. Decisions stay with your organization.','/funding']],
- ADMIN:[['Control center','Review network access and audit evidence.','/admin'],['Virtual Shadow','Review evidence-backed procurement findings.','/intelligence']]
+ ADMIN:[['Control center','Review network access and audit evidence.','/admin'],['Market Compass','Review evidence-backed procurement findings.','/intelligence']]
 };
 export default function Dashboard(){
  const [data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[profile,setProfile]=useState<{complete:boolean}|null>(null);
