@@ -399,6 +399,28 @@ model Supplier {
   @@index([deletedAt], map: "Supplier_deleted_idx")
 }
 
+/// Public-source intake only. A candidate is not a transacting Supplier until
+/// an authorized operator completes legal and commercial verification.
+model SupplierResearchCandidate {
+  id               String   @id @default(cuid())
+  name             String
+  candidateType    String
+  website          String?
+  sourceUrl        String
+  sourceObservedAt DateTime
+  categories       Json
+  status           String   @default("RESEARCH_CANDIDATE")
+  sourceHash       String   @unique
+  verificationNote String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  deletedAt        DateTime?
+
+  @@index([candidateType])
+  @@index([status])
+  @@index([deletedAt])
+}
+
 model DeliveryZone {
   id         String    @id @default(cuid())
   zone       String

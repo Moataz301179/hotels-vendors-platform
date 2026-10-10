@@ -14,6 +14,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
+    "staging:import-supplier-research": "tsx scripts/import-supplier-research-register.ts",
     "swarm": "tsx scripts/swarm-dev.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -94,6 +95,7 @@
     "prisma": "^6.6.0",
     "sass": "^1.100.0",
     "typescript": "^5",
+    "tsx": "^4.23.15",
     "vitest": "^4.1.5"
   }
 }
