@@ -1,5 +1,5 @@
 export type CostBreakdown = {
-  productCost: number;
+  productCost: number | null;
   deliveryCost: number | null;
   taxCost: number | null;
   totalCost: number | null;
@@ -20,9 +20,13 @@ export function costBreakdown(input: {
   taxAmount?: unknown;
 }): CostBreakdown {
   const unitPrice = numberOrNull(input.unitPrice);
-  const productCost = unitPrice === null ? 0 : unitPrice * input.quantity;
+  const productCost = unitPrice === null || !Number.isFinite(input.quantity) || input.quantity < 0
+    ? null
+    : unitPrice * input.quantity;
   const deliveryCost = numberOrNull(input.deliveryFee);
   const taxCost = numberOrNull(input.taxAmount);
-  const totalCost = deliveryCost === null || taxCost === null ? null : productCost + deliveryCost + taxCost;
+  const totalCost = productCost === null || deliveryCost === null || taxCost === null
+    ? null
+    : productCost + deliveryCost + taxCost;
   return { productCost, deliveryCost, taxCost, totalCost, totalCostState: totalCost === null ? "INCOMPLETE" : "KNOWN" };
 }

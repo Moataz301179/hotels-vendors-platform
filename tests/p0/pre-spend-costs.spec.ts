@@ -12,4 +12,9 @@ describe('pre-spend commercial totals', () => {
     expect(cost).toMatchObject({ productCost: 200, deliveryCost: 0, taxCost: null, totalCost: null, totalCostState: 'INCOMPLETE' });
     expect(cost).not.toHaveProperty('savings');
   });
+
+  it('does not treat a missing or invalid unit price as a zero-cost item', () => {
+    expect(costBreakdown({ unitPrice: 'not-a-price', quantity: 2, deliveryFee: 10, taxAmount: 5 }))
+      .toEqual({ productCost: null, deliveryCost: 10, taxCost: 5, totalCost: null, totalCostState: 'INCOMPLETE' });
+  });
 });

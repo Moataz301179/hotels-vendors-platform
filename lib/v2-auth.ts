@@ -30,6 +30,23 @@ export async function getActor() {
     });
     const roleName = `${platformRole}_USER`;
     const role = await tx.role.upsert({where:{tenantId_name:{tenantId:tenant.id,name:roleName}},update:{},create:{name:roleName,tenantId:tenant.id}});
+    const permissionCodes = platformRole === "SUPPLIER" ? ["order:read", "quote:submit"] : ["order:read", "order:create"];
+    for (const code of permissionCodes) {
+      const permission = await tx.permission.upsert({
+        where: { code },
+        update: {},
+        create: {
+          code,
+          name: code === "order:read" ? "View Orders" : code === "quote:submit" ? "Submit Supplier Quotes" : "Create Purchase Orders",
+          description: code === "order:read" ? "View assigned procurement requests, quotes, and orders" : code === "quote:submit" ? "Submit a fixed response to an explicitly granted RFQ" : "Create procurement orders from approved commercial terms",
+        },
+      });
+      await tx.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: role.id, permissionId: permission.id } },
+        update: {},
+        create: { roleId: role.id, permissionId: permission.id },
+      });
+    }
     return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,platformRole,tenantId:tenant.id,roleId:role.id,status:"ACTIVE"}});
   });
   return user;

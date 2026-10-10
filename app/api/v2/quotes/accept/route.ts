@@ -3,15 +3,20 @@ import { prisma } from '@/lib/prisma';
 import { getActor } from '@/lib/v2-auth';
 import { appendAuditEntry } from '@/lib/audit/tamper-proof';
 import { costBreakdown } from '@/lib/procurement/pre-spend';
+import { PermissionDeniedError, requirePermission } from '@/lib/auth/rbac';
+import { z } from 'zod';
+
+const acceptQuoteInput = z.object({ quoteId: z.string().min(1) });
 
 export async function POST(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});
  if(!['HOTEL','ADMIN'].includes(user.platformRole))return NextResponse.json({error:'HOTEL_ROLE_REQUIRED'},{status:403});
- const body=await req.json().catch(()=>null);if(typeof body?.quoteId!=='string')return NextResponse.json({error:'quoteId is required'},{status:400});
- const quote=await prisma.procurementQuote.findFirst({where:{id:body.quoteId,tenantId:user.tenantId,deletedAt:null,status:'SUBMITTED',supplier:{isVerified:true,status:'ACTIVE',deletedAt:null}},include:{rfq:true}});
+ try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:create');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_CREATE_PERMISSION_REQUIRED'},{status:403});throw error;}
+ const parsed=acceptQuoteInput.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:'quoteId is required'},{status:400});
+ const quote=await prisma.procurementQuote.findFirst({where:{id:parsed.data.quoteId,tenantId:user.tenantId,deletedAt:null,status:'SUBMITTED',supplier:{isVerified:true,status:'ACTIVE',deletedAt:null}},include:{rfq:true}});
  if(!quote)return NextResponse.json({error:'An available verified quote was not found'},{status:404});
  const costs=costBreakdown(quote);
- if(!Number.isInteger(quote.quantity)||quote.quantity<=0||!Number.isFinite(Number(quote.unitPrice))||Number(quote.unitPrice)<=0||costs.totalCost===null||costs.totalCost>9000000000)return NextResponse.json({error:'The stored quote must state product, delivery, and tax amounts before it can be selected.'},{status:409});
+ if(!Number.isInteger(quote.quantity)||quote.quantity<=0||!Number.isFinite(Number(quote.unitPrice))||Number(quote.unitPrice)<=0||costs.productCost===null||costs.deliveryCost===null||costs.taxCost===null||costs.totalCost===null||costs.totalCost>9000000000)return NextResponse.json({error:'The stored quote must state product, delivery, and tax amounts before it can be selected.'},{status:409});
  if(quote.validUntil&&quote.validUntil<new Date())return NextResponse.json({error:'This quote has expired. Request an updated quote.'},{status:409});
  if(!['PENDING','QUOTED'].includes(quote.rfq.status)||quote.rfq.tenantId!==user.tenantId||quote.rfq.deletedAt)return NextResponse.json({error:'This request is no longer available for conversion'},{status:409});
  const [hotel,product]=await Promise.all([prisma.hotel.findFirst({where:{tenantId:user.tenantId,status:'ACTIVE',deletedAt:null},select:{id:true}}),prisma.product.findFirst({where:{id:quote.rfq.productId,supplierId:quote.supplierId,status:'ACTIVE',deletedAt:null},select:{id:true}})]);

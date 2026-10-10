@@ -3589,6 +3589,23 @@ model RfqRequest {
   @@index([tenantId, contractBaselineId])
 }
 
+/// Explicit, tenant-bound grant for a supplier-side RFQ response.
+model RfqSupplierAccess {
+  id               String   @id @default(cuid())
+  rfqId            String
+  supplierId       String
+  hotelTenantId    String
+  supplierTenantId String
+  grantedById      String?
+  revokedAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([rfqId, supplierId, supplierTenantId])
+  @@index([supplierTenantId, supplierId, revokedAt])
+  @@index([hotelTenantId, rfqId])
+}
+
 model ContractRateBaseline {
   id              String   @id @default(cuid())
   tenantId        String
