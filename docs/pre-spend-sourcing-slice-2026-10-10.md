@@ -24,3 +24,11 @@ This slice improves the existing v2 RFQ-to-order path before any spend is commit
 ## Non-goals
 
 Supplier discovery expansion, public catalog claims, and a broad copy redesign are outside this first slice.
+
+## Approved execution queue
+
+1. Add a staging-only automated journey covering assigned RFQ, verified supplier quote, Authority Matrix approval, payment guarantee, delivery, goods receipt, invoice creation, and ETA outcome recording.
+2. Add authenticated browser/API evidence for the hotel and supplier roles; no synthetic record may be presented as commercial proof.
+3. Connect logistics and funder handoffs only to persisted orders, then add audit-backed regression tests.
+4. Build the tenant-scoped evidence and Intelligence spine after the transaction loop is proven.
+5. Automate release identity, protected runtime configuration, rollback verification, and a user-approved release-retention cleanup procedure.
