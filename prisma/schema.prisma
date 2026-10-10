@@ -84,6 +84,7 @@ model Tenant {
   spendUploadRecords     SpendUploadRecord[]
   suppliers              Supplier[]
   procurementQuotes      ProcurementQuote[]
+  contractRateBaselines  ContractRateBaseline[]
   supplierAudits         SupplierAudit[]
   swarmJobs              SwarmJob[]
   swarmMemories          SwarmMemory[]
@@ -197,6 +198,7 @@ model Hotel {
   consumptionForecasts ConsumptionForecast[]
   inventoryReconciliations InventoryReconciliation[]
   scheduledOrders      ScheduledOrder[]
+  contractRateBaselines ContractRateBaseline[]
 
   @@index([tenantId])
   @@index([city])
@@ -388,6 +390,7 @@ model Supplier {
   scheduledOrders      ScheduledOrder[]
   savingsLedger        SavingsLedger[]
   procurementQuotes    ProcurementQuote[]
+  contractRateBaselines ContractRateBaseline[]
 
   @@index([tenantId])
   @@index([city])
@@ -465,6 +468,7 @@ model Product {
   opportunities          Opportunity[]
   spendUploadRecords     SpendUploadRecord[]
   savingsLedger          SavingsLedger[]
+  contractRateBaselines  ContractRateBaseline[]
 
   @@index([tenantId])
   @@index([supplierId])
@@ -3247,6 +3251,7 @@ enum EntityName {
   ONBOARDING
   OPPORTUNITY
   PROCUREMENT_QUOTE
+  CONTRACT_RATE_BASELINE
   RFQ
   SHIPMENT
   CARRIER_PROFILE
@@ -3558,6 +3563,7 @@ model RfqRequest {
   id                String    @id @default(cuid())
   buyerId           String
   productId         String
+  contractBaselineId String?
   supplierId        String
   requestedQty      Int
   targetPrice       Decimal?  @db.Decimal(12, 2)
@@ -3574,11 +3580,43 @@ model RfqRequest {
   uuid              String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt         DateTime?
   quotes            ProcurementQuote[]
+  contractBaseline  ContractRateBaseline? @relation(fields: [contractBaselineId], references: [id], onDelete: SetNull)
 
   @@index([buyerId])
   @@index([status])
   @@index([supplierId])
   @@index([tenantId])
+  @@index([tenantId, contractBaselineId])
+}
+
+model ContractRateBaseline {
+  id              String   @id @default(cuid())
+  tenantId        String
+  hotelId         String
+  supplierId      String
+  productId       String
+  unitPrice       Decimal  @db.Decimal(12, 2)
+  rateQuantity    Int
+  deliveryFee     Decimal? @db.Decimal(12, 2)
+  taxAmount       Decimal? @db.Decimal(12, 2)
+  currency        String   @default("EGP")
+  sourceReference String
+  validFrom       DateTime
+  validUntil      DateTime?
+  createdById     String
+  approvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  supplier        Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  rfqRequests     RfqRequest[]
+
+  @@index([tenantId, hotelId, productId])
+  @@index([tenantId, supplierId])
+  @@index([deletedAt])
 }
 
 model ProcurementQuote {
@@ -3592,6 +3630,8 @@ model ProcurementQuote {
   currency        String      @default("EGP")
   leadTimeDays    Int?
   deliveryFee     Decimal?    @db.Decimal(12, 2)
+  /// Supplier-stated tax. A quote cannot be converted when it is unknown.
+  taxAmount       Decimal?    @db.Decimal(12, 2)
   validUntil      DateTime?
   notes           String?
   status          QuoteStatus @default(SUBMITTED)
