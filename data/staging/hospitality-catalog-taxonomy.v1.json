@@ -1,0 +1,22 @@
+{
+  "version": "2026-10-11",
+  "scope": "Egyptian hotel and hospitality procurement MVP",
+  "skuTarget": 5000,
+  "categories": [
+    { "code": "FOOD_BEVERAGE", "label": "Food and beverage", "targetSkus": 1200 },
+    { "code": "HOUSEKEEPING_CLEANING", "label": "Housekeeping and cleaning", "targetSkus": 700 },
+    { "code": "GUEST_AMENITIES", "label": "Guest amenities", "targetSkus": 450 },
+    { "code": "LINEN_TEXTILES", "label": "Linen and textiles", "targetSkus": 450 },
+    { "code": "TABLETOP_SERVICEWARE", "label": "Tabletop and serviceware", "targetSkus": 250 },
+    { "code": "COMMERCIAL_KITCHEN", "label": "Commercial kitchen equipment", "targetSkus": 350 },
+    { "code": "ENGINEERING_MRO", "label": "Engineering, maintenance and repair", "targetSkus": 400 },
+    { "code": "FFE", "label": "Furniture, fixtures and equipment", "targetSkus": 400 },
+    { "code": "PACKAGING_DISPOSABLES", "label": "Packaging and disposables", "targetSkus": 200 },
+    { "code": "ICT_AV", "label": "ICT and audiovisual", "targetSkus": 150 },
+    { "code": "UNIFORMS", "label": "Uniforms and workwear", "targetSkus": 100 },
+    { "code": "LAUNDRY", "label": "Laundry equipment and consumables", "targetSkus": 100 },
+    { "code": "SAFETY_SECURITY", "label": "Safety and security", "targetSkus": 100 },
+    { "code": "WELLNESS_POOL", "label": "Wellness and pool operations", "targetSkus": 100 },
+    { "code": "LOGISTICS_COLD_CHAIN", "label": "Logistics and cold-chain services", "targetSkus": 50 }
+  ]
+}

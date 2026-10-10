@@ -1,0 +1,79 @@
+{
+  "version": "2026-10-11",
+  "purpose": "Public-source intake queue for Egyptian hospitality procurement suppliers and B2B marketplaces",
+  "status": "RESEARCH_CANDIDATE_ONLY",
+  "records": [
+    {
+      "name": "Horeca Stars",
+      "type": "HOSPITALITY_SUPPLIER",
+      "categories": ["COMMERCIAL_KITCHEN", "TABLETOP_SERVICEWARE", "HOUSEKEEPING_CLEANING", "GUEST_AMENITIES"],
+      "website": "https://www.horecastarseg.com/",
+      "source": "https://www.horecastarseg.com/",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "Exceed for Distribution and Hotel Supplies",
+      "type": "HOSPITALITY_SUPPLIER",
+      "categories": ["HOUSEKEEPING_CLEANING", "GUEST_AMENITIES", "COMMERCIAL_KITCHEN"],
+      "website": "https://exceeddhs.com/en/about-us/",
+      "source": "https://exceeddhs.com/en/about-us/",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "MTS for Hotel Supplies",
+      "type": "HOSPITALITY_SUPPLIER",
+      "categories": ["HOUSEKEEPING_CLEANING", "GUEST_AMENITIES"],
+      "website": "https://erp.mtshotelsupply.com/",
+      "source": "https://erp.mtshotelsupply.com/",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "Al-Qaswa",
+      "type": "HOSPITALITY_SUPPLIER",
+      "categories": ["COMMERCIAL_KITCHEN", "TABLETOP_SERVICEWARE", "FFE"],
+      "website": "https://qaswaa.net/en/blogs/Supplies-for-Restaurants-and-Hotels",
+      "source": "https://qaswaa.net/en/blogs/Supplies-for-Restaurants-and-Hotels",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "KBK Active",
+      "type": "HOSPITALITY_SUPPLIER",
+      "categories": ["HOUSEKEEPING_CLEANING", "LINEN_TEXTILES", "GUEST_AMENITIES", "FFE"],
+      "website": "https://kbkactive.com/procurement/hotels",
+      "source": "https://kbkactive.com/procurement/hotels",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "Cartona",
+      "type": "B2B_MARKETPLACE",
+      "categories": ["FOOD_BEVERAGE", "HOUSEKEEPING_CLEANING", "PACKAGING_DISPOSABLES"],
+      "website": "https://cartona.com/",
+      "source": "https://cartona.com/",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "Juhayna Food Industries",
+      "type": "FMCG_MANUFACTURER",
+      "categories": ["FOOD_BEVERAGE"],
+      "website": "https://www.juhayna.com/about-us/",
+      "source": "https://www.juhayna.com/about-us/",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    },
+    {
+      "name": "Arabian Food Industries (Domty)",
+      "type": "FMCG_MANUFACTURER",
+      "categories": ["FOOD_BEVERAGE"],
+      "website": "https://domty.org/",
+      "source": "https://domty.org/",
+      "sourceObservedAt": "2026-10-11",
+      "status": "RESEARCH_CANDIDATE"
+    }
+  ]
+}

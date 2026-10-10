@@ -63,6 +63,9 @@ crew/
 # playwright MCP captures (local debugging only)
 .playwright-mcp/
 
+# Live research captures; sources are transformed into reviewable registry records.
+.firecrawl/
+
 # ad-hoc SQL dumps — real migrations live in prisma/migrations/
 /schema-v6-*.sql
 
