@@ -25,5 +25,9 @@ if [[ ! -r "$HV_RUNTIME_ENV_FILE" ]]; then
 fi
 
 # shellcheck source=/dev/null
+# Export assignments from the protected shell file so the Node process can
+# receive Clerk, database, and integration configuration.
+set -a
 source "$HV_RUNTIME_ENV_FILE"
+set +a
 exec node .next/standalone/server.js
