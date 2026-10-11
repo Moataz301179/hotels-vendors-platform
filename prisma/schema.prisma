@@ -231,73 +231,77 @@ model Property {
 }
 
 model User {
-  id                     String                   @id @default(cuid())
-  email                  String                   @unique
-  name                   String
-  companyName            String?
-  phone                  String?                  @unique
-  role                   UserRole                 @default(DEPARTMENT_HEAD)
-  status                 UserStatus               @default(ACTIVE)
-  sector                 UserSector?
-  passwordHash           String?
-  refreshTokenHash       String?
-  platformRole           PlatformRole             @default(HOTEL)
-  tenantId               String
-  roleId                 String
-  hotelId                String?
-  supplierId             String?
-  departmentId           String?
-  factoringCompanyId     String?
-  canOverride            Boolean                  @default(false)
-  inviteToken            String?                  @unique
-  inviteExpiresAt        DateTime?
-  invitedBy              String?
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  lastActive             DateTime?
-  accountType            AccountType              @default(BUSINESS)
-  emailVerifiedAt        DateTime?
-  marketingConsent       Boolean                  @default(false)
-  termsAcceptedAt        DateTime?
-  privacyPolicyVersion   String?
-  kycLevel               Int                      @default(0)
-  kycStatus              String                   @default("NOT_STARTED")
-  kycVerifiedAt          DateTime?
-  uuid                   String?                  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  totpSecret             String?
-  twoFactorEnabled       Boolean                  @default(false)
-  ownedTenantId          String?
-  transferToken          String?                  @unique(map: "User_transfer_token_uniq")
-  transferExpiresAt      DateTime?
-  phoneVerifiedAt        DateTime?
-  deletedAt              DateTime?
-  aiUsage                AiUsage?
-  carts                  Cart?
-  consentRecords         ConsentRecord[]
-  conversations          Conversation[]
-  Notification           Notification[]
-  NotificationPreference NotificationPreference[]
-  orders                 Order[]
-  approvals              OrderApproval[]
-  reviews                ProductReview[]
-  refreshTokens          RefreshToken[]
-  sampleRequests         SampleRequest[]
-  factoringCompany       FactoringCompany?        @relation(fields: [factoringCompanyId], references: [id])
-  hotel                  Hotel?                   @relation(fields: [hotelId], references: [id])
-  assignedRole           Role                     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  supplier               Supplier?                @relation(fields: [supplierId], references: [id])
-  department             Department?              @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  tenant                 Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  addresses              UserAddress[]
-  pairingCodes           PairingCode[]
-  carrierProfile         CarrierProfile?
-  onboardingProgress     OnboardingProgress?
-  pushTokens             PushToken[]
-  supportTickets         SupportTicket[]
-  opportunities          Opportunity[]
-  savingsLedgers         SavingsLedger[]
-  procurementQuotes      ProcurementQuote[]
-  verifiedSavingsLedgers SavingsLedger[]          @relation("SavingsLedgerVerifiedBy")
+  id                             String                      @id @default(cuid())
+  email                          String                      @unique
+  name                           String
+  companyName                    String?
+  phone                          String?                     @unique
+  role                           UserRole                    @default(DEPARTMENT_HEAD)
+  status                         UserStatus                  @default(ACTIVE)
+  sector                         UserSector?
+  passwordHash                   String?
+  refreshTokenHash               String?
+  platformRole                   PlatformRole                @default(HOTEL)
+  tenantId                       String
+  roleId                         String
+  hotelId                        String?
+  supplierId                     String?
+  departmentId                   String?
+  factoringCompanyId             String?
+  canOverride                    Boolean                     @default(false)
+  inviteToken                    String?                     @unique
+  inviteExpiresAt                DateTime?
+  invitedBy                      String?
+  createdAt                      DateTime                    @default(now())
+  updatedAt                      DateTime                    @updatedAt
+  lastActive                     DateTime?
+  accountType                    AccountType                 @default(BUSINESS)
+  emailVerifiedAt                DateTime?
+  marketingConsent               Boolean                     @default(false)
+  termsAcceptedAt                DateTime?
+  privacyPolicyVersion           String?
+  kycLevel                       Int                         @default(0)
+  kycStatus                      String                      @default("NOT_STARTED")
+  kycVerifiedAt                  DateTime?
+  uuid                           String?                     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  totpSecret                     String?
+  twoFactorEnabled               Boolean                     @default(false)
+  ownedTenantId                  String?
+  transferToken                  String?                     @unique(map: "User_transfer_token_uniq")
+  transferExpiresAt              DateTime?
+  phoneVerifiedAt                DateTime?
+  deletedAt                      DateTime?
+  aiUsage                        AiUsage?
+  carts                          Cart?
+  consentRecords                 ConsentRecord[]
+  conversations                  Conversation[]
+  Notification                   Notification[]
+  NotificationPreference         NotificationPreference[]
+  orders                         Order[]
+  approvals                      OrderApproval[]
+  reviews                        ProductReview[]
+  refreshTokens                  RefreshToken[]
+  sampleRequests                 SampleRequest[]
+  factoringCompany               FactoringCompany?           @relation(fields: [factoringCompanyId], references: [id])
+  hotel                          Hotel?                      @relation(fields: [hotelId], references: [id])
+  assignedRole                   Role                        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  supplier                       Supplier?                   @relation(fields: [supplierId], references: [id])
+  department                     Department?                 @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  tenant                         Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  addresses                      UserAddress[]
+  pairingCodes                   PairingCode[]
+  carrierProfile                 CarrierProfile?
+  onboardingProgress             OnboardingProgress?
+  pushTokens                     PushToken[]
+  supportTickets                 SupportTicket[]
+  opportunities                  Opportunity[]
+  savingsLedgers                 SavingsLedger[]
+  procurementQuotes              ProcurementQuote[]
+  verifiedSavingsLedgers         SavingsLedger[]             @relation("SavingsLedgerVerifiedBy")
+  departmentCategoryAccessGrants DepartmentCategoryAccess[]  @relation("DepartmentCategoryAccessCreatedBy")
+  primaryApprovalPolicies        ProcurementApprovalPolicy[] @relation("ProcurementApprovalPolicyPrimaryApprover")
+  secondaryApprovalPolicies      ProcurementApprovalPolicy[] @relation("ProcurementApprovalPolicySecondaryApprover")
+  createdApprovalPolicies        ProcurementApprovalPolicy[] @relation("ProcurementApprovalPolicyCreatedBy")
 
   @@index([sector])
   @@index([tenantId])
@@ -312,17 +316,19 @@ model User {
 }
 
 model Department {
-  id             String                     @id @default(cuid())
-  tenantId       String
-  name           String
-  code           String
-  isActive       Boolean                    @default(true)
-  createdAt      DateTime                   @default(now())
-  updatedAt      DateTime                   @updatedAt
-  deletedAt      DateTime?
-  tenant         Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  members        User[]
-  categoryAccess DepartmentCategoryAccess[]
+  id               String                      @id @default(cuid())
+  tenantId         String
+  name             String
+  code             String
+  isActive         Boolean                     @default(true)
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  deletedAt        DateTime?
+  tenant           Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members          User[]
+  categoryAccess   DepartmentCategoryAccess[]
+  orders           Order[]
+  approvalPolicies ProcurementApprovalPolicy[]
 
   @@unique([tenantId, code])
   @@index([tenantId, deletedAt])
@@ -335,24 +341,30 @@ model DepartmentCategoryAccess {
   createdById  String?
   createdAt    DateTime        @default(now())
   department   Department      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdBy    User?           @relation("DepartmentCategoryAccessCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([departmentId, category])
 }
 
 model ProcurementApprovalPolicy {
-  id                  String    @id @default(cuid())
+  id                  String      @id @default(cuid())
   tenantId            String
   departmentId        String?
-  minAmount           Decimal?  @db.Decimal(12, 2)
-  maxAmount           Decimal?  @db.Decimal(12, 2)
+  minAmount           Decimal?    @db.Decimal(12, 2)
+  maxAmount           Decimal?    @db.Decimal(12, 2)
   primaryApproverId   String
   secondaryApproverId String?
-  isActive            Boolean   @default(true)
+  isActive            Boolean     @default(true)
   createdById         String
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
   deletedAt           DateTime?
-  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant              Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department          Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  primaryApprover     User        @relation("ProcurementApprovalPolicyPrimaryApprover", fields: [primaryApproverId], references: [id], onDelete: Restrict)
+  secondaryApprover   User?       @relation("ProcurementApprovalPolicySecondaryApprover", fields: [secondaryApproverId], references: [id], onDelete: Restrict)
+  createdBy           User        @relation("ProcurementApprovalPolicyCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  orders              Order[]
 
   @@index([tenantId, departmentId, isActive])
 }
@@ -570,56 +582,63 @@ model ProductSeasonality {
 }
 
 model Order {
-  id                     String              @id @default(cuid())
-  orderNumber            String              @unique
-  status                 OrderStatus         @default(DRAFT)
-  currency               String              @default("EGP")
-  deliveryDate           DateTime?
-  deliveryInstructions   String?
-  hotelId                String
-  propertyId             String?
-  outletId               String?
-  supplierId             String
-  requesterId            String
-  tenantId               String
-  etaSubmissionId        String?             @unique
-  paymentGuaranteed      Boolean             @default(false)
-  paymentGuaranteeMethod String?
-  paymentGuaranteeSetAt  DateTime?
-  checkoutGroupId        String?
-  shippingMethod         String?
-  estimatedDelivery      DateTime?
-  poNumber               String?
-  costCenter             String?
-  deliveryAddress        String?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
-  uuid                   String?             @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt              DateTime?
-  subtotal               Decimal?            @db.Decimal(12, 2)
-  vatAmount              Decimal?            @db.Decimal(12, 2)
-  total                  Decimal?            @db.Decimal(12, 2)
-  shippingCost           Decimal?            @db.Decimal(12, 2)
-  scheduledOrderId       String?
-  creditTransactions     CreditTransaction[]
-  disputes               Dispute[]
-  invoices               Invoice[]
-  hotel                  Hotel               @relation(fields: [hotelId], references: [id])
-  outlet                 Outlet?             @relation(fields: [outletId], references: [id])
-  property               Property?           @relation(fields: [propertyId], references: [id])
-  requester              User                @relation(fields: [requesterId], references: [id])
-  supplier               Supplier            @relation(fields: [supplierId], references: [id])
-  tenant                 Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  approvals              OrderApproval[]
-  items                  OrderItem[]
-  ReturnRequest          ReturnRequest[]
-  tripStops              TripStop[]
-  goodsReceiptNotes      GoodsReceiptNote[]
-  scheduledOrder         ScheduledOrder?     @relation(fields: [scheduledOrderId], references: [id])
+  id                          String                     @id @default(cuid())
+  orderNumber                 String                     @unique
+  status                      OrderStatus                @default(DRAFT)
+  currency                    String                     @default("EGP")
+  deliveryDate                DateTime?
+  deliveryInstructions        String?
+  hotelId                     String
+  propertyId                  String?
+  outletId                    String?
+  supplierId                  String
+  requesterId                 String
+  tenantId                    String
+  etaSubmissionId             String?                    @unique
+  paymentGuaranteed           Boolean                    @default(false)
+  paymentGuaranteeMethod      String?
+  paymentGuaranteeSetAt       DateTime?
+  checkoutGroupId             String?
+  shippingMethod              String?
+  estimatedDelivery           DateTime?
+  poNumber                    String?
+  costCenter                  String?
+  departmentId                String?
+  procurementApprovalPolicyId String?
+  approvalPolicySnapshot      Json?
+  deliveryAddress             String?
+  createdAt                   DateTime                   @default(now())
+  updatedAt                   DateTime                   @updatedAt
+  uuid                        String?                    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt                   DateTime?
+  subtotal                    Decimal?                   @db.Decimal(12, 2)
+  vatAmount                   Decimal?                   @db.Decimal(12, 2)
+  total                       Decimal?                   @db.Decimal(12, 2)
+  shippingCost                Decimal?                   @db.Decimal(12, 2)
+  scheduledOrderId            String?
+  creditTransactions          CreditTransaction[]
+  disputes                    Dispute[]
+  invoices                    Invoice[]
+  hotel                       Hotel                      @relation(fields: [hotelId], references: [id])
+  outlet                      Outlet?                    @relation(fields: [outletId], references: [id])
+  property                    Property?                  @relation(fields: [propertyId], references: [id])
+  requester                   User                       @relation(fields: [requesterId], references: [id])
+  supplier                    Supplier                   @relation(fields: [supplierId], references: [id])
+  department                  Department?                @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  procurementApprovalPolicy   ProcurementApprovalPolicy? @relation(fields: [procurementApprovalPolicyId], references: [id], onDelete: Restrict)
+  tenant                      Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  approvals                   OrderApproval[]
+  items                       OrderItem[]
+  ReturnRequest               ReturnRequest[]
+  tripStops                   TripStop[]
+  goodsReceiptNotes           GoodsReceiptNote[]
+  scheduledOrder              ScheduledOrder?            @relation(fields: [scheduledOrderId], references: [id])
 
   @@index([tenantId])
   @@index([hotelId])
   @@index([supplierId])
+  @@index([departmentId])
+  @@index([procurementApprovalPolicyId])
   @@index([status])
   @@index([createdAt])
   @@index([deletedAt], map: "Order_deleted_idx")
