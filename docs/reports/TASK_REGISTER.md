@@ -28,8 +28,9 @@
 - Dashboard UI still needs to consume the new admin endpoints; direct API enforcement is in place.
 - Per-user permission delegation and category-grant revocation need a reviewed schema/migration because the current models are add-only and role-based.
 - Existing migration ledger contains historical records marked rolled back; they were not rewritten. Production remains untouched.
-- The new additive governance-audit enum migration is committed but still requires application and verification on the isolated Neon clone before release rehearsal.
-- The delegated-permission migration is committed but requires application and rollback-only verification on the isolated Neon clone.
+- The new additive governance-audit and delegated-permission migrations are applied and verified on the isolated Neon clone.
+- Neon staging verification completed: migration status reports no pending migrations; delegated-permission table, category revocation columns, and both migration ledger entries are present.
+- Operational verification: the available iOS Simulator HOVIN/Expo project currently fails with “Could not connect to the server”; it is not evidence of the current release and needs replacement with the current mobile checkout/build.
 - Staging runtime still serves older release `23def85`; it has not been redeployed with this branch.
 - Clerk provisioning and end-to-end authenticated web/mobile acceptance remain unproven.
 - Mobile EAS identity and real-device sign-in/restart evidence remain unresolved.
