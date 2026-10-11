@@ -25,13 +25,14 @@
 
 ## Remaining blockers
 
-- Dashboard UI still needs to consume the new admin endpoints; direct API enforcement is in place.
-- Per-user permission delegation and category-grant revocation need a reviewed schema/migration because the current models are add-only and role-based.
+- Dashboard UI now exposes approval-policy and delegated-permission controls; browser-level authenticated acceptance is still pending.
+- Category-access revocation is implemented in the isolated branch and requires staging UI/runtime acceptance.
 - Existing migration ledger contains historical records marked rolled back; they were not rewritten. Production remains untouched.
 - The new additive governance-audit and delegated-permission migrations are applied and verified on the isolated Neon clone.
 - Neon staging verification completed: migration status reports no pending migrations; delegated-permission table, category revocation columns, and both migration ledger entries are present.
 - Operational verification: the available iOS Simulator HOVIN/Expo project currently fails with “Could not connect to the server”; it is not evidence of the current release and needs replacement with the current mobile checkout/build.
 - Staging runtime still serves older release `23def85`; it has not been redeployed with this branch.
+- Isolated release `6563827` passes `npx tsc --noEmit`, production `next build` with a staging-only `SESSION_SECRET`, and the full P0 suite (21 files, 99 tests).
 - Clerk provisioning and end-to-end authenticated web/mobile acceptance remain unproven.
 - Mobile EAS identity and real-device sign-in/restart evidence remain unresolved.
 
