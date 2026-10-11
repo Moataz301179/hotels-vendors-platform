@@ -28,6 +28,7 @@
 - **Audit log:** Every submission/rejection writes to `audit_entries` (`entity = "invoice_eta"`).
 - **Idempotency:** `lib/fintech/idempotency.ts` key (`invoice_eta:{invoiceId}`) prevents duplicate submissions.
 - **No client-side role switching:** Server-side only (`middleware.ts` + `requirePermission`).
+- **Tax integrity:** ETA submission uses the supplier-stated `vatRate` and `vatAmount` only when they reconcile with all invoice lines. Missing or non-reconciling tax data blocks submission; the platform must never infer a 14% rate.
 
 ## Adapter Pattern
 

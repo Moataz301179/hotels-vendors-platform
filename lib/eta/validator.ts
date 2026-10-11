@@ -9,6 +9,7 @@
 import { prisma } from "@/lib/prisma";
 import type { EtaValidationResult, EtaValidationCode } from "./types";
 import { etaClient } from "./client";
+import { buildEtaTaxBreakdown } from "./tax-breakdown";
 
 // ─────────────────────────────────────────
 // 1. VALIDATION RULES
@@ -219,6 +220,35 @@ export async function validateForSubmission(invoiceId: string): Promise<EtaValid
       valid: false,
       code: "ETA_NOT_FOUND",
       message: "Invoice has no linked order",
+    };
+  }
+
+  if (invoice.status !== "ISSUED") {
+    return {
+      valid: false,
+      code: "ETA_STATUS_INVALID",
+      message: "Only an issued invoice may be submitted to ETA.",
+    };
+  }
+
+  if (!invoice.digitalSignature) {
+    return {
+      valid: false,
+      code: "ETA_SIGNATURE_MISSING",
+      message: "Digital signature missing. Invoice must be signed before ETA submission.",
+    };
+  }
+
+  const taxBreakdown = buildEtaTaxBreakdown({
+    lineTotals: invoice.order.items.map(item => item.total),
+    vatRate: invoice.vatRate,
+    vatAmount: invoice.vatAmount,
+  });
+  if (!taxBreakdown.ok) {
+    return {
+      valid: false,
+      code: "ETA_AMOUNT_MISMATCH",
+      message: taxBreakdown.reason,
     };
   }
 

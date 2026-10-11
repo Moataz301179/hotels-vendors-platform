@@ -17,6 +17,7 @@ import { etaClient } from "./client";
 import { validateForSubmission } from "./validator";
 import { recordSwarmEvent } from "@/lib/swarm/monitoring";
 import { moveToDeadLetter } from "@/lib/queues/dead-letter";
+import { buildEtaTaxBreakdown } from "./tax-breakdown";
 
 // ── Queue ──
 export const etaQueue = new Queue("eta-submission", {
@@ -81,6 +82,15 @@ export function createEtaWorker(): Worker {
         throw new Error(`Validation failed: ${validation.message}`);
       }
 
+      const taxBreakdown = buildEtaTaxBreakdown({
+        lineTotals: invoice.order.items.map(item => item.total),
+        vatRate: invoice.vatRate,
+        vatAmount: invoice.vatAmount,
+      });
+      if (!taxBreakdown.ok) {
+        throw new Error(`Validation failed: ${taxBreakdown.reason}`);
+      }
+
       // Build payload
       const payload = {
         issuer: {
@@ -114,7 +124,7 @@ export function createEtaWorker(): Worker {
         purchaseOrderReference: invoice.order.orderNumber,
         payment: { terms: "Net 30" },
         delivery: { approach: "By Truck", terms: "DAP" },
-        invoiceLines: invoice.order.items.map((item) => ({
+        invoiceLines: invoice.order.items.map((item, index) => ({
           description: item.product.name,
           itemType: "EGS" as const,
           itemCode: item.product.sku,
@@ -128,9 +138,7 @@ export function createEtaWorker(): Worker {
           netTotal: Number(item.total || 0),
           itemsDiscount: 0,
           discount: { amount: 0 },
-          taxableItems: [
-            { taxType: "T1" as const, amount: Number(item.total || 0) * 0.14, subType: "V001", rate: 14 },
-          ],
+          taxableItems: [{ taxType: "T1" as const, amount: taxBreakdown.lines[index].taxAmount, subType: "V001", rate: taxBreakdown.lines[index].taxRate }],
         })),
         totalSalesAmount: invoice.subtotal,
         netAmount: invoice.subtotal,
