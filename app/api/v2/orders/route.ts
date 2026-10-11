@@ -4,6 +4,7 @@ import { getActor } from "@/lib/v2-auth";
 import { evaluateV2Authority } from "@/lib/auth/v2-authority";
 import { orderActions } from "@/lib/v2-order-actions";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 
 export async function GET(){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
@@ -27,6 +28,10 @@ export async function PATCH(req:Request){
  const order=await prisma.order.findFirst({where:{id:b.id,deletedAt:null,...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId})}});
  if(!order)return NextResponse.json({error:'Order not found'},{status:404});
  if(!orderActions(user,order).includes(b.status))return NextResponse.json({error:'Your role cannot perform this order action'},{status:403});
+ const permissionByAction:Record<string,string>={APPROVED:'order:approve',REJECTED:'order:reject',CONFIRMED:'order:confirm',IN_TRANSIT:'order:update',RECEIVE:'order:update'};
+ const permission=permissionByAction[b.status];
+ if(!permission)return NextResponse.json({error:'Unsupported order action'},{status:400});
+ try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},permission);}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_ACTION_PERMISSION_REQUIRED'},{status:403});throw error;}
  if(b.status==='APPROVED'){
   const authority=await evaluateV2Authority(order.id,{role:user.role,tenantId:user.tenantId});
   if(!authority.allowed)return NextResponse.json({error:authority.reason},{status:409});
