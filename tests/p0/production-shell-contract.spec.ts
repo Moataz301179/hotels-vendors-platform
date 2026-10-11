@@ -40,6 +40,7 @@ describe("production shell and authorization contracts", () => {
     expect(proxy).toContain("connect-src");
     expect(proxy).toContain("https://united-treefrog-223.clerk.accounts.dev");
     expect(proxy).toContain("https://*.clerk.accounts.dev");
+    expect(proxy).toContain("if (isApiPath) return authMiddleware(request, event);");
   });
 
   it("keeps role-specific workspace pages behind server-side role gates", () => {

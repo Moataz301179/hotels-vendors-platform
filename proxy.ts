@@ -74,10 +74,12 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
   const isApiPath = pathname.startsWith("/api/") || pathname.startsWith("/trpc/");
   if (!isApiPath && !isProtectedPage(pathname)) return addSecurityHeaders(NextResponse.next());
 
+  // API clients can present a verified Clerk bearer token without a browser
+  // session cookie. Let Clerk validate that token instead of rejecting it
+  // during the page-navigation optimization below.
+  if (isApiPath) return authMiddleware(request, event);
+
   if (!request.cookies.get("__session")?.value) {
-    if (isApiPath) {
-      return addSecurityHeaders(NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }));
-    }
     const url = new URL("/login", request.url);
     url.searchParams.set("redirect_url", `${pathname}${search}`);
     return addSecurityHeaders(NextResponse.redirect(url));
