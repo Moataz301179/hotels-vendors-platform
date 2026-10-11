@@ -14,15 +14,11 @@ export async function GET(){
 export async function POST(req:Request){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
  if(!["HOTEL","ADMIN"].includes(user.platformRole))return NextResponse.json({error:"HOTEL_ROLE_REQUIRED"},{status:403});
- const b=await req.json().catch(()=>null); const productId=String(b?.productId||""); const quantity=Number(b?.quantity||0); const supplierId=String(b?.supplierId||"");
- if(!productId||!supplierId||!Number.isInteger(quantity)||quantity<=0||quantity>1000000)return NextResponse.json({error:"productId, supplierId and positive integer quantity are required"},{status:400});
- const [product,supplier,hotel]=await Promise.all([prisma.product.findFirst({where:{id:productId,status:"ACTIVE",deletedAt:null,supplier:{id:supplierId,status:"ACTIVE",isVerified:true}},select:{id:true,unitPrice:true,supplierId:true}}),prisma.supplier.findFirst({where:{id:supplierId,status:"ACTIVE",isVerified:true,deletedAt:null},select:{id:true}}),prisma.hotel.findFirst({where:{tenantId:user.tenantId,status:"ACTIVE",deletedAt:null},orderBy:{createdAt:"asc"},select:{id:true}})]);
- if(!product||!supplier||!hotel)return NextResponse.json({error:"Product, supplier or active hotel is not available in your tenant"},{status:404});
- if(product.supplierId!==supplier.id)return NextResponse.json({error:"Supplier does not own this product"},{status:409});
- const unitPrice=Number(product.unitPrice||0); if(!Number.isFinite(unitPrice)||unitPrice<=0||unitPrice*quantity>9000000000)return NextResponse.json({error:"A real unit price is required; use an RFQ first if price is unknown"},{status:400});
- const subtotal=unitPrice*quantity; const order=await prisma.$transaction(async tx=>{const created=await tx.order.create({data:{orderNumber:"HV-"+Date.now().toString(36).toUpperCase(),status:"PENDING_APPROVAL",currency:"EGP",hotelId:hotel.id,supplierId:supplier.id,requesterId:user.id,tenantId:user.tenantId,deliveryDate:b?.deliveryDate?new Date(b.deliveryDate):undefined,deliveryInstructions:b?.deliveryInstructions||undefined,subtotal,total:subtotal,items:{create:{productId:product.id,quantity,unitPrice,total:subtotal}}},include:{items:true}});
- await appendAuditEntry({entityName:"ORDER",entityId:created.id,actionType:"CREATED",tenantId:user.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{orderNumber:created.orderNumber,subtotal,productId,quantity}},tx);return created;});
- return NextResponse.json({order},{status:201});
+ // Orders must originate from a tenant-scoped accepted supplier quote.  Keeping
+ // this legacy endpoint closed prevents bypassing RFQ assignment, quote terms,
+ // authority policy, payment guarantees, and the associated audit trail.
+ void req;
+ return NextResponse.json({error:"RFQ_QUOTE_ACCEPT_REQUIRED",message:"Create an RFQ and accept a verified supplier quote before creating an order."},{status:409});
 }
 
 export async function PATCH(req:Request){
