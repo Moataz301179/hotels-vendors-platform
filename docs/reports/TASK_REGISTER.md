@@ -30,12 +30,12 @@
 - Existing migration ledger contains historical records marked rolled back; they were not rewritten. Production remains untouched.
 - The new additive governance-audit and delegated-permission migrations are applied and verified on the isolated Neon clone.
 - Neon staging verification completed: migration status reports no pending migrations; delegated-permission table, category revocation columns, and both migration ledger entries are present.
-- Operational verification: the available iOS Simulator HOVIN/Expo project currently fails with “Could not connect to the server”; it is not evidence of the current release and needs replacement with the current mobile checkout/build.
+- Operational verification: the current mobile checkout was rebuilt from `/Users/Moatazi/hotels-vendors-mobile` as a native arm64 iOS Release simulator build (`BUILD SUCCEEDED`), installed under bundle `com.hotelsvendors.hovin`, and visually verified on the iPhone 17 Pro simulator. The branded HOVIN onboarding screen renders; the prior Expo/old red-screen state is no longer the active app.
 - Isolated release `6563827` passes `npx tsc --noEmit`, production `next build` with a staging-only `SESSION_SECRET`, and the full P0 suite (21 files, 99 tests).
 - Isolated release `40f1c2e` was packaged, checksum-verified, smoke-tested on port `3062`, then promoted to the staging PM2 slot on port `3060`; health returned `200`, release ID `pre-spend-40f1c2-20261011`, source commit `40f1c2e`, and the prior `23def85` directory remains available for rollback.
 - Clerk provisioning and end-to-end authenticated web/mobile acceptance remain unproven.
 - Mobile EAS identity and real-device sign-in/restart evidence remain unresolved.
-- Clerk web/mobile authenticated acceptance remains pending; the active Clerk instance is verified, but the simulator must run the current mobile checkout with injected environment values.
+- Clerk web/mobile authenticated acceptance remains pending; the current simulator binary renders correctly with the active mobile environment, but a signed-in Clerk session and end-to-end procurement acceptance still require verification.
 
 ## Deployment readiness
 
