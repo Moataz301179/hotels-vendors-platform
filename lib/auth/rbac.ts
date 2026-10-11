@@ -26,6 +26,12 @@ export async function hasPermission(
 ): Promise<boolean> {
   if (ctx.platformRole === "ADMIN") return true;
 
+  const delegated = await prisma.userPermissionGrant.findFirst({
+    where: { tenantId: ctx.tenantId, userId: ctx.userId, revokedAt: null, permission: { code: permissionCode, deletedAt: null } },
+    select: { id: true },
+  });
+  if (delegated) return true;
+
   const user = await prisma.user.findUnique({
     where: { id: ctx.userId },
     select: { roleId: true },
@@ -113,6 +119,12 @@ export async function getUserPermissions(ctx: TenantContext): Promise<string[]> 
   if (!user) return [];
 
   const perms = new Set<string>();
+
+  const delegated = await prisma.userPermissionGrant.findMany({
+    where: { tenantId: ctx.tenantId, userId: ctx.userId, revokedAt: null, permission: { deletedAt: null } },
+    select: { permission: { select: { code: true } } },
+  });
+  delegated.forEach((grant) => perms.add(grant.permission.code));
 
   if (user.roleId) {
     const directPerms = await prisma.rolePermission.findMany({
