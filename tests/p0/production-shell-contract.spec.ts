@@ -43,10 +43,12 @@ describe("production shell and authorization contracts", () => {
     const productionCsp = buildClerkContentSecurityPolicy(productionKey);
     expect(productionCsp).toContain("https://clerk.hotelsvendors.com");
     expect(productionCsp).toContain("https://accounts.hotelsvendors.com");
+    expect(productionCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://accounts.hotelsvendors.com");
     expect(productionCsp).not.toContain("united-treefrog-223");
     const stagingKey = "pk_test_cHJvYmFibGUtbG9jdXN0LTk3NDguY2xlcmsuYWNjb3VudHMuZGV2JA";
     const stagingCsp = buildClerkContentSecurityPolicy(stagingKey);
     expect(stagingCsp).toContain("https://probable-locust-9748.clerk.accounts.dev");
+    expect(stagingCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://*.clerk.accounts.dev");
     expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
     expect(proxy).toContain("if (isApiPath) return authMiddleware(request, event);");
   });
