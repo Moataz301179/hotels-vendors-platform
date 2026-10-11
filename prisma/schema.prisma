@@ -9,101 +9,103 @@ datasource db {
 }
 
 model Tenant {
-  id                     String                  @id @default(cuid())
-  name                   String
-  slug                   String                  @unique
-  type                   TenantType              @default(HOTEL_GROUP)
-  status                 TenantStatus            @default(ACTIVE)
-  taxId                  String?                 @unique
-  logoUrl                String?
-  primaryColor           String?
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
-  kycLevel               Int                     @default(0)
-  kycStatus              String                  @default("NOT_STARTED")
-  kycVerifiedAt          DateTime?
-  parentTenantId         String?
-  relation               TenantRelation          @default(STANDALONE)
-  verificationStatus     VerificationStatus      @default(UNVERIFIED)
-  verifiedAt             DateTime?
-  verifiedBy             String?
-  legalName              String?
-  billingContactName     String?
-  billingContactEmail    String?
-  billingContactPhone    String?
-  uuid                   String?                 @unique(map: "Tenant_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt              DateTime?
-  aiSubscriptions        AISubscription[]
-  agentRuns              AgentRun[]
-  auditLogs              AuditLog[]
-  carts                  Cart[]
-  competitors            Competitor[]
-  consentRecords         ConsentRecord[]
-  consolidatedInvoices   ConsolidatedInvoice[]
-  consolidatedOrders     ConsolidatedOrder[]
-  creditFacilities       CreditFacility[]
-  creditLineApplications CreditLineApplication[]
-  creditTransactions     CreditTransaction[]
-  deliveryZones          DeliveryZone[]
-  disputes               Dispute[]
-  documents              Document[]
-  documentProcessings    DocumentProcessing[]
-  etaCredential          EtaCredential?
-  etaDeadLetterJobs      EtaDeadLetterJob[]
-  factoringCompanies     FactoringCompany[]
-  factoringRequests      FactoringRequest[]
-  factoringTransactions  FactoringTransaction[]
-  featureProposals       FeatureProposal[]
-  forecastAccuracies     ForecastAccuracy[]
-  hotels                 Hotel[]
-  hotelSuppliers         HotelSupplier[]
-  inventorySnapshots     InventorySnapshot[]
-  invoPartners           InvoPartner[]
-  invoSubscriptions      InvoSubscription[]
-  invoices               Invoice[]
-  journalEntries         JournalEntry[]
-  leads                  Lead[]
-  ledgerEntries          LedgerEntry[]
-  logisticsHubs          LogisticsHub[]
-  marketInsights         MarketInsight[]
-  olivCreditFacilities   OlivCreditFacility[]
-  olivOnboardingAudits   OlivOnboardingAudit[]
-  olivSyncLogs           OlivSyncLog[]
-  orders                 Order[]
-  outlets                Outlet[]
-  payments               Payment[]
-  PaymentTerm            PaymentTerm[]
-  paymentTransactions    PaymentTransaction[]
-  products               Product[]
-  productSeasonalities   ProductSeasonality[]
-  promoCodes             PromoCode[]
-  properties             Property[]
-  refreshTokens          RefreshToken[]
-  roles                  Role[]
-  spendRecords           SpendRecord[]
-  spendUploadRecords     SpendUploadRecord[]
-  suppliers              Supplier[]
-  procurementQuotes      ProcurementQuote[]
-  contractRateBaselines  ContractRateBaseline[]
-  supplierAudits         SupplierAudit[]
-  swarmJobs              SwarmJob[]
-  swarmMemories          SwarmMemory[]
-  Tenant                 Tenant?                 @relation("TenantToTenant", fields: [parentTenantId], references: [id], onUpdate: NoAction, map: "Tenant_parent_fkey")
-  other_Tenant           Tenant[]                @relation("TenantToTenant")
-  trips                  Trip[]
-  tripStops              TripStop[]
-  users                  User[]
-  Workspace              Workspace[]
-  goodsReceiptNotes      GoodsReceiptNote[]
-  carrierProfiles        CarrierProfile[]
-  consumptionForecasts   ConsumptionForecast[]
-  inventoryReconciliations InventoryReconciliation[]
-  onboardingProgresses   OnboardingProgress[]
-  pushTokens             PushToken[]
-  scheduledOrders        ScheduledOrder[]
-  supportTickets         SupportTicket[]
-  opportunities          Opportunity[]
-  savingsLedger          SavingsLedger[]
+  id                          String                      @id @default(cuid())
+  name                        String
+  slug                        String                      @unique
+  type                        TenantType                  @default(HOTEL_GROUP)
+  status                      TenantStatus                @default(ACTIVE)
+  taxId                       String?                     @unique
+  logoUrl                     String?
+  primaryColor                String?
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
+  kycLevel                    Int                         @default(0)
+  kycStatus                   String                      @default("NOT_STARTED")
+  kycVerifiedAt               DateTime?
+  parentTenantId              String?
+  relation                    TenantRelation              @default(STANDALONE)
+  verificationStatus          VerificationStatus          @default(UNVERIFIED)
+  verifiedAt                  DateTime?
+  verifiedBy                  String?
+  legalName                   String?
+  billingContactName          String?
+  billingContactEmail         String?
+  billingContactPhone         String?
+  uuid                        String?                     @unique(map: "Tenant_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt                   DateTime?
+  aiSubscriptions             AISubscription[]
+  agentRuns                   AgentRun[]
+  auditLogs                   AuditLog[]
+  carts                       Cart[]
+  competitors                 Competitor[]
+  consentRecords              ConsentRecord[]
+  consolidatedInvoices        ConsolidatedInvoice[]
+  consolidatedOrders          ConsolidatedOrder[]
+  creditFacilities            CreditFacility[]
+  creditLineApplications      CreditLineApplication[]
+  creditTransactions          CreditTransaction[]
+  deliveryZones               DeliveryZone[]
+  disputes                    Dispute[]
+  documents                   Document[]
+  documentProcessings         DocumentProcessing[]
+  etaCredential               EtaCredential?
+  etaDeadLetterJobs           EtaDeadLetterJob[]
+  factoringCompanies          FactoringCompany[]
+  factoringRequests           FactoringRequest[]
+  factoringTransactions       FactoringTransaction[]
+  featureProposals            FeatureProposal[]
+  forecastAccuracies          ForecastAccuracy[]
+  hotels                      Hotel[]
+  hotelSuppliers              HotelSupplier[]
+  inventorySnapshots          InventorySnapshot[]
+  invoPartners                InvoPartner[]
+  invoSubscriptions           InvoSubscription[]
+  invoices                    Invoice[]
+  journalEntries              JournalEntry[]
+  leads                       Lead[]
+  ledgerEntries               LedgerEntry[]
+  logisticsHubs               LogisticsHub[]
+  marketInsights              MarketInsight[]
+  olivCreditFacilities        OlivCreditFacility[]
+  olivOnboardingAudits        OlivOnboardingAudit[]
+  olivSyncLogs                OlivSyncLog[]
+  orders                      Order[]
+  outlets                     Outlet[]
+  payments                    Payment[]
+  PaymentTerm                 PaymentTerm[]
+  paymentTransactions         PaymentTransaction[]
+  products                    Product[]
+  productSeasonalities        ProductSeasonality[]
+  promoCodes                  PromoCode[]
+  properties                  Property[]
+  refreshTokens               RefreshToken[]
+  roles                       Role[]
+  spendRecords                SpendRecord[]
+  spendUploadRecords          SpendUploadRecord[]
+  suppliers                   Supplier[]
+  procurementQuotes           ProcurementQuote[]
+  contractRateBaselines       ContractRateBaseline[]
+  supplierAudits              SupplierAudit[]
+  swarmJobs                   SwarmJob[]
+  swarmMemories               SwarmMemory[]
+  Tenant                      Tenant?                     @relation("TenantToTenant", fields: [parentTenantId], references: [id], onUpdate: NoAction, map: "Tenant_parent_fkey")
+  other_Tenant                Tenant[]                    @relation("TenantToTenant")
+  trips                       Trip[]
+  tripStops                   TripStop[]
+  users                       User[]
+  Workspace                   Workspace[]
+  goodsReceiptNotes           GoodsReceiptNote[]
+  carrierProfiles             CarrierProfile[]
+  consumptionForecasts        ConsumptionForecast[]
+  inventoryReconciliations    InventoryReconciliation[]
+  onboardingProgresses        OnboardingProgress[]
+  pushTokens                  PushToken[]
+  scheduledOrders             ScheduledOrder[]
+  supportTickets              SupportTicket[]
+  opportunities               Opportunity[]
+  savingsLedger               SavingsLedger[]
+  departments                 Department[]
+  procurementApprovalPolicies ProcurementApprovalPolicy[]
 
   @@index([deletedAt], map: "Tenant_deleted_idx")
   @@index([parentTenantId], map: "Tenant_parent_idx")
@@ -157,48 +159,48 @@ model RolePermission {
 }
 
 model Hotel {
-  id                   String                @id @default(cuid())
-  tenantId             String
-  name                 String
-  legalName            String?
-  taxId                String                @unique
-  commercialReg        String?
-  address              String?
-  city                 String
-  governorate          String
-  phone                String?
-  email                String?
-  starRating           Int?
-  roomCount            Int?
-  tier                 HotelTier             @default(CORE)
-  status               HotelStatus           @default(ACTIVE)
-  riskScore            Int?                  @default(50)
-  riskTier             RiskTier?             @default(MEDIUM)
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  uuid                 String?               @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt            DateTime?
-  creditLimit          Decimal?              @db.Decimal(14, 2)
-  creditUsed           Decimal?              @db.Decimal(14, 2)
-  carts                Cart[]
-  consolidatedInvoices ConsolidatedInvoice[]
-  creditFacilities     CreditFacility[]
-  creditTransactions   CreditTransaction[]
-  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  mandatedSuppliers    HotelSupplier[]
-  invoices             Invoice[]
-  journalEntries       JournalEntry[]
-  orders               Order[]
-  payments             Payment[]
-  properties           Property[]
-  spendRecords         SpendRecord[]
-  tripStops            TripStop[]
-  users                User[]
-  goodsReceiptNotes    GoodsReceiptNote[]
-  consumptionForecasts ConsumptionForecast[]
+  id                       String                    @id @default(cuid())
+  tenantId                 String
+  name                     String
+  legalName                String?
+  taxId                    String                    @unique
+  commercialReg            String?
+  address                  String?
+  city                     String
+  governorate              String
+  phone                    String?
+  email                    String?
+  starRating               Int?
+  roomCount                Int?
+  tier                     HotelTier                 @default(CORE)
+  status                   HotelStatus               @default(ACTIVE)
+  riskScore                Int?                      @default(50)
+  riskTier                 RiskTier?                 @default(MEDIUM)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  uuid                     String?                   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt                DateTime?
+  creditLimit              Decimal?                  @db.Decimal(14, 2)
+  creditUsed               Decimal?                  @db.Decimal(14, 2)
+  carts                    Cart[]
+  consolidatedInvoices     ConsolidatedInvoice[]
+  creditFacilities         CreditFacility[]
+  creditTransactions       CreditTransaction[]
+  tenant                   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  mandatedSuppliers        HotelSupplier[]
+  invoices                 Invoice[]
+  journalEntries           JournalEntry[]
+  orders                   Order[]
+  payments                 Payment[]
+  properties               Property[]
+  spendRecords             SpendRecord[]
+  tripStops                TripStop[]
+  users                    User[]
+  goodsReceiptNotes        GoodsReceiptNote[]
+  consumptionForecasts     ConsumptionForecast[]
   inventoryReconciliations InventoryReconciliation[]
-  scheduledOrders      ScheduledOrder[]
-  contractRateBaselines ContractRateBaseline[]
+  scheduledOrders          ScheduledOrder[]
+  contractRateBaselines    ContractRateBaseline[]
 
   @@index([tenantId])
   @@index([city])
@@ -244,6 +246,7 @@ model User {
   roleId                 String
   hotelId                String?
   supplierId             String?
+  departmentId           String?
   factoringCompanyId     String?
   canOverride            Boolean                  @default(false)
   inviteToken            String?                  @unique
@@ -283,6 +286,7 @@ model User {
   hotel                  Hotel?                   @relation(fields: [hotelId], references: [id])
   assignedRole           Role                     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   supplier               Supplier?                @relation(fields: [supplierId], references: [id])
+  department             Department?              @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   tenant                 Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   addresses              UserAddress[]
   pairingCodes           PairingCode[]
@@ -293,17 +297,64 @@ model User {
   opportunities          Opportunity[]
   savingsLedgers         SavingsLedger[]
   procurementQuotes      ProcurementQuote[]
-  verifiedSavingsLedgers SavingsLedger[] @relation("SavingsLedgerVerifiedBy")
+  verifiedSavingsLedgers SavingsLedger[]          @relation("SavingsLedgerVerifiedBy")
 
   @@index([sector])
   @@index([tenantId])
   @@index([hotelId])
   @@index([supplierId])
+  @@index([departmentId])
   @@index([roleId])
   @@index([status])
   @@index([platformRole])
   @@index([deletedAt], map: "User_deleted_idx")
   @@index([uuid])
+}
+
+model Department {
+  id             String                     @id @default(cuid())
+  tenantId       String
+  name           String
+  code           String
+  isActive       Boolean                    @default(true)
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members        User[]
+  categoryAccess DepartmentCategoryAccess[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, deletedAt])
+}
+
+model DepartmentCategoryAccess {
+  id           String          @id @default(cuid())
+  departmentId String
+  category     ProductCategory
+  createdById  String?
+  createdAt    DateTime        @default(now())
+  department   Department      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, category])
+}
+
+model ProcurementApprovalPolicy {
+  id                  String    @id @default(cuid())
+  tenantId            String
+  departmentId        String?
+  minAmount           Decimal?  @db.Decimal(12, 2)
+  maxAmount           Decimal?  @db.Decimal(12, 2)
+  primaryApproverId   String
+  secondaryApproverId String?
+  isActive            Boolean   @default(true)
+  createdById         String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, departmentId, isActive])
 }
 
 model OtpVerification {
@@ -325,15 +376,15 @@ model OtpVerification {
 }
 
 model PairingCode {
-  id            String    @id @default(cuid())
-  code          String    @unique
-  userId        String
-  tenantId      String?
-  expiresAt     DateTime
-  usedAt        DateTime?
-  createdAt     DateTime  @default(now())
-  linkedUserId  String?
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid())
+  code         String    @unique
+  userId       String
+  tenantId     String?
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+  linkedUserId String?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([tenantId])
@@ -341,55 +392,55 @@ model PairingCode {
 }
 
 model Supplier {
-  id                   String               @id @default(cuid())
-  name                 String
-  legalName            String?
-  taxId                String               @unique
-  commercialReg        String?
-  address              String?
-  city                 String
-  governorate          String
-  phone                String?
-  email                String               @unique
-  website              String?
-  description          String?
-  logoUrl              String?
-  status               SupplierStatus       @default(PENDING)
-  tier                 SupplierTier         @default(CORE)
-  type                 SupplierType         @default(WHOLESALER)
-  isVerified           Boolean              @default(false)
-  returnPolicyDays     Int                  @default(14)
-  rating               Float?               @default(0)
-  reviewCount          Int                  @default(0)
-  certifications       String?
-  bankAccount          String?
-  bankName             String?
-  tenantId             String
-  olivUserId           String?
-  olivFacilityId       String?
-  olivSyncAt           DateTime?
-  olivStatus           String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  uuid                 String?              @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt            DateTime?
-  deliveryZones        DeliveryZone[]
-  documentProcessings  DocumentProcessing[]
-  hotelMandates        HotelSupplier[]
-  invoSubscription     InvoSubscription?
-  invoices             Invoice[]
-  olivCreditFacilities OlivCreditFacility[]
-  orders               Order[]
-  products             Product[]
-  spendUploadRecords   SpendUploadRecord[]
-  opportunities        Opportunity[]
-  tenant               Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  audits               SupplierAudit[]
-  users                User[]
-  goodsReceiptNotes    GoodsReceiptNote[]
-  scheduledOrders      ScheduledOrder[]
-  savingsLedger        SavingsLedger[]
-  procurementQuotes    ProcurementQuote[]
+  id                    String                 @id @default(cuid())
+  name                  String
+  legalName             String?
+  taxId                 String                 @unique
+  commercialReg         String?
+  address               String?
+  city                  String
+  governorate           String
+  phone                 String?
+  email                 String                 @unique
+  website               String?
+  description           String?
+  logoUrl               String?
+  status                SupplierStatus         @default(PENDING)
+  tier                  SupplierTier           @default(CORE)
+  type                  SupplierType           @default(WHOLESALER)
+  isVerified            Boolean                @default(false)
+  returnPolicyDays      Int                    @default(14)
+  rating                Float?                 @default(0)
+  reviewCount           Int                    @default(0)
+  certifications        String?
+  bankAccount           String?
+  bankName              String?
+  tenantId              String
+  olivUserId            String?
+  olivFacilityId        String?
+  olivSyncAt            DateTime?
+  olivStatus            String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  uuid                  String?                @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt             DateTime?
+  deliveryZones         DeliveryZone[]
+  documentProcessings   DocumentProcessing[]
+  hotelMandates         HotelSupplier[]
+  invoSubscription      InvoSubscription?
+  invoices              Invoice[]
+  olivCreditFacilities  OlivCreditFacility[]
+  orders                Order[]
+  products              Product[]
+  spendUploadRecords    SpendUploadRecord[]
+  opportunities         Opportunity[]
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  audits                SupplierAudit[]
+  users                 User[]
+  goodsReceiptNotes     GoodsReceiptNote[]
+  scheduledOrders       ScheduledOrder[]
+  savingsLedger         SavingsLedger[]
+  procurementQuotes     ProcurementQuote[]
   contractRateBaselines ContractRateBaseline[]
 
   @@index([tenantId])
@@ -402,18 +453,18 @@ model Supplier {
 /// Public-source intake only. A candidate is not a transacting Supplier until
 /// an authorized operator completes legal and commercial verification.
 model SupplierResearchCandidate {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   name             String
   candidateType    String
   website          String?
   sourceUrl        String
   sourceObservedAt DateTime
   categories       Json
-  status           String   @default("RESEARCH_CANDIDATE")
-  sourceHash       String   @unique
+  status           String    @default("RESEARCH_CANDIDATE")
+  sourceHash       String    @unique
   verificationNote String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
   @@index([candidateType])
@@ -439,58 +490,58 @@ model DeliveryZone {
 }
 
 model Product {
-  id                 String               @id @default(cuid())
-  sku                String               @unique
-  name               String
-  description        String?
-  category           ProductCategory
-  subcategory        String?
-  currency           String               @default("EGP")
-  volumeTiers        String?
-  stockQuantity      Int                  @default(0)
-  minOrderQty        Int                  @default(1)
-  leadTimeDays       Int                  @default(1)
-  reorderPoint       Int                  @default(10)
-  reorderQty         Int                  @default(50)
-  avgDailyUsage      Float                @default(0)
-  lastCountedAt      DateTime?
-  aiForecast         String?
-  unitOfMeasure      String               @default("piece")
-  shelfLifeDays      Int?
-  temperatureReq     String?
-  images             String?
-  specs              String?
-  status             ProductStatus        @default(ACTIVE)
-  supplierId         String
-  tenantId           String
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  uuid               String?              @unique(map: "Product_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt          DateTime?
-  unitPrice          Decimal?             @db.Decimal(12, 2)
-  basePrice          Decimal?             @db.Decimal(12, 2)
-  pricingMode        PricingMode          @default(FIXED)
-  rfqThresholdQty    Int?
-  source             ProductSource        @default(FIXTURE)
-  sourceProvider     String?
-  sourceKey          String?
-  cartItems          CartItem[]
-  inventorySnapshots InventorySnapshot[]
-  orderItems         OrderItem[]
-  supplier           Supplier             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  reviews            ProductReview[]
-  seasonalities      ProductSeasonality[]
-  ProductTierPrice   ProductTierPrice[]
-  grnLineItems       GrnLineItem[]
-  consumptionForecasts ConsumptionForecast[]
-  productVariations  ProductVariation[]
+  id                      String                   @id @default(cuid())
+  sku                     String                   @unique
+  name                    String
+  description             String?
+  category                ProductCategory
+  subcategory             String?
+  currency                String                   @default("EGP")
+  volumeTiers             String?
+  stockQuantity           Int                      @default(0)
+  minOrderQty             Int                      @default(1)
+  leadTimeDays            Int                      @default(1)
+  reorderPoint            Int                      @default(10)
+  reorderQty              Int                      @default(50)
+  avgDailyUsage           Float                    @default(0)
+  lastCountedAt           DateTime?
+  aiForecast              String?
+  unitOfMeasure           String                   @default("piece")
+  shelfLifeDays           Int?
+  temperatureReq          String?
+  images                  String?
+  specs                   String?
+  status                  ProductStatus            @default(ACTIVE)
+  supplierId              String
+  tenantId                String
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  uuid                    String?                  @unique(map: "Product_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt               DateTime?
+  unitPrice               Decimal?                 @db.Decimal(12, 2)
+  basePrice               Decimal?                 @db.Decimal(12, 2)
+  pricingMode             PricingMode              @default(FIXED)
+  rfqThresholdQty         Int?
+  source                  ProductSource            @default(FIXTURE)
+  sourceProvider          String?
+  sourceKey               String?
+  cartItems               CartItem[]
+  inventorySnapshots      InventorySnapshot[]
+  orderItems              OrderItem[]
+  supplier                Supplier                 @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  tenant                  Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviews                 ProductReview[]
+  seasonalities           ProductSeasonality[]
+  ProductTierPrice        ProductTierPrice[]
+  grnLineItems            GrnLineItem[]
+  consumptionForecasts    ConsumptionForecast[]
+  productVariations       ProductVariation[]
   reconciliationLineItems ReconciliationLineItem[] @relation("ProductReconciliationLineItems")
-  scheduledOrderItems ScheduledOrderItem[]
-  opportunities          Opportunity[]
-  spendUploadRecords     SpendUploadRecord[]
-  savingsLedger          SavingsLedger[]
-  contractRateBaselines  ContractRateBaseline[]
+  scheduledOrderItems     ScheduledOrderItem[]
+  opportunities           Opportunity[]
+  spendUploadRecords      SpendUploadRecord[]
+  savingsLedger           SavingsLedger[]
+  contractRateBaselines   ContractRateBaseline[]
 
   @@index([tenantId])
   @@index([supplierId])
@@ -564,7 +615,7 @@ model Order {
   ReturnRequest          ReturnRequest[]
   tripStops              TripStop[]
   goodsReceiptNotes      GoodsReceiptNote[]
-  scheduledOrder         ScheduledOrder?       @relation(fields: [scheduledOrderId], references: [id])
+  scheduledOrder         ScheduledOrder?     @relation(fields: [scheduledOrderId], references: [id])
 
   @@index([tenantId])
   @@index([hotelId])
@@ -599,35 +650,35 @@ enum OpportunityStatus {
 }
 
 model Opportunity {
-  id                    String            @id @default(cuid())
-  tenantId              String
-  type                  OpportunityType
-  status                OpportunityStatus @default(DETECTED)
-  title                 String
-  description           String?
-  evidence              Json?
-  baseline              Decimal?          @db.Decimal(14, 2)
-  currentValue          Decimal?          @db.Decimal(14, 2)
-  potentialImpact       Decimal?          @db.Decimal(14, 2)
-  confidence            Float?
-  recommendedAction     String?
-  affectedSupplierId    String?
-  affectedProductId     String?
-  affectedCategory      String?
-  ownerId               String?
+  id                     String            @id @default(cuid())
+  tenantId               String
+  type                   OpportunityType
+  status                 OpportunityStatus @default(DETECTED)
+  title                  String
+  description            String?
+  evidence               Json?
+  baseline               Decimal?          @db.Decimal(14, 2)
+  currentValue           Decimal?          @db.Decimal(14, 2)
+  potentialImpact        Decimal?          @db.Decimal(14, 2)
+  confidence             Float?
+  recommendedAction      String?
+  affectedSupplierId     String?
+  affectedProductId      String?
+  affectedCategory       String?
+  ownerId                String?
   resultingTransactionId String?
-  realizedResult        Json?
-  verificationState     String?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  uuid                  String?           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt             DateTime?
+  realizedResult         Json?
+  verificationState      String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  uuid                   String?           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt              DateTime?
 
-  tenant                Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  affectedSupplier      Supplier?         @relation(fields: [affectedSupplierId], references: [id], onDelete: SetNull)
-  affectedProduct       Product?          @relation(fields: [affectedProductId], references: [id], onDelete: SetNull)
-  owner                 User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  savingsLedgers        SavingsLedger[]
+  tenant           Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  affectedSupplier Supplier?       @relation(fields: [affectedSupplierId], references: [id], onDelete: SetNull)
+  affectedProduct  Product?        @relation(fields: [affectedProductId], references: [id], onDelete: SetNull)
+  owner            User?           @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  savingsLedgers   SavingsLedger[]
 
   @@index([tenantId])
   @@index([type])
@@ -655,37 +706,37 @@ enum SavingsStatus {
 }
 
 model SavingsLedger {
-  id                String        @id @default(cuid())
-  tenantId          String
-  opportunityId     String?
-  type              SavingsType
-  status            SavingsStatus @default(POTENTIAL)
-  baseline          Decimal?      @db.Decimal(14, 2)
-  potentialSaving   Decimal?      @db.Decimal(14, 2)
-  expectedSaving    Decimal?      @db.Decimal(14, 2)
-  negotiatedAmount  Decimal?      @db.Decimal(14, 2)
-  realizedAmount    Decimal?      @db.Decimal(14, 2)
-  verifiedAmount    Decimal?      @db.Decimal(14, 2)
-  evidence          Json?
-  transactionId     String?
-  supplierId        String?
-  category          String?
-  productId         String?
-  ownerId           String?
-  verifiedById      String?
-  verifiedAt        DateTime?
-  disputeReason     String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  uuid              String?       @unique(map: "SavingsLedger_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt         DateTime?
+  id               String        @id @default(cuid())
+  tenantId         String
+  opportunityId    String?
+  type             SavingsType
+  status           SavingsStatus @default(POTENTIAL)
+  baseline         Decimal?      @db.Decimal(14, 2)
+  potentialSaving  Decimal?      @db.Decimal(14, 2)
+  expectedSaving   Decimal?      @db.Decimal(14, 2)
+  negotiatedAmount Decimal?      @db.Decimal(14, 2)
+  realizedAmount   Decimal?      @db.Decimal(14, 2)
+  verifiedAmount   Decimal?      @db.Decimal(14, 2)
+  evidence         Json?
+  transactionId    String?
+  supplierId       String?
+  category         String?
+  productId        String?
+  ownerId          String?
+  verifiedById     String?
+  verifiedAt       DateTime?
+  disputeReason    String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  uuid             String?       @unique(map: "SavingsLedger_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt        DateTime?
 
-  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  opportunity       Opportunity?  @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
-  supplier          Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  product           Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
-  owner             User?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  verifiedBy        User?         @relation("SavingsLedgerVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  supplier    Supplier?    @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  owner       User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  verifiedBy  User?        @relation("SavingsLedgerVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([opportunityId])
@@ -700,20 +751,20 @@ model SavingsLedger {
 }
 
 model OrderItem {
-  id               String    @id @default(cuid())
+  id               String        @id @default(cuid())
   quantity         Int
   receivedQuantity Int?
-  returnedQuantity Int?      @default(0)
+  returnedQuantity Int?          @default(0)
   returnReason     String?
   orderId          String
   productId        String
   notes            String?
-  uuid             String?   @unique(map: "OrderItem_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uuid             String?       @unique(map: "OrderItem_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt        DateTime?
-  unitPrice        Decimal?  @db.Decimal(12, 2)
-  total            Decimal?  @db.Decimal(12, 2)
-  order            Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product          Product   @relation(fields: [productId], references: [id])
+  unitPrice        Decimal?      @db.Decimal(12, 2)
+  total            Decimal?      @db.Decimal(12, 2)
+  order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product          Product       @relation(fields: [productId], references: [id])
   grnLineItems     GrnLineItem[]
 
   @@index([deletedAt], map: "OrderItem_deleted_idx")
@@ -909,7 +960,7 @@ model AuditLog {
   changes      Json?
   tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  evidenceRecords EvidenceRecord[]
+  evidenceRecords   EvidenceRecord[]
   intelligenceEdges IntelligenceEdge[]
 
   @@index([actorId])
@@ -1097,7 +1148,7 @@ model Trip {
   uuid               String?             @unique(map: "Trip_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt          DateTime?
   consolidatedOrders ConsolidatedOrder[]
-  hub                LogisticsHub?        @relation(fields: [hubId], references: [id])
+  hub                LogisticsHub?       @relation(fields: [hubId], references: [id])
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   stops              TripStop[]
 
@@ -1588,42 +1639,42 @@ model SwarmMemory {
 }
 
 model Lead {
-  id            String        @id @default(cuid())
-  entityType    LeadType
-  name          String
-  legalName     String?
-  website       String?
-  email         String?
-  phone         String?
-  city          String?
-  governorate   String?
-  address       String?
-  tier          LeadTier      @default(UNRATED)
-  starRating    Int?
-  roomCount     Int?
-  category      String?
-  source        String
-  sourceUrl     String?
-  discoveredBy  String
-  enrichment    String?
-  trustSignals  String?
-  status        LeadStatus    @default(DISCOVERED)
-  priority      Int           @default(5)
-  lastContactAt DateTime?
-  contactCount  Int           @default(0)
-  responseCount Int           @default(0)
-  convertedAt   DateTime?
-  convertedToId String?
-  tenantId      String
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  uuid          String?       @unique(map: "Lead_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt     DateTime?
+  id                 String             @id @default(cuid())
+  entityType         LeadType
+  name               String
+  legalName          String?
+  website            String?
+  email              String?
+  phone              String?
+  city               String?
+  governorate        String?
+  address            String?
+  tier               LeadTier           @default(UNRATED)
+  starRating         Int?
+  roomCount          Int?
+  category           String?
+  source             String
+  sourceUrl          String?
+  discoveredBy       String
+  enrichment         String?
+  trustSignals       String?
+  status             LeadStatus         @default(DISCOVERED)
+  priority           Int                @default(5)
+  lastContactAt      DateTime?
+  contactCount       Int                @default(0)
+  responseCount      Int                @default(0)
+  convertedAt        DateTime?
+  convertedToId      String?
+  tenantId           String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  uuid               String?            @unique(map: "Lead_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt          DateTime?
   dataClassification DataClassification @default(SEED_DEMO)
-  retrievalTimestamp  DateTime?
-  rawEvidence         String?
-  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  outreachLogs  OutreachLog[]
+  retrievalTimestamp DateTime?
+  rawEvidence        String?
+  tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outreachLogs       OutreachLog[]
 
   @@index([status, entityType])
   @@index([priority, status])
@@ -2491,8 +2542,8 @@ model ReturnRequest {
 }
 
 model GoodsReceiptNote {
-  id                String   @id @default(cuid())
-  grnNumber         String   @unique
+  id                String    @id @default(cuid())
+  grnNumber         String    @unique
   status            GrnStatus @default(PENDING)
   orderId           String
   hotelId           String
@@ -2503,19 +2554,19 @@ model GoodsReceiptNote {
   deliveryNoteRef   String?
   vehiclePlate      String?
   notes             String?
-  receivedAt        DateTime @default(now())
+  receivedAt        DateTime  @default(now())
   inspectedAt       DateTime?
   acceptedAt        DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  uuid              String?  @unique(map: "GoodsReceiptNote_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  uuid              String?   @unique(map: "GoodsReceiptNote_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt         DateTime?
 
-  order             Order    @relation(fields: [orderId], references: [id])
-  hotel             Hotel    @relation(fields: [hotelId], references: [id])
-  supplier          Supplier @relation(fields: [supplierId], references: [id])
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  lineItems         GrnLineItem[]
+  order     Order         @relation(fields: [orderId], references: [id])
+  hotel     Hotel         @relation(fields: [hotelId], references: [id])
+  supplier  Supplier      @relation(fields: [supplierId], references: [id])
+  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lineItems GrnLineItem[]
 
   @@index([tenantId])
   @@index([orderId])
@@ -2525,23 +2576,23 @@ model GoodsReceiptNote {
 }
 
 model GrnLineItem {
-  id                String  @id @default(cuid())
-  grnId             String
-  orderItemId       String
-  productId         String
-  orderedQuantity   Int
-  receivedQuantity  Int
-  acceptedQuantity  Int
-  rejectedQuantity  Int     @default(0)
-  rejectionReason   String?
-  batchNumber       String?
-  expiryDate        DateTime?
-  conditionNotes    String?
-  uuid              String? @unique(map: "GrnLineItem_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id               String    @id @default(cuid())
+  grnId            String
+  orderItemId      String
+  productId        String
+  orderedQuantity  Int
+  receivedQuantity Int
+  acceptedQuantity Int
+  rejectedQuantity Int       @default(0)
+  rejectionReason  String?
+  batchNumber      String?
+  expiryDate       DateTime?
+  conditionNotes   String?
+  uuid             String?   @unique(map: "GrnLineItem_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  grn               GoodsReceiptNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
-  orderItem         OrderItem        @relation(fields: [orderItemId], references: [id])
-  product           Product          @relation(fields: [productId], references: [id])
+  grn       GoodsReceiptNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  orderItem OrderItem        @relation(fields: [orderItemId], references: [id])
+  product   Product          @relation(fields: [productId], references: [id])
 
   @@index([grnId])
   @@index([orderItemId])
@@ -2563,34 +2614,34 @@ model Workspace {
 }
 
 model PlatformSettings {
-  id                   String   @id @default(cuid())
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  platformFeeRate      Decimal  @default(2.5) @db.Decimal(5, 2)
-  minOrderFee          Decimal  @default(0) @db.Decimal(12, 2)
-  maxOrderFee          Decimal  @default(0) @db.Decimal(12, 2)
+  platformFeeRate Decimal @default(2.5) @db.Decimal(5, 2)
+  minOrderFee     Decimal @default(0) @db.Decimal(12, 2)
+  maxOrderFee     Decimal @default(0) @db.Decimal(12, 2)
 
-  supplierTierBRate    Decimal  @default(2.5) @db.Decimal(5, 2)
-  supplierTierARate    Decimal  @default(2.0) @db.Decimal(5, 2)
-  supplierTierSRate    Decimal  @default(1.5) @db.Decimal(5, 2)
+  supplierTierBRate Decimal @default(2.5) @db.Decimal(5, 2)
+  supplierTierARate Decimal @default(2.0) @db.Decimal(5, 2)
+  supplierTierSRate Decimal @default(1.5) @db.Decimal(5, 2)
 
-  referralEnabled      Boolean  @default(true)
-  refereeDiscountPct   Decimal  @default(5.0) @db.Decimal(5, 2)
-  referrerBonusEgp     Decimal  @default(500.00) @db.Decimal(12, 2)
-  maxReferralUses      Int      @default(50)
+  referralEnabled    Boolean @default(true)
+  refereeDiscountPct Decimal @default(5.0) @db.Decimal(5, 2)
+  referrerBonusEgp   Decimal @default(500.00) @db.Decimal(12, 2)
+  maxReferralUses    Int     @default(50)
 
-  payoutDay            Int      @default(15)
-  payoutCurrency       String   @default("EGP")
-  autoPayoutEnabled    Boolean  @default(false)
-  minPayoutThreshold   Decimal  @default(1000.00) @db.Decimal(12, 2)
+  payoutDay          Int     @default(15)
+  payoutCurrency     String  @default("EGP")
+  autoPayoutEnabled  Boolean @default(false)
+  minPayoutThreshold Decimal @default(1000.00) @db.Decimal(12, 2)
 
-  bankName             String?
-  bankAccountName      String?
-  bankAccountNumber    String?
-  bankIban             String?
-  bankSwiftCode        String?
-  bankBranch           String?
+  bankName          String?
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIban          String?
+  bankSwiftCode     String?
+  bankBranch        String?
 
   @@map("PlatformSettings")
 }
@@ -3042,14 +3093,13 @@ enum LeadTier {
 }
 
 enum DataClassification {
-  SEED_DEMO           // Intentionally seeded demonstration data
-  USER_PROVIDED       // Explicitly provided by user/agent
-  EXTERNAL_OBSERVED   // Observed from external source, evidence preserved
-  INFERRED            // System-generated inference, not directly observed
-  VALIDATED           // Externally observed AND independently validated
-  AUTHORIZED          // Validated AND authorized for action/sharing
+  SEED_DEMO // Intentionally seeded demonstration data
+  USER_PROVIDED // Explicitly provided by user/agent
+  EXTERNAL_OBSERVED // Observed from external source, evidence preserved
+  INFERRED // System-generated inference, not directly observed
+  VALIDATED // Externally observed AND independently validated
+  AUTHORIZED // Validated AND authorized for action/sharing
 }
-
 
 enum LeadStatus {
   DISCOVERED
@@ -3362,19 +3412,19 @@ enum VerificationStatus {
 }
 
 model MarketingCampaign {
-  id                String   @id @default(cuid())
-  tenantId          String
-  createdById       String
-  title             String
-  channel           String
-  budgetEgyptianPounds Decimal @default(0)
-  startDate         DateTime?
-  endDate           DateTime?
-  targetAudience    String?
-  status            String   @default("draft")
-  content           String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  tenantId             String
+  createdById          String
+  title                String
+  channel              String
+  budgetEgyptianPounds Decimal   @default(0)
+  startDate            DateTime?
+  endDate              DateTime?
+  targetAudience       String?
+  status               String    @default("draft")
+  content              String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@index([tenantId])
   @@index([status])
@@ -3398,26 +3448,26 @@ model ContentSchedule {
 }
 
 model SocialAccount {
-  id           String   @id @default(cuid())
-  platform     String
-  pageId       String
-  pageName     String
-  accessToken  String
-  connectedAt  DateTime @default(now())
-  tenantId     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  platform    String
+  pageId      String
+  pageName    String
+  accessToken String
+  connectedAt DateTime @default(now())
+  tenantId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([tenantId])
   @@index([platform])
 }
 
 model InvoPartner {
-  id            String   @id @default(cuid())
-  partnerId     String   @unique
+  id            String    @id @default(cuid())
+  partnerId     String    @unique
   tenantId      String
   name          String
-  type          String   @default("unknown")
+  type          String    @default("unknown")
   taxId         String?
   email         String?
   phone         String?
@@ -3425,13 +3475,13 @@ model InvoPartner {
   address       String?
   categories    String[]
   documents     String[]
-  status        String   @default("pending_review")
-  submittedAt   DateTime @default(now())
+  status        String    @default("pending_review")
+  submittedAt   DateTime  @default(now())
   reviewedAt    DateTime?
   reviewerNotes String?
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([tenantId])
   @@index([name])
@@ -3467,30 +3517,30 @@ model SupportTicket {
 }
 
 model ScheduledOrder {
-  id                 String               @id @default(cuid())
-  tenantId           String
-  hotelId            String
-  propertyId         String?
-  outletId           String?
-  supplierId         String
-  frequency          ScheduleFrequency
-  cronExpression     String?
-  nextRunAt          DateTime
-  lastRunAt          DateTime?
-  status             ScheduleStatus       @default(ACTIVE)
-  name               String
-  notes              String?
-  autoSubmit         Boolean              @default(false)
-  maxOrderValue      Decimal?             @db.Decimal(14, 2)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  uuid               String?              @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt          DateTime?
-  orders             Order[]
-  hotel              Hotel                @relation(fields: [hotelId], references: [id], onDelete: Cascade)
-  supplier           Supplier             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items              ScheduledOrderItem[]
+  id             String               @id @default(cuid())
+  tenantId       String
+  hotelId        String
+  propertyId     String?
+  outletId       String?
+  supplierId     String
+  frequency      ScheduleFrequency
+  cronExpression String?
+  nextRunAt      DateTime
+  lastRunAt      DateTime?
+  status         ScheduleStatus       @default(ACTIVE)
+  name           String
+  notes          String?
+  autoSubmit     Boolean              @default(false)
+  maxOrderValue  Decimal?             @db.Decimal(14, 2)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  uuid           String?              @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt      DateTime?
+  orders         Order[]
+  hotel          Hotel                @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  supplier       Supplier             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  tenant         Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items          ScheduledOrderItem[]
 
   @@index([hotelId])
   @@index([nextRunAt])
@@ -3582,27 +3632,27 @@ model ReconciliationLineItem {
 }
 
 model RfqRequest {
-  id                String    @id @default(cuid())
-  buyerId           String
-  productId         String
+  id                 String                @id @default(cuid())
+  buyerId            String
+  productId          String
   contractBaselineId String?
-  supplierId        String
-  requestedQty      Int
-  targetPrice       Decimal?  @db.Decimal(12, 2)
-  deliveryTimeline  String?
-  specialReq        String?
-  notes             String?
-  status            RfqStatus @default(PENDING)
-  estimatedResponse String?
-  webhookPayload    String?
-  webhookResponse   String?
-  tenantId          String
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  uuid              String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt         DateTime?
-  quotes            ProcurementQuote[]
-  contractBaseline  ContractRateBaseline? @relation(fields: [contractBaselineId], references: [id], onDelete: SetNull)
+  supplierId         String
+  requestedQty       Int
+  targetPrice        Decimal?              @db.Decimal(12, 2)
+  deliveryTimeline   String?
+  specialReq         String?
+  notes              String?
+  status             RfqStatus             @default(PENDING)
+  estimatedResponse  String?
+  webhookPayload     String?
+  webhookResponse    String?
+  tenantId           String
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  uuid               String?               @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt          DateTime?
+  quotes             ProcurementQuote[]
+  contractBaseline   ContractRateBaseline? @relation(fields: [contractBaselineId], references: [id], onDelete: SetNull)
 
   @@index([buyerId])
   @@index([status])
@@ -3613,15 +3663,15 @@ model RfqRequest {
 
 /// Explicit, tenant-bound grant for a supplier-side RFQ response.
 model RfqSupplierAccess {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   rfqId            String
   supplierId       String
   hotelTenantId    String
   supplierTenantId String
   grantedById      String?
   revokedAt        DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@unique([rfqId, supplierId, supplierTenantId])
   @@index([supplierTenantId, supplierId, revokedAt])
@@ -3629,28 +3679,28 @@ model RfqSupplierAccess {
 }
 
 model ContractRateBaseline {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   tenantId        String
   hotelId         String
   supplierId      String
   productId       String
-  unitPrice       Decimal  @db.Decimal(12, 2)
+  unitPrice       Decimal      @db.Decimal(12, 2)
   rateQuantity    Int
-  deliveryFee     Decimal? @db.Decimal(12, 2)
-  taxAmount       Decimal? @db.Decimal(12, 2)
-  currency        String   @default("EGP")
+  deliveryFee     Decimal?     @db.Decimal(12, 2)
+  taxAmount       Decimal?     @db.Decimal(12, 2)
+  currency        String       @default("EGP")
   sourceReference String
   validFrom       DateTime
   validUntil      DateTime?
   createdById     String
   approvedAt      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   deletedAt       DateTime?
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  supplier        Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  hotel           Hotel        @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  supplier        Supplier     @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  product         Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
   rfqRequests     RfqRequest[]
 
   @@index([tenantId, hotelId, productId])
@@ -3659,29 +3709,29 @@ model ContractRateBaseline {
 }
 
 model ProcurementQuote {
-  id              String      @id @default(cuid())
-  rfqId           String
-  tenantId        String
-  supplierId      String
-  buyerId         String
-  unitPrice       Decimal     @db.Decimal(12, 2)
-  quantity        Int
-  currency        String      @default("EGP")
-  leadTimeDays    Int?
-  deliveryFee     Decimal?    @db.Decimal(12, 2)
+  id           String      @id @default(cuid())
+  rfqId        String
+  tenantId     String
+  supplierId   String
+  buyerId      String
+  unitPrice    Decimal     @db.Decimal(12, 2)
+  quantity     Int
+  currency     String      @default("EGP")
+  leadTimeDays Int?
+  deliveryFee  Decimal?    @db.Decimal(12, 2)
   /// Supplier-stated tax. A quote cannot be converted when it is unknown.
-  taxAmount       Decimal?    @db.Decimal(12, 2)
-  validUntil      DateTime?
-  notes           String?
-  status          QuoteStatus @default(SUBMITTED)
-  submittedAt     DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  uuid            String?     @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt       DateTime?
-  rfq             RfqRequest  @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  supplier        Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  buyer           User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  taxAmount    Decimal?    @db.Decimal(12, 2)
+  validUntil   DateTime?
+  notes        String?
+  status       QuoteStatus @default(SUBMITTED)
+  submittedAt  DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  uuid         String?     @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt    DateTime?
+  rfq          RfqRequest  @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplier     Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  buyer        User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, rfqId])
   @@index([supplierId, status])
@@ -3965,26 +4015,26 @@ enum ProductSource {
 }
 
 model EvidenceRecord {
-  id                  String    @id @default(cuid())
-  tenantId            String
-  sourceUrl           String?
-  sourceReference     String?
-  rawEvidenceHash     String?
-  extractedFact       String?
-  entityId            String?
-  entityName          String?
-  entityUuid          String?   @unique
-  provenanceClass     EvidenceClass @default(OBSERVED)
-  confidenceScore     Float?    
-  retrievalTimestamp  DateTime  @default(now())
-  auditLogId          String?
-  status              EvidenceStatus @default(PENDING)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  uuid                String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt           DateTime?
+  id                 String         @id @default(cuid())
+  tenantId           String
+  sourceUrl          String?
+  sourceReference    String?
+  rawEvidenceHash    String?
+  extractedFact      String?
+  entityId           String?
+  entityName         String?
+  entityUuid         String?        @unique
+  provenanceClass    EvidenceClass  @default(OBSERVED)
+  confidenceScore    Float?
+  retrievalTimestamp DateTime       @default(now())
+  auditLogId         String?
+  status             EvidenceStatus @default(PENDING)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  uuid               String?        @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt          DateTime?
 
-  auditLog            AuditLog? @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
+  auditLog AuditLog? @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
 
   @@index([entityId, entityName])
   @@index([entityUuid])
@@ -4010,23 +4060,23 @@ enum EvidenceStatus {
 }
 
 model IntelligenceEdge {
-  id                  String    @id @default(cuid())
-  tenantId            String
-  entityId            String
-  relatedEntityId     String
-  relationshipType    String
-  validFrom           DateTime  @default(now())
-  validTo             DateTime?
-  confidence          Float?    
-  auditLogId          String?
-  provenanceClass     EvidenceClass @default(OBSERVED)
-  entityUuid          String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  status              String?   @default("ACTIVE")
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  deletedAt           DateTime?
+  id               String        @id @default(cuid())
+  tenantId         String
+  entityId         String
+  relatedEntityId  String
+  relationshipType String
+  validFrom        DateTime      @default(now())
+  validTo          DateTime?
+  confidence       Float?
+  auditLogId       String?
+  provenanceClass  EvidenceClass @default(OBSERVED)
+  entityUuid       String?       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status           String?       @default("ACTIVE")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
 
-  auditLog            AuditLog? @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
+  auditLog AuditLog? @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
 
   @@index([entityId, relationshipType])
   @@index([relatedEntityId, relationshipType])
@@ -4050,33 +4100,33 @@ enum SpendResolutionStatus {
 }
 
 model SpendUploadRecord {
-  id                String               @id @default(cuid())
-  tenantId          String
-  sourceType        SpendSourceType
-  rawData           Json
-  normalizedDate    DateTime?
-  supplierId        String?
-  supplierName      String               @default("Unknown")
-  productId         String?
-  productName       String?
-  sku               String?
-  category          String?
-  quantity          Int?
-  unitPrice         Decimal?             @db.Decimal(12, 2)
-  totalAmount       Decimal?             @db.Decimal(12, 2)
-  poNumber          String?
-  invoiceNumber     String?
-  resolutionStatus  SpendResolutionStatus @default(UNRESOLVED)
-  resolutionNotes   String?
-  opportunityId     String?
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  uuid              String?              @unique(map: "SpendUploadRecord_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  deletedAt         DateTime?
+  id               String                @id @default(cuid())
+  tenantId         String
+  sourceType       SpendSourceType
+  rawData          Json
+  normalizedDate   DateTime?
+  supplierId       String?
+  supplierName     String                @default("Unknown")
+  productId        String?
+  productName      String?
+  sku              String?
+  category         String?
+  quantity         Int?
+  unitPrice        Decimal?              @db.Decimal(12, 2)
+  totalAmount      Decimal?              @db.Decimal(12, 2)
+  poNumber         String?
+  invoiceNumber    String?
+  resolutionStatus SpendResolutionStatus @default(UNRESOLVED)
+  resolutionNotes  String?
+  opportunityId    String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  uuid             String?               @unique(map: "SpendUploadRecord_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt        DateTime?
 
-  supplier          Supplier?            @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  product           Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  product  Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([deletedAt], map: "SpendUploadRecord_deleted_idx")
   @@index([tenantId])
@@ -4085,4 +4135,3 @@ model SpendUploadRecord {
   @@index([supplierId])
   @@index([category])
 }
-
