@@ -14,6 +14,7 @@
 - Prisma schema validation.
 - TypeScript validation.
 - Focused procurement and governance tests: 28/28 passed.
+- Full P0 regression suite: 21 files, 99 tests passed.
 - Neon migration status: database schema up to date.
 - Governance tables and 17 policy constraints present.
 - Four tenant guard triggers present.
@@ -26,6 +27,7 @@
 - Dashboard UI still needs to consume the new admin endpoints; direct API enforcement is in place.
 - Per-user permission delegation and category-grant revocation need a reviewed schema/migration because the current models are add-only and role-based.
 - Existing migration ledger contains historical records marked rolled back; they were not rewritten. Production remains untouched.
+- The new additive governance-audit enum migration is committed but still requires application and verification on the isolated Neon clone before release rehearsal.
 - Staging runtime still serves older release `23def85`; it has not been redeployed with this branch.
 - Clerk provisioning and end-to-end authenticated web/mobile acceptance remain unproven.
 - Mobile EAS identity and real-device sign-in/restart evidence remain unresolved.
