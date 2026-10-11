@@ -4,6 +4,8 @@
 
 - Procurement controls: supplier RFQ access, quote submission boundaries, payment-guarantee gating, protected order creation, and permission checks for order state transitions.
 - Governance foundation: department/category-access and approval-policy schema, tenant-integrity guards, approval amount checks, and immutable order policy-link fields.
+- Governance runtime: tenant-scoped department/category administration, deny-by-default catalog filtering, admin approval-policy creation, and quote acceptance snapshots of the selected policy.
+- Approval execution: configured approvers are recorded as immutable order approval events; approval remains pending until every configured approver has acted.
 - Migration history recovery: restored the three applied production migration SQL files from checksum-verified source.
 - Staging rehearsal: applied the governance migration to Neon branch `br-cool-recipe-b5sck7k5` (branch `staging-pre-spend-sourcing-20261010`), with direct non-pooled connection.
 
@@ -11,7 +13,7 @@
 
 - Prisma schema validation.
 - TypeScript validation.
-- Focused procurement tests: 20/20 passed.
+- Focused procurement and governance tests: 28/28 passed.
 - Neon migration status: database schema up to date.
 - Governance tables and 17 policy constraints present.
 - Four tenant guard triggers present.
@@ -21,7 +23,8 @@
 
 ## Remaining blockers
 
-- Runtime governance is not implemented yet: no admin API, category-filtered catalog query, persisted approval-step routing, or dashboard UI consumes the new models.
+- Dashboard UI still needs to consume the new admin endpoints; direct API enforcement is in place.
+- Per-user permission delegation and category-grant revocation need a reviewed schema/migration because the current models are add-only and role-based.
 - Existing migration ledger contains historical records marked rolled back; they were not rewritten. Production remains untouched.
 - Staging runtime still serves older release `23def85`; it has not been redeployed with this branch.
 - Clerk provisioning and end-to-end authenticated web/mobile acceptance remain unproven.
