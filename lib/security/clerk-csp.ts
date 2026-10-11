@@ -31,6 +31,7 @@ export function buildClerkContentSecurityPolicy(publishableKey: string | undefin
   return [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${configuredClerkOrigins} https://challenges.cloudflare.com ${CLERK_PROTECT}`,
+    "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://images.unsplash.com https://cdn.jsdelivr.net https://api.qrserver.com https://img.clerk.com",
