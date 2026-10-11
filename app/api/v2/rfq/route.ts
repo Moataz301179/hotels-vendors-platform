@@ -8,7 +8,12 @@ const rfqInput=z.object({productId:z.string().min(1).optional(),contractBaseline
 
 export async function GET() {
   const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
-  const where = user.platformRole==="SUPPLIER" && user.supplierId ? {supplierId:user.supplierId,deletedAt:null} : {tenantId:user.tenantId,deletedAt:null};
+  if(user.platformRole==="SUPPLIER"){
+   if(!user.supplierId)return NextResponse.json({error:"VERIFIED_SUPPLIER_CONTEXT_REQUIRED"},{status:403});
+   const grants=await prisma.rfqSupplierAccess.findMany({where:{supplierId:user.supplierId,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true}});
+   return NextResponse.json({rfqs:await prisma.rfqRequest.findMany({where:{id:{in:grants.map(grant=>grant.rfqId)},supplierId:user.supplierId,deletedAt:null},orderBy:{createdAt:"desc"},take:100})});
+  }
+  const where = {tenantId:user.tenantId,deletedAt:null};
   return NextResponse.json({rfqs:await prisma.rfqRequest.findMany({where,orderBy:{createdAt:"desc"},take:100})});
 }
 
@@ -23,8 +28,8 @@ export async function POST(req:Request){
  if(baselineId&&!baseline)return NextResponse.json({error:"An active contract baseline for your hotel was not found"},{status:404});
  if(baseline&&requestedProductId&&requestedProductId!==baseline.productId)return NextResponse.json({error:"The product must match the selected contract baseline"},{status:409});
  const productId=baseline?.productId||requestedProductId;
- const product=await prisma.product.findFirst({where:{id:productId,supplierId:baseline?.supplierId,status:"ACTIVE",deletedAt:null,supplier:{status:"ACTIVE",isVerified:true}},select:{id:true,supplierId:true}});
+ const product=await prisma.product.findFirst({where:{id:productId,supplierId:baseline?.supplierId,status:"ACTIVE",deletedAt:null,supplier:{status:"ACTIVE",isVerified:true}},select:{id:true,supplierId:true,supplier:{select:{tenantId:true}}}});
  if(!product)return NextResponse.json({error:"Verified active product not found"},{status:404});
- const rfq=await prisma.$transaction(async tx=>{const created=await tx.rfqRequest.create({data:{buyerId:user.id,productId:product.id,contractBaselineId:baseline?.id,supplierId:product.supplierId,requestedQty:quantity,targetPrice:b?.targetPrice?Number(b.targetPrice):undefined,deliveryTimeline:b?.deliveryTimeline||undefined,specialReq:b?.specialReq||undefined,notes:b?.notes||undefined,tenantId:user.tenantId}});await appendAuditEntry({entityName:"RFQ",entityId:created.id,actionType:"CREATED",tenantId:user.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{productId,quantity,supplierId:product.supplierId,contractBaselineId:baseline?.id}},tx);return created;});
+ const rfq=await prisma.$transaction(async tx=>{const created=await tx.rfqRequest.create({data:{buyerId:user.id,productId:product.id,contractBaselineId:baseline?.id,supplierId:product.supplierId,requestedQty:quantity,targetPrice:b?.targetPrice?Number(b.targetPrice):undefined,deliveryTimeline:b?.deliveryTimeline||undefined,specialReq:b?.specialReq||undefined,notes:b?.notes||undefined,tenantId:user.tenantId}});await tx.rfqSupplierAccess.create({data:{rfqId:created.id,supplierId:product.supplierId,hotelTenantId:user.tenantId,supplierTenantId:product.supplier.tenantId,grantedById:user.id}});await appendAuditEntry({entityName:"RFQ",entityId:created.id,actionType:"CREATED",tenantId:user.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{productId,quantity,supplierId:product.supplierId,contractBaselineId:baseline?.id}},tx);return created;});
  return NextResponse.json({rfq},{status:201});
 }

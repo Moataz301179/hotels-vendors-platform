@@ -89,6 +89,13 @@ describe('supplier quote submission boundary', () => {
     expect(m.quotes).not.toHaveBeenCalled();
   });
 
+  it('lists supplier quotes only through active supplier-tenant grants', async () => {
+    const response = await listQuotes();
+    expect(response.status).toBe(200);
+    expect(m.grants.mock.calls[0][0].where).toMatchObject({ supplierId: 'supplier-a', supplierTenantId: 'supplier-tenant', revokedAt: null });
+    expect(m.quotes.mock.calls[0][0].where).toMatchObject({ supplierId: 'supplier-a', rfqId: { in: ['rfq-a'] } });
+  });
+
   it('returns a conflict and creates no quote when another response claimed the RFQ first', async () => {
     m.updateMany.mockResolvedValue({ count: 0 });
     const response = await submitQuote(request(quote));
