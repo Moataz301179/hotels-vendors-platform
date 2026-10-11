@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { buildClerkContentSecurityPolicy } from "@/lib/security/clerk-csp";
 
 const root = process.cwd();
 function filesUnder(dir: string): string[] {
@@ -37,10 +38,25 @@ describe("production shell and authorization contracts", () => {
 
   it("allows Clerk API connections in the response CSP", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
-    expect(proxy).toContain("connect-src");
-    expect(proxy).toContain("https://united-treefrog-223.clerk.accounts.dev");
-    expect(proxy).toContain("https://*.clerk.accounts.dev");
+    expect(proxy).toContain("buildClerkContentSecurityPolicy(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)");
+    const productionKey = "pk_live_Y2xlcmsuaG90ZWxzdmVuZG9ycy5jb20k";
+    const productionCsp = buildClerkContentSecurityPolicy(productionKey);
+    expect(productionCsp).toContain("https://clerk.hotelsvendors.com");
+    expect(productionCsp).toContain("https://accounts.hotelsvendors.com");
+    expect(productionCsp).not.toContain("united-treefrog-223");
+    const stagingKey = "pk_test_cHJvYmFibGUtbG9jdXN0LTk3NDguY2xlcmsuYWNjb3VudHMuZGV2JA";
+    const stagingCsp = buildClerkContentSecurityPolicy(stagingKey);
+    expect(stagingCsp).toContain("https://probable-locust-9748.clerk.accounts.dev");
+    expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
     expect(proxy).toContain("if (isApiPath) return authMiddleware(request, event);");
+  });
+
+  it("keeps /register on the role-selection entry flow rather than a raw Clerk widget", () => {
+    const page = readFileSync(join(root, "app/(auth)/register/page.tsx"), "utf8");
+    expect(page).toContain("Start with your role in procurement");
+    expect(page).toContain("/hotels/signup");
+    expect(page).toContain("/suppliers/signup");
+    expect(page).not.toContain("<SignUp");
   });
 
   it("keeps role-specific workspace pages behind server-side role gates", () => {
