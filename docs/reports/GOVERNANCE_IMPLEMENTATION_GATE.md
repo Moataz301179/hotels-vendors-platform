@@ -15,6 +15,15 @@
 - The append-only `AuditLog` trigger is present.
 - `Department` and `ProcurementApprovalPolicy` tables are absent, as expected before the new migration.
 
+## Isolated Neon clone rehearsal
+
+- Branch `staging-pre-spend-sourcing-20261010` (`br-cool-recipe-b5sck7k5`) was verified as a direct clone of production.
+- The three previously missing applied migration sources were recovered from the integration release and matched the clone ledger checksums exactly.
+- Governance migration `20261011090000_add_department_procurement_governance` applied successfully on the clone.
+- Prisma reports the clone schema up to date.
+- Rollback-only adversarial checks rejected cross-tenant category grants and negative policy amounts.
+- Rollback-only audit checks rejected both update and delete operations.
+
 ## Gate decision
 
-Do not apply this migration to staging or production, and do not start the admin/runtime governance layer, until a clean restorable Neon staging clone is identified and its migration history is verified read-only. The clone rehearsal must validate schema application, tenant-bound adversarial cases, audit append-only behavior, rollback/restore evidence, and the deployed artifact identity.
+The isolated database migration rehearsal is complete. The runtime governance layer may now proceed against this schema in the isolated release branch. Production remains blocked: the current staging runtime still serves an older artifact, and release SHA, backup/rollback, and authenticated end-to-end acceptance gates remain open.
