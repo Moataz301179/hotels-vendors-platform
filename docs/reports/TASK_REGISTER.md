@@ -6,6 +6,7 @@
 - Governance foundation: department/category-access and approval-policy schema, tenant-integrity guards, approval amount checks, and immutable order policy-link fields.
 - Governance runtime: tenant-scoped department/category administration, deny-by-default catalog filtering, admin approval-policy creation, and quote acceptance snapshots of the selected policy.
 - Approval execution: configured approvers are recorded as immutable order approval events; approval remains pending until every configured approver has acted.
+- Delegated authorization: tenant admins can grant, list, and revoke user-specific permissions; server-side RBAC honors active grants and tenant boundaries.
 - Migration history recovery: restored the three applied production migration SQL files from checksum-verified source.
 - Staging rehearsal: applied the governance migration to Neon branch `br-cool-recipe-b5sck7k5` (branch `staging-pre-spend-sourcing-20261010`), with direct non-pooled connection.
 
@@ -28,6 +29,7 @@
 - Per-user permission delegation and category-grant revocation need a reviewed schema/migration because the current models are add-only and role-based.
 - Existing migration ledger contains historical records marked rolled back; they were not rewritten. Production remains untouched.
 - The new additive governance-audit enum migration is committed but still requires application and verification on the isolated Neon clone before release rehearsal.
+- The delegated-permission migration is committed but requires application and rollback-only verification on the isolated Neon clone.
 - Staging runtime still serves older release `23def85`; it has not been redeployed with this branch.
 - Clerk provisioning and end-to-end authenticated web/mobile acceptance remain unproven.
 - Mobile EAS identity and real-device sign-in/restart evidence remain unresolved.
