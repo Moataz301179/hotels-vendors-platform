@@ -46,9 +46,9 @@ describe("production shell and authorization contracts", () => {
     expect(productionCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://accounts.hotelsvendors.com");
     expect(productionCsp).toContain("worker-src 'self' blob:");
     expect(productionCsp).not.toContain("united-treefrog-223");
-    const stagingKey = "pk_test_cHJvYmFibGUtbG9jdXN0LTk3NDguY2xlcmsuYWNjb3VudHMuZGV2JA";
+    const stagingKey = "pk_test_dW5pdGVkLXRyZWVmcm9nLTIyMy5jbGVyay5hY2NvdW50cy5kZXYk";
     const stagingCsp = buildClerkContentSecurityPolicy(stagingKey);
-    expect(stagingCsp).toContain("https://probable-locust-9748.clerk.accounts.dev");
+    expect(stagingCsp).toContain("https://united-treefrog-223.clerk.accounts.dev");
     expect(stagingCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://*.clerk.accounts.dev");
     expect(stagingCsp).toContain("worker-src 'self' blob:");
     expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
