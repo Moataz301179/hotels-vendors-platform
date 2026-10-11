@@ -29,3 +29,16 @@ export async function POST(request: Request) {
   });
   return NextResponse.json({ departmentId: department.id, categories: uniqueCategories });
 }
+
+export async function DELETE(request: Request) {
+  const actor = await getActor();
+  if (!actor) return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 });
+  if (actor.platformRole !== 'ADMIN') return NextResponse.json({ error: 'ADMIN_ROLE_REQUIRED' }, { status: 403 });
+  const body = await request.json().catch(() => null);
+  if (typeof body?.id !== 'string') return NextResponse.json({ error: 'ACCESS_ID_REQUIRED' }, { status: 400 });
+  const grant = await prisma.departmentCategoryAccess.findFirst({ where: { id: body.id, revokedAt: null, department: { tenantId: actor.tenantId, deletedAt: null } } });
+  if (!grant) return NextResponse.json({ error: 'ACCESS_GRANT_NOT_FOUND' }, { status: 404 });
+  const revoked = await prisma.departmentCategoryAccess.update({ where: { id: grant.id }, data: { revokedAt: new Date(), revokedById: actor.id } });
+  await appendAuditEntry({ entityName: 'DEPARTMENT_CATEGORY_ACCESS', entityId: grant.id, actionType: 'UPDATED', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { revokedAt: revoked.revokedAt } });
+  return NextResponse.json({ grant: revoked });
+}

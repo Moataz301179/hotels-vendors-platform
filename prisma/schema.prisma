@@ -362,10 +362,13 @@ model DepartmentCategoryAccess {
   category     ProductCategory
   createdById  String?
   createdAt    DateTime        @default(now())
+  revokedAt    DateTime?
+  revokedById  String?
   department   Department      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   createdBy    User?           @relation("DepartmentCategoryAccessCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([departmentId, category])
+  @@index([departmentId, revokedAt])
 }
 
 model ProcurementApprovalPolicy {
