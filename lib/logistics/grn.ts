@@ -7,7 +7,7 @@
  * - Accountability terms: who is liable for in-consignment damage/loss/shortage
  */
 
-import { createHash } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export type DiscrepancyKind = "SHORTAGE" | "SURPLUS" | "DAMAGED" | "WRONG_ITEM" | "MISSING_DOC";
 
@@ -48,21 +48,35 @@ export const DEFAULT_TERMS: AccountabilityTerms = {
   subrogationToFunder: true,
 };
 
+function waybillSecret(): string | null {
+  const secret = process.env.HOTELSVENDORS_HMAC_SECRET?.trim();
+  return secret || null;
+}
+
+function signWaybillPayload(payload: string, secret: string) {
+  return createHmac("sha256", secret).update(payload).digest("hex").slice(0, 32);
+}
+
 /* ── e-Waybill QR generation (scannable payload) ── */
 export function makeWaybillQr(orderId: string, waybillId: string, supplierTaxId: string, parcelCount: number): string {
+  const secret = waybillSecret();
+  if (!secret) throw new Error("WAYBILL_SIGNING_UNAVAILABLE");
   const payload = JSON.stringify({ v: 1, waybillId, orderId, supplierTaxId, parcels: parcelCount, ts: Date.now() });
-  const sig = createHash("sha256").update(payload + process.env.HOTELSVENDORS_HMAC_SECRET || "").digest("hex").slice(0, 16);
+  const sig = signWaybillPayload(payload, secret);
   return `HVWB:${Buffer.from(JSON.stringify({ ...JSON.parse(payload), sig })).toString("base64url")}`;
 }
 
 export function verifyWaybillQr(qr: string): { valid: boolean; orderId?: string; waybillId?: string } {
   try {
+    const secret = waybillSecret();
+    if (!secret) return { valid: false };
     if (!qr.startsWith("HVWB:")) return { valid: false };
     const parsed = JSON.parse(Buffer.from(qr.slice(5), "base64url").toString());
     // Recompute signature
     const { sig, ...rest } = parsed;
-    const check = createHash("sha256").update(JSON.stringify(rest) + process.env.HOTELSVENDORS_HMAC_SECRET || "").digest("hex").slice(0, 16);
-    if (check !== sig) return { valid: false };
+    if (typeof sig !== "string") return { valid: false };
+    const check = signWaybillPayload(JSON.stringify(rest), secret);
+    if (sig.length !== check.length || !timingSafeEqual(Buffer.from(check), Buffer.from(sig))) return { valid: false };
     return { valid: true, orderId: rest.orderId, waybillId: rest.waybillId };
   } catch {
     return { valid: false };
