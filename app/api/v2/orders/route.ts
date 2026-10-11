@@ -25,7 +25,7 @@ export async function POST(req:Request){
 export async function PATCH(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});
  const b=await req.json().catch(()=>null);if(typeof b?.id!=='string'||typeof b?.status!=='string')return NextResponse.json({error:'Order ID and status are required'},{status:400});
- const order=await prisma.order.findFirst({where:{id:b.id,deletedAt:null,...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId})}});
+ const order=await prisma.order.findFirst({where:{id:b.id,deletedAt:null,...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId})},include:{approvals:{where:{deletedAt:null},select:{approverId:true,action:true}}}});
  if(!order)return NextResponse.json({error:'Order not found'},{status:404});
  if(!orderActions(user,order).includes(b.status))return NextResponse.json({error:'Your role cannot perform this order action'},{status:403});
  const permissionByAction:Record<string,string>={APPROVED:'order:approve',REJECTED:'order:reject',CONFIRMED:'order:confirm',IN_TRANSIT:'order:update',RECEIVE:'order:update'};
@@ -33,6 +33,19 @@ export async function PATCH(req:Request){
  if(!permission)return NextResponse.json({error:'Unsupported order action'},{status:400});
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},permission);}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_ACTION_PERMISSION_REQUIRED'},{status:403});throw error;}
  if(b.status==='APPROVED'){
+  const snapshot = order.approvalPolicySnapshot as { requiredApproverIds?: string[] } | null;
+  const requiredApproverIds = snapshot?.requiredApproverIds?.filter(Boolean) ?? [];
+  if (requiredApproverIds.length > 0) {
+   if (!requiredApproverIds.includes(user.id)) return NextResponse.json({error:'APPROVAL_DELEGATE_REQUIRED'},{status:403});
+   const existingApproverIds = new Set(order.approvals.filter(a=>a.action==='APPROVED').map(a=>a.approverId));
+   if (!existingApproverIds.has(user.id)) {
+    const approval=await prisma.orderApproval.create({data:{orderId:order.id,approverId:user.id,action:'APPROVED',beforeState:order.status,afterState:existingApproverIds.size+1===requiredApproverIds.length?'APPROVED':'PENDING_APPROVAL'}});
+    await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'APPROVAL_RECORDED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{approvalId:approval.id,requiredApproverIds}},);
+    existingApproverIds.add(user.id);
+   }
+   const remainingApproverIds=requiredApproverIds.filter(id=>!existingApproverIds.has(id));
+   if (remainingApproverIds.length>0) return NextResponse.json({updated:false,approvalRecorded:true,awaitingApproval:true,remainingApproverIds});
+  }
   const authority=await evaluateV2Authority(order.id,{role:user.role,tenantId:user.tenantId});
   if(!authority.allowed)return NextResponse.json({error:authority.reason},{status:409});
  }
