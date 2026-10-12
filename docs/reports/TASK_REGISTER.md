@@ -1,5 +1,11 @@
 # HotelsVendors implementation task register — 2026-10-11
 
+## 2026-10-13 execution update
+
+- Release commit `4a42d99`: aligned the homepage interaction, divider, workflow-card, and focus colors with the shared HotelsVendors theme tokens (`--paper-*`, `--line`, `--blue-strong`, `--focus`, `--ink`, `--muted`). This removes homepage-only hard-coded slate/blue values that could drift from the header/footer palette.
+- Verification: full Vitest suite passed (21 files, 99 tests); production build passed with an ephemeral local `SESSION_SECRET`.
+- Staging VPS rehearsal packaging was attempted in `/var/www/hv-releases/staging-c39a2f9-20261013` but the first macOS archive emitted extended-attribute warnings and was interrupted; no PM2 or Nginx production route was changed. A clean repackage and PM2 staging smoke test remain pending.
+
 ## 2026-10-12 execution update
 
 - Release commit `40a68f0`: restored the intended warm-paper/mineral/ice-blue/cobalt palette across the public homepage, navigation, workflow panels, and cards.
