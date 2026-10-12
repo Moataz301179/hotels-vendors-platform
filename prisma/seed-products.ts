@@ -146,7 +146,18 @@ async function main() {
   for (const s of SUPPLIERS) {
     await prisma.supplier.upsert({
       where: { taxId: s.taxId },
-      update: {},
+      update: {
+        name: s.name,
+        legalName: s.legalName,
+        city: s.city,
+        governorate: s.governorate,
+        email: s.email,
+        website: s.website,
+        tier: s.tier,
+        status: "ACTIVE" as SupplierStatus,
+        isVerified: true,
+        deletedAt: null,
+      },
       create: {
         name: s.name,
         legalName: s.legalName,
@@ -180,7 +191,13 @@ async function main() {
 
     await prisma.product.upsert({
       where: { sku: p.sku },
-      update: {},
+      update: {
+        status: "ACTIVE" as ProductStatus,
+        source: "SUPPLIER_SYNC",
+        deletedAt: null,
+        supplierId: supplier.id,
+        tenantId: platformTenant.id,
+      },
       create: {
         sku: p.sku,
         name: p.name,
@@ -197,6 +214,7 @@ async function main() {
         status: "ACTIVE" as ProductStatus,
         supplierId: supplier.id,
         tenantId: platformTenant.id,
+        source: "SUPPLIER_SYNC",
       },
     });
     created++;

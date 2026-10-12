@@ -1,4 +1,4 @@
-.nav { position:sticky; top:0; z-index:50; background:#f9fafb; color:#111827; border-bottom:1px solid #d1d5db; font-family:var(--font-display),sans-serif; }
+.nav { position:sticky; top:0; z-index:50; background:var(--paper-50); color:var(--ink); border-bottom:1px solid var(--line); font-family:var(--font-display),sans-serif; }
 .inner { max-width:1400px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:76px; padding:12px 32px; }
 .brand { display:flex; align-items:center; gap:10px; color:#111827; font-size:16px; font-weight:750; text-decoration:none; white-space:nowrap; }
 .wordmark { width:165px; height:auto; }
@@ -9,9 +9,9 @@
 .dropdown { position:relative; }
 .dropdown summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:6px; list-style:none; font-size:14px; }
 .dropdown summary::-webkit-details-marker { display:none; }
-.dropdownPanel { position:absolute; top:100%; left:0; min-width:240px; border:1px solid #cbd5e1; border-radius:4px; background:#f9fafb; padding:8px; box-shadow:0 8px 20px #1118271a; }
+.dropdownPanel { position:absolute; top:100%; left:0; min-width:240px; border:1px solid var(--line); border-radius:4px; background:var(--paper-50); padding:8px; box-shadow:0 8px 20px rgba(29,42,54,.1); }
 .dropdownPanel a { padding:12px; }
-.dropdownPanel a:hover,.mobile a:hover { background:#e5e7eb; }
+.dropdownPanel a:hover,.mobile a:hover { background:var(--paper-200); }
 .nav a:focus-visible,.nav button:focus-visible,.nav summary:focus-visible { outline:3px solid #315f8b; outline-offset:3px; }
 .toggle { display:none; min-width:44px; min-height:44px; align-items:center; justify-content:center; border:1px solid #cbd5e1; color:#111827; background:transparent; cursor:pointer; border-radius:4px; }
 .mobile { display:none; }

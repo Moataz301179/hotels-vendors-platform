@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { PlatformRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-export async function getActor() {
+export async function getActor(options: { allowPending?: boolean } = {}) {
   const { userId } = await auth();
   if (!userId) return null;
   const cu = await currentUser();
@@ -13,7 +13,10 @@ export async function getActor() {
   const email = primaryEmail?.verification?.status === "verified" ? primaryEmail.emailAddress.toLowerCase() : undefined;
   if (!email) return null;
   let user = await prisma.user.findUnique({ where: { email } });
-  if (user) return user.status === "ACTIVE" && !user.deletedAt ? user : null;
+  if (user) {
+    if (user.deletedAt || (user.status !== "ACTIVE" && !(options.allowPending && user.status === "PENDING_VERIFICATION"))) return null;
+    return user;
+  }
 
   // Signup role is onboarding intent only. After provisioning, DB platformRole is authoritative.
   // ADMIN can never be self-provisioned from Clerk metadata.
@@ -47,7 +50,7 @@ export async function getActor() {
         create: { roleId: role.id, permissionId: permission.id },
       });
     }
-    return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,platformRole,tenantId:tenant.id,roleId:role.id,status:"ACTIVE"}});
+    return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,platformRole,tenantId:tenant.id,roleId:role.id,status:"PENDING_VERIFICATION"}});
   });
   return user;
 }

@@ -16,7 +16,7 @@ export default async function MarketplacePage() {
   const products = await prisma.product.findMany({
     where: { status: 'ACTIVE', deletedAt: null, source:{not:'FIXTURE'}, supplier: { status: 'ACTIVE', isVerified: true, deletedAt:null } },
     select: { id: true, name: true, sku: true, unitPrice: true, unitOfMeasure: true, supplier: { select: { name: true } } },
-    take: 60,
+    take: 100,
   }).catch(() => null);
 
   return <main className="hv-public-page hv-marketplace">

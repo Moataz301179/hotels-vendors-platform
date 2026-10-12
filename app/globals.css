@@ -2,10 +2,11 @@
 
 :root{
   /* Shared neutral surfaces keep large page backgrounds light gray. */
-  --paper-0:#ffffff;
-  --paper-50:#f9fafb;
-  --paper-100:#f3f4f6;
-  --paper-200:#e5e7eb;
+  /* Shared HotelsVendors grade: warm paper, mineral neutrals, ice blue and cobalt. */
+  --paper-0:oklch(99.3% .003 103);
+  --paper-50:oklch(98.4% .006 103);
+  --paper-100:oklch(96.4% .009 103);
+  --paper-200:oklch(91.5% .01 235);
   --slate-950:oklch(25.5% .018 245);
   --slate-800:oklch(32% .02 245);
   --slate-700:oklch(40% .018 240);
