@@ -26,7 +26,7 @@ export async function PATCH(req: Request) {
   const status = parsed.data.decision === 'APPROVE' ? 'ACTIVE' : 'SUSPENDED';
   await prisma.$transaction(async tx => {
     await tx.user.update({ where: { id: target.id }, data: { status } });
-    await appendAuditEntry({ entityName: 'USER', entityId: target.id, actionType: 'VERIFICATION_DECISION', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { from: target.status, to: status, platformRole: target.platformRole, reviewNote: parsed.data.reviewNote } }, tx);
+    await appendAuditEntry({ entityName: 'USER', entityId: target.id, actionType: 'STATUS_CHANGED', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { reason: 'VERIFICATION_DECISION', from: target.status, to: status, platformRole: target.platformRole, reviewNote: parsed.data.reviewNote } }, tx);
   });
   return NextResponse.json({ updated: true, status });
 }
