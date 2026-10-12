@@ -7,10 +7,10 @@ import { ArrowRight, ArrowUpRight, Building2, CircleDollarSign, FileCheck2, Pack
 import styles from "./public-home.module.css";
 
 const actors = [
-  { title: "Hotels", text: "Find products, compare terms and follow purchasing approvals.", href: "/register", action: "Start registration", icon: Building2 },
-  { title: "Suppliers", text: "Present your products and respond to hotel purchasing needs.", href: "/register", action: "Start registration", icon: PackageCheck },
-  { title: "Carriers", text: "Discuss delivery coverage and partner access with our team.", href: "/contact", action: "Discuss a partnership", icon: Truck },
-  { title: "Funders", text: "Discuss eligible referrals; your organization makes funding decisions.", href: "/contact", action: "Discuss a partnership", icon: CircleDollarSign },
+  { title: "Hotels", text: "Find products, compare terms and follow purchasing approvals.", href: "/register", action: "Start registration", icon: Building2, image: "/roles/hotels.svg", imageAlt: "Illustration of a hotel building" },
+  { title: "Suppliers", text: "Present your products and respond to hotel purchasing needs.", href: "/register", action: "Start registration", icon: PackageCheck, image: "/roles/suppliers.svg", imageAlt: "Illustration of supplier packages" },
+  { title: "Carriers", text: "Discuss delivery coverage and partner access with our team.", href: "/contact", action: "Discuss a partnership", icon: Truck, image: "/roles/carriers.svg", imageAlt: "Illustration of a delivery vehicle" },
+  { title: "Funders", text: "Discuss eligible referrals; your organization makes funding decisions.", href: "/contact", action: "Discuss a partnership", icon: CircleDollarSign, image: "/roles/funders.svg", imageAlt: "Illustration of a financial review" },
 ];
 
 const signalSteps = [
@@ -50,7 +50,7 @@ export default function MarketingPage() {
     </div></section>
 
     <section className={styles.section}><div className={styles.shell}><div className={styles.sectionHeading}><h2>One purchasing network.<br/>Four distinct roles.</h2><p>Hotels buy, suppliers offer products, carriers coordinate delivery and independent funders review eligible opportunities.</p></div>
-      <div className={styles.ledger}>{actors.map(({title,text,href,action,icon:Icon}) => <Link key={title} href={href} className={styles.actor}><Icon size={23} aria-hidden="true"/><strong>{title}</strong><span>{text}</span><small>{action} <ArrowUpRight size={15} aria-hidden="true"/></small></Link>)}</div>
+      <div className={styles.ledger}>{actors.map(({title,text,href,action,icon:Icon,image,imageAlt}) => <Link key={title} href={href} className={styles.actor}><Image className={styles.actorImage} src={image} alt={imageAlt} width={96} height={72}/><div className={styles.actorTitle}><Icon size={19} aria-hidden="true"/><strong>{title}</strong></div><span>{text}</span><small>{action} <ArrowUpRight size={15} aria-hidden="true"/></small></Link>)}</div>
     </div></section>
 
     <section className={styles.volume} id="volume-deals"><div className={styles.shell}><div className={styles.sectionHeading}><h2>Review purchasing volume.<br/>Across your own properties.</h2><p>Compare purchases of equivalent products across your hotel group before discussing volume and commercial terms with suppliers.</p></div><p>This is not an advertised group-buying offer. Cross-organization buying rounds and negotiated group deals are not currently available.</p><Link href="/login?redirect_url=%2Fintelligence" className={styles.textLink}>Sign in to review purchasing records <ArrowRight size={17}/></Link></div></section>
