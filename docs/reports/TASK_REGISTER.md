@@ -2,6 +2,8 @@
 
 ## 2026-10-13 execution update
 
+- Verified staging refresh completed from release `fb7d8bc`: PM2 `hv-staging-fb7d8bc-3078` now serves `/var/www/hv-releases/staging-fb7d8bc-20261013/standalone` on port `3078`; `/api/health` returns HTTP 200 with release ID `staging-fb7d8bc-20261013`, source SHA `fb7d8bc`, and `/marketplace` returns `76 listings`. The prior `hv-staging-c39a2f9` process is stopped but retained for rollback; production routing and production data were not changed.
+
 - Release commit `9a6e93f`: restored the requested Apple-style public palette—white and grey surfaces, black type, light-blue actions, and no dark-blue/green public CTA accents. Release commit `1065139`: served local SVG wordmarks directly to prevent the Next image optimizer’s HTTP 400 and broken header logo.
 - Production promotion completed after candidate verification: Nginx now routes to PM2 `hv-frontend-palette-candidate` on port `3079`, release directory `/var/www/hv-releases/frontend-5721bb6-20261013`, with backup `/root/nginx-hotelsvendors.com.pre-5721bb6-20261013`. Live `/api/health` returns HTTP 200 with release ID `frontend-5721bb6-20261013` and source SHA `1065139`; the live browser visibly shows the corrected light palette and rendered wordmark.
 - Release commit `4a42d99`: aligned the homepage interaction, divider, workflow-card, and focus colors with the shared HotelsVendors theme tokens (`--paper-*`, `--line`, `--blue-strong`, `--focus`, `--ink`, `--muted`). This removes homepage-only hard-coded slate/blue values that could drift from the header/footer palette.
