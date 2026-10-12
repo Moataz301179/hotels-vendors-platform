@@ -1,36 +1,45 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
-import { BrandLogo } from "@/components/layout/brand-logo";
-import { LanguageSwitcher } from "@/components/shared/language-switcher";
-import { ThemeModeToggle } from "@/components/theme/mode-toggle";
 
-const links = [
-  ["/marketplace", "Procurement"], ["/intelligence", "Virtual Shadow"], ["/solutions", "For Hotels"], ["/suppliers/join", "For Suppliers"], ["/about", "Network"],
-];
+import Link from "next/link";
+import { useId, useRef, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { useLanguage } from "@/lib/i18n/language-context";
+import styles from "./public-nav.module.css";
+
+function PublicDropdown({ title, links }: { title: string; links: { href: string; label: string }[] }) {
+  const details = useRef<HTMLDetailsElement>(null);
+  return <details ref={details} className={styles.dropdown} onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); details.current?.removeAttribute("open"); details.current?.querySelector("summary")?.focus(); } }} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) details.current?.removeAttribute("open"); }}>
+    <summary>{title} <ChevronDown size={14} aria-hidden="true"/></summary>
+    <div className={styles.dropdownPanel}>{links.map(link => <Link key={link.href} href={link.href} onClick={() => details.current?.removeAttribute("open")}>{link.label}</Link>)}</div>
+  </details>;
+}
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
-  return <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#232831] shadow-lg shadow-black/10">
-    <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
-      <Link href="/" className="flex shrink-0 items-center gap-3 text-white" dir="ltr">
-        <BrandLogo variant="light" size="md" showText={false} />
-        <span className="whitespace-nowrap text-[14px] font-semibold uppercase tracking-[0.18em]">HotelsVendors</span>
-      </Link>
-      <div className="hidden items-center gap-7 lg:flex">
-        {links.map(([href,label]) => <Link key={href} href={href} className="whitespace-nowrap text-sm text-white/65 transition hover:text-[#60a5fa]">{label}</Link>)}
-      </div>
-      <div className="hidden items-center gap-2 md:flex">
-        <LanguageSwitcher /><ThemeModeToggle variant="icon" />
-        <Link href="/login" className="px-3 py-2 text-sm text-white/70 hover:text-[#60a5fa]">Sign in</Link>
-        <Link href="/register" className="rounded-lg bg-[#3b82f6] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#60a5fa]">Join network</Link>
-      </div>
-      <button className="p-2 text-white/70 lg:hidden" onClick={()=>setOpen(!open)} aria-label="Toggle navigation">{open?<X size={20}/>:<Menu size={20}/>}</button>
+  const menuId = useId();
+  const button = useRef<HTMLButtonElement>(null);
+  const { locale } = useLanguage();
+  const ar = locale === "ar";
+  const platform = [
+    { href: "/platform", label: ar ? "عن المنصة" : "Platform overview" },
+    { href: "/marketplace", label: ar ? "كتالوج الموردين" : "Supplier catalogue" },
+    { href: "/#market-compass", label: ar ? "دليل المشتريات" : "Market Compass overview" },
+  ];
+  const audiences = [
+    { href: "/solutions", label: ar ? "الحلول" : "Solutions" },
+    { href: "/register", label: ar ? "الفنادق والموردون" : "Hotels and suppliers" },
+    { href: "/contact", label: ar ? "شركاء النقل والتمويل" : "Delivery and funding partners" },
+  ];
+  function closeMenu() { setOpen(false); }
+  return <nav className={styles.nav} aria-label={ar ? "التنقل الرئيسي" : "Main navigation"} onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
+    <div className={styles.inner}>
+      <Link href="/" className={styles.brand} aria-label="HotelsVendors home"><Image src="/logo-nav-dark.svg" alt="HotelsVendors" width={165} height={38} className={styles.wordmark}/></Link>
+      <div className={styles.desktop}><PublicDropdown title={ar ? "المنصة" : "Platform"} links={platform}/><PublicDropdown title={ar ? "لمن المنصة" : "Who it's for"} links={audiences}/><Link href="/#volume-deals">{ar ? "حجم المشتريات" : "Purchasing volume"}</Link></div>
+      <div className={styles.actions}><span className={styles.language}><LanguageSwitcher/></span><Link href="/login" className={styles.signIn}>{ar ? "تسجيل الدخول" : "Sign in"}</Link><Link href="/register" className={styles.join}>{ar ? "انضم للشبكة" : "Join network"}</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>
-    {open && <div className="border-t border-white/10 bg-[#232831] px-5 py-4 lg:hidden">
-      <div className="flex flex-col gap-1">{links.map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-lg px-3 py-3 text-sm text-white/70 hover:bg-white/5 hover:text-[#60a5fa]">{label}</Link>)}</div>
-      <div className="mt-3 flex items-center gap-3 border-t border-white/10 pt-3"><LanguageSwitcher/><ThemeModeToggle variant="icon"/><Link href="/login" className="text-sm text-white/70">Sign in</Link><Link href="/register" className="rounded-lg bg-[#3b82f6] px-3 py-2 text-sm font-semibold text-white">Join network</Link></div>
-    </div>}
+    {open && <div className={styles.mobile} id={menuId}><LanguageSwitcher/>{[...platform,...audiences,{href:"/#volume-deals",label:ar ? "حجم المشتريات" : "Purchasing volume"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
   </nav>;
 }
+
