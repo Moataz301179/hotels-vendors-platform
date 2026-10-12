@@ -35,7 +35,7 @@ export function SiteNav() {
   function closeMenu() { setOpen(false); }
   return <nav className={styles.nav} aria-label={ar ? "التنقل الرئيسي" : "Main navigation"} onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
     <div className={styles.inner}>
-      <Link href="/" className={styles.brand} aria-label="HotelsVendors home"><Image src="/logo-nav-dark.svg" alt="HotelsVendors" width={165} height={38} className={styles.wordmark}/></Link>
+      <Link href="/" className={styles.brand} aria-label="HotelsVendors home"><Image src="/logo-nav-dark.svg" alt="HotelsVendors" width={165} height={38} className={styles.wordmark} unoptimized /></Link>
       <div className={styles.desktop}><PublicDropdown title={ar ? "المنصة" : "Platform"} links={platform}/><PublicDropdown title={ar ? "لمن المنصة" : "Who it's for"} links={audiences}/><Link href="/#volume-deals">{ar ? "حجم المشتريات" : "Purchasing volume"}</Link></div>
       <div className={styles.actions}><span className={styles.language}><LanguageSwitcher/></span><Link href="/login" className={styles.signIn}>{ar ? "تسجيل الدخول" : "Sign in"}</Link><Link href="/register" className={styles.join}>{ar ? "انضم للشبكة" : "Join network"}</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>

@@ -42,7 +42,7 @@ export function SiteFooter() {
           {/* Brand + About + Founder */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-3" dir="ltr">
-              <Image src="/logo-nav-dark.svg" alt="HotelsVendors" width={165} height={38} />
+              <Image src="/logo-nav-dark.svg" alt="HotelsVendors" width={165} height={38} unoptimized />
               <span className="font-semibold text-slate-900 uppercase text-[15px]" style={{ letterSpacing: "0.2em" }}>
                 Hotels Vendors
               </span>
