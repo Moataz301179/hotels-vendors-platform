@@ -2,6 +2,8 @@
 
 ## 2026-10-13 execution update
 
+- Release commit `9a6e93f`: restored the requested Apple-style public palette—white and grey surfaces, black type, light-blue actions, and no dark-blue/green public CTA accents. Release commit `1065139`: served local SVG wordmarks directly to prevent the Next image optimizer’s HTTP 400 and broken header logo.
+- Production promotion completed after candidate verification: Nginx now routes to PM2 `hv-frontend-palette-candidate` on port `3079`, release directory `/var/www/hv-releases/frontend-5721bb6-20261013`, with backup `/root/nginx-hotelsvendors.com.pre-5721bb6-20261013`. Live `/api/health` returns HTTP 200 with release ID `frontend-5721bb6-20261013` and source SHA `1065139`; the live browser visibly shows the corrected light palette and rendered wordmark.
 - Release commit `4a42d99`: aligned the homepage interaction, divider, workflow-card, and focus colors with the shared HotelsVendors theme tokens (`--paper-*`, `--line`, `--blue-strong`, `--focus`, `--ink`, `--muted`). This removes homepage-only hard-coded slate/blue values that could drift from the header/footer palette.
 - Verification: full Vitest suite passed (21 files, 99 tests); production build passed with an ephemeral local `SESSION_SECRET`.
 - Staging VPS rehearsal is now running in PM2 as `hv-staging-c39a2f9` on port `3078`, from `/var/www/hv-releases/staging-c39a2f9-20261013`; direct `/api/health` returned HTTP 200 with release ID `staging-c39a2f9-20261013` and source SHA `c39a2f9`, and `/marketplace` rendered `76 listings`. The first macOS archive attempt emitted extended-attribute warnings and was discarded; the corrected staged files were transferred without touching the live Nginx/PM2 route on port 3077.
