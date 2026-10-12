@@ -1,5 +1,15 @@
 # HotelsVendors implementation task register — 2026-10-11
 
+## 2026-10-12 execution update
+
+- Release commit `40a68f0`: restored the intended warm-paper/mineral/ice-blue/cobalt palette across the public homepage, navigation, workflow panels, and cards.
+- Release commit `40a68f0`: changed the product seed to mark approved seed inventory as `SUPPLIER_SYNC` instead of the excluded `FIXTURE` source, and expanded the public query limit to 100 records.
+- Release commit `40a68f0`: added pending-user review controls and kept new Clerk-provisioned accounts pending verification rather than auto-activating them.
+- Release commit `6dea8ce`: aligned pending-user verification with the existing immutable `STATUS_CHANGED` audit event and recorded the verification reason in the audit payload.
+- Full regression suite currently passes: 21 files, 99 tests.
+- Production build currently passes with an ephemeral local `SESSION_SECRET`; no production secret was changed.
+- Read-only Prisma status against the available Neon connection reports 11 unapplied migrations (procurement tax, contract baselines, procurement RBAC, supplier access, supplier research candidates, department governance, audit enum values, delegated permissions, and category-access revocation). No migration or seed was applied during this update because the connection identity must be confirmed as the intended staging clone first.
+
 ## Implemented
 
 - Procurement controls: supplier RFQ access, quote submission boundaries, payment-guarantee gating, protected order creation, and permission checks for order state transitions.
