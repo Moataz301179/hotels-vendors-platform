@@ -11,7 +11,7 @@ export default function Login() {
       <div className="hv-auth-shell hv-auth-shell-login">
         <section className="hv-auth-story">
           <Link href="/" className="hv-auth-logo" aria-label="HotelsVendors home"><Brand /></Link>
-          <div className="hv-auth-story-copy"><h1>Back to the work that moves your business.</h1><p>Return to your workspace to review procurement activity, evidence-backed signals and the next action assigned to your organization.</p></div>
+          <div className="hv-auth-story-copy"><h1>Welcome back to HotelsVendors.</h1><p>Return to your workspace to review procurement activity, evidence-backed signals and the next action assigned to your organization.</p></div>
           <div className="hv-auth-trust"><span><ShieldCheck size={17}/></span><div><strong>Your workspace stays scoped.</strong><p>Organization records and actions remain subject to role-based access and audit controls.</p></div></div>
         </section>
         <section className="hv-auth-form-panel" aria-labelledby="hv-login-title">
