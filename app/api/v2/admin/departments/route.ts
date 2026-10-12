@@ -29,7 +29,7 @@ export async function GET() {
   if ("error" in auth) return auth.error;
   const departments = await prisma.department.findMany({
     where: { tenantId: auth.actor.tenantId, deletedAt: null },
-    include: { categoryAccess: { select: { category: true } } },
+    include: { categoryAccess: { select: { id: true, category: true, revokedAt: true }, orderBy: { category: "asc" } } },
     orderBy: { name: "asc" },
   });
   return NextResponse.json({ departments });
