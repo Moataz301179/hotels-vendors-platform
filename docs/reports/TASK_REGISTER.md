@@ -8,7 +8,10 @@
 - Release commit `6dea8ce`: aligned pending-user verification with the existing immutable `STATUS_CHANGED` audit event and recorded the verification reason in the audit payload.
 - Full regression suite currently passes: 21 files, 99 tests.
 - Production build currently passes with an ephemeral local `SESSION_SECRET`; no production secret was changed.
-- Read-only Prisma status against the available Neon connection reports 11 unapplied migrations (procurement tax, contract baselines, procurement RBAC, supplier access, supplier research candidates, department governance, audit enum values, delegated permissions, and category-access revocation). No migration or seed was applied during this update because the connection identity must be confirmed as the intended staging clone first.
+- Earlier read-only status against an unverified endpoint reported 11 unapplied migrations; that endpoint was not used for mutation and is superseded by the verified branch connection below.
+- Staging identity is now verified in Neon Console: project `HotelsVendors`, branch `staging-pre-spend-sourcing-20261010`, ID `br-cool-recipe-b5sck7k5`, parent `production`. The earlier `ep-rough-sea` endpoint was not this branch and was not mutated.
+- Verified staging endpoint reports all 32 migrations applied. The sourced staging seed completed successfully: 8 active verified suppliers and 76 active `SUPPLIER_SYNC` products (20 F&B, 26 consumables, 15 guest supplies, 15 FFE).
+- Local release runtime connected to that exact staging endpoint returns `/marketplace` with `76 listings` and `/api/health` returns HTTP 200.
 
 ## Implemented
 
