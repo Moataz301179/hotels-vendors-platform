@@ -2,6 +2,8 @@
 
 ## 2026-10-13 execution update
 
+- Release `05dc725` corrected the shared public shell to the requested grey header/footer with a white logo and white shell text; staging slot `hv-staging-05dc725-3078` and production route `frontend-05dc725-20261013` were smoke-tested after promotion. Production health is HTTP 200 and the live browser confirms the grey/white treatment. Production catalog data remains untouched and currently contains 0 public listings; staging remains the verified 76-listing dataset.
+
 - Verified staging refresh completed from release `fb7d8bc`: PM2 `hv-staging-fb7d8bc-3078` now serves `/var/www/hv-releases/staging-fb7d8bc-20261013/standalone` on port `3078`; `/api/health` returns HTTP 200 with release ID `staging-fb7d8bc-20261013`, source SHA `fb7d8bc`, and `/marketplace` returns `76 listings`. The prior `hv-staging-c39a2f9` process is stopped but retained for rollback; production routing and production data were not changed.
 
 - Release commit `9a6e93f`: restored the requested Apple-style public palette—white and grey surfaces, black type, light-blue actions, and no dark-blue/green public CTA accents. Release commit `1065139`: served local SVG wordmarks directly to prevent the Next image optimizer’s HTTP 400 and broken header logo.
