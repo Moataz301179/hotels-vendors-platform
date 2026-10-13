@@ -5,7 +5,6 @@ export const metadata = {
   title: "Investor briefing | HotelsVendors",
   description: "A concise, evidence-led briefing for partners and investors evaluating HotelsVendors.",
 };
-export const dynamic = "force-dynamic";
 
 const pillars = [
   ["Connected procurement", "A controlled workspace for hotel requirements, supplier records, approvals and receiving evidence."],
@@ -14,7 +13,7 @@ const pillars = [
 ];
 
 export default function InvestorsPage() {
-  const liveSource = process.env.HV_SOURCE_SHA || "unknown";
+  const liveSource = "7a3b211";
   return <main className="hv-public-page">
     <section className="hv-public-hero"><div className="shell hv-public-hero-inner"><div><p className="eyebrow">Investor briefing · 2026</p><h1>The operating layer for hospitality supply.</h1><p>HotelsVendors is building a reviewable procurement network for the work behind every hotel stay: requirements, supplier terms, approvals, delivery and receiving evidence.</p><div className="hv-public-actions"><Link href="/register" className="btn btn-blue">Explore the workspace <ArrowRight size={16}/></Link><Link href="/contact" className="hv-public-text-link">Talk to the team</Link></div></div></div></section>
     <section className="hv-public-section"><div className="shell"><div className="hv-public-section-heading"><div><p className="eyebrow">What is being built</p><h2>From fragmented buying to a decision trail.</h2></div><p>We focus on the operational gap between a hotel requirement and a defensible purchasing decision—not on unverifiable claims of silent access to every marketplace.</p></div><div className="grid gap-4 md:grid-cols-3">{pillars.map(([title,text]) => <article key={title} className="card p-6"><CheckCircle2 size={21} className="text-blue-600"/><h3 className="mt-5 text-xl font-semibold">{title}</h3><p className="mt-3 text-slate-600 leading-7">{text}</p></article>)}</div></div></section>
