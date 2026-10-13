@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+// Release identity must be read from the running process, not frozen into a
+// statically generated route during the build.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   return NextResponse.json({
     ok: true,
