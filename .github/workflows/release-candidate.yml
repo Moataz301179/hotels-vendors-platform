@@ -36,6 +36,22 @@ jobs:
         ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@v4
+      - name: Materialize pinned mobile layer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mobile_sha=$(git ls-tree HEAD mobile | awk '{print $3}')
+          test -n "$mobile_sha"
+          if [ -d mobile/.git ]; then
+            git -C mobile fetch --depth 1 origin "$mobile_sha"
+            git -C mobile checkout --detach "$mobile_sha"
+          else
+            rm -rf mobile
+            git clone --no-tags --filter=blob:none https://github.com/Moataz301179/hotels-vendors-mobile.git mobile
+            git -C mobile fetch --depth 1 origin "$mobile_sha"
+            git -C mobile checkout --detach "$mobile_sha"
+          fi
+          test -s mobile/src/api/index.ts
       - uses: actions/setup-node@v4
         with:
           node-version: 20
