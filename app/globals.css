@@ -1,4 +1,7 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+@source "../app";
+@source "../components";
+@source "../lib";
 
 :root{
   /* Shared neutral surfaces keep large page backgrounds light gray. */
