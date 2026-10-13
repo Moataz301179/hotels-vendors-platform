@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { z } from "zod";
 
 const rfqInput=z.object({productId:z.string().min(1).optional(),contractBaselineId:z.string().min(1).optional(),quantity:z.number().int().positive().max(1_000_000),targetPrice:z.number().finite().positive().optional(),deliveryTimeline:z.string().trim().max(240).optional(),specialReq:z.string().trim().max(2000).optional(),notes:z.string().trim().max(2000).optional()}).refine(value=>Boolean(value.productId||value.contractBaselineId),{message:'A product or contract baseline is required'});
@@ -23,6 +24,7 @@ export async function GET() {
 export async function POST(req:Request){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
  if(user.platformRole!=="HOTEL" && user.platformRole!=="ADMIN")return NextResponse.json({error:"HOTEL_ROLE_REQUIRED"},{status:403});
+ try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:create');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'RFQ_CREATE_PERMISSION_REQUIRED'},{status:403});throw error;}
  const parsed=rfqInput.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"A product or contract baseline and a positive integer quantity are required"},{status:400});
  const b=parsed.data; const requestedProductId=b.productId||""; const baselineId=b.contractBaselineId||null; const quantity=b.quantity;
  const hotel=await prisma.hotel.findFirst({where:{tenantId:user.tenantId,status:'ACTIVE',deletedAt:null},select:{id:true}});
