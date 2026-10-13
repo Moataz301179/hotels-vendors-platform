@@ -58,7 +58,11 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --legacy-peer-deps
-      - run: npx playwright install --with-deps chromium chromium-headless-shell
+      - name: Install Playwright browsers
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps
+          node -e 'const { chromium } = require("playwright"); console.log(chromium.executablePath());'
       - run: npx prisma generate
       - run: npx prisma db push --skip-generate --accept-data-loss
       - run: npx vitest run
