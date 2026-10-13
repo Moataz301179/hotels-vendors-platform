@@ -16,8 +16,8 @@ jobs:
     timeout-minutes: 30
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_c2VydmljZV9rZXlfZm9yX2NpX3Rlc3Q
-      CLERK_SECRET_KEY: sk_test_c2VydmljZV9rZXlfZm9yX2NpX3Rlc3Q
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ""
+      CLERK_SECRET_KEY: ""
       SESSION_SECRET: ci-only-not-used-by-clerk
       HOTELSVENDORS_HMAC_SECRET: ci-only-hmac-secret-012345678901234567890123
       REDIS_URL: redis://127.0.0.1:6379
