@@ -21,7 +21,9 @@ export async function POST(req: Request) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Serialize receipts for this order so simultaneous requests cannot over-receive.
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${body.orderId}, 0))`;
+      // pg_advisory_xact_lock returns void; execute it as a command rather
+      // than asking Prisma to deserialize a result row.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${body.orderId}, 0))`;
       const order = await tx.order.findFirst({
         where: { id: body.orderId, tenantId: actor.tenantId, deletedAt: null },
         include: { items: { where: { deletedAt: null }, select: { id: true, productId: true, quantity: true, receivedQuantity: true } } },
