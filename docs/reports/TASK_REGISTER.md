@@ -9,6 +9,7 @@
 - Verification: `npx tsc --noEmit` passed; `SESSION_SECRET=staging-build-only-20261013 NODE_ENV=production npm run build` passed; Vitest passed 21 files / 99 tests. Commit pushed to `origin/codex/latest-frontend-promotion-20261012`.
 - Staging promotion of `14067cf` is not claimed from this checkout because the configured shell SSH alias is unavailable. Existing staging release `staging-b491d3b-20261013` remains the last independently verified runtime; production routing and data were not changed.
 - A standalone artifact for `14067cf` was rebuilt locally and SHA-256 verified as `3d8dc538c4514f823decc9f52ec0a181104c1609a3bfad4e264b70d6a0398b6b`. Hostinger promotion remains blocked by the expired/Cloudflare-challenged hPanel session and unavailable SSH alias; no production or staging process was altered by this attempt.
+- Hostinger access was restored through the configured VPS key. The corrected artifact was promoted to isolated PM2 `hv-staging-14067cf-3060`, port `3060`, release directory `/var/www/hv-releases/staging-14067cf-20261013/standalone`, using the protected staging environment and release identity `staging-14067cf-20261013` / source `14067cf`. `/api/health`, `/`, `/login`, `/register`, `/marketplace`, `/hovin`, `/carriers/portal`, and `/funders/portal` returned HTTP 200; `/marketplace` returned `76 listings`; unauthenticated `/api/v2/assistant` returned 401; the prior `staging-b491d3b-fixed-20261013` directory remains available for rollback. Production routing and data were not changed.
 
 ## 2026-10-13 execution update
 
