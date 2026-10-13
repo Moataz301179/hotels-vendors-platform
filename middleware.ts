@@ -166,8 +166,9 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: blob: https://images.unsplash.com https://cdn.jsdelivr.net https://api.qrserver.com https://img.clerk.com" + clerkOrigin + "; " +
-    "connect-src 'self'" + clerkOrigin + " https://*.clerk.accounts.dev; " +
+    "connect-src 'self'" + clerkOrigin + " https://*.clerk.accounts.dev https://*.clerk.dev; " +
     "frame-src 'self'" + clerkOrigin + " https://*.clerk.accounts.dev; " +
+    "worker-src 'self' blob:; " +
     "frame-ancestors 'none'; " +
     "base-uri 'self'; " +
     "form-action 'self';"
