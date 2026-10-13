@@ -5,9 +5,11 @@ const m = vi.hoisted(() => ({
   grants: vi.fn(),
   rfqs: vi.fn(),
   products: vi.fn(),
+  permission: vi.fn(),
 }));
 
 vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
+vi.mock("@/lib/auth/rbac", () => ({ requirePermission: m.permission, PermissionDeniedError: class PermissionDeniedError extends Error {} }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     rfqSupplierAccess: { findMany: m.grants },
@@ -30,6 +32,7 @@ describe("supplier RFQ workspace", () => {
     m.grants.mockResolvedValue([{ rfqId: "rfq-a" }]);
     m.rfqs.mockResolvedValue([{ id: "rfq-a", productId: "product-a", supplierId: "supplier-a" }]);
     m.products.mockResolvedValue([{ id: "product-a", name: "Bath towel", sku: "BT-100", unitOfMeasure: "piece" }]);
+    m.permission.mockResolvedValue(undefined);
   });
 
   it("returns only granted RFQs with the product details required to quote", async () => {

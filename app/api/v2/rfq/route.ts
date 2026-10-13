@@ -9,6 +9,7 @@ const rfqInput=z.object({productId:z.string().min(1).optional(),contractBaseline
 
 export async function GET() {
   const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
+  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:read');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'RFQ_READ_PERMISSION_REQUIRED'},{status:403});throw error;}
   if(user.platformRole==="SUPPLIER"){
    if(!user.supplierId)return NextResponse.json({error:"VERIFIED_SUPPLIER_CONTEXT_REQUIRED"},{status:403});
    const grants=await prisma.rfqSupplierAccess.findMany({where:{supplierId:user.supplierId,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true}});
