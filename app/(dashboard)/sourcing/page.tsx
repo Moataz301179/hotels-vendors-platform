@@ -2,9 +2,8 @@
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell"
 import { Btn, Card, PageHead, StatePill, T, Td, Th } from "@/components/ui"
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import { RFQS, categoryById, fmtDate } from "./data";
 import { IcPlus } from "@/components/ui/icons";
 
 const HOTEL: string[] = ["hotel_admin", "gm", "finance_director"];
@@ -12,7 +11,29 @@ const HOTEL: string[] = ["hotel_admin", "gm", "finance_director"];
 export default function SourcingPage() {
   const { t, lang } = usePrefs();
   const [filter, setFilter] = useState("all");
-  const filtered = RFQS.filter((r) => filter === "all" || r.status === filter);
+  const [rfqs, setRfqs] = useState<Array<{ id: string; itemName: string; status: string; requestedQty: number; unitOfMeasure: string | null; deliveryTimeline: string | null; createdAt: string }>>([]);
+  const [state, setState] = useState<"loading" | "ready" | "unavailable">("loading");
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/v1/rfq?limit=50", { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`RFQ feed returned ${response.status}`);
+        return response.json() as Promise<{ success?: boolean; data?: { rfqs?: typeof rfqs } }>;
+      })
+      .then((payload) => {
+        if (!active) return;
+        setRfqs(payload.success && payload.data?.rfqs ? payload.data.rfqs : []);
+        setState("ready");
+      })
+      .catch(() => {
+        if (active) setState("unavailable");
+      });
+    return () => { active = false; };
+  }, []);
+
+  const filtered = useMemo(() => rfqs.filter((r) => filter === "all" || r.status.toLowerCase() === filter), [filter, rfqs]);
+  const fmtDate = (value: string | null) => value ? new Date(value).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
   return (
     <RequireAuth>
@@ -30,25 +51,26 @@ export default function SourcingPage() {
                 <tr className="border-b border-line dark:border-linedark">
                   <Th>{t("sourcing.col.id")}</Th>
                   <Th>{t("sourcing.col.title")}</Th>
-                  <Th>{t("sourcing.col.category")}</Th>
-                  <Th>{t("sourcing.col.issue")}</Th>
-                  <Th>{t("sourcing.col.closing")}</Th>
-                  <Th>{t("sourcing.col.bids")}</Th>
+                  <Th>Quantity</Th>
+                  <Th>Created</Th>
+                  <Th>Delivery timeline</Th>
                   <Th>{t("sourcing.col.status")}</Th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {state === "ready" && filtered.map((r) => (
                   <tr key={r.id} className="border-b border-line dark:border-linedark">
                     <Td className="font-mono text-[12px]">{r.id}</Td>
-                    <Td className="font-medium">{lang === "ar" ? r.titleAr : r.title}</Td>
-                    <Td>{categoryById(r.categoryId)?.name}</Td>
-                    <Td className="text-ink-500">{fmtDate(r.issueDate, lang)}</Td>
-                    <Td className="text-ink-500">{fmtDate(r.closingDate, lang)}</Td>
-                    <Td className="tnum">{r.bids}</Td>
+                    <Td className="font-medium">{r.itemName}</Td>
+                    <Td className="tnum">{r.requestedQty} {r.unitOfMeasure ?? ""}</Td>
+                    <Td className="text-ink-500">{fmtDate(r.createdAt)}</Td>
+                    <Td className="text-ink-500">{r.deliveryTimeline ?? "Not specified"}</Td>
                     <Td><StatePill s={r.status} /></Td>
                   </tr>
                 ))}
+                {state === "loading" && <tr><td colSpan={6} className="py-12 text-center text-ink-500">Loading your requirements…</td></tr>}
+                {state === "unavailable" && <tr><td colSpan={6} className="py-12 text-center text-ink-500">Your requirements could not be loaded. Try again after checking the workspace connection.</td></tr>}
+                {state === "ready" && filtered.length === 0 && <tr><td colSpan={6} className="py-12 text-center text-ink-500">No requirements match this filter yet.</td></tr>}
               </tbody>
             </T>
           </Card>
