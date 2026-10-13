@@ -1,5 +1,14 @@
 # HotelsVendors implementation task register — 2026-10-11
 
+## 2026-10-13 public experience and assistant correction
+
+- Release commit `14067cf` removes the broken Arabic toggle from public navigation and marketplace chrome; public registration now presents Hotels and Suppliers only. Carrier and Funder access is explicitly partner-provisioned through footer portal links.
+- The public header and footer now use the same explicit dark-grey/white treatment (`#3d4a56` / white), with ETA-ready workflow wording that does not claim an unconfigured live submission.
+- Homepage copy now describes the verified/connected procurement intelligence boundary instead of claiming all-market access; engine cards identify their evidence/status boundary. The generic final CTA is replaced with an honest product walkthrough call-to-action. Existing hero image was preserved.
+- Dashboard and floating assistant clients now call the implemented authenticated `/api/v2/assistant` contract and parse its JSON response. Unauthenticated use reports that a Clerk session is required; provider-unavailable responses remain explicit. No fabricated assistant output is permitted.
+- Verification: `npx tsc --noEmit` passed; `SESSION_SECRET=staging-build-only-20261013 NODE_ENV=production npm run build` passed; Vitest passed 21 files / 99 tests. Commit pushed to `origin/codex/latest-frontend-promotion-20261012`.
+- Staging promotion of `14067cf` is not claimed from this checkout because the configured shell SSH alias is unavailable. Existing staging release `staging-b491d3b-20261013` remains the last independently verified runtime; production routing and data were not changed.
+
 ## 2026-10-13 execution update
 
 - Release `05dc725` corrected the shared public shell to the requested grey header/footer with a white logo and white shell text; staging slot `hv-staging-05dc725-3078` and production route `frontend-05dc725-20261013` were smoke-tested after promotion. Production health is HTTP 200 and the live browser confirms the grey/white treatment. Production catalog data remains untouched and currently contains 0 public listings; staging remains the verified 76-listing dataset.
