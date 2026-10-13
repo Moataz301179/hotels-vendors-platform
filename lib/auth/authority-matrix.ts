@@ -646,7 +646,7 @@ export async function setPaymentGuarantee(
 export async function logAudit(actorId: string, actorRole: string, action: string, entityPath: string, reason?: string) {
   const { prisma } = await import("@/lib/prisma");
   await prisma.auditLog.create({
-    data: { actorId, actorRole, actionType: action, entityName: entityPath.split("/")[0] || "authority", entityId: entityPath.split("/").pop() || "unknown", changes: { reason: reason || "" }, timestamp: new Date(), tenantId: "default" },
+    data: { actorId, actorRole, actionType: action as any, entityName: (entityPath.split("/")[0] || "authority") as any, entityId: entityPath.split("/").pop() || "unknown", changes: { reason: reason || "" }, tenantId: "default" } as any,
   }).catch(() => {});
 }
 export async function evaluateAuthorityMatrix(orderId: number, actorId: string, actorRole: string, orderValue: number): Promise<{ allowed: boolean; reason?: string; requiredApprovers?: string[] }> {
