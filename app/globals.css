@@ -30,6 +30,15 @@
   --signal-glow: rgba(152, 214, 64, 0.22);
 }
 :root {
+  /* Shared HotelsVendors light-theme contract (web + HOVIN mobile). */
+  --hv-ink: #17232E;
+  --hv-charcoal: #3E4C5A;
+  --hv-charcoal-glass: rgba(62, 76, 90, .92);
+  --hv-cream: #F7F5EF;
+  --hv-platinum: #E7EBEF;
+  --hv-baby-blue: #A9D3F5;
+  --hv-blue-ink: #1F5E9C;
+  --hv-rule: #C9D2DA;
 /* ═══════════════════════════════════════════════════════════════
    CARD TOKENS — consistent card language across marketing + dashboard
    ═══════════════════════════════════════════════════════════════ */

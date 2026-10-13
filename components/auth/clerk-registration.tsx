@@ -9,7 +9,7 @@ export function ClerkRegistration() {
         routing="hash"
         signInUrl="/login"
         fallbackRedirectUrl="/dashboard"
-        appearance={{ variables: { colorPrimary: "#356fb6", colorBackground: "#fbfbf8", borderRadius: "3px" } }}
+        appearance={{ variables: { colorPrimary: "#1F5E9C", colorBackground: "#FFFFFF", borderRadius: "8px" } }}
       />
     </section>
   );

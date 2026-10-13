@@ -111,12 +111,12 @@ export default function RegisterPage() {
   if (oauthContinuation) return <ClerkRegistration />;
 
   return (
-    <section aria-labelledby="register-title" className="w-full rounded-2xl bg-[#f4f2ec] p-4 sm:p-6 text-[#314b43]">
+    <section aria-labelledby="register-title" className="w-full rounded-2xl bg-[var(--hv-cream)] p-4 sm:p-6 text-[var(--hv-ink)]">
       <div className="w-full max-w-2xl">
         <div className="mb-6">
           <Link href="/" className="text-sm font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">HotelsVendors</Link>
           <h1 id="register-title" className="mt-4 text-3xl font-semibold">Join the procurement network</h1>
-          <p className="mt-2 text-[#566961] text-sm leading-relaxed">Choose how you work with hotels, then create your account. Already registered? <Link href="/login" className="font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">Sign in</Link>.</p>
+          <p className="mt-2 text-slate-600 text-sm leading-relaxed">Choose how you work with hotels, then create your account. Already registered? <Link href="/login" className="font-semibold text-[var(--hv-blue-ink)] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">Sign in</Link>.</p>
         </div>
         {!needsVerification ? (
           <form onSubmit={submit} aria-busy={pending} className="rounded-2xl border border-[#d9ded9] bg-white p-5 md:p-7 space-y-5">
@@ -124,12 +124,12 @@ export default function RegisterPage() {
               <legend className="block text-sm font-semibold mb-3">I am joining as</legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {roles.map(([value, label, Icon, description]) => (
-                  <button type="button" key={value} aria-pressed={role === value} onClick={() => setRole(value)} className={`min-h-28 rounded-xl border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#314b43] ${role===value ? "border-[#314b43] bg-[#edf1ed] text-[#314b43]" : "border-[#d9ded9] text-[#566961] hover:border-[#314b43]"}`}>
+                  <button type="button" key={value} aria-pressed={role === value} onClick={() => setRole(value)} className={`min-h-28 rounded-xl border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--hv-charcoal)] ${role===value ? "border-[var(--hv-charcoal)] bg-[var(--hv-platinum)] text-[var(--hv-ink)]" : "border-[var(--hv-rule)] text-slate-600 hover:border-[var(--hv-charcoal)]"}`}>
                     <Icon size={18} aria-hidden="true" className="mb-2" /><span className="block text-sm font-semibold">{label}</span><span className="mt-1 block text-xs leading-relaxed">{description}</span>
                   </button>
                 ))}
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-[#566961]">Funder and carrier partners: <Link href="/contact" className="font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">contact the team</Link> to discuss partner onboarding. Selecting a role does not grant workspace access.</p>
+              <p className="mt-3 text-xs leading-relaxed text-slate-600">Funder and carrier partners: <Link href="/contact" className="font-semibold text-[var(--hv-blue-ink)] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">contact the team</Link> to discuss partner onboarding. Selecting a role does not grant workspace access.</p>
             </fieldset>
             <div>
               <label htmlFor="register-name" className="mb-2 block text-sm font-semibold">Your name or company name</label>
@@ -144,10 +144,10 @@ export default function RegisterPage() {
               <input id="register-password" name="password" required minLength={8} type="password" autoComplete="new-password" aria-describedby="register-password-help" value={password} onChange={e=>setPassword(e.target.value)} className="w-full rounded-xl border border-[#c6cfc8] bg-white px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[#314b43]" />
               <p id="register-password-help" className="mt-2 text-xs text-[#566961]">Use at least 8 characters.</p>
             </div>
-            <p className="text-sm leading-relaxed text-[#566961]">Next, verify your email with a code and continue to organization setup. Registration does not guarantee supplier approval, credit or financing.</p>
+            <p className="text-sm leading-relaxed text-slate-600">Next, verify your email with a code and continue to organization setup. Registration does not guarantee supplier approval, credit or financing.</p>
             <div id="clerk-captcha" />
             {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-            <button disabled={pending || !isLoaded} className="w-full rounded-xl bg-[#314b43] hover:bg-[#263c35] text-white font-semibold py-3.5 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#314b43]">{pending ? "Creating…" : "Create account"}</button>
+            <button disabled={pending || !isLoaded} className="w-full rounded-xl bg-[var(--hv-charcoal)] hover:bg-[var(--hv-ink)] text-white font-semibold py-3.5 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--hv-charcoal)]">{pending ? "Creating…" : "Create account"}</button>
           </form>
         ) : (
           <form onSubmit={verify} aria-busy={pending} className="rounded-2xl border border-[#d9ded9] bg-white p-5 md:p-7 space-y-5">
