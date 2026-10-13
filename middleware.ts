@@ -8,6 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import type { NextFetchEvent } from "next/server";
+import { normalizeLoopbackRouting } from "./lib/deployment/normalize-loopback-routing";
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { csrfMiddleware } from "@/lib/security/csrf";
 
@@ -31,7 +33,14 @@ const PUBLIC_PATHS = [
   "/suppliers",
   "/suppliers/join",
   "/about",
+  "/docs",
   "/pricing",
+  // Public information pages only; workspace and API authorization remain unchanged.
+  "/platform",
+  "/terms",
+  "/privacy",
+  "/support",
+  "/founder",
   "/solutions",
   "/contact",
   "/become-supplier",
@@ -118,11 +127,29 @@ function isApiPath(path: string): boolean {
   return path.startsWith("/api/");
 }
 
+// Native clients carry no ambient browser cookies. Credential issuance routes
+// validate their own password/OTP/refresh credential; protected APIs must still
+// verify the bearer token and derive database permissions in authenticate().
+function isNativeRequest(request: NextRequest): boolean {
+  return !request.headers.has("origin") && !request.headers.has("sec-fetch-site") && !request.headers.has("cookie");
+}
+
+const NATIVE_AUTH_PATHS = [
+  "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/otp-login",
+  "/api/v1/auth/register", "/api/v1/auth/send-otp", "/api/v1/auth/verify-otp",
+];
 
 /* ── Middleware ── */
 
 /* ── Security Headers ── */
 function addSecurityHeaders(response: NextResponse): NextResponse {
+  const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+  let clerkOrigin = "";
+  try {
+    const encoded = key.replace(/^pk_(test|live)_/, "");
+    const host = atob(encoded).replace(/\$$/, "");
+    if (/^[a-z0-9.-]+$/i.test(host)) clerkOrigin = ` https://${host}`;
+  } catch { /* Missing configuration cannot broaden the content policy. */ }
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -135,11 +162,12 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set(
     "Content-Security-Policy",
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://united-treefrog-223.clerk.accounts.dev; " +
+    "script-src 'self' 'unsafe-inline'" + (process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'") + clerkOrigin + " https://*.clerk.accounts.dev; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
-    "img-src 'self' data: blob: https://images.unsplash.com https://cdn.jsdelivr.net https://api.qrserver.com; " +
-    "connect-src 'self' https://api.oliv.finance https://sandbox.oliv.finance https://invoicing.eta.gov.eg https://api.fawry.com; " +
+    "img-src 'self' data: blob: https://images.unsplash.com https://cdn.jsdelivr.net https://api.qrserver.com https://img.clerk.com" + clerkOrigin + "; " +
+    "connect-src 'self'" + clerkOrigin + " https://*.clerk.accounts.dev; " +
+    "frame-src 'self'" + clerkOrigin + " https://*.clerk.accounts.dev; " +
     "frame-ancestors 'none'; " +
     "base-uri 'self'; " +
     "form-action 'self';"
@@ -147,7 +175,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export default clerkMiddleware(async (auth, request: NextRequest) => {
+const authenticatedMiddleware = clerkMiddleware(async (auth, request: NextRequest) => {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") || "";
 
@@ -178,24 +206,40 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     return addSecurityHeaders(NextResponse.redirect(new URL("/sandbox", request.url)));
   }
 
-  // Allow public paths without auth
+  if (isApiPath(pathname) && isNativeRequest(request)
+    && (NATIVE_AUTH_PATHS.includes(pathname) || request.headers.get("authorization")?.startsWith("Bearer "))) {
+    const cleanHeaders = new Headers(request.headers);
+    for (const name of ["x-user-id", "x-tenant-id", "x-platform-role"]) cleanHeaders.delete(name);
+    return addSecurityHeaders(NextResponse.next({ request: { headers: cleanHeaders } }));
+  }
+
+  // Public pages still need a CSRF cookie so their authenticated follow-up mutations
+  // (signup provisioning, contact forms, and onboarding) can use the same double-submit protection.
   if (isPublicPath(pathname)) {
-    return addSecurityHeaders(NextResponse.next());
+    const response = addSecurityHeaders(NextResponse.next());
+    if (!isApiPath(pathname) && !request.cookies.get(CSRF_COOKIE)?.value) {
+      const { generateCsrfToken } = await import("@/lib/security/csrf");
+      const csrfToken = await generateCsrfToken();
+      response.cookies.set(CSRF_COOKIE, csrfToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 60 * 60,
+      });
+    }
+    return response;
   }
 
   // Clerk is the only application identity source. Legacy hv_session cookies are ignored.
-  const { userId, sessionClaims } = await auth();
-  const platformRole = String((sessionClaims as any)?.platformRole || "");
-  const tenantId = String((sessionClaims as any)?.tenantId || "");
+  const { userId } = await auth();
 
   if (isApiPath(pathname)) {
     if (!userId) {
       return addSecurityHeaders(NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 }));
     }
     const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-user-id", userId);
-    if (tenantId && tenantId !== "undefined" && tenantId !== "null") requestHeaders.set("x-tenant-id", tenantId);
-    if (platformRole && platformRole !== "undefined") requestHeaders.set("x-platform-role", platformRole);
+    for (const name of ["x-user-id", "x-tenant-id", "x-platform-role"]) requestHeaders.delete(name);
 
     const isStateChanging = ["POST", "PUT", "DELETE", "PATCH"].includes(request.method);
     const isExemptPath = pathname === "/api/v1/auth/login" || pathname === "/api/v1/auth/register" || pathname === "/api/v1/oliv/webhook" || pathname.startsWith("/api/webhooks");
@@ -213,9 +257,7 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
   }
 
   const requestHeaders = new Headers(request.headers);
-  if (userId) requestHeaders.set("x-user-id", userId);
-  if (tenantId && tenantId !== "undefined" && tenantId !== "null") requestHeaders.set("x-tenant-id", tenantId);
-  if (platformRole && platformRole !== "undefined") requestHeaders.set("x-platform-role", platformRole);
+  for (const name of ["x-user-id", "x-tenant-id", "x-platform-role"]) requestHeaders.delete(name);
 
   const response = addSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
   if (!isApiPath(pathname) && !request.cookies.get(CSRF_COOKIE)?.value) {
@@ -227,6 +269,12 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
 });
 
 /* ── Matcher ── */
+
+export default async function middleware(request: NextRequest, event: NextFetchEvent) {
+  const response = await authenticatedMiddleware(request, event);
+  if (response) normalizeLoopbackRouting(response.headers, "https://hotelsvendors.com", request.url);
+  return response;
+}
 
 export const config = {
   matcher: [
