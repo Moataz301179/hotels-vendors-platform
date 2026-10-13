@@ -32,6 +32,7 @@ export async function PATCH(req:Request){
  const permissionByAction:Record<string,string>={APPROVED:'order:approve',REJECTED:'order:reject',CONFIRMED:'order:confirm',IN_TRANSIT:'order:update',RECEIVE:'order:update'};
  const permission=permissionByAction[b.status];
  if(!permission)return NextResponse.json({error:'Unsupported order action'},{status:400});
+ if(b.status==='RECEIVE')return NextResponse.json({error:'GRN_RECEIPT_REQUIRED'},{status:409});
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},permission);}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_ACTION_PERMISSION_REQUIRED'},{status:403});throw error;}
  if(b.status==='APPROVED'){
   const snapshot = order.approvalPolicySnapshot as { requiredApproverIds?: string[] } | null;
