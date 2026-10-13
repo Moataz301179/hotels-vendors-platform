@@ -1,9 +1,10 @@
 "use client";
-import { ArrowRight, Clock, ShieldCheck } from "lucide-react";
+import { Clock } from "lucide-react";
+import type { EvidenceRecord } from "@prisma/client";
 import { useApi } from "@/lib/hooks/use-api";
 
 export default function IntelligenceEvidencePage() {
-  const { data, loading } = useApi<{ evidence: any[] }>("/api/v1/intelligence/evidence");
+  const { data, loading, error } = useApi<{ evidence: Pick<EvidenceRecord, 'id' | 'entityName' | 'sourceReference' | 'extractedFact'>[] }>("/api/v1/intelligence/evidence");
   const evidence = data?.evidence || [];
 
   return (
@@ -15,7 +16,7 @@ export default function IntelligenceEvidencePage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-        {loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading evidence...</div> :
+        {error ? <div role="alert" className="p-4 text-red-400">{error}</div> : loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading evidence...</div> :
          evidence.length === 0 ? (
           <div className="bg-surface-1 border border-border-subtle rounded-xl p-8 text-center text-sm text-foreground-muted">
             <Clock size={20} className="mx-auto text-foreground-muted mb-2" />
@@ -24,11 +25,11 @@ export default function IntelligenceEvidencePage() {
           </div>
          ) : (
           <div className="grid md:grid-cols-3 gap-4">
-            {evidence.map((ev: any) => (
+            {evidence.map((ev) => (
               <div key={ev.id || ev.sourceReference} className="bg-surface-1 border border-border-subtle rounded-xl p-5">
                 <h3 className="text-sm font-medium text-white">{ev.entityName || ev.id}</h3>
                 <p className="text-[10px] text-foreground-subtle">Source: {ev.sourceReference}</p>
-                <p className="text-xs text-foreground-muted mt-2">{ev.extractedFact || ev.description}</p>
+                <p className="text-xs text-foreground-muted mt-2">{ev.extractedFact}</p>
               </div>
             ))}
           </div>

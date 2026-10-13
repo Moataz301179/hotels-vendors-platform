@@ -1,0 +1,22 @@
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { useApi } from "@/lib/hooks/use-api";
+import { operationsLabels, operationsSections, type OperationsResult } from "@/lib/admin/operations-contract";
+
+export function OperationsTable({ section }: { section: typeof operationsSections[number] }) {
+  const [page, setPage] = useState(1);
+  const [input, setInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const result = useApi<OperationsResult>(`/api/v1/admin/operations/${section}?page=${page}&limit=20&search=${encodeURIComponent(search)}`);
+  const label = operationsLabels[section];
+  const record = result.data?.rows.find(row => row.id === selected);
+  return <section className="space-y-5"><header><h1 className="text-2xl font-semibold">{label.title}</h1><p className="mt-2 text-sm">{label.description}</p></header>
+    <nav aria-label="Operational modules" className="flex flex-wrap gap-2">{operationsSections.map(item => <Link key={item} href={`/admin/${item}`} aria-current={item === section ? "page" : undefined} className={`rounded border px-3 py-2 text-sm ${item === section ? "border-blue-400 bg-blue-50 text-black" : "border-line"}`}>{operationsLabels[item].title}</Link>)}<Link href="/admin/approvals" className="rounded border border-line px-3 py-2 text-sm">Approval queue</Link></nav>
+    <form className="flex flex-wrap gap-3" onSubmit={event => { event.preventDefault(); setSearch(input); setPage(1); setSelected(null); }}><label htmlFor="operations-search" className="sr-only">Search recorded data</label><input id="operations-search" maxLength={120} value={input} onChange={event => setInput(event.target.value)} placeholder="Search records" className="rounded border border-line px-3 py-2" /><button className="rounded border px-4 py-2" type="submit">Search</button><button className="rounded border px-4 py-2" type="button" onClick={result.refetch}>Refresh</button></form>
+    {result.loading ? <p role="status">Loading records…</p> : null}{result.error ? <p role="alert">{result.error}</p> : null}
+    {result.data ? <><p className="text-sm">Platform scope · {result.data.pagination.total} matching records · checked {new Date(result.data.generatedAt).toLocaleString()}</p><div className="overflow-x-auto rounded border border-line"><table className="w-full text-left text-sm"><thead><tr>{result.data.columns.map(column => <th key={column.key} className="border-b p-3 font-semibold">{column.label}</th>)}<th className="border-b p-3">Evidence</th></tr></thead><tbody>{result.data.rows.map(row => <tr key={String(row.id)}>{result.data!.columns.map(column => <td key={column.key} className="border-b p-3">{row[column.key] === null ? "Not recorded" : typeof row[column.key] === "boolean" ? row[column.key] ? "Yes" : "No" : String(row[column.key])}</td>)}<td className="border-b p-3"><button type="button" className="underline" onClick={() => setSelected(String(row.id))}>Inspect record</button></td></tr>)}</tbody></table>{!result.data.rows.length ? <p className="p-5">No recorded data matches this search.</p> : null}</div><div className="flex items-center gap-3"><button type="button" disabled={page <= 1} onClick={() => { setPage(page - 1); setSelected(null); }} className="rounded border px-3 py-2 disabled:opacity-40">Previous</button><span>Page {page}</span><button type="button" disabled={page >= result.data.pagination.totalPages} onClick={() => { setPage(page + 1); setSelected(null); }} className="rounded border px-3 py-2 disabled:opacity-40">Next</button></div></> : null}
+    {record ? <aside className="rounded border border-blue-200 bg-blue-50 p-5 text-black" aria-label="Recorded evidence"><div className="flex justify-between"><h2 className="font-semibold">Record evidence</h2><button type="button" className="underline" onClick={() => setSelected(null)}>Close</button></div><dl>{Object.entries(record).map(([key, value]) => <div key={key} className="mt-2 grid gap-2 sm:grid-cols-2"><dt>{key}</dt><dd className="break-all">{value === null ? "Not recorded" : String(value)}</dd></div>)}</dl>{(section === "verification" || section === "catalog") ? <Link className="mt-4 inline-block underline" href={`/admin/approvals?targetId=${encodeURIComponent(String(record.id))}`}>Prepare a controlled change request</Link> : null}{section === "verification" ? <Link className="ml-4 inline-block underline" href="/admin/documents">Find verification evidence</Link> : null}</aside> : null}
+  </section>;
+}

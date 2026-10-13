@@ -7,42 +7,39 @@
  */
 
 import { NextRequest } from "next/server";
-import { apiRoute, authenticate, success, error } from "@/lib/api-utils";
+import { apiRoute, authenticate, success, error, requirePermission, validateBody } from "@/lib/api-utils";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { enrichProduct, upsertCatalog } from "@/lib/ingestion/ingest";
 
+const ProductInput = z.object({ title: z.string().max(300).optional(), name: z.string().max(300).optional(), category: z.string().max(100).optional(), unit: z.string().max(50).optional(), unitOfMeasure: z.string().max(50).optional(), priceEGP: z.number().finite().nonnegative().optional(), unitPrice: z.number().finite().nonnegative().optional(), imageURL: z.string().url().optional(), images: z.union([z.string().url(), z.array(z.string().url())]).optional(), sku: z.string().max(128).optional(), skuCode: z.string().max(128).optional() }).refine(value => Boolean(value.title?.trim() || value.name?.trim()), "Product title is required");
+const SyncInput = z.object({ supplierId: z.string().min(1).max(128), providerKey: z.string().min(1).max(128).default("erp-sync"), products: z.array(ProductInput).min(1).max(1000) });
+
 export const POST = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  const body = await request.json();
-
-  const supplierId = (body.supplierId as string) || "";
-  const sourceId = (body.providerKey as string) || "erp-sync";
-  const raw = Array.isArray(body.products) ? body.products : [];
-
-  if (!supplierId) return error("supplierId is required", 400);
-  if (raw.length === 0) return error("products[] must not be empty", 400);
-  if (raw.length > 1000) return error("Batch too large (max 1000). Send in chunks.", 400);
+  await requirePermission(auth, "product:update");
+  const { supplierId, providerKey: sourceId, products: raw } = validateBody(SyncInput, await request.json());
 
   // Resolve the supplier's tenant
-  const supplier = await prisma.supplier.findUnique({ where: { id: supplierId }, include: { tenant: true } });
+  const supplier = await prisma.supplier.findFirst({ where: { id: supplierId, tenantId: auth.tenantId, deletedAt: null } });
   if (!supplier) return error("Supplier not found", 404);
-  const tenantId = supplier.tenantId || auth.tenantId;
+  const tenantId = auth.tenantId;
 
   // Normalize + AI enrich
-  const enriched = raw.map((p: any) =>
+  const enriched = raw.map((p) =>
     enrichProduct(
       {
         title: p.title || p.name || "",
         category: p.category,
         unit: p.unit || p.unitOfMeasure,
         priceEGP: p.priceEGP ?? p.unitPrice ?? 0,
-        imageURL: p.imageURL || p.images,
+        imageURL: p.imageURL || (typeof p.images === "string" ? p.images : p.images?.[0]),
         sku: p.sku || p.skuCode,
         supplierName: supplier.name,
       },
       tenantId
     )
-  ).filter((p: any) => p.title && p.unitPrice > 0);
+  ).filter((p) => p.title && p.unitPrice > 0);
 
   const result = await upsertCatalog(enriched, tenantId, sourceId, supplier.id);
 

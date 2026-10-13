@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
 import { integrationEngine } from '@/lib/integrations/engine';
+import { integrationAdminRoute } from '@/lib/integrations/admin-route';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+type RouteContext = { params: Promise<{ id: string }> };
+
+export const GET = integrationAdminRoute(async (_request, context) => {
+  const { id } = await (context as RouteContext).params;
   const provider = integrationEngine.getProvider(id);
   if (!provider) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(provider);
-}
+});
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export const PATCH = integrationAdminRoute(async (request, context) => {
+  const { id } = await (context as RouteContext).params;
   try {
     const body = await request.json();
     const updated = integrationEngine.updateProvider(id, body);
@@ -18,11 +21,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export const DELETE = integrationAdminRoute(async (_request, context) => {
+  const { id } = await (context as RouteContext).params;
   const deleted = integrationEngine.deleteProvider(id);
   if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json({ success: true });
-}
+});

@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireSensitiveAdmin, requirePlatformAdmin } from "@/lib/admin/access";
 import {
   apiRoute,
   authenticate,
-  requirePermission,
   validateBody,
   success,
   audit,
@@ -45,7 +45,7 @@ async function getOrCreateSettings() {
 
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  await requirePermission(auth, "admin:manage_platform");
+  await requirePlatformAdmin(auth, "admin:manage_platform");
 
   const settings = await getOrCreateSettings();
 
@@ -84,8 +84,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
 });
 
 export const PUT = apiRoute(async (request: NextRequest) => {
-  const auth = await authenticate(request);
-  await requirePermission(auth, "admin:manage_platform");
+  const auth = await requireSensitiveAdmin(request, "admin:manage_platform");
 
   const body = await request.json();
   const data = validateBody(BillingSettingsSchema, body);

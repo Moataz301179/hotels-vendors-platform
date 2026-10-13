@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { canonicalUrl } from "@/lib/seo";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Clock, Shield, Zap, Landmark, RefreshCw, ExternalLink, Factory, Truck, CreditCard, Users, TrendingUp, FileText, Building2, Package } from "lucide-react";
-import { OlivLogo } from "@/components/partners/oliv-logo";
 
 export const metadata: Metadata = {
   alternates: { canonical: canonicalUrl("/suppliers/join") },
@@ -52,33 +51,33 @@ const PAYMENT_STEPS = [
   {
     step: "B",
     title: "Click 'Get Financed'",
-    desc: "From your dashboard, submit the verified invoice to Oliv. Approval takes minutes.",
+    desc: "From your dashboard, submit the verified invoice to . Approval takes minutes.",
     color: "var(--success)",
   },
   {
     step: "C",
     title: "Receive Cash in 48h",
-    desc: "Oliv deposits funds to your bank account. Your credit limit resets for the next cycle.",
+    desc: "Financing partner deposits funds to your bank account. Your credit limit resets for the next cycle.",
     color: "var(--orange-base)",
   },
 ];
 
 const BENEFITS = [
-  { icon: Zap, title: "Get Paid in 48 Hours", desc: "Oliv finances your verified invoices instantly. No waiting for hotel payment cycles.", color: "var(--accent-base)" },
-  { icon: Shield, title: "Zero Recourse Risk", desc: "Oliv collects from the hotel. You have zero liability if the hotel delays payment.", color: "var(--success)" },
+  { icon: Zap, title: "Get Paid in 48 Hours", desc: " finances your verified invoices instantly. No waiting for hotel payment cycles.", color: "var(--accent-base)" },
+  { icon: Shield, title: "Zero Recourse Risk", desc: " collects from the hotel. You have zero liability if the hotel delays payment.", color: "var(--success)" },
   { icon: RefreshCw, title: "Unlimited Invoice Volume", desc: "Credit engine processes any number of invoices. Revolving facility grows with you.", color: "var(--purple-base)" },
   { icon: ExternalLink, title: "No Tech Integration", desc: "Works through HotelsVendors dashboard. One click to apply. No API needed.", color: "var(--orange-base)" },
   { icon: Factory, title: "Coastal Hotel Demand", desc: "Access 480+ hotels in Sharm El-Sheikh, Hurghada, Cairo, Alexandria. High-velocity orders.", color: "#64b5f6" },
-  { icon: Landmark, title: "FRA Regulated & Backed", desc: "Oliv holds Egypt's first digital factoring license. Suez Canal Bank EGP 30M facility.", color: "var(--success)" },
+  { icon: Landmark, title: "FRA Regulated & Backed", desc: " holds Egypt's first digital factoring license. Suez Canal Bank EGP 30M facility.", color: "var(--success)" },
 ];
 
 const FAQ = [
-  { q: "What are the fees?", a: "HotelsVendors charges 1.5–2.5% transaction fee on completed orders. Oliv financing fee is separate and transparent — you see the exact cost before accepting." },
+  { q: "What are the fees?", a: "HotelsVendors charges 1.5–2.5% transaction fee on completed orders. financing fee is separate and transparent — you see the exact cost before accepting." },
   { q: "Do I need to integrate my ERP?", a: "No. Everything happens in the HotelsVendors supplier dashboard. Order management, delivery tracking, invoice financing — all in one place." },
-  { q: "What if the hotel doesn't pay Oliv?", a: "That's Oliv's risk, not yours. Non-recourse financing means zero liability to the supplier. Oliv handles collections." },
+  { q: "What if the hotel doesn't pay?", a: "Non-recourse financing means zero liability to the supplier. The financing partner handles collections." },
   { q: "What documents do I need?", a: "At registration: Tax ID, City, Governorate. For full onboarding: Commercial Register, company logo, product catalog. You can upload documents after registration." },
-  { q: "How do I get the EGP 10M credit line?", a: "After your first verified invoice on HotelsVendors, apply for Oliv financing from your dashboard. Oliv evaluates your business performance and assigns a revolving credit facility up to EGP 10M." },
-  { q: "How do I get started?", a: "Register as a supplier → complete your profile → list products → start receiving orders. Apply for Oliv financing after your first verified invoice." },
+  { q: "How do I get the EGP 10M credit line?", a: "After your first verified invoice on HotelsVendors, apply for financing from your dashboard.  evaluates your business performance and assigns a revolving credit facility up to EGP 10M." },
+  { q: "How do I get started?", a: "Register as a supplier → complete your profile → list products → start receiving orders. Apply for financing after your first verified invoice." },
 ];
 
 export default function SupplierJoinPage() {
@@ -89,9 +88,8 @@ export default function SupplierJoinPage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px] pointer-events-none" style={{ background: "radial-gradient(circle, rgba(var(--success-rgb),0.08) 0%, transparent 70%)" }} />
         <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-6" style={{ borderColor: "var(--success)33", backgroundColor: "var(--success)10" }}>
-            <OlivLogo size="xs" variant="green" />
             <span className="text-[11px] font-medium uppercase tracking-[0.12em]" style={{ color: "var(--success)" }}>
-              Oliv Partnership Active
+              Financing Partner Active
             </span>
           </div>
           <h1 className="text-[clamp(30px,5vw,52px)] font-semibold leading-[1.05] tracking-tight mb-5">
@@ -100,7 +98,7 @@ export default function SupplierJoinPage() {
           </h1>
           <p className="text-[15px] text-white/40 max-w-2xl mx-auto leading-relaxed mb-8">
             List your hospitality products on Egypt&apos;s largest B2B procurement platform.
-            Access 480+ hotels. And when the invoice is verified — <strong style={{ color: "var(--success)" }}>Oliv finances it instantly</strong>.
+            Access 480+ hotels. And when the invoice is verified — <strong style={{ color: "var(--success)" }}>financing partner finances it instantly</strong>.
             Up to <strong style={{ color: "var(--accent-base)" }}>EGP 10M</strong>. Zero paperwork. Zero recourse risk.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -117,8 +115,8 @@ export default function SupplierJoinPage() {
       {/* Trust Bar */}
       <section className="py-6 border-y" style={{ borderColor: "var(--success)18" }}>
         <div className="max-w-4xl mx-auto px-6 flex flex-wrap justify-center gap-6 text-[12px] text-white/30">
-          <span className="flex items-center gap-2"><Landmark size={14} style={{ color: "var(--success)" }} /> Oliv: FRA-Licensed Digital Factoring (Partner)</span>
-          <span className="flex items-center gap-2"><Shield size={14} style={{ color: "var(--success)" }} /> Oliv Partner Facility: EGP 30M (Suez Canal Bank)</span>
+          <span className="flex items-center gap-2"><Landmark size={14} style={{ color: "var(--success)" }} /> : FRA-Licensed Digital Factoring (Partner)</span>
+          <span className="flex items-center gap-2"><Shield size={14} style={{ color: "var(--success)" }} />  Partner Facility: EGP 30M (Suez Canal Bank)</span>
           <span className="flex items-center gap-2"><CheckCircle2 size={14} style={{ color: "var(--success)" }} /> 48-Hour Funding SLA</span>
           <span className="flex items-center gap-2"><Zap size={14} style={{ color: "var(--success)" }} /> Non-Recourse by Design</span>
         </div>
@@ -174,9 +172,8 @@ export default function SupplierJoinPage() {
             ))}
           </div>
           <div className="text-center">
-            <p className="text-[13px] text-white/30 mb-4">After your first verified invoice, apply for Oliv financing from your dashboard.</p>
+            <p className="text-[13px] text-white/30 mb-4">After your first verified invoice, apply for financing from your dashboard.</p>
             <Link href="/financing/oliv" className="inline-flex items-center gap-2 px-6 py-3 text-[13px] font-semibold rounded-xl transition-all hover:shadow-[0_0_20px_rgba(var(--success-rgb),0.2)]" style={{ backgroundColor: "var(--success)", color: "#ffffff" }}>
-              <OlivLogo size="xs" variant="dark" />
               See Financing Details <ArrowRight size={14} />
             </Link>
           </div>
@@ -188,12 +185,11 @@ export default function SupplierJoinPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="rounded-2xl border p-8 md:p-12 text-center" style={{ borderColor: "var(--success)22", backgroundColor: "var(--success)06" }}>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-4" style={{ borderColor: "var(--success)33", backgroundColor: "var(--success)10" }}>
-              <OlivLogo size="xs" variant="green" />
-              <span className="text-[11px] font-medium uppercase tracking-[0.12em]" style={{ color: "var(--success)" }}>Oliv Invoice Financing</span>
+              <span className="text-[11px] font-medium uppercase tracking-[0.12em]" style={{ color: "var(--success)" }}> Invoice Financing</span>
             </div>
             <h2 className="text-2xl md:text-3xl font-semibold text-white mb-5">The Credit Engine That Scales With You</h2>
             <p className="text-[14px] text-white/40 max-w-xl mx-auto mb-8 leading-relaxed">
-              Unlike traditional factoring, Oliv&apos;s credit engine evaluates your business performance — not just individual invoices.
+              Unlike traditional factoring, &apos;s credit engine evaluates your business performance — not just individual invoices.
               One approval unlocks a <strong style={{ color: "var(--success)" }}>revolving facility up to EGP 10M</strong> that handles any invoice volume.
             </p>
             <div className="grid sm:grid-cols-3 gap-6 mb-8">
@@ -259,14 +255,14 @@ export default function SupplierJoinPage() {
           <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4">Ready to Grow Your Hotel Supply Business?</h2>
           <p className="text-[14px] text-white/40 mb-8 max-w-md mx-auto">
             Join suppliers already transacting on HotelsVendors. List your products today,
-            unlock Oliv financing on your first verified invoice.
+            unlock financing on your first verified invoice.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link href="/register?type=supplier" className="inline-flex items-center gap-2 px-8 py-3 text-[13px] font-semibold rounded-xl transition-all hover:shadow-[0_0_30px_rgba(var(--success-rgb),0.25)]" style={{ backgroundColor: "var(--success)", color: "#ffffff" }}>
               Start Selling Now <ArrowRight size={14} />
             </Link>
             <Link href="/financing/oliv" className="inline-flex items-center gap-2 px-8 py-3 text-[13px] font-medium rounded-xl transition-all hover:bg-white/[0.04]" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
-              Learn About Oliv Financing
+              Learn About Financing
             </Link>
           </div>
           <p className="text-[11px] text-white/20 mt-6">

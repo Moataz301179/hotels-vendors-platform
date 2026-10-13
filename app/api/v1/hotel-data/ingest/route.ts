@@ -23,15 +23,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { createHash } from 'crypto';
-
-import { ingest, type IngestionResult } from '@/lib/hotel-data/ingestion-api';
+import { ingest } from '@/lib/hotel-data/ingestion-api';
 import { createEvidenceStore, type HotelDataEvidenceStore, type StoredIngestion } from '@/lib/hotel-data/hotel-data-evidence-store';
-import { normalizeBatch, type NormalizationContext } from '@/lib/hotel-data/normalizer';
-import { createIngestionId, type IngestionId } from '@/lib/hotel-data/evidence-chain';
-import { type CurrencyCode } from '@/lib/hotel-data/canonical-schema';
+import { normalizeAccount, normalizeTransaction } from '@/lib/hotel-data/normalizer';
+import { createIngestionId } from '@/lib/hotel-data/evidence-chain';
+import { normalizeCurrencyCode, type IngestionRecord } from '@/lib/hotel-data/canonical-schema';
+import { authenticate, requirePermission, handleApiError } from '@/lib/api-utils';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+const UploadFields = z.object({ hotelId: z.string().min(1), sourceSystem: z.string().min(1).max(100), exportTimestamp: z.string().datetime() });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORE (singleton per process — for pilot, in-memory + JSON disk)
@@ -42,7 +42,6 @@ let evidenceStore: HotelDataEvidenceStore | null = null;
 function getStore(): HotelDataEvidenceStore {
   if (!evidenceStore) {
     // Use a subdirectory under the project data folder
-    const dataDir = join(process.cwd(), 'data', 'hotel-data-evidence');
     evidenceStore = createEvidenceStore('hotel-data-evidence');
   }
   return evidenceStore;
@@ -55,11 +54,10 @@ function getStore(): HotelDataEvidenceStore {
 /**
  * Extract file buffer from NextRequest multipart form data.
  */
-async function extractFile(request: NextRequest): Promise<{ buffer: Buffer; filename: string } | null> {
-  const formData = await request.formData();
-  const file = formData.get('file') as File | null;
+async function extractFile(formData: FormData): Promise<{ buffer: Buffer; filename: string } | null> {
+  const file = formData.get('file');
 
-  if (!file) {
+  if (!file || typeof file === 'string') {
     return null;
   }
 
@@ -72,9 +70,6 @@ async function extractFile(request: NextRequest): Promise<{ buffer: Buffer; file
 /**
  * Compute SHA-256 hash of a buffer.
  */
-function computeHash(buffer: Buffer): string {
-  return createHash('sha256').update(buffer).digest('hex');
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROUTE HANDLERS
@@ -106,8 +101,11 @@ function computeHash(buffer: Buffer): string {
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await authenticate(request);
+    await requirePermission(auth, "invoice:write");
+    const formData = await request.formData();
     // Step 1: Extract file
-    const fileResult = await extractFile(request);
+    const fileResult = await extractFile(formData);
     if (!fileResult) {
       return NextResponse.json(
         { error: 'No file provided. Please upload a .xlsx, .xls, or .csv file.' },
@@ -130,10 +128,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Extract form fields
-    const formData = await request.formData();
     const hotelId = (formData.get('hotelId') as string | null)?.trim();
     const sourceSystem = (formData.get('sourceSystem') as string | null)?.trim();
-    const tenantId = (formData.get('tenantId') as string | null)?.trim();
+    const tenantId = auth.tenantId;
     const exportTimestamp = (formData.get('exportTimestamp') as string | null)?.trim() || new Date().toISOString();
 
     if (!hotelId) {
@@ -157,11 +154,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 4: Compute raw file hash (for provenance)
-    const rawFileHash = computeHash(buffer);
-
-    // Step 5: Generate ingestion ID
-    const ingestionId = createIngestionId(`ingest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    UploadFields.parse({ hotelId, sourceSystem, exportTimestamp });
+    if (!await prisma.hotel.findFirst({ where: { id: hotelId, tenantId }, select: { id: true } })) return NextResponse.json({ error: 'Hotel not found' }, { status: 404 });
 
     // Step 6: Parse and validate via ingestion-api.ts
     const parseResult = await ingest({
@@ -174,6 +168,12 @@ export async function POST(request: NextRequest) {
 
     // Step 8: Persist to evidence store
     const store = getStore();
+    const context = { ingestionId: createIngestionId(parseResult.ingestionId), sourceSystem };
+    const records: IngestionRecord[] = parseResult.normalizedTransactions.map((record, index) => {
+      if (!normalizeCurrencyCode(record.currency)) throw new Error('Validated source currency is required');
+      if (record.accountCode !== undefined) return { kind: 'account', data: { ...normalizeAccount({ ...record, ...record.rawData, currency: record.currency }, context, index), id: record.id } };
+      return { kind: 'transaction', data: { ...normalizeTransaction({ ...record, ...record.rawData, invoiceAmount: record.invoiceAmount?.value, unitPrice: record.unitPrice?.value, currency: record.currency }, context, index), id: record.id } };
+    });
 
     // Convert records to JSON for storage
     const rawDataJson = JSON.stringify({
@@ -189,9 +189,9 @@ export async function POST(request: NextRequest) {
       sourceSystem,
       exportTimestamp,
       buffer,
-      parseResult.normalizedTransactions as any,
-      parseResult.validationReport as any,
-      parseResult.detectedSourceCurrency,
+      records,
+      parseResult.validationReport,
+      normalizeCurrencyCode(parseResult.detectedSourceCurrency) ?? undefined,
       rawDataJson
     );
 
@@ -217,6 +217,8 @@ export async function POST(request: NextRequest) {
         .map((i) => i.message),
     });
   } catch (error) {
+    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Invalid upload metadata' }, { status: 400 });
+    if (error instanceof Error && 'statusCode' in error) return handleApiError(error);
     console.error('[hotel-data-ingest] POST error:', error);
 
     return NextResponse.json(
@@ -242,6 +244,8 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const auth = await authenticate(request);
+    await requirePermission(auth, "invoice:read");
     const { searchParams } = new URL(request.url);
     const hotelId = searchParams.get('hotelId')?.trim();
 
@@ -249,9 +253,9 @@ export async function GET(request: NextRequest) {
 
     let ingestions: StoredIngestion[];
     if (hotelId) {
-      ingestions = store.listForHotel(hotelId);
+      ingestions = store.listForHotel(hotelId).filter(record => record.tenantId === auth.tenantId);
     } else {
-      ingestions = store.listAll();
+      ingestions = store.listAll().filter(record => record.tenantId === auth.tenantId);
     }
 
     return NextResponse.json({
@@ -271,6 +275,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
+    if (error instanceof Error && 'statusCode' in error) return handleApiError(error);
     console.error('[hotel-data-ingest] GET error:', error);
 
     return NextResponse.json(

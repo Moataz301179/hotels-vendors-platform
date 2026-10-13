@@ -9,6 +9,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import type { EntityName } from "@prisma/client";
 
 export type ProvenanceClassification =
   | "OBSERVED"
@@ -61,7 +62,7 @@ export async function linkProcurementAudit(
   if (!audit) return null;
 
   // Only link when entity is a procurement-related entity (Order, Invoice, etc.)
-  const procurementEntities = ["Order", "Invoice", "OrderApproval", "TripStop", "GoodsReceiptNote"];
+  const procurementEntities = ["ORDER", "INVOICE", "ORDER_ITEM", "CREDIT_NOTE"];
   if (!procurementEntities.includes(audit.entityName ?? "")) {
     return null;
   }
@@ -80,10 +81,10 @@ export async function linkProcurementAudit(
   };
 }
 
-async function buildAuditChain(entityId: string, entityName: string | null): Promise<string[]> {
+async function buildAuditChain(entityId: string, entityName: EntityName | null): Promise<string[]> {
   const chain: string[] = [entityId];
-  let currentId = entityId;
-  const currentName = entityName ?? "";
+  const currentId = entityId;
+  const currentName = entityName;
   // Build a limited chain by following audit entries with previousHash links.
   for (let depth = 0; depth < 10; depth++) {
     const entry = await prisma.auditLog.findFirst({

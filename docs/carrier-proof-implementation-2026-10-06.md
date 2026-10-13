@@ -1,0 +1,15 @@
+# Authenticated carrier proof maintenance
+
+Trip assignment uses `assignedDriverId`, a composite FK to `(User.id, User.tenantId)`. Legacy driver names/phones are display fields only; they are never an authentication shortcut. Existing trips remain unassigned until a coordinator assigns an active SHIPPING user. No name-based automatic backfill is permitted.
+
+Evidence is stored privately as bounded binary data in `DeliveryProof`, not under the product upload endpoint or as external/device URLs. Stop, uploader and tenant ownership are tied by composite foreign keys. Every capture requires dedicated `shipping:capture_proof` and the authenticated assigned driver. The migration registers this permission without granting it to broad roles; an administrator provisions a reviewed tenant driver role explicitly. Driver today's query returns only the session user's assigned trips. Private proof reads require authenticated `shipping:read` and same tenant plus dispatcher (`shipping:create_trip`) or assigned-driver capture rights.
+
+The capture transaction locks the stop, checks assignment, state and idempotency, creates private proof, updates the stop to POD_CAPTURED, and appends the audit entry. Audit failure rolls back all writes. Exact retries replay the result; changed input with the same key conflicts. One proof per stop prevents competing captures. Capturing proof never changes order status or completes the trip; acceptance/payment/Authority Matrix gates remain separate.
+
+Deployment prerequisites: review/apply `20261006023000_private_delivery_proofs` against the confirmed target, generate the client, explicitly assign drivers to existing trips, verify private database storage encryption/backups/retention, and run staging capture/read/replay/tenant-negative tests. No database migration was executed in this maintenance session. Missing schema returns an explicit unavailable error instead of recording a delivery.
+
+Carrier earnings remain unavailable until approved settlement records exist. Public product uploads are deliberately not used for proof evidence. Native simulator verification remains dependent on existing native dependency setup.
+
+Auto-assignment now matches verified active same-tenant SHIPPING accounts and their carrier profiles by actual coverage and available capacity. It uses User IDs, never driver-name similarity. Existing assignments replay without duplicate stops. Confirmed approval and payment guarantee are required before assignment. Trip/stop creation and audit commit together. Vehicle plate remains null until a real vehicle is recorded; absent delivery-zone terms leave the delivery estimate unset. No default reliability/punctuality or settlement numbers are invented.
+
+Local verification: Prisma schema validation and client generation passed; 23 isolated service/API tests passed covering permissions, assignment ownership, tenant filtering, private responses, image validation, idempotency, lifecycle rejection and mandatory audit error propagation. Database transaction semantics and migration application still require staging PostgreSQL verification; mocked tests do not establish deployed readiness.

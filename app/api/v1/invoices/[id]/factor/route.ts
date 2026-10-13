@@ -4,25 +4,42 @@ import { inquireAll } from "@/lib/fintech/factoring-bridge";
 import { validateForFactoring } from "@/lib/eta/validator";
 import { assessRisk } from "@/lib/fintech/risk-engine";
 import { calculateHubRevenue } from "@/lib/fintech/hub-revenue";
-import { addFactoringJob } from "@/lib/factoring/queue";
 import { apiRoute, authenticate, success, error, audit, requireIdempotencyKey, completeIdempotency, requirePermission } from "@/lib/api-utils";
 
 export const POST = apiRoute(async (request: NextRequest, { params }: { params?: Promise<{ id: string }> }) => {
   const auth = await authenticate(request);
   await requirePermission(auth, "invoice:factor");
   const resolved = await params;
-  if (!resolved) return error("Missing parameter", 400);
+  if (!resolved?.id) return error("Missing parameter", 400);
   const { id } = resolved;
 
-  const record = await prisma.invoice.findUnique({ where: { id }, select: { tenantId: true } });
-  if (!record || record.tenantId !== auth.tenantId) return error("Not found", 404);
-
-  const invoice = await prisma.invoice.findUnique({
-    where: { id },
-    include: { hotel: true, supplier: true, order: true },
+  const invoice = await prisma.invoice.findFirst({
+    where: { id, tenantId: auth.tenantId, deletedAt: null, order: { tenantId: auth.tenantId, deletedAt: null } },
+    include: {
+      hotel: true,
+      supplier: true,
+      order: {
+        include: {
+          tripStops: {
+            where: { tenantId: auth.tenantId, deletedAt: null },
+            select: { deliveryProofs: { select: { id: true }, take: 1 } },
+          },
+          goodsReceiptNotes: {
+            where: { tenantId: auth.tenantId, deletedAt: null },
+            select: { status: true },
+          },
+        },
+      },
+    },
   });
 
   if (!invoice) return error("Invoice not found", 404);
+  if (invoice.order.status !== "DELIVERED") return error("Factoring requires a fully delivered order", 409);
+  if (!invoice.order.paymentGuaranteed) return error("Factoring requires a payment-guaranteed order", 409);
+  if (!invoice.order.tripStops.some((stop) => stop.deliveryProofs.length > 0)) return error("Factoring requires carrier proof of delivery", 409);
+  if (!invoice.order.goodsReceiptNotes.some((grn) => grn.status === "ACCEPTED" || grn.status === "PARTIALLY_ACCEPTED")) {
+    return error("Factoring requires a hotel goods receipt", 409);
+  }
 
   const idempotencyKey = await requireIdempotencyKey(request, { userId: auth.userId, action: "INVOICE_FACTOR", amount: Number(invoice.total ?? 0) });
 
@@ -58,14 +75,21 @@ export const POST = apiRoute(async (request: NextRequest, { params }: { params?:
     advanceRate: bestOffer.maxAdvanceRate,
   });
 
-  // Create factoring request record (queued for background processing)
+  const existingRequest = await prisma.factoringRequest.findFirst({
+    where: { invoiceId: id, tenantId: auth.tenantId, deletedAt: null },
+    select: { id: true, status: true },
+  });
+  if (existingRequest) return error("Factoring eligibility has already been requested for this invoice", 409);
+
+  // Create an eligibility request. Funding remains a separate, explicitly
+  // approved step after the partner offer is accepted.
   const factoringRequest = await prisma.factoringRequest.create({
     data: {
       tenantId: auth.tenantId,
       invoiceId: id,
       factoringCompanyId: bestOffer.partnerId,
       requestedAmount: invoice.total,
-      status: "APPROVED",
+      status: "UNDER_REVIEW",
       riskScore: risk.compositeScore,
       riskTier: risk.riskTier,
       advanceRate: bestOffer.maxAdvanceRate,
@@ -74,22 +98,15 @@ export const POST = apiRoute(async (request: NextRequest, { params }: { params?:
       grossAmount: invoice.total,
       platformFee: hubRev.netPlatformFee,
       factoringFee: hubRev.factoringFee,
+      partnerResponse: JSON.stringify({ offers: allOffers, selectedPartnerId: bestOffer.partnerId }),
     },
   });
 
-  // Queue funding execution
-  const job = await addFactoringJob({
-    factoringRequestId: factoringRequest.id,
-    tenantId: auth.tenantId,
-    userId: auth.userId,
-    action: "FUND",
-  });
-
-  // Update invoice
+  // Mark that an offer is available, never as funded or accepted.
   await prisma.invoice.update({
     where: { id },
     data: {
-      factoringStatus: "ACCEPTED",
+      factoringStatus: "OFFERED",
       factoringCompanyId: bestOffer.partnerId,
     },
   });
@@ -104,7 +121,6 @@ export const POST = apiRoute(async (request: NextRequest, { params }: { params?:
     afterState: {
       partnerId: bestOffer.partnerId,
       factoringRequestId: factoringRequest.id,
-      jobId: job.id,
       platformFee: hubRev.platformFee,
       factoringFee: hubRev.factoringFee,
     },
@@ -112,12 +128,11 @@ export const POST = apiRoute(async (request: NextRequest, { params }: { params?:
     userAgent: request.headers.get("user-agent"),
   });
 
-  completeIdempotency(idempotencyKey, id);
+  await completeIdempotency(idempotencyKey, id);
 
   return success({
-    message: "Factoring queued for disbursement",
+    message: "Factoring eligibility offer prepared; partner approval is required before funding",
     factoringRequestId: factoringRequest.id,
-    jobId: job.id,
     hubRevenue: hubRev,
     offers: allOffers,
   });

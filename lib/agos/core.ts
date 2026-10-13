@@ -2,7 +2,7 @@
  * AGENT OPERATING SYSTEM — core runtime (framework, not a pipeline).
  *
  * This is the GENERIC substrate every mission runs on. A mission (e.g. Oliv
- * CHV000 onboarding) is just one AGENT REGISTRATION into it. Future tasks plug
+ * Partner referral onboarding) is just one AGENT REGISTRATION into it. Future tasks plug
  * in without touching the core.
  *
  * Core primitives:

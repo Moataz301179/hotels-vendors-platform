@@ -52,20 +52,20 @@ export async function getSupplierProfile(
 
   // Operational footprint from existing procurement/logistics schemas
   const [orders, invoices, hotelSuppliers, auditLog, supplierAudit] = await Promise.all([
-    prisma.order.findMany({ where: { supplierId }, select: { id: true, status: true, total: true } }),
-    prisma.invoice.findMany({ where: { supplierId }, select: { amount: true, etaStatus: true } }),
-    prisma.hotelSupplier.findMany({ where: { supplierId }, include: { hotel: { select: { id: true } } } }),
+    prisma.order.findMany({ where: { supplierId, tenantId }, select: { id: true, status: true, total: true } }),
+    prisma.invoice.findMany({ where: { supplierId, tenantId }, select: { total: true, etaStatus: true } }),
+    prisma.hotelSupplier.findMany({ where: { supplierId, tenantId }, include: { hotel: { select: { id: true } } } }),
     prisma.auditLog.findFirst({
-      where: { entityId: supplierId, entityName: "SUPPLIER" },
+      where: { tenantId, entityId: supplierId, entityName: "SUPPLIER" },
       orderBy: { createdAt: "desc" },
       select: { id: true, actionType: true, entityUuid: true },
     }),
-    prisma.supplierAudit.findFirst({ where: { supplierId }, orderBy: { auditDate: "desc" }, select: { status: true, score: true, coldChainCompliant: true } }),
+    prisma.supplierAudit.findFirst({ where: { supplierId, tenantId }, orderBy: { auditDate: "desc" }, select: { status: true, score: true, coldChainCompliant: true } }),
   ]);
 
   const confirmedOrders = orders.filter((o: { status: string }) => o.status === "CONFIRMED" || o.status === "DELIVERED").length;
-  const totalRevenue = invoices.reduce((sum: number, inv: { amount: number | null }) => sum + Number(inv.amount || 0), 0);
-  const logisticsTrips = await prisma.trip.count({ where: { supplierId } });
+  const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
+  const logisticsTrips = await prisma.trip.count({ where: { tenantId, stops: { some: { tenantId, order: { supplierId, tenantId } } } } });
 
   // Provenance chain reference from audit log (existing audit/provenance infrastructure)
   const provenanceRefs: string[] = auditLog ? [auditLog.id] : [];

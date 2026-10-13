@@ -15,7 +15,7 @@ export function InvoFooter() {
               <span className="text-[11px] text-white/30">by HotelsVendors</span>
             </div>
             <p className="text-[14px] text-white/40 max-w-sm leading-relaxed">
-              The financial layer for suppliers on Egypt's largest hospitality
+              The financial layer for suppliers on Egypt&apos;s largest hospitality
               procurement network. Subscribe. List. Get paid.
             </p>
           </div>

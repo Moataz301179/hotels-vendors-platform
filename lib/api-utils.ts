@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createHash } from "crypto";
-import { verifySession, getSessionToken } from "@/lib/session";
+import { getCurrentUser } from "@/lib/auth/server-auth";
+import { authenticateMobileToken, isNativeTokenRequest } from "@/lib/auth/mobile-session";
 import { captureException } from "@sentry/nextjs";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { checkIdempotencyKey, completeIdempotency as completeRedisIdempotency } from "@/lib/redis";
@@ -32,19 +33,6 @@ function hashIpAddress(ip: string | null): string | null {
 // ─────────────────────────────────────────
 // 1. TENANT ISOLATION
 // ─────────────────────────────────────────
-
-export function getTenantId(request: NextRequest): string | null {
-  // DEPRECATED: Do not use. Tenant ID must come from the JWT session.
-  return request.headers.get("x-tenant-id");
-}
-
-export function requireTenantId(request: NextRequest): string {
-  const tenantId = getTenantId(request);
-  if (!tenantId) {
-    throw new ApiError("Missing x-tenant-id header", 400);
-  }
-  return tenantId;
-}
 
 export function getBearerToken(request: NextRequest): string | null {
   const header = request.headers.get("authorization")?.trim();
@@ -77,27 +65,21 @@ export interface AuthContext {
 }
 
 export async function authenticate(request: NextRequest): Promise<AuthContext> {
-  // Primary: read from session cookie
-  let token = await getSessionToken();
-
-  if (!token) {
-    throw new ApiError("Unauthorized", 401);
-  }
-
-  const session = await verifySession(token);
-  if (!session) {
-    throw new ApiError("Invalid or expired session", 401);
-  }
-
-  // Tenant ID comes from the JWT session — NEVER trust client-sent headers
-  return { userId: session.userId, platformRole: session.platformRole, tenantId: session.tenantId };
+  const token = getBearerToken(request);
+  // A supplied bearer credential is never rescued by a browser cookie/session.
+  const user = request.headers.has("authorization")
+    ? token && isNativeTokenRequest(request) ? await authenticateMobileToken(token) : null
+    : await getCurrentUser();
+  if (!user) throw new ApiError("Unauthorized", 401);
+  return { userId: user.id, platformRole: user.platformRole, tenantId: user.tenantId };
 }
 
 export async function optionalAuth(request: NextRequest): Promise<AuthContext | null> {
   try {
     return await authenticate(request);
-  } catch {
-    return null;
+  } catch (cause) {
+    if (cause instanceof ApiError && cause.statusCode === 401) return null;
+    throw cause;
   }
 }
 
@@ -197,9 +179,22 @@ export async function audit(
       ipAddress: hashIpAddress(params.ipAddress ?? null),
       userAgent: params.userAgent,
     });
-  } catch {
-    // Audit failure should not break the request, but log it somewhere
-    console.error("Audit log failed:", params);
+  } catch (err) {
+    // Audit failure must not break the request but must be visible.
+    // Log structured for SIEM ingestion and alert critical failures.
+    const ip = params.ipAddress ?? "unknown";
+    console.error(JSON.stringify({
+      event: "audit_write_failed",
+      severity: "critical",
+      timestamp: new Date().toISOString(),
+      entityId: params.entityId,
+      tenantId: params.tenantId,
+      actorId: params.actorId,
+      actionType: params.actionType || params.action,
+      ip,
+      userAgent: params.userAgent,
+      error: err instanceof Error ? err.message : String(err),
+    }));
   }
 }
 
@@ -229,6 +224,9 @@ export class ApiError extends Error {
 }
 
 export function handleApiError(err: unknown): NextResponse {
+  if (err instanceof Error && err.name === "ReverificationRequiredError") {
+    return NextResponse.json({ success: false, error: err.message, clerk_error: { type: "forbidden", reason: "reverification-error", metadata: { reverification: { level: "second_factor", afterMinutes: 5 } } } }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
   if (err instanceof ApiError) {
     return error(err.message, err.statusCode);
   }
@@ -241,7 +239,7 @@ export function handleApiError(err: unknown): NextResponse {
     return error(err.message, 403);
   }
   if (err instanceof Error) {
-    return error(err.message, 500);
+    return error("The request could not be completed", 500);
   }
   return error("Unknown error", 500);
 }

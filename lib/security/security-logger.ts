@@ -18,7 +18,8 @@ export type SecurityEventType =
   | "admin_override"
   | "mfa_required"
   | "session_invalid"
-  | "unauthorized_access_attempt";
+  | "inventory_webhook_received"
+  | "llm_invoked";
 
 interface SecurityEvent {
   timestamp: string;

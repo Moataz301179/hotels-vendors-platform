@@ -1,7 +1,7 @@
 /**
  * POST /api/v1/oliv/initiate-factoring
  *
- * Called when supplier clicks "Factor via Oliv" on the dashboard.
+ * Called when supplier clicks "Factor via partner" on the dashboard.
  * Generates referral token (Layer 1), builds Oliv payload, logs transaction.
  *
  * This endpoint does NOT send to Oliv — it returns the payload for

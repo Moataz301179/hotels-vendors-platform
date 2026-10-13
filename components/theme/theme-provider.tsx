@@ -1,8 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 
 export type AccentMode = "orange" | "lime";
+function readAccent(): AccentMode {
+  return localStorage.getItem("hv-accent-mode") === "lime" ? "lime" : "orange";
+}
+function subscribeAccent(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener("hv-accent-change", listener);
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener("hv-accent-change", listener);
+  };
+}
 
 interface ThemeContextType {
   accent: AccentMode;
@@ -21,23 +32,15 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [accent, setAccentState] = useState<AccentMode>("orange");
-  const [mounted, setMounted] = useState(false);
+  const accent = useSyncExternalStore(subscribeAccent, readAccent, () => "orange" as AccentMode);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("hv-accent-mode") as AccentMode | null;
-    if (saved === "lime" || saved === "orange") {
-      setAccentState(saved);
-      document.documentElement.setAttribute("data-accent", saved);
-    } else {
-      document.documentElement.setAttribute("data-accent", "orange");
-    }
-  }, []);
+    document.documentElement.setAttribute("data-accent", accent);
+  }, [accent]);
 
   const setAccent = (mode: AccentMode) => {
-    setAccentState(mode);
     localStorage.setItem("hv-accent-mode", mode);
+    window.dispatchEvent(new Event("hv-accent-change"));
     document.documentElement.setAttribute("data-accent", mode);
   };
 
@@ -45,11 +48,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const next = accent === "orange" ? "lime" : "orange";
     setAccent(next);
   };
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <>{children}</>;
-  }
 
   return (
     <ThemeContext.Provider value={{ accent, setAccent, toggleAccent }}>

@@ -10,7 +10,7 @@
  */
 
 import { Queue, Worker, Job } from "bullmq";
-import { getRedisConnection } from "@/lib/queues/connection";
+import { getRedisConnection, isBuildEnvironment } from "@/lib/queues/connection";
 import { prisma } from "@/lib/prisma";
 import { recordSwarmEvent } from "@/lib/swarm/monitoring";
 import { assessRisk } from "@/lib/fintech/risk-engine";
@@ -19,9 +19,9 @@ import { addEmailJob } from "@/lib/notifications/queue";
 import { factoringDisbursedTemplate } from "@/lib/notifications/email";
 
 // ── Queue ──
-export const factoringQueue = new Queue("factoring-disbursement", {
-  connection: getRedisConnection(),
-});
+export const factoringQueue = isBuildEnvironment()
+  ? (null as unknown as Queue)
+  : new Queue("factoring-disbursement", { connection: getRedisConnection() });
 
 // ── Types ──
 export interface FactoringJobPayload {

@@ -3,13 +3,15 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Landmark, FileCheck, AlertTriangle, TrendingUp,
+  Landmark, FileCheck, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Plus, Search, Eye,
-  Wallet, Receipt, CheckCircle2, Clock, Loader2,
-  ArrowRight, X, Building2, Package, Check, AlertCircle,
+  Wallet, Receipt, CheckCircle2, Loader2,
+  ArrowRight, X, Check, AlertCircle,
 } from "lucide-react";
-import { OlivReferralCTA } from "@/components/partners/oliv-referral-cta";
+import { ReferralCTA } from "@/components/partners/oliv-referral-cta";
 import { FactoringOnboardingBot } from "@/components/ai-assistant/factoring-onboarding-chatbot";
+import type { PartnerOffer } from "@/lib/fintech/factoring-bridge";
+import { getCsrfToken } from "@/lib/security/csrf-client";
 import { useApi } from "@/lib/hooks/use-api";
 import { LoadingCard, LoadingTable } from "@/components/dashboards/shared/loading-card";
 import { EmptyState } from "@/components/dashboards/shared/empty-state";
@@ -38,11 +40,11 @@ interface Facility {
 interface FactoringRequest {
   id: string;
   status: string;
-  amount: number;
-  discountRate: number;
-  currency: string;
+  requestedAmount: number | string;
+  disbursedAmount: number | string | null;
+  discountRate: number | string;
   createdAt: string;
-  invoice: { invoiceNumber: string; hotel: { name: string }; supplier: { name: string }; total: number };
+  invoice: { invoiceNumber: string; hotel: { name: string }; supplier: { name: string }; total: number | string; currency: string };
   factoringCompany: { name: string };
 }
 
@@ -87,26 +89,26 @@ export default function FinanceDashboardPage() {
   const [newModalOpen, setNewModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<"select" | "offers" | "confirm" | "success">("select");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [offers, setOffers] = useState<any[]>([]);
-  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [offers, setOffers] = useState<PartnerOffer[]>([]);
+  const [selectedOffer, setSelectedOffer] = useState<PartnerOffer | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
 
-  const { data: facilitiesData, loading: facilitiesLoading, error: facilitiesError } = useApi<Facility[]>(
-    "/api/v1/factoring/credit-lines?page=1&limit=50"
+  const { data: facilitiesData, loading: facilitiesLoading, error: facilitiesError } = useApi<{ hasFacility: boolean; facility?: { id: string; status: string; creditLimitEgp: number | string; utilizedEgp: number | string; supplier: { name: string } } }>(
+    "/api/v1/fintech/oliv-facility"
   );
 
   const { data: requestsData, loading: requestsLoading } = useApi<{ requests: FactoringRequest[]; pagination: { total: number } }>(
     "/api/v1/factoring/requests?page=1&limit=10"
   );
 
-  const { data: invoicesData, loading: invoicesLoading } = useApi<{ data: Invoice[]; meta: { total: number } }>(
+  const { data: invoicesData, loading: invoicesLoading } = useApi<{ invoices: Invoice[]; pagination: { total: number } }>(
     "/api/v1/invoices?page=1&limit=10"
   );
 
-  const facilities = facilitiesData ?? [];
-  const requests = requestsData?.requests ?? [];
-  const invoices = invoicesData?.data ?? [];
+  const facilities = useMemo<Facility[]>(() => facilitiesData?.hasFacility && facilitiesData.facility ? [{ id: facilitiesData.facility.id, status: facilitiesData.facility.status, limit: Number(facilitiesData.facility.creditLimitEgp), utilized: Number(facilitiesData.facility.utilizedEgp), currency: "EGP", hotel: { name: facilitiesData.facility.supplier.name }, factoringCompany: { name: "Oliv" } }] : [], [facilitiesData]);
+  const requests = useMemo(() => requestsData?.requests ?? [], [requestsData]);
+  const invoices = invoicesData?.invoices ?? [];
 
   const stats = useMemo(() => {
     const totalLimit = facilities.reduce((sum, f) => sum + f.limit, 0);
@@ -117,7 +119,7 @@ export default function FinanceDashboardPage() {
     return [
       { label: "Available Credit", value: formatCurrency(available), change: `${formatCurrency(totalLimit)} total limit`, up: true, icon: Wallet },
       { label: "Outstanding", value: formatCurrency(totalUtilized), change: "Utilized", up: false, icon: Receipt },
-      { label: "Factored Amount", value: formatCurrency(requests.filter((r) => r.status === "FUNDED").reduce((s, r) => s + r.amount, 0)), change: "This month", up: true, icon: Landmark },
+      { label: "Factored Amount", value: formatCurrency(requests.filter((r) => ["DISBURSED", "SETTLED"].includes(r.status)).reduce((s, r) => s + Number(r.disbursedAmount ?? 0), 0)), change: "Loaded requests", up: true, icon: Landmark },
       { label: "Pending Requests", value: pendingRequests.toString(), change: "Awaiting approval", up: pendingRequests === 0, icon: AlertTriangle },
     ];
   }, [facilities, requests]);
@@ -137,13 +139,13 @@ export default function FinanceDashboardPage() {
     try {
       const res = await fetch("/api/v1/factoring/inquire", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfToken(), "x-idempotency-key": crypto.randomUUID() },
         body: JSON.stringify({ invoiceId: invoice.id }),
       });
       const json = await res.json();
-      if (json.success) {
-        setOffers(json.allOffers || []);
-        setSelectedOffer(json.bestOffer || null);
+      if (res.ok && json.success) {
+        setOffers((json.data?.allOffers || []).filter((offer: PartnerOffer) => offer.eligible));
+        setSelectedOffer(json.data?.bestOffer || null);
         setModalStep("offers");
       } else {
         setModalError(json.error || "Failed to get offers");
@@ -162,12 +164,10 @@ export default function FinanceDashboardPage() {
     try {
       const res = await fetch("/api/v1/factoring/fund", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfToken(), "x-idempotency-key": crypto.randomUUID() },
         body: JSON.stringify({
           invoiceId: selectedInvoice.id,
-          factoringCompanyId: selectedOffer.factoringCompanyId,
-          advanceRate: selectedOffer.advanceRate,
-          discountRate: selectedOffer.discountRate,
+          partnerId: selectedOffer.partnerId,
         }),
       });
       const json = await res.json();
@@ -239,9 +239,9 @@ export default function FinanceDashboardPage() {
             ))}
       </motion.div>
 
-      {/* Oliv Referral Banner */}
+      {/*  Referral Banner */}
       <motion.div variants={fadeInUp}>
-        <OlivReferralCTA variant="banner" />
+        <ReferralCTA variant="banner" />
       </motion.div>
 
       {/* Main Grid */}
@@ -300,10 +300,10 @@ export default function FinanceDashboardPage() {
                         <span className="text-xs text-white">{req.invoice?.hotel?.name || "—"}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-xs font-semibold text-white">{formatCurrency(req.amount, req.currency)}</span>
+                        <span className="text-xs font-semibold text-white">{formatCurrency(Number(req.requestedAmount), req.invoice.currency)}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[11px] text-foreground-muted">{(req.discountRate * 100).toFixed(1)}%</span>
+                        <span className="text-[11px] text-foreground-muted">{(Number(req.discountRate) * 100).toFixed(1)}%</span>
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={req.status} />
@@ -332,7 +332,7 @@ export default function FinanceDashboardPage() {
               <Wallet size={14} className="text-foreground-muted" />
               Credit Facilities
             </h3>
-            {facilitiesLoading ? (
+            {facilitiesError ? <p role="alert" className="text-red-400">{facilitiesError}</p> : facilitiesLoading ? (
               <LoadingTable rows={3} />
             ) : facilities.length === 0 ? (
               <EmptyState title="No facilities" description="Credit facilities will appear here." />
@@ -406,11 +406,11 @@ export default function FinanceDashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg bg-surface-1 border border-border-invisible">
                 <p className="text-[10px] text-foreground-muted uppercase">Amount</p>
-                <p className="text-sm text-white mt-0.5">{formatCurrency(selectedRequest.amount, selectedRequest.currency)}</p>
+                <p className="text-sm text-white mt-0.5">{formatCurrency(Number(selectedRequest.requestedAmount), selectedRequest.invoice.currency)}</p>
               </div>
               <div className="p-3 rounded-lg bg-surface-1 border border-border-invisible">
                 <p className="text-[10px] text-foreground-muted uppercase">Discount Rate</p>
-                <p className="text-sm text-white mt-0.5">{(selectedRequest.discountRate * 100).toFixed(1)}%</p>
+                <p className="text-sm text-white mt-0.5">{(Number(selectedRequest.discountRate) * 100).toFixed(1)}%</p>
               </div>
               <div className="p-3 rounded-lg bg-surface-1 border border-border-invisible">
                 <p className="text-[10px] text-foreground-muted uppercase">Status</p>
@@ -433,7 +433,7 @@ export default function FinanceDashboardPage() {
               </div>
               <div className="flex items-center justify-between text-xs mt-1">
                 <span className="text-foreground-muted">Invoice Total:</span>
-                <span className="text-white">{formatCurrency(selectedRequest.invoice?.total || 0, selectedRequest.currency)}</span>
+                <span className="text-white">{formatCurrency(Number(selectedRequest.invoice?.total || 0), selectedRequest.invoice.currency)}</span>
               </div>
             </div>
           </div>
@@ -483,28 +483,16 @@ function NewFactoringModal({
   setStep: (s: "select" | "offers" | "confirm" | "success") => void;
   selectedInvoice: Invoice | null;
   setSelectedInvoice: (i: Invoice | null) => void;
-  offers: any[];
-  selectedOffer: any;
-  setSelectedOffer: (o: any) => void;
+  offers: PartnerOffer[];
+  selectedOffer: PartnerOffer | null;
+  setSelectedOffer: (o: PartnerOffer) => void;
   loading: boolean;
   error: string;
   onFetchOffers: (invoice: Invoice) => void;
   onExecuteFunding: () => void;
 }) {
-  const [eligibleInvoices, setEligibleInvoices] = useState<Invoice[]>([]);
-  const [invLoading, setInvLoading] = useState(false);
-
-  useState(() => {
-    if (isOpen && step === "select") {
-      setInvLoading(true);
-      fetch("/api/v1/factoring/invoices")
-        .then((r) => r.json())
-        .then((json) => {
-          if (json.success) setEligibleInvoices(json.data || []);
-        })
-        .finally(() => setInvLoading(false));
-    }
-  });
+  const { data: eligibleData, loading: invLoading, error: invoiceError } = useApi<{ invoices: Invoice[] }>(isOpen && step === "select" ? "/api/v1/factoring/invoices" : null);
+  const eligibleInvoices = eligibleData?.invoices ?? [];
 
   if (!isOpen) return null;
 
@@ -587,7 +575,7 @@ function NewFactoringModal({
                   <EmptyState title="No offers available" description="No factoring partners returned offers for this invoice." />
                 ) : (
                   <div className="space-y-3">
-                    {offers.map((offer: any, i: number) => (
+                    {offers.map((offer, i: number) => (
                       <button
                         key={i}
                         onClick={() => setSelectedOffer(offer)}
@@ -598,22 +586,22 @@ function NewFactoringModal({
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-white">{offer.companyName || "Partner"}</span>
+                          <span className="text-sm font-medium text-white">{offer.partnerName || "Partner"}</span>
                           {selectedOffer === offer && <Check size={16} className="text-accent-base" />}
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-xs">
                           <div>
                             <p className="text-foreground-muted">Advance</p>
-                            <p className="text-white font-medium">{((offer.advanceRate || 0.9) * 100).toFixed(0)}%</p>
+                            <p className="text-white font-medium">{((offer.maxAdvanceRate) * 100).toFixed(0)}%</p>
                           </div>
                           <div>
                             <p className="text-foreground-muted">Discount</p>
-                            <p className="text-white font-medium">{((offer.discountRate || 0.02) * 100).toFixed(1)}%</p>
+                            <p className="text-white font-medium">{((offer.discountRate) * 100).toFixed(1)}%</p>
                           </div>
                           <div>
                             <p className="text-foreground-muted">You Receive</p>
                             <p className="text-emerald-400 font-medium">
-                              {formatCurrency(Math.round((selectedInvoice?.total || 0) * (offer.advanceRate || 0.9) * (1 - (offer.discountRate || 0.02))), selectedInvoice?.currency)}
+                              {offer.estimatedDisbursement == null ? "Not quoted" : formatCurrency(offer.estimatedDisbursement, selectedInvoice?.currency)}
                             </p>
                           </div>
                         </div>
@@ -645,18 +633,18 @@ function NewFactoringModal({
                   </div>
                   <div className="p-4 rounded-xl bg-surface-1 border border-border-invisible">
                     <h4 className="text-xs font-semibold text-foreground-secondary uppercase tracking-wider mb-3">Terms</h4>
-                    <div className="flex justify-between text-sm"><span className="text-foreground-muted">Partner</span><span className="text-white">{selectedOffer.companyName || "Partner"}</span></div>
-                    <div className="flex justify-between text-sm mt-1"><span className="text-foreground-muted">Advance Rate</span><span className="text-white">{((selectedOffer.advanceRate || 0.9) * 100).toFixed(0)}%</span></div>
-                    <div className="flex justify-between text-sm mt-1"><span className="text-foreground-muted">Discount Rate</span><span className="text-white">{((selectedOffer.discountRate || 0.02) * 100).toFixed(1)}%</span></div>
-                    <div className="flex justify-between text-sm mt-1"><span className="text-foreground-muted">Platform Fee</span><span className="text-white">1.5%</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-foreground-muted">Partner</span><span className="text-white">{selectedOffer.partnerName || "Partner"}</span></div>
+                    <div className="flex justify-between text-sm mt-1"><span className="text-foreground-muted">Advance Rate</span><span className="text-white">{((selectedOffer.maxAdvanceRate) * 100).toFixed(0)}%</span></div>
+                    <div className="flex justify-between text-sm mt-1"><span className="text-foreground-muted">Discount Rate</span><span className="text-white">{((selectedOffer.discountRate) * 100).toFixed(1)}%</span></div>
+                    <div className="flex justify-between text-sm mt-1"><span className="text-foreground-muted">Platform Fee</span><span className="text-white">Calculated by server at funding</span></div>
                     <div className="pt-2 mt-2 border-t border-border-subtle flex justify-between">
-                      <span className="text-sm font-medium text-white">Net Disbursement</span>
+                      <span className="text-sm font-medium text-white">Partner advance estimate (before fees)</span>
                       <span className="text-sm font-bold text-emerald-400">
-                        {formatCurrency(Math.round(selectedInvoice.total * (selectedOffer.advanceRate || 0.9) * (1 - (selectedOffer.discountRate || 0.02) - 0.015)), selectedInvoice.currency)}
+                        {selectedOffer.estimatedDisbursement == null ? "Not quoted" : formatCurrency(selectedOffer.estimatedDisbursement, selectedInvoice.currency)}
                       </span>
                     </div>
                   </div>
-                  {error && (
+                  {(error || invoiceError) && (
                     <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-red-400 text-xs flex items-center gap-2">
                       <AlertCircle size={14} /> {error}
                     </div>

@@ -11,7 +11,7 @@
  */
 
 import { Queue, Worker, Job } from "bullmq";
-import { getRedisConnection } from "@/lib/queues/connection";
+import { getRedisConnection, isBuildEnvironment } from "@/lib/queues/connection";
 import { prisma } from "@/lib/prisma";
 import { etaClient } from "./client";
 import { validateForSubmission } from "./validator";
@@ -19,13 +19,13 @@ import { recordSwarmEvent } from "@/lib/swarm/monitoring";
 import { moveToDeadLetter } from "@/lib/queues/dead-letter";
 
 // ── Queue ──
-export const etaQueue = new Queue("eta-submission", {
-  connection: getRedisConnection(),
-});
+export const etaQueue = isBuildEnvironment()
+  ? (null as unknown as Queue)
+  : new Queue("eta-submission", { connection: getRedisConnection() });
 
-export const etaDeadLetterQueue = new Queue("eta-dead-letter", {
-  connection: getRedisConnection(),
-});
+export const etaDeadLetterQueue = isBuildEnvironment()
+  ? (null as unknown as Queue)
+  : new Queue("eta-dead-letter", { connection: getRedisConnection() });
 
 // ── Types ──
 export interface EtaJobPayload {
@@ -57,13 +57,8 @@ export function createEtaWorker(): Worker {
     async (job) => {
       const { invoiceId, tenantId, userId, platformRole } = job.data;
 
-      await prisma.invoice.update({
-        where: { id: invoiceId },
-        data: { etaStatus: "SUBMITTING" },
-      });
-
-      const invoice = await prisma.invoice.findUnique({
-        where: { id: invoiceId },
+      const invoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, tenantId, deletedAt: null },
         include: {
           hotel: true,
           supplier: true,
@@ -74,12 +69,14 @@ export function createEtaWorker(): Worker {
       if (!invoice) {
         throw new Error(`Invoice ${invoiceId} not found`);
       }
+      if (!invoice.digitalSignature) throw new Error("Invoice digital signature is required before submission");
 
       // Validate
       const validation = await validateForSubmission(invoiceId);
       if (!validation.valid) {
         throw new Error(`Validation failed: ${validation.message}`);
       }
+      await prisma.invoice.update({ where: { id: invoiceId, tenantId, deletedAt: null }, data: { etaStatus: "SUBMITTING" } });
 
       // Build payload
       const payload = {
@@ -143,10 +140,10 @@ export function createEtaWorker(): Worker {
 
       // Update invoice
       await prisma.invoice.update({
-        where: { id: invoiceId },
+        where: { id: invoiceId, tenantId, deletedAt: null },
         data: {
           etaUuid: result.uuid,
-          etaStatus: "ACCEPTED",
+          etaStatus: "PENDING",
           submissionLog: JSON.stringify({ submissions: [result] }),
           status: "SUBMITTED",
         },
@@ -161,7 +158,7 @@ export function createEtaWorker(): Worker {
         actionType: "UPDATE",
         actorId: userId,
         actorRole: platformRole,
-        changes: { etaUuid: result.uuid, status: "ACCEPTED" },
+        changes: { etaUuid: result.uuid, status: "PENDING", invoiceStatus: "SUBMITTED" },
       });
 
       await recordSwarmEvent("eta_submitted", "INFO", {
@@ -198,7 +195,7 @@ export function createEtaDeadLetterWorker(): Worker {
       const { invoiceId, tenantId } = job.data;
 
       await prisma.invoice.update({
-        where: { id: invoiceId },
+        where: { id: invoiceId, tenantId, deletedAt: null },
         data: { etaStatus: "MANUAL_RESOLUTION" },
       });
 

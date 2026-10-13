@@ -14,7 +14,7 @@
 
 import { Queue, Worker, Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
-import { getRedisConnection } from "@/lib/queues/connection";
+import { getRedisConnection, isBuildEnvironment } from "@/lib/queues/connection";
 import { etaClient } from "./client";
 import { recordSwarmEvent } from "@/lib/swarm/monitoring";
 
@@ -33,9 +33,9 @@ const BACKOFF_INTERVALS = [
 
 // ── Queue ──
 
-export const etaDlqQueue = new Queue(ETA_DLQ_NAME, {
-  connection: getRedisConnection(),
-});
+export const etaDlqQueue = isBuildEnvironment()
+  ? (null as unknown as Queue)
+  : new Queue(ETA_DLQ_NAME, { connection: getRedisConnection() });
 
 // ── Types ──
 

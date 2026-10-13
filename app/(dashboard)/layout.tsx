@@ -1,54 +1,18 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { prisma } from "@/lib/prisma";
-
-const SESSION_COOKIE = "hv_session";
+import { getCurrentUser } from "@/lib/auth/server-auth";
 
 export const metadata: Metadata = {
-  title: {
-    default: "Dashboard — Hotels Vendors",
-    template: "%s — Hotels Vendors",
-  },
-  description:
-    "Role-specific command center for the Egyptian hospitality procurement hub.",
+  title: { default: "Dashboard — Hotels Vendors", template: "%s — Hotels Vendors" },
+  description: "Role-specific command center for the Egyptian hospitality procurement hub.",
 };
+const shellRoles = { ADMIN: "admin", HOTEL: "hotel", SUPPLIER: "supplier", FACTORING: "factoring", SHIPPING: "shipping", MARKETING: "marketing" } as const;
 
-export default async function DashboardLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  const authResult = await auth();
-  const userId = authResult.userId || null;
-  const clerkUser = userId ? await currentUser() : null;
-  const email = clerkUser?.emailAddresses[0]?.emailAddress || null;
-  if (!userId || !email) redirect("/login");
-  const dbUser = email ? await prisma.user.findUnique({ where: { email }, select: { platformRole: true, role: true } }) : null;
-  if (!dbUser) redirect("/onboarding");
-  const role = dbUser.platformRole;
-
-  let userData = null;
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { tenant: { select: { name: true } } },
-    });
-    if (user) {
-      userData = { id: user.id, name: user.name, email: user.email, role: user.role, platformRole: user.platformRole, tenantName: user.tenant?.name, createdAt: user.createdAt.toISOString() };
-    }
-  } catch {
-    // DB unavailable: keep Clerk identity active and render the workspace shell.
-  }
-
-  const validRole = role as "admin" | "hotel" | "supplier" | "factoring" | "shipping" | "marketing";
-
-  return (
-    <DashboardShell
-      role={validRole}
-      user={userData || null}
-    >
-      {children}
-    </DashboardShell>
-  );
+export default async function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!(user.platformRole in shellRoles)) redirect("/login");
+  const role = shellRoles[user.platformRole as keyof typeof shellRoles];
+  return <DashboardShell role={role} user={user}>{children}</DashboardShell>;
 }
-

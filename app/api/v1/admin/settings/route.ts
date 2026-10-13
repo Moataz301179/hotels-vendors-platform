@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiRoute, authenticate, success } from "@/lib/api-utils";
 import { z } from "zod";
+import { requirePlatformAdmin, requireSensitiveAdmin } from "@/lib/admin/access";
 
 /**
  * Platform settings page. This is a configuration surface: the values returned
@@ -49,9 +50,7 @@ function serialize(settings: z.infer<typeof SettingsSchema>): NonNullable<Settin
 
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  if (auth.platformRole !== "ADMIN") {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
+  await requirePlatformAdmin(auth, "admin:read");
 
   const row = await prisma.platformSettings.findFirst();
 
@@ -75,10 +74,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
 });
 
 export const POST = apiRoute(async (request: NextRequest) => {
-  const auth = await authenticate(request);
-  if (auth.platformRole !== "ADMIN") {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
+  await requireSensitiveAdmin(request, "admin:manage_platform");
 
   const body = await request.json();
   const parsed = SettingsSchema.safeParse(body);

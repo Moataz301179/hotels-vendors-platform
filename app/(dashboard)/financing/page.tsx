@@ -1,11 +1,12 @@
 // app/financing/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useApi } from "@/lib/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Badge } from "@/components/ui";
-import { IcCard, IcCheck, IcX, IcHand, IcSearch } from "@/components/icons";
+import { Badge, Card, Skeleton, Input, Button, Table, TableHeader, TableBody, TableRow, TableHead } from "@/components/ui";
+import { IcCard, IcCheck, IcHand } from "@/components/icons";
 import { StatCard } from "@/components/shared/stat-card";
 
 // Credit line application shape from POST /api/v1/factoring/credit-lines/route.ts
@@ -46,12 +47,6 @@ interface CreditLineApplication {
   createdAt: string;
 }
 
-interface CreditLinesResponse {
-  id?: string;
-  status?: string;
-  // GET returns array directly
-  [key: string]: unknown;
-}
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING_REVIEW: "Pending Review",
@@ -76,32 +71,13 @@ const STATUS_TONE: Record<string, "default" | "success" | "warning" | "error" | 
 };
 
 export default function FinancingPage() {
-  const [applications, setApplications] = useState<CreditLineApplication[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [submissionError, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchApplications = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/factoring/credit-lines", {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) throw new Error("Failed to load credit lines");
-      const data: CreditLinesResponse = await res.json();
-      // GET returns array directly; POST returns { id, status }
-      const list = Array.isArray(data) ? data : [];
-      setApplications(list as CreditLineApplication[]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchApplications(); }, []);
+  const { data, loading, error: loadError, refetch: fetchApplications } = useApi<CreditLineApplication[]>("/api/v1/factoring/credit-lines");
+  const applications = data ?? [];
+  const error = submissionError || loadError;
 
   const filtered = applications.filter((a) =>
     a.hotelName.toLowerCase().includes(search.toLowerCase()) ||
@@ -150,7 +126,6 @@ export default function FinancingPage() {
               placeholder="Search by hotel name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              size="sm"
               className="w-48"
             />
           </div>
@@ -319,7 +294,6 @@ export default function FinancingPage() {
                 placeholder="Enter hotel name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                size="sm"
               />
             </div>
             <Button

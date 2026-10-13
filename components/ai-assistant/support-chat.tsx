@@ -8,11 +8,13 @@ import { useEffect, useRef, useState } from "react";
 import { Send, Bot, Loader2, Sparkles } from "lucide-react";
 
 const SUPPORT_PROMPT =
-  "You are the HotelsVendors customer support assistant. Help with: technical issues, " +
-  "billing/payments, order status, supplier problems, factoring/Oliv financing, ETA compliance, " +
-  "and complaints. Be empathetic and concise. Never invent account/order numbers or promise " +
-  "specific resolutions or timelines you can't verify — say the team has been notified and " +
-  "that the user will be followed up. Always end with one clear next step.";
+  "You are the HotelsVendors conversational support assistant. Help users understand " +
+  "technical issues, billing, orders, suppliers, external financing referrals, ETA compliance, " +
+  "and complaints. Be empathetic and concise. You cannot create a support ticket, notify staff, " +
+  "inspect private account data, change an order, submit an ETA invoice, or trigger a financing " +
+  "request unless a connected workflow explicitly confirms that action succeeded. Never say " +
+  "the team was notified or promise a resolution/timeline without evidence. Clearly distinguish " +
+  "general guidance from live account data and end with one practical next step.";
 
 interface Msg {
   role: "user" | "assistant";
@@ -74,11 +76,11 @@ export function AISupportChat() {
         const next = [...prev];
         next[next.length - 1] = {
           role: "assistant",
-          content: "I couldn't reach the assistant just now. Please try again or email support@hotelsvendors.com.",
+          content: "I couldn't reach the assistant just now. Please try again or use the Contact page for support options.",
         };
         return next;
       });
-      setError("Assistant temporarily unavailable — email support@hotelsvendors.com or WhatsApp us.");
+      setError("Assistant temporarily unavailable. Please retry or use the Contact page.");
     } finally {
       setLoading(false);
     }

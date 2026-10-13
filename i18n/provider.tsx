@@ -44,6 +44,8 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [ready, setReady] = useState(false);
 
+  // Hydrate preferences from browser storage after mount; these state updates are intentional.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const l = localStorage.getItem("hv:lang");
@@ -57,12 +59,18 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     }
     setReady(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const dir = lang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = lang;
     document.documentElement.dir = dir;
     document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+    document.getElementById("theme-color-meta")?.setAttribute("content", theme === "dark" ? "#000000" : "#FFFFFF");
+    try {
+      localStorage.setItem("hv-theme-mode", theme);
+    } catch { /* ignore */ }
   }, [lang, theme, ready]);
 
   const setLang = useCallback((l: Lang) => {
@@ -76,6 +84,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     setThemeState(t);
     try {
       localStorage.setItem("hv:theme", t);
+      localStorage.setItem("hv-theme-mode", t);
     } catch { /* ignore */ }
   }, []);
 

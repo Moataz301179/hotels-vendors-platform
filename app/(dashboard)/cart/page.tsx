@@ -1,14 +1,14 @@
 // app/cart/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button, Btn } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { IcCart, IcPlus, IcMinus, IcBox } from "@/components/icons";
-import { Trash2, Minus, Plus, ArrowRight } from "lucide-react";
-import { StatCard } from "@/components/shared/stat-card";
+import { Trash2 as IcTrash } from "lucide-react";
 
 export default function CartPage() {
   const { items, totalItems, totalPrice, subtotal, removeItem, updateQuantity, clearCart } = useCart();
@@ -109,7 +109,7 @@ export default function CartPage() {
                 Browse the marketplace to add products to your cart.
               </p>
               <Button size="sm" variant="outline" asChild>
-                <a href="/marketplace">Browse Marketplace</a>
+                <Link href="/marketplace">Browse Marketplace</Link>
               </Button>
             </Card>
           ) : (
@@ -208,13 +208,11 @@ export default function CartPage() {
                 <span className="text-slate-300">Calculated at checkout</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">VAT (14%)</span>
-                <span className="text-white font-medium">
-                  EGP {(subtotal * 0.14).toLocaleString("en-EG", { minimumFractionDigits: 2 })}
-                </span>
+                <span className="text-slate-400">Tax</span>
+                <span className="text-slate-300">Confirmed by supplier at quote</span>
               </div>
               <div className="border-t border-slate-700/30 pt-3 flex items-center justify-between">
-                <span className="text-base font-semibold text-white">Total</span>
+                <span className="text-base font-semibold text-white">Order total before confirmed tax</span>
                 <span className="text-base font-medium text-signal">
                   EGP {totalPrice.toLocaleString("en-EG", { minimumFractionDigits: 2 })}
                 </span>

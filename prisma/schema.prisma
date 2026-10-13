@@ -97,11 +97,17 @@ model Tenant {
   consumptionForecasts   ConsumptionForecast[]
   inventoryReconciliations InventoryReconciliation[]
   onboardingProgresses   OnboardingProgress[]
+  onboardingStepProgresses OnboardingStepProgress[]
   pushTokens             PushToken[]
   scheduledOrders        ScheduledOrder[]
   supportTickets         SupportTicket[]
   opportunities          Opportunity[]
   savingsLedger          SavingsLedger[]
+  catalogItems            CatalogItem[]
+  catalogSources          CatalogSource[]
+  catalogEvidence         CatalogEvidence[]
+  procurementQuotes       ProcurementQuote[]
+  contractRateBaselines   ContractRateBaseline[]
 
   @@index([deletedAt], map: "Tenant_deleted_idx")
   @@index([parentTenantId], map: "Tenant_parent_idx")
@@ -285,11 +291,15 @@ model User {
   pairingCodes           PairingCode[]
   carrierProfile         CarrierProfile?
   onboardingProgress     OnboardingProgress?
+  onboardingStepProgresses OnboardingStepProgress[]
   pushTokens             PushToken[]
   supportTickets         SupportTicket[]
   opportunities          Opportunity[]
   savingsLedgers         SavingsLedger[]
   verifiedSavingsLedgers SavingsLedger[] @relation("SavingsLedgerVerifiedBy")
+  assignedDeliveryTrips  Trip[] @relation("AssignedTripDriver")
+  deliveryProofs         DeliveryProof[]
+  procurementQuotes       ProcurementQuote[] @relation("BuyerProcurementQuotes")
 
   @@index([sector])
   @@index([tenantId])
@@ -300,6 +310,7 @@ model User {
   @@index([platformRole])
   @@index([deletedAt], map: "User_deleted_idx")
   @@index([uuid])
+  @@unique([id, tenantId])
 }
 
 model OtpVerification {
@@ -384,6 +395,7 @@ model Supplier {
   users                User[]
   goodsReceiptNotes    GoodsReceiptNote[]
   scheduledOrders      ScheduledOrder[]
+  procurementQuotes    ProcurementQuote[] @relation("SupplierProcurementQuotes")
   savingsLedger        SavingsLedger[]
 
   @@index([tenantId])
@@ -469,6 +481,84 @@ model Product {
   @@index([status])
   @@index([createdAt])
   @@index([deletedAt], map: "Product_deleted_idx")
+}
+
+/// Platform catalog records are market references, not supplier-owned offers.
+/// They require source evidence and are never populated with generated values.
+model CatalogItem {
+  id                 String          @id @default(cuid())
+  tenantId           String
+  canonicalKey       String
+  name               String
+  brand              String?
+  category           String
+  subcategory        String?
+  unitOfMeasure      String?
+  description        String?
+  status             CatalogItemStatus @default(PENDING_REVIEW)
+  imageUrl           String?
+  imageSourceUrl     String?
+  imageRightsStatus  String?
+  firstObservedAt    DateTime         @default(now())
+  lastObservedAt     DateTime         @default(now())
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+  uuid               String?          @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sources            CatalogEvidence[]
+
+  @@unique([tenantId, canonicalKey])
+  @@index([tenantId, category])
+  @@index([tenantId, brand])
+  @@index([tenantId, status])
+}
+
+/// A source is a retrievable public/partner feed or business directory entry.
+/// It stores metadata only; ingestion must preserve the original URL and time.
+model CatalogSource {
+  id             String       @id @default(cuid())
+  tenantId       String
+  name           String
+  sourceType     CatalogSourceType
+  baseUrl        String
+  accessPolicy   String       @default("PUBLIC_REFERENCE")
+  lastCheckedAt  DateTime?
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  evidence       CatalogEvidence[]
+
+  @@unique([tenantId, baseUrl])
+  @@index([tenantId, sourceType])
+}
+
+/// One item/source observation. Hashing makes replay and duplicate imports safe.
+model CatalogEvidence {
+  id             String       @id @default(cuid())
+  tenantId       String
+  catalogItemId  String
+  sourceId       String
+  externalKey    String?
+  sourceUrl      String
+  sourceHash     String
+  observedName   String
+  observedBrand  String?
+  observedPrice  Decimal?     @db.Decimal(12, 2)
+  currency       String?
+  imageUrl       String?
+  observedAt     DateTime     @default(now())
+  confidence     Int          @default(0)
+  provenance     EvidenceClass @default(OBSERVED)
+  createdAt      DateTime     @default(now())
+  catalogItem    CatalogItem  @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+  source         CatalogSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, sourceHash])
+  @@index([tenantId, catalogItemId])
+  @@index([tenantId, observedAt])
 }
 
 model ProductSeasonality {
@@ -1056,6 +1146,8 @@ model Trip {
   hubId              String?
   driverName         String?
   driverPhone        String?
+  assignedDriverId   String?
+  assignedDriver     User? @relation("AssignedTripDriver", fields: [assignedDriverId, tenantId], references: [id, tenantId], onDelete: Restrict)
   vehiclePlate       String?
   scheduledDate      DateTime?
   departureDate      DateTime?
@@ -1073,6 +1165,7 @@ model Trip {
   stops              TripStop[]
 
   @@index([deletedAt], map: "Trip_deleted_idx")
+  @@index([tenantId, assignedDriverId, scheduledDate])
 }
 
 model TripStop {
@@ -1098,8 +1191,30 @@ model TripStop {
   order            Order?     @relation(fields: [orderId], references: [id])
   tenant           Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   trip             Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  deliveryProofs   DeliveryProof[]
 
   @@index([deletedAt], map: "TripStop_deleted_idx")
+  @@unique([id, tenantId])
+}
+
+// Private delivery evidence; never stored under public/uploads or accepted by URL.
+model DeliveryProof {
+  id             String @id @default(cuid())
+  tenantId       String
+  stopId         String
+  uploadedById   String
+  idempotencyKey String
+  content        Bytes
+  mimeType       String
+  sha256         String
+  receivedBy     String
+  notes          String?
+  createdAt      DateTime @default(now())
+  stop           TripStop @relation(fields: [stopId, tenantId], references: [id, tenantId], onDelete: Restrict)
+  uploadedBy     User @relation(fields: [uploadedById, tenantId], references: [id, tenantId], onDelete: Restrict)
+
+  @@unique([tenantId, uploadedById, idempotencyKey])
+  @@unique([tenantId, stopId])
 }
 
 model Outlet {
@@ -3199,6 +3314,7 @@ enum EntityName {
   PAYMENT
   CREDIT_FACILITY
   SETTLEMENT_BATCH
+  CONTRACT_RATE_BASELINE
 }
 
 enum NotificationChannel {
@@ -3505,8 +3621,27 @@ model ReconciliationLineItem {
 model RfqRequest {
   id                String    @id @default(cuid())
   buyerId           String
-  productId         String
-  supplierId        String
+  /// A supplier-owned Product when the request starts from a verified offer.
+  /// Nullable because market references and request-anything entries are not
+  /// supplier-owned records yet.
+  productId         String?
+  /// The platform market reference that initiated the request, if any.
+  /// This is intentionally a scalar: the reference may belong to the public
+  /// catalogue tenant while the RFQ belongs to the hotel's tenant.
+  catalogItemId     String?
+  /// The hotel-owned contract/rate record used for pre-spend comparison.
+  /// Server routes enforce its tenant and hotel scope.
+  baselineId        String?
+  /// Human-entered item name for a request that is not in the catalogue.
+  itemName          String?
+  unitOfMeasure      String?
+  normalizedItemKey String?
+  packDescription   String?
+  deliveryLocation   String?
+  matchingStatus     String    @default("QUEUED")
+  /// Populated only after the matching/quote stage. Never accepted from the
+  /// hotel client and never shown before a permitted fulfillment stage.
+  supplierId        String?
   requestedQty      Int
   targetPrice       Decimal?  @db.Decimal(12, 2)
   deliveryTimeline  String?
@@ -3521,11 +3656,90 @@ model RfqRequest {
   updatedAt         DateTime  @updatedAt
   uuid              String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt         DateTime?
+  quotes            ProcurementQuote[]
 
   @@index([buyerId])
   @@index([status])
   @@index([supplierId])
   @@index([tenantId])
+  @@index([tenantId, baselineId])
+}
+
+/// Confidential, hotel-owned current commercial baseline. It is not a public
+/// offer and may never be returned from a catalogue endpoint.
+model ContractRateBaseline {
+  id                String                 @id @default(cuid())
+  tenantId          String
+  hotelId           String
+  supplierId        String
+  productId         String
+  itemName          String
+  normalizedItemKey String
+  unitOfMeasure     String
+  packDescription   String?
+  rateQuantity      Int
+  unitPrice         Decimal                @db.Decimal(12, 2)
+  deliveryFee       Decimal?               @db.Decimal(12, 2)
+  taxAmount         Decimal?               @db.Decimal(12, 2)
+  currency          String                 @default("EGP")
+  minimumOrderQty   Int?
+  deliveryTerms     String?
+  sourceReference   String
+  validFrom         DateTime?
+  validUntil        DateTime?
+  status            ContractBaselineStatus @default(ACTIVE)
+  createdById       String
+  approvalOwnerId   String?
+  approvedAt        DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  uuid              String?                @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt         DateTime?
+
+  tenant            Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, hotelId, status])
+  @@index([tenantId, productId])
+  @@index([tenantId, supplierId])
+  @@index([tenantId, normalizedItemKey])
+  @@index([deletedAt], map: "ContractRateBaseline_deleted_idx")
+}
+
+/// Supplier responses to a hotel RFQ. The tenant belongs to the requesting
+/// hotel; supplier identity is kept server-side until the order is accepted.
+model ProcurementQuote {
+  id            String      @id @default(cuid())
+  rfqId         String
+  tenantId      String
+  supplierId    String
+  /// Server-verified supplier product used to fulfil this fixed response.
+  supplierProductId String?
+  buyerId       String
+  normalizedItemKey String?
+  unitOfMeasure String?
+  packDescription String?
+  unitPrice     Decimal     @db.Decimal(12, 2)
+  quantity      Int
+  currency      String      @default("EGP")
+  leadTimeDays  Int?
+  deliveryFee   Decimal?    @db.Decimal(12, 2)
+  taxAmount     Decimal?    @db.Decimal(12, 2)
+  validUntil    DateTime?
+  notes         String?
+  status        QuoteStatus @default(SUBMITTED)
+  submittedAt   DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  uuid          String?     @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deletedAt     DateTime?
+
+  rfq           RfqRequest  @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier      Supplier    @relation("SupplierProcurementQuotes", fields: [supplierId], references: [id], onDelete: Cascade)
+  buyer         User        @relation("BuyerProcurementQuotes", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, rfqId])
+  @@index([supplierId, status])
+  @@index([buyerId, status])
 }
 
 model OnboardingProgress {
@@ -3545,6 +3759,24 @@ model OnboardingProgress {
   @@index([deletedAt])
   @@index([tenantId])
   @@index([userId])
+}
+
+model OnboardingStepProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  stepKey   String
+  completed Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stepKey])
+  @@index([tenantId, completed])
+  @@index([deletedAt])
 }
 
 model CarrierProfile {
@@ -3742,6 +3974,21 @@ enum RfqStatus {
   CONVERTED_TO_ORDER
 }
 
+enum QuoteStatus {
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum ContractBaselineStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  RETIRED
+}
+
 enum ScheduleFrequency {
   DAILY
   WEEKLY
@@ -3794,6 +4041,20 @@ enum ProductSource {
   ECOMMERCE
   DROPSHIP
   MANUAL
+}
+
+enum CatalogItemStatus {
+  PENDING_REVIEW
+  ACTIVE
+  ARCHIVED
+}
+
+enum CatalogSourceType {
+  SUPPLIER_SITE
+  MARKETPLACE
+  BUSINESS_DIRECTORY
+  HOTEL_UPLOAD
+  PARTNER_FEED
 }
 
 model EvidenceRecord {
@@ -3917,4 +4178,3 @@ model SpendUploadRecord {
   @@index([supplierId])
   @@index([category])
 }
-

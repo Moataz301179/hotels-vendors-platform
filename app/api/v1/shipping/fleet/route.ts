@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { apiRoute, authenticate, success } from "@/lib/api-utils";
+import { apiRoute, authenticate, requirePermission, success, validateQuery } from "@/lib/api-utils";
+import { z } from "zod";
 
 /**
  * GET /api/v1/shipping/fleet — List all vehicles for the tenant's logistics fleet.
@@ -8,12 +9,12 @@ import { apiRoute, authenticate, success } from "@/lib/api-utils";
  */
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  const { searchParams } = new URL(request.url);
-  const status = searchParams.get("status") || undefined;
+  await requirePermission(auth, "shipping:read");
+  const { status } = validateQuery(z.object({ status: z.enum(["ACTIVE", "IDLE"]).optional() }), request.nextUrl.searchParams);
 
   // Aggregate distinct vehicles from trips
   const trips = await prisma.trip.findMany({
-    where: { tenantId: auth.tenantId },
+    where: { tenantId: auth.tenantId, deletedAt: null },
     select: {
       vehiclePlate: true,
       driverName: true,

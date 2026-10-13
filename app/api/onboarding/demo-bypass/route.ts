@@ -10,7 +10,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticate } from "@/lib/api-utils";
+import { authenticate, requirePermission } from "@/lib/api-utils";
+import type { InvoiceStatus } from "@prisma/client";
 
 // ─── HORECA Mock Data Generators ──────────────────────────────────
 
@@ -47,7 +48,7 @@ function generateMockHORECData(tenantId: string, hotelId: string, supplierId: st
     subtotal: number;
     vatAmount: number;
     daysAgo: number;
-    status: string;
+    status: InvoiceStatus;
   }> = [];
 
   for (let d = 0; d < 30; d++) {
@@ -85,6 +86,8 @@ function generateMockHORECData(tenantId: string, hotelId: string, supplierId: st
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticate(request);
+    await requirePermission(auth, "admin:manage_platform");
+    if (process.env.NODE_ENV === "production" || process.env.HV_ENABLE_DEMO_DATA !== "true") return NextResponse.json({ success: false, error: "Synthetic demo data is disabled for this environment" }, { status: 403 });
     if (!auth?.tenantId) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -171,7 +174,7 @@ export async function POST(request: NextRequest) {
             vatAmount: inv.vatAmount,
             total: inv.total,
             currency: "EGP",
-            status: inv.status as any,
+            status: inv.status,
             paymentStatus: inv.status === "VALIDATED" ? "PAID" : "UNPAID",
             issueDate: new Date(Date.now() - inv.daysAgo * 86400000),
             dueDate: new Date(Date.now() - (inv.daysAgo - 30) * 86400000),

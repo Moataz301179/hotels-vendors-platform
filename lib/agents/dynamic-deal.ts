@@ -1,53 +1,88 @@
 /**
- * DynamicDeal — Automated Bulk RFQ & Negotiation Agent
- * Multi-vendor bidding engine. Auctions RFQ across suppliers,
- * negotiates volume discounts and delivery windows within 15 min.
+ * DynamicDeal — RFQ matching hook.
+ *
+ * This agent does not manufacture discounts, lead times or bids. It finds
+ * real eligible supplier offers and leaves quote collection to the connected
+ * supplier/API/email workers. Supplier identity is kept inside the worker
+ * result and is never part of the hotel-facing RFQ response.
  */
 import { prisma } from "@/lib/prisma";
 import { AgentContext } from "./swarm-orchestrator";
 
-const BID_WINDOW_MINUTES = 15;
-const DEFAULT_DISCOUNTS = [0.05, 0.08, 0.12, 0.15];
-
 export const DynamicDealAgent = {
   async execute(ctx: AgentContext) {
-    const rfqId = ctx.payload.rfqId as string;
+    const rfqId = typeof ctx.payload.rfqId === "string" ? ctx.payload.rfqId : "";
     if (!rfqId) return { success: false, output: "Missing rfqId" };
 
-    const rfq = await prisma.rfqRequest.findUnique({
-      where: { id: rfqId },
-      select: { productId: true, requestedQty: true, targetPrice: true, supplierId: true },
+    const rfq = await prisma.rfqRequest.findFirst({
+      where: { id: rfqId, tenantId: ctx.tenantId, deletedAt: null },
+      select: { productId: true, catalogItemId: true, requestedQty: true },
     });
     if (!rfq) return { success: false, output: "RFQ not found" };
 
-    // Find alternative suppliers
-    const alternatives = await prisma.product.findMany({
+    const seedProduct = rfq.productId
+      ? await prisma.product.findFirst({
+        where: {
+          id: rfq.productId,
+          status: "ACTIVE",
+          source: { not: "FIXTURE" },
+          deletedAt: null,
+          supplier: { is: { status: "ACTIVE", isVerified: true, deletedAt: null } },
+        },
+        select: { category: true },
+      })
+      : null;
+
+    const publicCatalogTenantId = process.env.PUBLIC_CATALOG_TENANT_ID?.trim();
+    const catalogItem = !seedProduct && rfq.catalogItemId && publicCatalogTenantId
+      ? await prisma.catalogItem.findFirst({
+        where: { id: rfq.catalogItemId, tenantId: publicCatalogTenantId, deletedAt: null, status: { in: ["PENDING_REVIEW", "ACTIVE"] } },
+        select: { category: true },
+      })
+      : null;
+
+    const category = seedProduct?.category ?? mapCatalogCategory(catalogItem?.category);
+    const candidates = await prisma.product.findMany({
       where: {
-        category: (await prisma.product.findUnique({ where: { id: rfq.productId }, select: { category: true } }))?.category,
-        tenantId: ctx.tenantId,
+        ...(category ? { category } : {}),
         status: "ACTIVE",
+        source: { not: "FIXTURE" },
         deletedAt: null,
-        supplierId: { not: rfq.supplierId },
         stockQuantity: { gte: rfq.requestedQty },
+        supplier: { is: { status: "ACTIVE", isVerified: true, deletedAt: null } },
       },
-      select: { id: true, unitPrice: true, supplierId: true, sku: true },
-      take: 5,
-      orderBy: { unitPrice: "asc" },
+      select: { id: true, supplierId: true },
+      take: 25,
+      orderBy: { createdAt: "desc" },
     });
 
-    const bids = alternatives.map((alt, i) => {
-      const discount = DEFAULT_DISCOUNTS[Math.min(i, DEFAULT_DISCOUNTS.length - 1)];
-      return {
-        productId: alt.id,
-        supplierId: alt.supplierId,
-        unitPrice: Number(alt.unitPrice || 0),
-        discountedPrice: Math.round(Number(alt.unitPrice || 0) * (1 - discount) * 100) / 100,
-        discount: `${(discount * 100).toFixed(0)}%`,
-        deliveryDays: 3 + i,
-        totalCost: Math.round(Number(alt.unitPrice || 0) * rfq.requestedQty * (1 - discount) * 100) / 100,
-      };
+    const matchingStatus = candidates.length > 0 ? "MATCHING_SOURCES" : "AWAITING_SOURCE_MATCH";
+    await prisma.rfqRequest.updateMany({
+      where: { id: rfqId, tenantId: ctx.tenantId, deletedAt: null },
+      data: { matchingStatus },
     });
 
-    return { success: true, output: { rfqId, bidWindow: `${BID_WINDOW_MINUTES}min`, bids, count: bids.length } };
+    // The returned shape is deliberately quote-free. A count proves that the
+    // matching hook ran without leaking supplier IDs or inventing terms.
+    return {
+      success: true,
+      output: {
+        rfqId,
+        status: matchingStatus,
+        candidateCount: candidates.length,
+        quotes: [],
+        requestedQty: rfq.requestedQty,
+      },
+    };
   },
 };
+
+function mapCatalogCategory(category: string | undefined) {
+  const value = (category || "").toLowerCase();
+  if (value.includes("food") || value.includes("beverage")) return "F_AND_B" as const;
+  if (value.includes("housekeeping") || value.includes("cleaning") || value.includes("linen") || value.includes("textile")) return "CONSUMABLES" as const;
+  if (value.includes("guest") || value.includes("amenit")) return "GUEST_SUPPLIES" as const;
+  if (value.includes("furniture") || value.includes("ff&e")) return "FFE" as const;
+  if (value) return "SERVICES" as const;
+  return undefined;
+}

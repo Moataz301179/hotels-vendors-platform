@@ -1,22 +1,15 @@
 // vitest.config.ts
-// P0-specific Vitest configuration.
-// Runs only the P0 test files.
-
+// Run the repository's maintained test specs by default.
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  resolve: { alias: { '@': fileURLToPath(new URL('.', import.meta.url)) } },
   test: {
     globals: true,
     environment: 'node',
-    // Include ONLY the p0 tests
-    include: ['tests/p0/**/*.spec.ts'],
-    exclude: [
-      // Do NOT run the full platform test suite
-      'tests/unit/**',
-      'tests/integration/**',
-      'tests/e2e/**',
-      'node_modules/**',
-    ],
+    include: ['tests/**/*.spec.ts'],
+    exclude: ['node_modules/**'],
     // Coverage thresholds (relaxed for MVP)
     coverage: {
       provider: 'v8',

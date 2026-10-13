@@ -1,13 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { readFileSync } from "fs";
 import { prisma } from "@/lib/prisma";
-import { authenticate, error as apiError, success } from "@/lib/api-utils";
+import { authenticate, requirePermission, error as apiError, success } from "@/lib/api-utils";
+import { z } from "zod";
+import { jsonValueSchema } from "@/lib/validators/json-value";
+import { apiErrorResponse } from "@/lib/api-error-response";
 
 const STATE_FILE = "/tmp/mission-control-state.json";
 
-function readState(): any {
+const StateSchema = z.object({ kimi: z.object({ agents: z.array(z.record(z.string(), jsonValueSchema)).default([]) }).optional(), hermes: z.object({ agents: z.array(z.record(z.string(), jsonValueSchema)).default([]), lastSync: z.string().optional() }).optional() });
+function readState(): z.infer<typeof StateSchema> {
   try {
-    return JSON.parse(readFileSync(STATE_FILE, "utf-8"));
+    return StateSchema.parse(JSON.parse(readFileSync(STATE_FILE, "utf-8")));
   } catch {
     return {};
   }
@@ -25,27 +29,29 @@ export async function GET(request: NextRequest) {
   }
 
   // 2. RBAC — only platform admins may access infrastructure telemetry
-  if (auth.platformRole !== "ADMIN" && auth.platformRole !== "SUPER_ADMIN") {
-    return apiError("Forbidden", 403);
-  }
+  try { await requirePermission(auth, "admin:manage_platform"); }
+  catch (cause) { return apiErrorResponse(cause); }
 
   try {
     const state = readState();
     const { tenantId } = auth;
 
     // ── BullMQ Queues ──
-    let queues: any[] = [];
+    let queues: { name: string; waiting: number; active: number; completed: number; failed: number }[] = [];
+    let queuesAvailable = false;
     try {
-      const { redis } = await import("@/lib/redis");
-      if (redis) {
+      const { getRedis } = await import("@/lib/redis");
+      const r = getRedis();
+      if (r) {
         const queueNames = ["swarm_execution", "swarm_intelligence", "eta_submission", "email"];
         for (const name of queueNames) {
-          const waiting = await redis.llen(`bull:${name}:wait`).catch(() => 0);
-          const active = await redis.llen(`bull:${name}:active`).catch(() => 0);
-          const completed = await redis.get(`bull:${name}:id`).catch(() => 0);
-          const failed = await redis.llen(`bull:${name}:failed`).catch(() => 0);
-          queues.push({ name, waiting, active, completed: Number(completed) || 0, failed });
+          const waiting = await r.llen(`bull:${name}:wait`);
+          const active = await r.llen(`bull:${name}:active`);
+          const completed = await r.zcard(`bull:${name}:completed`);
+          const failed = await r.zcard(`bull:${name}:failed`);
+          queues.push({ name, waiting, active, completed, failed });
         }
+        queuesAvailable = true;
       }
     } catch { queues = []; }
 
@@ -62,6 +68,7 @@ export async function GET(request: NextRequest) {
       kimi: {
         agents: state.kimi?.agents || [],
         queues,
+        queuesAvailable,
       },
       hermes: {
         agents: state.hermes?.agents || [],
@@ -72,9 +79,9 @@ export async function GET(request: NextRequest) {
       recentActivity,
       syncTime: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Mission Control status error:", err);
-    return apiError(err.message, 500);
+    return apiErrorResponse(err);
   }
 }
 

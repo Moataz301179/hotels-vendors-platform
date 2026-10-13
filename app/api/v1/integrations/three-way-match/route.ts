@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { integrationEngine } from '@/lib/integrations/engine';
+import { integrationAdminRoute } from '@/lib/integrations/admin-route';
 
-export async function POST(request: Request) {
+export const POST = integrationAdminRoute(async (request) => {
   try {
     const { poId, receivingSlipId, invoiceId } = await request.json();
     const result = await integrationEngine.matchThreeWay(poId, receivingSlipId, invoiceId);
@@ -9,4 +10,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-}
+});

@@ -1,41 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-
-import { requireServiceKey } from "@/lib/api-utils";
-
-function requireAuth(request: NextRequest): void {
-  requireServiceKey(request, "INVO_SERVICE_KEY");
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    requireAuth(request);
-
-    const body = await request.json();
-    const { orderIds, vehicleType, consolidate } = body;
-
-    const mockStops = (orderIds || ["ord_1", "ord_2"]).map((id: string, idx: number) => ({
-      orderId: id,
-      sequence: idx + 1,
-      location: { lat: 30.04 + idx * 0.1, lng: 31.23 + idx * 0.1 },
-      eta: new Date(Date.now() + (idx + 1) * 3600000).toISOString(),
-    }));
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        routeId: `route_${Date.now()}`,
-        stops: mockStops,
-        estimatedDuration: mockStops.length * 2,
-        vehicleType: vehicleType || "van",
-        consolidate: consolidate ?? true,
-        driverAssigned: true,
-        driverName: "Ahmed K.",
-        driverPhone: "+20 10X XXX XXXX",
-        trackingUrl: `https://invo.hotelsvendors.com/track/route_${Date.now()}`,
-        status: "assigned",
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { apiRoute, authenticate, requirePermission, validateBody, success } from "@/lib/api-utils";
+import { batchAssign } from "@/lib/logistics/assign";
+const DispatchInput = z.object({ orderIds: z.array(z.string().min(1).max(128)).min(1).max(50) });
+export const POST = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request); await requirePermission(auth, "shipping:create_trip");
+  const { orderIds } = validateBody(DispatchInput, await request.json());
+  const results = await batchAssign(orderIds, auth.tenantId, auth);
+  return success({ results, assigned: results.filter(item => item.result).length, failed: results.filter(item => !item.result).length });
+});

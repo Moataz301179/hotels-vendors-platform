@@ -1,0 +1,42 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const m = vi.hoisted(() => ({ transaction: vi.fn(), grants: vi.fn(), audit: vi.fn(), logs: vi.fn(), target: vi.fn(), update: vi.fn(), document: vi.fn(), lock: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: m.transaction } }));
+vi.mock("@/lib/auth/rbac", () => ({ getUserPermissions: m.grants }));
+vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
+vi.mock("@/lib/api-utils", () => ({ ApiError: class extends Error { constructor(message: string, public statusCode: number) { super(message); } } }));
+import { createChange, decideChange } from "@/lib/admin/approvals";
+const targetId = "cmux7e4h80004cr3f9plk75bc";
+const tenantId = "cmux8bffs0000crz4uy37rtpg";
+const record = { id: targetId, tenantId, status: "ACTIVE", platformRole: "HOTEL", updatedAt: new Date("2026-10-07T00:00:00Z") };
+const ctx = { userId: "approver", tenantId, platformRole: "ADMIN" as const, workspaceId: null };
+const change = () => ({ kind: "ADMIN_CHANGE_REQUEST", action: "USER_SUSPEND", targetId, targetTenantId: tenantId, reason: "Investigated account policy violation", evidenceId: null, snapshot: JSON.stringify(record), expiresAt: new Date(Date.now() + 60000).toISOString() });
+const request = () => ({ actorId: "requester", actionType: "CREATE", entityName: "USER", entityId: targetId, changes: change() });
+const decision = { requestId: "cmux8bfqt0002crz4bx0hk586", decision: "APPROVE" as const, reason: "Independent investigation confirms decision" };
+describe("transactional admin changes", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    const tx = { $queryRaw: m.lock, auditLog: { findFirst: m.logs }, user: { findFirst: m.target, updateMany: m.update }, document: { findFirst: m.document } };
+    m.transaction.mockImplementation(callback => callback(tx));
+    m.grants.mockResolvedValue(["admin:read", "admin:manage_tenants", "user:update"]);
+    m.logs.mockResolvedValueOnce(request()).mockResolvedValue(null);
+    m.target.mockResolvedValue(record); m.update.mockResolvedValue({ count: 1 }); m.audit.mockResolvedValue(decision.requestId);
+  });
+  it("applies only after both grants and writes audit in the same transaction", async () => {
+    await expect(decideChange(ctx, decision)).resolves.toMatchObject({ status: "APPLIED" });
+    expect(m.grants).toHaveBeenCalledTimes(2); expect(m.grants.mock.calls[1][0].userId).toBe("requester");
+    expect(m.update).toHaveBeenCalledWith({ where: { id: targetId, tenantId, updatedAt: record.updatedAt, deletedAt: null }, data: { status: "SUSPENDED" } });
+    expect(m.audit.mock.calls[0][1]).toBe(m.grants.mock.calls[0][1]);
+  });
+  it("rejects self approval before mutation", async () => { await expect(decideChange({ ...ctx, userId: "requester" }, decision)).rejects.toThrow("different"); expect(m.update).not.toHaveBeenCalled(); });
+  it("allows verified platform owner to confirm a routine own request", async () => { m.target.mockImplementation(async args => args.where.role === "OWNER" ? { id: "requester" } : record); await expect(decideChange({ ...ctx, userId: "requester" }, decision)).resolves.toMatchObject({ status: "APPLIED" }); expect(m.update).toHaveBeenCalledTimes(1); });
+  it("rejects revoked requester permissions", async () => { m.grants.mockResolvedValueOnce(["admin:read", "admin:manage_tenants", "user:update"]).mockResolvedValueOnce([]); await expect(decideChange(ctx, decision)).rejects.toThrow("revoked"); expect(m.update).not.toHaveBeenCalled(); });
+  it("rejects replay", async () => { m.logs.mockReset().mockResolvedValueOnce(request()).mockResolvedValueOnce({ id: "decision" }); await expect(decideChange(ctx, decision)).rejects.toThrow("already decided"); expect(m.update).not.toHaveBeenCalled(); });
+  it("rejects changed records", async () => { m.target.mockResolvedValue({ ...record, status: "SUSPENDED" }); await expect(decideChange(ctx, decision)).rejects.toThrow("Target changed"); expect(m.update).not.toHaveBeenCalled(); });
+  it("rejects malformed persisted actions", async () => { m.logs.mockReset().mockResolvedValueOnce({ ...request(), changes: { ...change(), action: "GRANT_ADMIN" } }); await expect(decideChange(ctx, decision)).rejects.toThrow("Invalid approval"); expect(m.update).not.toHaveBeenCalled(); });
+  it("rejects mismatched audit identity", async () => { m.logs.mockReset().mockResolvedValueOnce({ ...request(), entityId: "another" }); await expect(decideChange(ctx, decision)).rejects.toThrow("identity mismatch"); expect(m.update).not.toHaveBeenCalled(); });
+  it("rejects raced updates without writing completion", async () => { m.update.mockResolvedValue({ count: 0 }); await expect(decideChange(ctx, decision)).rejects.toThrow("changed during approval"); expect(m.audit).not.toHaveBeenCalled(); });
+  it("propagates audit failure so the transaction cannot commit", async () => { m.audit.mockRejectedValue(new Error("audit unavailable")); await expect(decideChange(ctx, decision)).rejects.toThrow("audit unavailable"); });
+  it("protects administrator targets during request creation", async () => { m.target.mockResolvedValue({ ...record, platformRole: "ADMIN" }); await expect(createChange(ctx, { action: "USER_SUSPEND", targetId, reason: decision.reason })).rejects.toThrow("platform-admin"); expect(m.audit).not.toHaveBeenCalled(); });
+  it("allows only requester cancellation without mutating target", async () => { await expect(decideChange({ ...ctx, userId: "requester" }, { ...decision, decision: "CANCEL" })).resolves.toMatchObject({ status: "CANCELLED" }); expect(m.update).not.toHaveBeenCalled(); });
+  it("rejects other administrator cancellation", async () => { await expect(decideChange(ctx, { ...decision, decision: "CANCEL" })).rejects.toThrow("Only the requester"); expect(m.update).not.toHaveBeenCalled(); });
+});

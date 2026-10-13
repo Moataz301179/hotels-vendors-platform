@@ -153,10 +153,10 @@ export default function MarketplacePage() {
     if (activeFilters.includes("In Stock")) list = list.filter((p) => p.stockQuantity > 0);
     if (activeFilters.includes("Low Stock")) list = list.filter((p) => p.stockQuantity > 0 && p.stockQuantity < 20);
     if (activeFilters.includes("Pre-Order")) list = list.filter((p) => p.stockQuantity === 0);
-    if (activeFilters.includes("Under 100 EGP")) list = list.filter((p) => p.unitPrice < 100);
-    if (activeFilters.includes("100-500 EGP")) list = list.filter((p) => p.unitPrice >= 100 && p.unitPrice <= 500);
-    if (activeFilters.includes("500-1K EGP")) list = list.filter((p) => p.unitPrice > 500 && p.unitPrice <= 1000);
-    if (activeFilters.includes("1K+ EGP")) list = list.filter((p) => p.unitPrice > 1000);
+    if (activeFilters.includes("Under 100 EGP")) list = list.filter((p) => p.unitPrice !== null && p.unitPrice < 100);
+    if (activeFilters.includes("100-500 EGP")) list = list.filter((p) => p.unitPrice !== null && p.unitPrice >= 100 && p.unitPrice <= 500);
+    if (activeFilters.includes("500-1K EGP")) list = list.filter((p) => p.unitPrice !== null && p.unitPrice > 500 && p.unitPrice <= 1000);
+    if (activeFilters.includes("1K+ EGP")) list = list.filter((p) => p.unitPrice !== null && p.unitPrice > 1000);
     if (activeFilters.includes("4.5+ Stars")) list = list.filter((p) => p.supplierRating >= 4.5);
     if (activeFilters.includes("4.0+ Stars")) list = list.filter((p) => p.supplierRating >= 4.0);
     if (activeFilters.includes("3.5+ Stars")) list = list.filter((p) => p.supplierRating >= 3.5);
@@ -164,8 +164,12 @@ export default function MarketplacePage() {
     if (activeFilters.includes("24 Hours")) list = list.filter((p) => p.leadTimeDays <= 1);
     if (activeFilters.includes("48 Hours")) list = list.filter((p) => p.leadTimeDays <= 2);
     if (activeFilters.includes("3-5 Days")) list = list.filter((p) => p.leadTimeDays >= 3 && p.leadTimeDays <= 5);
-    if (sortBy === "price_low") list.sort((a, b) => a.unitPrice - b.unitPrice);
-    else if (sortBy === "price_high") list.sort((a, b) => b.unitPrice - a.unitPrice);
+    if (sortBy === "price_low" || sortBy === "price_high") list.sort((a, b) => {
+      // Missing prices are not free products and sort after known prices.
+      if (a.unitPrice === null) return b.unitPrice === null ? 0 : 1;
+      if (b.unitPrice === null) return -1;
+      return sortBy === "price_low" ? a.unitPrice - b.unitPrice : b.unitPrice - a.unitPrice;
+    });
     else if (sortBy === "rating") list.sort((a, b) => b.supplierRating - a.supplierRating);
     else if (sortBy === "lead") list.sort((a, b) => a.leadTimeDays - b.leadTimeDays);
     return list;
@@ -180,6 +184,7 @@ export default function MarketplacePage() {
   const { addItem, openCart, totalItems } = useCart();
 
   const handleAdd = (product: MarketplaceProduct) => {
+    if (product.unitPrice === null) return;
     const resolved = getProductImage(product);
     addItem({
       id: product.id,
@@ -510,7 +515,9 @@ export default function MarketplacePage() {
                       </div>
 
                       <div className="flex items-baseline gap-2 pt-1">
-                        {memberMode ? (
+                        {product.unitPrice === null ? (
+                          <span className="text-sm text-white/60">{tc("priceUnavailable")}</span>
+                        ) : memberMode ? (
                           <>
                             <span className="text-xl font-bold text-white tracking-tight">
                               EGP {memberDiscount(product.unitPrice).toLocaleString()}
@@ -542,6 +549,7 @@ export default function MarketplacePage() {
                         </Link>
                         <button
                           onClick={() => handleAdd(product)}
+                          disabled={product.unitPrice === null}
                           className="flex items-center justify-center px-3 py-2.5 rounded-xl bg-accent-base hover:bg-[#6B0000] text-white transition-all"
                         >
                           <ShoppingCart className="w-4 h-4" />

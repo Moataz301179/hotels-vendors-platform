@@ -3,30 +3,27 @@ import { canonicalUrl } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Smartphone, Eye, ShieldCheck, Compass, PackageSearch, Bell, ScanLine, Truck, Hotel, Store, Ship } from "lucide-react";
-import { DownloadQR } from "@/components/marketing/download-qr";
 import { HovinPhoneMockup } from "@/components/invo/hovin-phone-mockup";
 
 export const metadata: Metadata = {
   alternates: { canonical: canonicalUrl("/hovin") },
-  title: "HOVIN — The HotelsVendors Mobile App for the Field | Suppliers, Carriers & Dock Teams",
-  description: "HOVIN is the mobile layer of HotelsVendors — built for suppliers, carriers, and dock teams operating on the move. List products, fulfill orders, scan deliveries, and cash out in 48 hours.",
+  title: "HOVIN — Receiving and delivery evidence for hospitality operations",
+  description: "HOVIN is the field layer for receiving, delivery evidence and ETA updates connected to the HotelsVendors operating record.",
   openGraph: {
-    title: "HOVIN — HotelsVendors Mobile App",
-    description: "Order fulfillment, dock scanning, and 48-hour cash-out, built for the field.",
+    title: "HOVIN — HotelsVendors field operations",
+    description: "Receiving, delivery evidence and ETA updates connected to the same order record.",
     type: "website",
   },
 };
 
 const FEATURES = [
-  { icon: PackageSearch, title: "Live Order Inbox", desc: "Accept & fulfill orders with one tap from the HOVIN mobile app." },
-  { icon: Eye, title: "Dock Scanner", desc: "Camera scan-to-GRN with QR verification and instant credit notes." },
-  { icon: ShieldCheck, title: "ETA on the Go", desc: "Submit ETA-compliant invoices and e-waybills straight from your phone." },
-  { icon: Bell, title: "48h Cash-Out", desc: "Early payout on approved orders via Oliv — promo code CHV000." },
-  { icon: Compass, title: "Live Tracking", desc: "Real-time shipment tracking & GPS for carriers and dock teams." },
-  { icon: Smartphone, title: "Built for the Field", desc: "Works on any phone — no desktop needed to run your operation." },
+  { icon: PackageSearch, title: "Order context", desc: "Open the approved order, quantities and delivery plan before receiving begins." },
+  { icon: Eye, title: "Receiving evidence", desc: "Capture quantities, exceptions and receipt evidence against the same order record." },
+  { icon: ShieldCheck, title: "ETA updates", desc: "Keep the hotel and supplier view aligned when delivery timing changes." },
+  { icon: Bell, title: "Exception alerts", desc: "Surface missing quantities, late deliveries and unresolved proof for review." },
+  { icon: Compass, title: "Connected handoffs", desc: "Pass verified status from supplier to carrier to hotel without a second ledger." },
+  { icon: Smartphone, title: "Protected web fallback", desc: "Until a signed mobile release is verified, use the authenticated web workspace." },
 ];
-
-const HOVIN_APP_URL = "https://hotelsvendors.com/hovin"; // real App Store / Play Store URLs once published
 
 const AUDIENCE_ROLES = [
   {
@@ -45,7 +42,7 @@ const AUDIENCE_ROLES = [
     items: [
       "Receive a hotel PO instantly in one mobile inbox — no lost order emails between Cairo and Sharm.",
       "Confirm, stage, and mark Ship with live status visible to the buyer.",
-      "Submit goods-received and trigger invoice payment toward 48-hour cash-out.",
+      "Submit dispatch and receipt evidence so the hotel can reconcile the order and invoice.",
       "Manage listings and pricing directly from your phone.",
     ],
   },
@@ -67,54 +64,20 @@ export default function HOVINPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-5 lg:px-8 pt-32 pb-16 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8a6d3b] mb-3">HotelsVendors · Mobile Layer</p>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#4D4A46] tracking-tight mb-4">HOVIN</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#28618f] mb-3">HOVIN · Field operations layer</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#20272b] tracking-tight mb-4">Receiving that stays connected.</h1>
           <p className="text-lg text-[#646367] max-w-2xl mx-auto mb-6">
-            The mobile app that powers the field — suppliers, carriers, and dock teams run
-            fulfillment, scanning, and 48-hour cash-out from their phones.
+            HOVIN connects the work at the dock to the HotelsVendors order record: confirm what arrived,
+            capture proof, update ETA and keep the next decision visible.
           </p>
           <div className="relative mx-auto mb-8 w-56 h-56">
             <Image src="/logo-hovin.png" alt="HOVIN app logo" fill className="object-contain" priority />
           </div>
 
-          {/* Download — official badges + QR (Oliv referral code on the left of the QR) */}
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
-            {/* Oliv referral code */}
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8a6d3b]">Referral</span>
-              <span className="px-3 py-1 rounded-md border border-[#314B43]/30 bg-[#314B43]/5 font-mono text-sm font-bold text-[#314B43]">CHV000</span>
-            </div>
-
-            <DownloadQR value={HOVIN_APP_URL} size={128} label="Scan to download HOVIN" />
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href={HOVIN_APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Download HOVIN App on the Apple App Store"
-                className="inline-flex items-center gap-2.5 bg-[#111827] text-white px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-              >
-                <AppleIcon />
-                <span className="text-left leading-tight">
-                  <span className="block text-[9px] uppercase tracking-wide opacity-70">Download on the</span>
-                  <span className="block text-sm font-semibold">App Store</span>
-                </span>
-              </a>
-              <a
-                href={HOVIN_APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Get HOVIN App on Google Play"
-                className="inline-flex items-center gap-2.5 bg-[#111827] text-white px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-              >
-                <PlayIcon />
-                <span className="text-left leading-tight">
-                  <span className="block text-[9px] uppercase tracking-wide opacity-70">Get it on</span>
-                  <span className="block text-sm font-semibold">Google Play</span>
-                </span>
-              </a>
-            </div>
+          <div className="mx-auto max-w-xl rounded-xl border border-[#c8d2d4] bg-[#e6edf0] px-5 py-4 text-left">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#28618f]">Release status</p>
+            <p className="mt-1 text-sm text-[#56636a]">Signed App Store and Google Play distribution is not published yet. Use the protected web workspace while device release verification is completed.</p>
+            <Link href="/login" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#28618f]">Use the web workspace <ArrowRight size={15} /></Link>
           </div>
         </div>
       </section>
@@ -213,10 +176,10 @@ export default function HOVINPage() {
           <h2 className="text-2xl font-bold text-[#4D4A46] mb-3">One platform. Two layers.</h2>
           <p className="text-[#646367] mb-6">Hotels run procurement on the web. The field runs on HOVIN.</p>
           <Link
-            href="/register"
+            href="/login"
             className="inline-flex items-center gap-2 px-7 py-3 bg-[#314B43] text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
           >
-            Get the HOVIN App <ArrowRight size={16} />
+            Open the protected web workspace <ArrowRight size={16} />
           </Link>
         </div>
       </section>

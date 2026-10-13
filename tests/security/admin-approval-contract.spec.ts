@@ -1,0 +1,20 @@
+import { describe, expect, it } from "vitest";
+import { requestChange, approveChange, assertApprovalEligible, type PendingChange } from "@/lib/admin/approval-contract";
+import { operationsQuery, operationsSection } from "@/lib/admin/operations-contract";
+import { csvCell } from "@/lib/admin/report-export";
+const change: PendingChange = { kind: "ADMIN_CHANGE_REQUEST", action: "USER_SUSPEND", targetId: "cmux8bffs0000crz4uy37rtpg", targetTenantId: "tenant", reason: "Independently reviewed business request", evidenceId: null, snapshot: "version-1", expiresAt: new Date(20000).toISOString() };
+describe("controlled admin contract", () => {
+  it("rejects self approval", () => expect(() => assertApprovalEligible(change, "a", "a", "version-1", 10000)).toThrow("different"));
+  it("rejects expiration", () => expect(() => assertApprovalEligible(change, "a", "b", "version-1", 20000)).toThrow("expired"));
+  it("rejects malformed expiry", () => expect(() => assertApprovalEligible({ ...change, expiresAt: "invalid" }, "a", "b", "version-1", 10000)).toThrow("expired"));
+  it("rejects stale target", () => expect(() => assertApprovalEligible(change, "a", "b", "version-2", 10000)).toThrow("changed"));
+  it("allows distinct authorized signature on matching snapshot", () => expect(() => assertApprovalEligible(change, "a", "b", "version-1", 10000)).not.toThrow());
+  it("rejects client-provided co-authorizer", () => expect(requestChange.safeParse({ action: "USER_SUSPEND", targetId: change.targetId, reason: change.reason, coAuthorizerId: "forged" }).success).toBe(false));
+  it("rejects monetary and permission-grant actions", () => expect(requestChange.safeParse({ action: "GRANT_CREDIT", targetId: change.targetId, reason: change.reason }).success).toBe(false));
+  it("validates decisions", () => expect(approveChange.safeParse({ requestId: change.targetId, decision: "APPROVE", reason: "short" }).success).toBe(false));
+  it("restricts operational section names", () => expect(operationsSection.safeParse("users-secret-table").success).toBe(false));
+  it("rejects client tenant selection", () => expect(operationsQuery.safeParse({ tenantId: "other" }).success).toBe(false));
+  it("bounds report page and size", () => { expect(operationsQuery.safeParse({ limit: 10001 }).success).toBe(false); expect(operationsQuery.safeParse({ page: -1 }).success).toBe(false); });
+  it.each(["=HYPERLINK(\"bad\")", "+SUM(1)", "-SUM(1)", "@SUM(1)", "  =SUM(1)"])("neutralizes spreadsheet formula %s", value => expect(csvCell(value)).toMatch(/^"'/));
+  it("escapes embedded quotes", () => expect(csvCell('supplier "name"')).toBe('"supplier ""name"""'));
+});

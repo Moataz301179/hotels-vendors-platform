@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Eye, EyeOff, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
@@ -14,17 +14,14 @@ function ResetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [submissionError, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (!token) {
-      setError("Invalid or missing reset token. Please request a new password reset.");
-    }
-  }, [token]);
+  const error = token ? submissionError : "Invalid or missing reset token. Please request a new password reset.";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
     setError("");
 
     if (password.length < 6) { setError("Password must be at least 6 characters"); return; }

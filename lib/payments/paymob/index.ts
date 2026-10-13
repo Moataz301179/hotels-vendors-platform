@@ -15,7 +15,7 @@
 
 import * as crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-// import removed: procurement-audit-link module not present; audit provenance handled by AuditLog directly
+import { linkProcurementAudit } from "@/lib/audit/procurement-audit-link";
 
 // ============================================================================
 // 1. CONFIGURATION & ENVIRONMENT
@@ -414,7 +414,7 @@ export async function initializePaymobPayment(params: {
 
   const iframeUrl = getPaymobIframeUrl(paymentToken);
 
-  return { iframeUrl, orderId: params.invoiceId, paymentToken };
+  return { iframeUrl, orderId: order.id, paymentToken };
 }
 
 // ============================================================================
@@ -791,10 +791,9 @@ export async function releaseEscrowToken(input: TokenReleaseInput): Promise<{ re
   });
 
   // Link audit entry to procurement provenance chain (existing module, no new DB table)
-  await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "paymob-escrow-release", {
-    orderId: input.invoiceId,
+  await linkProcurementAudit(auditResult.id, "VALIDATED", "paymob-escrow-release", {
     invoiceId: input.invoiceId,
-    approvalId: input.approverId || null,
+    approvalId: input.approverId || undefined,
   }).catch((err: Error) => console.error("Audit provenance link failed:", err));
 
   return {

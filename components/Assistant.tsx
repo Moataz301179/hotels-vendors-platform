@@ -7,7 +7,6 @@ import { useUser } from "@clerk/nextjs";
 import { usePrefs } from "@/i18n/provider";
 import { useApp } from "@/lib/store";
 import { IcArrow, IcSpark, IcX } from "./icons";
-import { useTranslation } from "@/lib/i18n/hooks/use-translation";
 
 type Item = { label: string; meta?: string; href?: string };
 
@@ -37,7 +36,7 @@ const NAV: { keys: string[]; href: string; label: string; labelAr: string }[] = 
 export default function Assistant() {
   const { t, lang } = usePrefs();
   const { cartCount } = useApp();
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -45,11 +44,12 @@ export default function Assistant() {
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (open && msgs.length === 0) {
+  const toggleOpen = () => {
+    if (!open && msgs.length === 0) {
       setMsgs([{ id: seq++, from: "bot", text: t("assistant.greeting") }]);
     }
-  }, [open, msgs.length, t]);
+    setOpen((value) => !value);
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -113,7 +113,7 @@ export default function Assistant() {
   return (
     <>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         aria-label={open ? t("assistant.close") : t("assistant.open")}
         aria-expanded={open}
         className="fixed bottom-5 end-5 z-[55] flex h-14 w-14 items-center justify-center rounded-full bg-ink-950 text-brass-300 shadow-2xl ring-1 ring-white/15 transition-transform hover:scale-105 dark:bg-white dark:text-brass-600 dark:ring-black/10"

@@ -34,15 +34,38 @@ export const POST = apiRoute(async (request: NextRequest) => {
   const body = await request.json();
   const data = validateBody(InvoiceCreateSchema, body);
 
+  const order = await prisma.order.findFirst({
+    where: { id: data.orderId, tenantId: auth.tenantId, deletedAt: null },
+    select: { id: true, tenantId: true, hotelId: true, supplierId: true, status: true, subtotal: true, vatAmount: true, total: true },
+  });
+  if (!order) return error("Order not found", 404);
+  if (!["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"].includes(order.status)) {
+    return error("An invoice can only be issued after the order is confirmed", 409);
+  }
+  if (data.hotelId !== order.hotelId || data.supplierId !== order.supplierId) {
+    return error("Invoice parties must match the order", 400);
+  }
+  const actor = await prisma.user.findFirst({
+    where: { id: auth.userId, tenantId: auth.tenantId, deletedAt: null },
+    select: { supplierId: true },
+  });
+  if (auth.platformRole === "SUPPLIER" && actor?.supplierId !== order.supplierId) {
+    return error("Only the assigned supplier can issue this invoice", 403);
+  }
+  const moneyMatches = (submitted: number, stored: unknown) => Math.abs(submitted - Number(stored ?? 0)) < 0.01;
+  if (!moneyMatches(data.subtotal, order.subtotal) || !moneyMatches(data.vatAmount, order.vatAmount) || !moneyMatches(data.total, order.total)) {
+    return error("Invoice amounts must match the locked order totals", 409);
+  }
+
   const idempotencyKey = await requireIdempotencyKey(request, { userId: auth.userId, action: "CREATE_INVOICE", amount: data.total });
 
   const invoice = await prisma.invoice.create({
     data: {
-          tenantId: auth.tenantId,
+      tenantId: order.tenantId,
       invoiceNumber: data.invoiceNumber,
-      orderId: data.orderId,
-      hotelId: data.hotelId,
-      supplierId: data.supplierId,
+      orderId: order.id,
+      hotelId: order.hotelId,
+      supplierId: order.supplierId,
       subtotal: data.subtotal,
       vatRate: data.vatRate,
       vatAmount: data.vatAmount,

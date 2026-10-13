@@ -1,53 +1,47 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePrefs } from "@/i18n/provider";
-import { useApp } from "@/lib/store";
+import { useApi } from "@/lib/hooks/use-api";
 import { fmtDate } from "@/lib/format";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Badge } from "@/components/ui";
-import { Card as PageHead, CardHeader as PageHeadHeader, CardTitle as PageHeadTitle } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
+import { PageHead, TextInput, Skeleton, EmptyState, T, Th, Td, StatePill } from "@/components/ui";
+import { IcSearch, IcBox } from "@/components/icons";
 
 const FILTERS = ["all", "approval", "active", "done"];
+interface Order { id: string; orderNumber: string; status: string; total: number | string | null; createdAt: string; deliveryDate: string | null; supplier: { name: string }; items: { id: string }[] }
 
 export default function OrdersPage() {
   const { t, lang } = usePrefs();
-  const { data, user } = useApp();
+  const { data, loading, error } = useApi<{ orders: Order[] }>("/api/v1/hotel/orders?limit=100");
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const id = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(id);
-  }, []);
 
   const list = useMemo(() => {
-    if (!data?.orders || !user) return [];
-    let out = data.orders.filter((o: any) => o.hotelId === user.orgId);
-    if (filter === "approval") out = out.filter((o: any) => o.approval?.state === "pending");
+    let out = data?.orders ?? [];
+    if (filter === "approval") out = out.filter(o => o.status === "PENDING_APPROVAL");
     if (filter === "active")
-      out = out.filter((o: any) => o.approval?.state !== "rejected" && o.fulfillment !== "delivered" && o.receipt !== "complete");
+      out = out.filter(o => !["REJECTED", "CANCELLED", "DELIVERED"].includes(o.status));
     if (filter === "done")
-      out = out.filter((o: any) => o.approval?.state === "rejected" || (o.receipt === "complete" && o.fulfillment === "delivered"));
+      out = out.filter(o => ["REJECTED", "CANCELLED", "DELIVERED"].includes(o.status));
     if (q.trim()) {
       const s = q.trim().toLowerCase();
       out = out.filter(
-        (o: any) =>
-          o.po?.toLowerCase().includes(s) ||
+        o =>
+          o.orderNumber.toLowerCase().includes(s) ||
           (o.supplier?.name ?? "").toLowerCase().includes(s)
       );
     }
     return out;
-  }, [data?.orders, user, filter, q]);
+  }, [data?.orders, filter, q]);
 
   return (
     <RequireAuth>
       <AppShell active="/orders">
         <Guard roles={["hotel_admin", "gm", "finance_director"]}>
           <PageHead kicker={t("orders.k") ?? "Orders"} title={t("orders.t") ?? "Purchase Orders"} sub={t("orders.sub") ?? "Track your procurement orders"} />
+          {error ? <p role="alert">{error}</p> : null}
 
           {/* Filters */}
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -110,43 +104,38 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {list.map((o: any) => (
+                {list.map(o => (
                   <tr key={o.id} className="cursor-pointer transition-colors hover:bg-fog-50 dark:hover:bg-ink-850">
                     <Td>
                       <Link href={`/orders/${o.id}`} className="font-semibold hover:underline">
-                        {o.po}
+                        {o.orderNumber}
                       </Link>
-                      <div className="text-xs text-ink-400">{o.lines?.length ?? 0} {t("common.items") ?? "items"}</div>
+                      <div className="text-xs text-ink-400">{o.items.length} {t("common.items") ?? "items"}</div>
                     </Td>
                     <Td className="text-[13px]">{o.supplier?.name ?? "—"}</Td>
                     <Td className="tnum text-[13px] text-ink-500">{fmtDate(o.createdAt, lang)}</Td>
-                    <Td className="tnum text-end font-semibold">{o.total?.toFixed(2)}</Td>
+                    <Td className="tnum text-end font-semibold">{o.total == null ? "—" : Number(o.total).toFixed(2)}</Td>
                     <Td>
-                      <StatePill s={o.approval?.state || "none"} />
+                      <StatePill s={o.status.toLowerCase()} />
                     </Td>
                     <Td>
-                      {o.fulfillment === "none" ? (
+                      {!["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"].includes(o.status) ? (
                         <span className="text-ink-400">—</span>
                       ) : (
-                        <StatePill s={o.fulfillment} />
+                        <StatePill s={o.status.toLowerCase()} />
                       )}
                     </Td>
                     <Td className="tnum text-[13px]">
-                      {o.eta ? (
+                      {o.deliveryDate ? (
                         <>
-                          {fmtDate(o.eta, lang)}
-                          <div className="text-xs text-ink-400">{new Date(o.eta).toLocaleDateString()}</div>
+                          {fmtDate(o.deliveryDate, lang)}
                         </>
                       ) : (
                         "—"
                       )}
                     </Td>
                     <Td>
-                      {o.receipt === "none" ? (
-                        <span className="text-ink-400">—</span>
-                      ) : (
-                        <StatePill s={o.receipt} />
-                      )}
+                      <span className="text-ink-400">Not provided</span>
                     </Td>
                   </tr>
                 ))}

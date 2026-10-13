@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
-  Package,
   Star,
   MapPin,
   ShieldCheck,
@@ -71,6 +69,7 @@ export default function ProductDetailClient({ product }: { product: MarketplaceP
   const memberDiscount = (price: number) => Math.round(price * 0.92);
 
   const handleAdd = () => {
+    if (product.unitPrice === null) return;
     const resolved = getProductImage(product);
     addItem({
       id: product.id,
@@ -172,7 +171,9 @@ export default function ProductDetailClient({ product }: { product: MarketplaceP
             </div>
 
             <div className="flex items-baseline gap-3">
-              {memberMode ? (
+              {product.unitPrice === null ? (
+                <span className="text-sm text-white/60">{tc("priceUnavailable")}</span>
+              ) : memberMode ? (
                 <>
                   <span className="text-3xl font-bold text-white tracking-tight">
                     EGP {memberDiscount(product.unitPrice).toLocaleString()}
@@ -236,7 +237,7 @@ export default function ProductDetailClient({ product }: { product: MarketplaceP
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleAdd}
-                disabled={!inStock}
+                disabled={!inStock || product.unitPrice === null}
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-accent-base hover:bg-[#6B0000] disabled:opacity-30 disabled:cursor-not-allowed text-white font-medium transition-all"
               >
                 {added ? (

@@ -260,7 +260,7 @@ export default function HarlyWolfRoom() {
 
         <footer className="mt-6 border-t pt-3 flex justify-between text-[10px] font-mono" style={{ borderColor: ACCENT.blueL, color: ACCENT.mut }}>
           <span>lip-sync via mic (you) + TTS (wolf) · backend: {endpoint}</span>
-          <span className="inline-flex items-center gap-1"><Settings2 size={11}/> CHV000 · HotelsVendors Agent OS</span>
+          <span className="inline-flex items-center gap-1"><Settings2 size={11}/> HotelsVendors Agent OS</span>
         </footer>
       </div>
     </main>

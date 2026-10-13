@@ -13,8 +13,10 @@ if (!process.env.SESSION_SECRET) {
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Isolate maintenance verification from the existing checkout's running server.
+  distDir: process.env.HV_MAINTENANCE_OUTPUT === "build" ? ".next-maintenance-build" : process.env.HV_MAINTENANCE_OUTPUT === "dev" ? ".next-maintenance" : ".next",
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     remotePatterns: [

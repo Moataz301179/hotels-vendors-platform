@@ -42,10 +42,11 @@ export const POST = apiRoute(async (request: NextRequest, { params }: { params: 
 
   // advance
   const next = body.stage as ShipmentStage;
+  const previousStage = tracker.stage;
   const updated = tracker.advance(next, actor, { note: body.note, gps: body.gps });
   if (!updated) return error(`Transition ${tracker.stage} → ${next} not allowed for ${actor.role}`, 403);
   for (const role of roleRecipients(updated)) {
     await dispatchNotifications(stageNotification(id, updated, meta?.orderNumber || id, role as NotifyRole, auth.userId));
   }
-  return success({ shipmentId: id, from: (tracker.timeline.at(-1) as any)?.prevStage, stage: updated, steps: TRANSITIONS[updated] });
+  return success({ shipmentId: id, from: previousStage, stage: updated, steps: TRANSITIONS[updated] });
 });

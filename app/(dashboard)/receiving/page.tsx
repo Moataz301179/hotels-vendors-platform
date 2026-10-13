@@ -1,10 +1,13 @@
 // app/receiving/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useApi } from "@/lib/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Badge, Card, CardContent, CardHeader, CardTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Skeleton, Input } from "@/components/ui";
+import { Badge, Card, Table, TableBody, TableHead, TableHeader, TableRow, Skeleton, Input, Button } from "@/components/ui";
+import { StatCard } from "@/components/shared/stat-card";
+import { IcWarehouse, IcCheck, IcClock, IcBox, IcTruck } from "@/components/icons";
 
 interface GrnLineItem {
   id: string;
@@ -64,32 +67,12 @@ const STATUS_TONE: Record<string, "default" | "success" | "warning" | "error" | 
 };
 
 export default function ReceivingPage() {
-  const [grns, setGrns] = useState<GoodsReceiptNote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
 
-  const fetchGrns = async (p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/v1/grn?page=${p}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
-        { headers: { Accept: "application/json" } }
-      );
-      if (!res.ok) throw new Error("Failed to load receiving records");
-      const data: GrnResponse = await res.json();
-      setGrns(data.grns);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchGrns(page); }, [page, search]);
+  const { data, loading, error, refetch } = useApi<GrnResponse>(`/api/v1/grn?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ""}`);
+  const grns = data?.grns ?? [];
 
   const accepted = grns.filter((g) => g.status === "ACCEPTED");
   const partial = grns.filter((g) => g.status === "PARTIALLY_ACCEPTED");
@@ -117,7 +100,6 @@ export default function ReceivingPage() {
               placeholder="Search GRN #..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              size="sm"
               className="w-44"
             />
           </div>

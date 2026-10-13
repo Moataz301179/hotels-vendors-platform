@@ -64,15 +64,15 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
   // Verify supplier
   const supplier = await prisma.supplier.findFirst({
-    where: { tenantId: auth.tenantId },
-    select: { id: true },
+    where: { tenantId: auth.tenantId, deletedAt: null },
+    select: { id: true, tenantId: true, isVerified: true },
   });
 
-  if (!supplier && auth.platformRole !== "ADMIN") {
-    return error("No supplier found for your tenant", 403);
+  if (!supplier) {
+    return error("A real supplier tenant is required before catalog records can be staged", 403);
   }
 
-  const supplierId = supplier?.id || auth.tenantId;
+  const supplierId = supplier.id;
 
   // Batch create products
   const createdProducts = await prisma.$transaction(async (tx) => {
@@ -109,7 +109,11 @@ export const POST = apiRoute(async (request: NextRequest) => {
                 ? "AMBIENT"
                 : (row.temperatureReq ?? null),
           images: row.images ? JSON.stringify(row.images) : null,
-          status: "ACTIVE",
+          // Imports are never published by confirmation. An owner must verify
+          // provenance, price and availability through the controlled admin
+          // workflow before activation.
+          status: "INACTIVE",
+          source: "MANUAL",
         },
       });
 

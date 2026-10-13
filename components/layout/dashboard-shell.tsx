@@ -1,10 +1,11 @@
 "use client";
 
-import { ReactNode, useState, useEffect, useCallback } from "react";
+import { ReactNode, useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import { PulseSidebar } from "./pulse-sidebar";
 import { DashboardHeader } from "./dashboard-header";
 import { CartProvider } from "@/components/cart/cart-context";
 import { CommandPalette } from "@/components/shared/command-palette";
+import { GuidedAssistant } from "@/components/onboarding/guided-assistant";
 
 interface UserData {
   id: string;
@@ -22,37 +23,29 @@ interface DashboardShellProps {
   user?: UserData | null;
 }
 
+const MOBILE_QUERY = "(max-width: 767px)";
+const TABLET_QUERY = "(min-width: 768px) and (max-width: 1023px)";
+function subscribeMedia(query: string, notify: () => void) {
+  const media = window.matchMedia(query);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+}
+const subscribeMobile = (notify: () => void) => subscribeMedia(MOBILE_QUERY, notify);
+const subscribeTablet = (notify: () => void) => subscribeMedia(TABLET_QUERY, notify);
+const mobileSnapshot = () => window.matchMedia(MOBILE_QUERY).matches;
+const tabletSnapshot = () => window.matchMedia(TABLET_QUERY).matches;
+const serverSnapshot = () => false;
+
 export function DashboardShell({ children, role, user }: DashboardShellProps) {
-  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+  const [collapsedOverride, setDesktopCollapsed] = useState<boolean | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
+  const isMobile = useSyncExternalStore(subscribeMobile, mobileSnapshot, serverSnapshot);
+  const isTablet = useSyncExternalStore(subscribeTablet, tabletSnapshot, serverSnapshot);
+  const desktopCollapsed = collapsedOverride ?? isTablet;
   const [cmdOpen, setCmdOpen] = useState(false);
 
   const openCmd = useCallback(() => setCmdOpen(true), []);
   const closeCmd = useCallback(() => setCmdOpen(false), []);
-
-  useEffect(() => {
-    const mobileMq = window.matchMedia("(max-width: 767px)");
-    const tabletMq = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
-
-    setIsMobile(mobileMq.matches);
-    setIsTablet(tabletMq.matches);
-    if (tabletMq.matches) setDesktopCollapsed(true);
-
-    const onMobileChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    const onTabletChange = (e: MediaQueryListEvent) => {
-      setIsTablet(e.matches);
-      setDesktopCollapsed(e.matches);
-    };
-
-    mobileMq.addEventListener("change", onMobileChange);
-    tabletMq.addEventListener("change", onTabletChange);
-    return () => {
-      mobileMq.removeEventListener("change", onMobileChange);
-      tabletMq.removeEventListener("change", onTabletChange);
-    };
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -123,6 +116,7 @@ export function DashboardShell({ children, role, user }: DashboardShellProps) {
         </div>
       </CartProvider>
       <CommandPalette role={role} open={cmdOpen} onClose={closeCmd} />
+      <GuidedAssistant role={role} />
     </div>
   );
 }

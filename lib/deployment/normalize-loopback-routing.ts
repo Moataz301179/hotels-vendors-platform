@@ -1,7 +1,9 @@
 /** Normalize transport URLs only; never alter Clerk authentication headers. */
 export function normalizeLoopbackRouting(headers: Headers, publicOrigin: string, requestUrl?: string) {
   const origin = new URL(publicOrigin);
-  if (origin.protocol !== "https:" || !["hotelsvendors.com", "www.hotelsvendors.com"].includes(origin.hostname)) return;
+  const isProductionOrigin = origin.protocol === "https:" && ["hotelsvendors.com", "www.hotelsvendors.com"].includes(origin.hostname);
+  const isLocalOrigin = ["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname) && ["http:", "https:"].includes(origin.protocol);
+  if (!isProductionOrigin && !isLocalOrigin) return;
   for (const name of ["location", "x-middleware-rewrite"]) {
     const value = headers.get(name);
     if (!value) continue;

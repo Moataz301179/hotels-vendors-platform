@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         sector: "HOTEL",
         role,
         message: JSON.stringify({
-          referralCode: "CHV000",
+          referralCode: "partner",
           phone: phone || null,
           capturedAt: new Date().toISOString(),
         }),

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { integrationEngine } from '@/lib/integrations/engine';
+import { integrationAdminRoute } from '@/lib/integrations/admin-route';
 
-export async function POST(request: Request) {
+export const POST = integrationAdminRoute(async (request) => {
   try {
     const { hotelId, amount } = await request.json();
     const result = await integrationEngine.checkBudget(hotelId, amount);
@@ -9,5 +10,5 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-}
+});
 

@@ -26,6 +26,9 @@ export class RelationshipDiscoveryEngine {
 
   // Evidence-backed only (§26 — no fabricated relationships)
   discoverRelationship(fromId: string, toId: string, type: string, evidence: RelationshipEvidence): boolean {
+    const types: EntityRelationship['relationshipType'][] = ['OWNS', 'OPERATES', 'SUPPLIES', 'PURCHASES_FROM', 'COMPETES_WITH', 'FINANCES', 'USES_TECHNOLOGY', 'MENTIONED_IN_DOCUMENT', 'POTENTIALLY_NEEDS', 'POTENTIALLY_BENEFITS_FROM'];
+    const relationshipType = types.find(value => value === type);
+    if (!relationshipType) return false;
     if (!evidence.sourceProvenance || evidence.confidence < 0.5) {
       return false; // strict threshold (§14) — no weak links in graph
     }
@@ -37,7 +40,7 @@ export class RelationshipDiscoveryEngine {
     const rel: EntityRelationship = {
       fromEntityId: fromId,
       toEntityId: toId,
-      relationshipType: type as any,
+      relationshipType,
       evidence: [evidence],
       firstObserved: evidence.temporalFirstSeen,
       lastUpdated: evidence.temporalLastUpdated || evidence.temporalFirstSeen,

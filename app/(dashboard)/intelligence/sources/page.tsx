@@ -1,9 +1,9 @@
 "use client";
-import { ArrowRight, Database, ShieldCheck } from "lucide-react";
+import { Database } from "lucide-react";
 import { useApi } from "@/lib/hooks/use-api";
 
 export default function IntelligenceSourcesPage() {
-  const { data, loading } = useApi<{ sources: any[] }>("/api/v1/intelligence/sources");
+  const { data, loading, error } = useApi<{ sources: { source: string; adapterVersion: string }[] }>("/api/v1/intelligence/sources");
   const sources = data?.sources || [];
 
   return (
@@ -15,7 +15,7 @@ export default function IntelligenceSourcesPage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading sources...</div> :
+        {error ? <div role="alert" className="p-4 text-red-400">{error}</div> : loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading sources...</div> :
          sources.length === 0 ? (
           <div className="bg-surface-1 border border-border-subtle rounded-xl p-8 text-center text-sm text-foreground-muted">
             <Database size={20} className="mx-auto text-foreground-muted mb-2" />
@@ -24,7 +24,7 @@ export default function IntelligenceSourcesPage() {
           </div>
          ) : (
           <div className="grid md:grid-cols-4 gap-3 text-[10px] text-foreground-subtle">
-            {sources.map((s: any) => (
+            {sources.map((s) => (
               <div key={s.source} className="bg-ink-950 border border-white/5 rounded p-3"><span className="text-white font-medium block">{s.source}</span><span className="text-foreground-subtle">{s.adapterVersion}</span></div>
             ))}
           </div>

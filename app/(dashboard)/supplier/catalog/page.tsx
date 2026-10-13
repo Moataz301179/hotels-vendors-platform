@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
-  Plus, Search, Package, Loader2, AlertCircle, Edit, Trash2,
+  Plus, Search, Package, Loader2, AlertCircle, Edit,
 } from "lucide-react";
 import { useApi } from "@/lib/hooks/use-api";
 import AppShell, { RequireAuth } from "@/components/AppShell";
@@ -20,7 +20,7 @@ interface Product {
 }
 
 interface ProductsResponse {
-  data: Product[];
+  products: Product[];
   pagination: { page: number; limit: number; total: number };
 }
 
@@ -32,10 +32,10 @@ export default function SupplierCatalogPage() {
   queryParams.set("limit", "50");
 
   const { data, loading, error, refetch } = useApi<ProductsResponse>(
-    `/api/v1/products?${queryParams.toString()}`
+    `/api/v1/supplier/inventory?${queryParams.toString()}`
   );
 
-  const products = data?.data || [];
+  const products = data?.products || [];
 
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat("en-US", {

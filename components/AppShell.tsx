@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { useClerk } from "@clerk/nextjs";
+import { useApi } from "@/lib/hooks/use-api";
 import { usePrefs } from "@/i18n/provider";
 import { useApp } from "@/lib/store";
-import type { Role } from "@/lib/types";
 import { initials } from "@/lib/format";
 import { Btn, EmptyState } from "./ui";
 import {
@@ -26,6 +27,18 @@ interface NavItem {
   badge?: number;
 }
 
+export type Role = "hotel_admin" | "gm" | "finance_director" | "supplier_manager" | "partner_officer" | "carrier" | "platform_admin";
+interface SessionUser { name: string; role: string; platformRole: string }
+function displayRole(user: SessionUser): Role {
+  if (user.platformRole === "ADMIN") return "platform_admin";
+  if (user.platformRole === "SUPPLIER") return "supplier_manager";
+  if (user.platformRole === "FACTORING") return "partner_officer";
+  if (user.platformRole === "SHIPPING") return "carrier";
+  if (user.role === "GM" || user.role === "REGIONAL_GM") return "gm";
+  if (user.role === "FINANCIAL_CONTROLLER") return "finance_director";
+  return "hotel_admin";
+}
+
 export function navFor(role: Role, cartCount: number): NavItem[] {
   switch (role) {
     case "hotel_admin":
@@ -39,18 +52,16 @@ export function navFor(role: Role, cartCount: number): NavItem[] {
         { href: "/orders", key: "nav.orders" },
         { href: "/receiving", key: "nav.receiving" },
         { href: "/invoices", key: "nav.invoices" },
-        { href: "/eta-compliance", key: "nav.eta" },
         { href: "/financing", key: "nav.financing" },
         { href: "/analytics", key: "nav.analytics" },
         { href: "/settings", key: "nav.settings" },
       ];
     case "supplier_manager":
       return [
-        { href: "/supplier-central", key: "nav.central" },
-        { href: "/supplier-central/catalog", key: "nav.catalog" },
-        { href: "/supplier-central/orders", key: "nav.ordersSup" },
+        { href: "/supplier", key: "nav.central" },
+        { href: "/supplier/catalog", key: "nav.catalog" },
+        { href: "/supplier/orders", key: "nav.ordersSup" },
         { href: "/invoices", key: "nav.invoices" },
-        { href: "/eta-compliance", key: "nav.eta" },
         { href: "/settings", key: "nav.settings" },
       ];
     case "partner_officer":
@@ -61,7 +72,6 @@ export function navFor(role: Role, cartCount: number): NavItem[] {
     case "carrier":
       return [
         { href: "/deliveries", key: "nav.deliveries" },
-        { href: "/eta-compliance", key: "nav.eta" },
         { href: "/settings", key: "nav.settings" },
       ];
     case "platform_admin":
@@ -79,7 +89,7 @@ export function navFor(role: Role, cartCount: number): NavItem[] {
 export function homeFor(role: Role): string {
   switch (role) {
     case "supplier_manager":
-      return "/supplier-central";
+      return "/supplier";
     case "partner_officer":
       return "/financing";
     case "carrier":
@@ -141,20 +151,18 @@ export function ToastHost() {
 }
 
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { user } = useApp();
-  const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
-  useEffect(() => {
-    if (ready && !user) window.location.href = "/login";
-  }, [ready, user]);
-  if (!user) return null;
+  const { data, loading, error } = useApi<SessionUser>("/api/v1/auth/me");
+  if (loading) return <p role="status">Loading workspace…</p>;
+  if (error || !data) return <p role="alert">Unable to load your session. <Link href="/login">Sign in</Link></p>;
   return <>{children}</>;
 }
 
-export function Guard({ roles, children }: { roles: Role[]; children: ReactNode }) {
-  const { user } = useApp();
+export function Guard({ roles, children }: { roles: readonly string[]; children: ReactNode }) {
+  const { data: session } = useApi<SessionUser>("/api/v1/auth/me");
   const { t } = usePrefs();
-  if (user && !roles.includes(user.role)) {
+  // Presentation only: route layouts and API permissions enforce authorization.
+  if (!session) return null;
+  if (!roles.includes(displayRole(session))) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16">
         <EmptyState
@@ -181,10 +189,16 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const { t } = usePrefs();
-  const { user, cartCount, logout } = useApp();
+  const { cartCount } = useApp();
+  const { data: session } = useApi<SessionUser>("/api/v1/auth/me");
+  const { signOut } = useClerk();
   const [open, setOpen] = useState(false);
 
-  if (!user) return null;
+  if (!session) return null;
+  const user = { name: session.name, role: displayRole(session) };
+  const logout = async () => {
+    await signOut({ redirectUrl: "/login" });
+  };
   const items = navFor(user.role, cartCount);
 
   return (

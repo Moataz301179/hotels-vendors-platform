@@ -67,6 +67,7 @@ export interface WebhookEvent {
   status: "queued" | "delivered" | "failed";
   deliveredAt?: string;
   retryCount: number;
+  error?: string;
 }
 
 export interface WebhookQueueEntry {
@@ -139,8 +140,9 @@ function registerProvider(body: {
   return {
     ...template,
     id: template.name.toLowerCase().replace(/\s+/g, "-"),
-    status: "pending" as const,
-    config: body.config,
+    // This engine has no durable credential store or live adapter yet.
+    status: "disconnected" as const,
+    description: `${template.description} Configuration is not saved; no live connection was created.`,
   };
 }
 
@@ -175,9 +177,10 @@ async function syncInbound(providerId: string, entity: string): Promise<SyncJob>
     provider: providerId,
     direction: "inbound",
     entity,
-    status: "completed",
+    status: "failed",
     records: 0,
     time: new Date().toISOString(),
+    error: "No live connector is configured. No records were imported.",
   };
 }
 
@@ -188,9 +191,10 @@ async function syncOutbound(providerId: string, entity: string): Promise<SyncJob
     provider: providerId,
     direction: "outbound",
     entity,
-    status: "completed",
+    status: "failed",
     records: 0,
     time: new Date().toISOString(),
+    error: "No live connector is configured. No records were exported.",
   };
 }
 
@@ -242,9 +246,9 @@ async function triggerWebhook(body: {
     eventType: body.eventType,
     targetUrl: url,
     payload: body.payload,
-    status: "delivered",
-    deliveredAt: new Date().toISOString(),
+    status: "failed",
     retryCount: 0,
+    error: "Webhook delivery is not connected to a durable queue or transport.",
   };
 }
 

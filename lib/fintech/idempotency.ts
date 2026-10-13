@@ -2,9 +2,9 @@
  * Idempotency Engine (G10 — double-entry safeguards for monetary mutations)
  */
 
-const idempotencyStore = new Map<string, { result: any; timestamp: number }>();
+const idempotencyStore = new Map<string, { result: unknown; timestamp: number }>();
 
-export function checkIdempotency(key: string): { exists: boolean; result?: any } {
+export function checkIdempotency(key: string): { exists: boolean; result?: unknown } {
   const entry = idempotencyStore.get(key);
   if (entry && Date.now() - entry.timestamp < 24 * 60 * 60 * 1000) {
     return { exists: true, result: entry.result };
@@ -12,6 +12,6 @@ export function checkIdempotency(key: string): { exists: boolean; result?: any }
   return { exists: false };
 }
 
-export function storeIdempotency(key: string, result: any) {
+export function storeIdempotency(key: string, result: unknown) {
   idempotencyStore.set(key, { result, timestamp: Date.now() });
 }

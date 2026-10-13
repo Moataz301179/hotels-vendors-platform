@@ -14,6 +14,7 @@ export type ShipmentStage =
 export type ShipperRole = "SYSTEM" | "DISPATCHER" | "DRIVER" | "DOCK" | "BUYER" | "SUPPLIER";
 
 export interface ShipmentEvent {
+  prevStage?: ShipmentStage;
   stage: ShipmentStage;
   actor: ShipperRole;
   actorId: string;
@@ -87,7 +88,7 @@ export class ShipmentTracker {
     this.currentStage = next;
 
     // Return a signal for notification dispatch: stageChanged
-    (evt as any).prevStage = prev;
+    evt.prevStage = prev;
     return this.currentStage;
   }
 

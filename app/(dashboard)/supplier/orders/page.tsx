@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Package, Loader2, AlertCircle } from "lucide-react";
 import { useApi } from "@/lib/hooks/use-api";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
@@ -32,10 +32,10 @@ export default function SupplierOrdersPage() {
   queryParams.set("limit", "50");
 
   const { data, loading, error, refetch } = useApi<OrdersResponse>(
-    `/api/v1/orders?${queryParams.toString()}`
+    `/api/v1/supplier/orders?${queryParams.toString()}`
   );
 
-  const orders = data?.orders || [];
+  const orders = (data?.orders || []).filter(order => filter === "all" || order.status === filter);
 
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -99,7 +99,7 @@ export default function SupplierOrdersPage() {
                 <Package size={32} className="mx-auto text-foreground-muted mb-3" />
                 <h3 className="text-lg font-medium text-white mb-1">No Orders Yet</h3>
                 <p className="text-foreground-muted text-sm max-w-md mx-auto">
-                  When hotels place orders, they'll appear here with status tracking.
+                  When hotels place orders, they will appear here with status tracking.
                   Update order status as you fulfill them.
                 </p>
               </div>

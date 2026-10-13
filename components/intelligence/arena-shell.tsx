@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import Link from "next/link";
 import { NeedFinding } from "@/lib/intelligence/need-detection/types";
 import { OpportunityPackage } from "@/lib/intelligence/opportunity/engine";
 import { TemporalContext } from "@/lib/intelligence/reasoning/temporal-context";
@@ -54,11 +55,11 @@ export function IntelligenceArenaShell({ role }: ArenaWorkspaceProps) {
           <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2"><ArrowRight size={16} className="text-foreground-muted" />Interactive Role Actions</h3>
           <p className="text-[11px] text-foreground-subtle mb-3">Role-specific actions connecting intelligence findings to procurement/commercial/network/transaction workflows — requires user review; no autonomous execution.</p>
           <div className="grid md:grid-cols-5 gap-2 text-[11px] text-foreground-subtle">
-            <a href="/hotel/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Eye size={14} /><span>Hotel / Procurement Portal</span></a>
-            <a href="/supplier" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Package size={14} /><span>Supplier Central</span></a>
-            <a href="/shipping" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Truck size={14} /><span>Shipping / Logistics</span></a>
-            <a href="/factoring" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><ShieldCheck size={14} /><span>Factoring / Liquidity</span></a>
-            <a href="/admin" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Users size={14} /><span>Admin / Audit</span></a>
+            <Link href="/hotel/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Eye size={14} /><span>Hotel / Procurement Portal</span></Link>
+            <Link href="/supplier" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Package size={14} /><span>Supplier Central</span></Link>
+            <Link href="/shipping" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Truck size={14} /><span>Shipping / Logistics</span></Link>
+            <Link href="/factoring" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><ShieldCheck size={14} /><span>Factoring / Liquidity</span></Link>
+            <Link href="/admin" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white"><Users size={14} /><span>Admin / Audit</span></Link>
           </div>
         </div>
         <div className="bg-surface-1 border border-border-subtle rounded-xl p-5">
@@ -82,21 +83,21 @@ export function IntelligenceArenaShell({ role }: ArenaWorkspaceProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
           <h4 className="text-[11px] font-medium text-foreground-muted mb-3 uppercase tracking-[0.1em]">Role-Specific Workspace Actions</h4>
           <div className="grid md:grid-cols-5 gap-2 text-[10px]">
-            <a href="/hotel/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            <Link href="/hotel/catalog" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Eye size={14} /> <span>Hotel / Procurement Portal</span>
-            </a>
-            <a href="/supplier" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            </Link>
+            <Link href="/supplier" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Package size={14} /> <span>Supplier Central</span>
-            </a>
-            <a href="/shipping" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            </Link>
+            <Link href="/shipping" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Truck size={14} /> <span>Shipping / Logistics</span>
-            </a>
-            <a href="/factoring" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            </Link>
+            <Link href="/factoring" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <ShieldCheck size={14} /> <span>Factoring / Liquidity</span>
-            </a>
-            <a href="/admin" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
+            </Link>
+            <Link href="/admin" className="flex items-center gap-2 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 transition-colors text-foreground-subtle hover:text-white">
               <Users size={14} /> <span>Admin / Audit</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

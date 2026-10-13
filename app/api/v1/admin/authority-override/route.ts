@@ -1,19 +1,18 @@
 import { NextRequest } from "next/server";
 import { adminOverride } from "@/lib/auth/authority-matrix";
-import { apiRoute, authenticate, requirePermission, success, error, audit } from "@/lib/api-utils";
+import { apiRoute, success, error, audit } from "@/lib/api-utils";
 import { z } from "zod";
+import { requireSensitiveAdmin } from "@/lib/admin/access";
 
 const OverrideSchema = z.object({
   orderId: z.string().cuid(),
   reason: z.string().min(20),
-  waivePaymentGuarantee: z.boolean().default(false),
-  coAuthorizerId: z.string().cuid(),
+  waivePaymentGuarantee: z.literal(false).default(false),
+  coAuthorizerId: z.string().cuid().optional(),
 });
 
 export const POST = apiRoute(async (request: NextRequest) => {
-  const auth = await authenticate(request);
-  await requirePermission(auth, "admin:read");
-  await requirePermission(auth, "admin:override_authority");
+  const auth = await requireSensitiveAdmin(request, "admin:override_authority");
   const body = await request.json();
   const data = OverrideSchema.parse(body);
 
@@ -33,6 +32,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   if (!result.success) {
     return error(result.error || "Override failed", 400);
   }
+  if (result.pending) return success({ message: "A second administrator must independently confirm this request", pending: true, requestId: result.requestId }, 202);
 
   await audit({
     entityType: "ORDER",

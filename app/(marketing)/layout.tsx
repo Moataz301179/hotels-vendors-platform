@@ -5,15 +5,15 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SupplierOnboardingBot } from "@/components/ai-assistant/supplier-onboarding-chatbot";
 
 export const metadata: Metadata = {
-  title: "HotelsVendors — Hospitality Business Network & Virtual Shadow",
+  title: "HotelsVendors — Hotel Procurement in Egypt",
   description:
-    "Connect hotels, suppliers, carriers and external funders. HotelsVendors Virtual Shadow surfaces evidence-backed procurement leaks, savings and business opportunities across the hospitality network.",
+    "HotelsVendors connects hotel demand, supplier catalogues, commercial terms, logistics evidence and purchasing history in one accountable hospitality supply network.",
   keywords: [
     "B2B hospitality procurement Egypt",
     "automated factoring lines Cairo",
     "hotel supply chain management Egypt",
     "ETA e-invoicing compliance",
-    "hospitality vendor marketplace",
+    "hospitality supply network",
     " Sharm El-Sheikh hotel suppliers",
     "Hurghada resort procurement",
     "digital invoice Egypt",
@@ -24,16 +24,16 @@ export const metadata: Metadata = {
     "سلسلة التوريد الفندقية",
   ],
   openGraph: {
-    title: "HotelsVendors — Hospitality Business Network & Virtual Shadow",
+    title: "HotelsVendors — Hotel Procurement in Egypt",
     description:
-      "A connected hospitality business network with a Virtual Shadow for evidence-backed procurement, savings and commercial opportunities. External funders retain all financing decisions.",
+      "Connect hotel demand, supplier catalogues, commercial terms and delivery evidence in one accountable operating network.",
     type: "website",
     locale: "en_EG",
     alternateLocale: "ar_EG",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HotelsVendors — Hospitality Business Network & Virtual Shadow",
+    title: "HotelsVendors — Hotel Procurement in Egypt",
     description:
       "Evidence-backed procurement signals, savings opportunities and commercial connections across the hospitality network.",
   },

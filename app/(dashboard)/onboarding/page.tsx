@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useApi } from "@/lib/hooks/use-api";
+import { getCsrfToken } from "@/lib/security/csrf-client";
 import {
   CheckCircle2,
   ArrowRight,
-  ArrowLeft,
   Hotel,
   Store,
   Landmark,
@@ -57,7 +58,7 @@ const ROLE_CONFIG: Record<string, { steps: Omit<OnboardingStep, "completed">[]; 
       { stepKey: "phone_verified", label: "Verify Phone Number", description: "We've sent a verification code to your phone", required: true, icon: Phone },
       { stepKey: "kyc_level1", label: "Submit KYC Documents", description: "Upload your Commercial Registry and Tax ID for verification", required: true, icon: FileText },
       { stepKey: "product_listed", label: "List Your First Product", description: "Add your first product to the marketplace catalog", required: true, icon: Package, action: "Add Product", actionHref: "/supplier/catalog" },
-      { stepKey: "oliv_activated", label: "Activate Oliv Financing", description: "Activate Oliv financing to get paid in 48 hours", required: false, icon: CreditCard, action: "Activate Oliv", actionHref: "/supplier/finance" },
+      { stepKey: "oliv_activated", label: "Activate  Financing", description: "Review financing options, subject to partner eligibility and approval", required: false, icon: CreditCard, action: "Activate ", actionHref: "/supplier/financing" },
     ],
   },
   SHIPPING: {
@@ -83,60 +84,29 @@ const ROLE_CONFIG: Record<string, { steps: Omit<OnboardingStep, "completed">[]; 
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [role, setRole] = useState<PlatformRole | null>(null);
-  const [steps, setSteps] = useState<OnboardingStep[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedStep, setCurrentStep] = useState<number | null>(null);
   const [completing, setCompleting] = useState(false);
-
-  useEffect(() => {
-    fetchProgress();
-  }, []);
-
-  const fetchProgress = async () => {
-    try {
-      const res = await fetch("/api/v1/onboarding/progress");
-      const data = await res.json();
-
-      if (data.success && data.data) {
-        const { platformRole, steps: apiSteps } = data.data;
-        setRole(platformRole);
-
-        const config = ROLE_CONFIG[platformRole];
-        if (config) {
-          const mergedSteps = config.steps.map((step) => {
-            const apiStep = apiSteps?.find((s: any) => s.stepKey === step.stepKey);
-            return {
-              ...step,
-              completed: apiStep?.completed || false,
-            };
-          });
-          setSteps(mergedSteps);
-
-          // Find first incomplete step
-          const firstIncomplete = mergedSteps.findIndex((s) => !s.completed);
-          setCurrentStep(firstIncomplete >= 0 ? firstIncomplete : 0);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch onboarding progress:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [completionError, setCompletionError] = useState<string | null>(null);
+  const { data, loading, error, refetch } = useApi<{ platformRole: PlatformRole; steps: { stepKey: string; completed: boolean }[] }>("/api/v1/onboarding/progress");
+  const role = data?.platformRole ?? null;
+  const steps = useMemo(() => (role ? ROLE_CONFIG[role]?.steps ?? [] : []).map(step => ({
+    ...step, completed: data?.steps?.some(apiStep => apiStep.stepKey === step.stepKey && apiStep.completed) ?? false,
+  })), [role, data]);
+  const currentStep = selectedStep ?? Math.max(0, steps.findIndex(step => !step.completed));
 
   const handleMarkComplete = async (stepKey: string) => {
     setCompleting(true);
     try {
-      await fetch("/api/v1/onboarding/progress", {
+      const response = await fetch("/api/v1/onboarding/progress", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfToken() },
         body: JSON.stringify({ stepKey, completed: true }),
       });
 
-      setSteps((prev) =>
-        prev.map((s) => (s.stepKey === stepKey ? { ...s, completed: true } : s))
-      );
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Unable to complete this step");
+      setCompletionError(null);
+      refetch();
 
       // Auto-advance to next incomplete step
       const nextIncomplete = steps.findIndex((s, i) => i > currentStep && !s.completed);
@@ -144,18 +114,18 @@ export default function OnboardingPage() {
         setCurrentStep(nextIncomplete);
       }
     } catch (err) {
-      console.error("Failed to mark step complete:", err);
+      setCompletionError(err instanceof Error ? err.message : "Unable to complete this step");
     } finally {
       setCompleting(false);
     }
   };
 
   const handleSkipToDashboard = () => {
-    if (!role) return;
-    const dashboardPath = role === "ADMIN" ? "/admin" : `/${role.toLowerCase()}`;
-    router.push(dashboardPath);
+    // Use the Clerk-protected dashboard entry point; the server layout selects the role-specific shell.
+    router.push("/dashboard");
   };
 
+  if (error || completionError) return <div className="p-6"><p role="alert">{error || completionError}</p><button onClick={refetch}>Retry</button></div>;
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>

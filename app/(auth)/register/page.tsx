@@ -24,7 +24,6 @@ function authErrorMessage(error: unknown, fallback: string): string {
 export default function RegisterPage() {
   const { signUp, fetchStatus } = useSignUp();
   const isLoaded = Boolean(signUp) && fetchStatus !== "fetching";
-  const hasClerkConfiguration = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const router = useRouter();
   const [role, setRole] = useState<PlatformRole>("HOTEL");
   const [name, setName] = useState("");
@@ -110,20 +109,6 @@ export default function RegisterPage() {
   };
 
   if (oauthContinuation) return <ClerkRegistration />;
-
-  if (!hasClerkConfiguration) {
-    return (
-      <section aria-labelledby="register-title" className="w-full rounded-2xl bg-[#f4f2ec] p-4 sm:p-6 text-[#314b43]">
-        <div className="w-full max-w-2xl">
-          <h1 id="register-title" className="text-3xl font-semibold">Join the procurement network</h1>
-          <div role="alert" className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950">
-            Registration is temporarily unavailable because the workspace authentication service is not configured. Please contact support and include code <code className="font-semibold">AUTH_CONFIG_MISSING</code>.
-          </div>
-          <Link href="/" className="mt-6 inline-block text-sm font-semibold underline underline-offset-4">Return to HotelsVendors</Link>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section aria-labelledby="register-title" className="w-full rounded-2xl bg-[#f4f2ec] p-4 sm:p-6 text-[#314b43]">

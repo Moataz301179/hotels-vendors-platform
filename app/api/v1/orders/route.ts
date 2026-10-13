@@ -33,7 +33,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   const body = await request.json();
   const data = validateBody(OrderCreateSchema, body);
   const user = await prisma.user.findUnique({
-    where: { id: auth.userId },
+    where: { id: auth.userId, tenantId: auth.tenantId },
     include: { hotel: true },
   });
   if (!user) {
@@ -43,10 +43,25 @@ export const POST = apiRoute(async (request: NextRequest) => {
   if (!hotelId) {
     return error("No hotel associated with order. Provide hotelId in body or link user to a hotel.", 400);
   }
-  const requesterId = data.requesterId || auth.userId;
+  const hotelOwner = await prisma.hotel.findFirst({ where: { id: hotelId, tenantId: auth.tenantId } });
+  if (!hotelOwner) return error("Hotel not found", 404);
+  const requesterId = auth.userId;
   const supplier = await prisma.supplier.findUnique({ where: { id: data.supplierId } });
-  if (!supplier || supplier.status === "INACTIVE" || supplier.status === "BLACKLISTED") {
+  if (!supplier || supplier.status !== "ACTIVE") {
     return error("Supplier not found or unavailable", 404);
+  }
+  if (data.propertyId && !await prisma.property.findFirst({ where: { id: data.propertyId, hotelId, tenantId: auth.tenantId }, select: { id: true } })) return error("Property not found", 404);
+  if (data.outletId && !await prisma.outlet.findFirst({ where: { id: data.outletId, tenantId: auth.tenantId, property: { hotelId, tenantId: auth.tenantId } }, select: { id: true } })) return error("Outlet not found", 404);
+  if (new Set(data.items.map(item => item.productId)).size !== data.items.length) return error("Duplicate product lines are not allowed", 400);
+  const products = await prisma.product.findMany({ where: { id: { in: data.items.map(item => item.productId) }, supplierId: supplier.id, tenantId: supplier.tenantId, status: "ACTIVE", deletedAt: null, currency: "EGP", pricingMode: "FIXED" }, include: { ProductTierPrice: { orderBy: { minQty: "desc" } } } });
+  if (products.length !== data.items.length) return error("Some products are unavailable from this supplier", 400);
+  for (const item of data.items) {
+    const product = products.find(product => product.id === item.productId)!;
+    if (item.quantity < product.minOrderQty || item.quantity > product.stockQuantity) return error("Order quantity is outside available supplier quantities", 409);
+    const tier = product.ProductTierPrice.find(tier => tier.minQty <= item.quantity);
+    const price = Number(tier?.unitPrice ?? product.unitPrice ?? product.basePrice);
+    if (!Number.isFinite(price) || price <= 0) return error("A verified fixed price is required", 409);
+    item.unitPrice = price;
   }
   // Cross-tenant marketplace: supplier may be in a different tenant.
   // Authorization is enforced by credit gate + authority matrix below.
@@ -74,11 +89,12 @@ export const POST = apiRoute(async (request: NextRequest) => {
   let order: any;
   try {
     order = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Hotel" WHERE "id" = ${hotelId} AND "tenantId" = ${auth.tenantId} FOR UPDATE`;
       // Lock the hotel row — Prisma doesn't expose raw FOR UPDATE, but the
       // transactional isolation ensures the read-then-write is serialized.
       const hotel = await tx.hotel.findUniqueOrThrow({
-        where: { id: hotelId },
-        select: { creditLimit: true, creditUsed: true },
+        where: { id: hotelId, tenantId: auth.tenantId },
+        select: { tenantId: true, creditLimit: true, creditUsed: true },
       });
       // Re-validate inside the transaction (race-condition guard)
       const currentExposure = Number(hotel.creditUsed ?? 0);
@@ -118,7 +134,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
       });
       // Increment creditUsed atomically
       await tx.hotel.update({
-        where: { id: hotelId },
+        where: { id: hotelId, tenantId: auth.tenantId },
         data: { creditUsed: { increment: total } },
       });
       return createdOrder;
@@ -134,7 +150,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   // Use order.tenantId (hotel's tenant) for cross-tenant marketplace transactions
   const evaluation = await evaluateAuthority(order.id, {
     userId: auth.userId,
-    userRole: auth.platformRole === "HOTEL" ? "DEPARTMENT_HEAD" : "OWNER",
+    userRole: user.role,
     tenantId: order.tenantId,
     ipAddress: request.headers.get("x-forwarded-for") || undefined,
     userAgent: request.headers.get("user-agent") ?? undefined,
@@ -146,7 +162,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   }
   if (finalStatus !== order.status) {
     await prisma.order.update({
-      where: { id: order.id },
+      where: { id: order.id, tenantId: auth.tenantId },
       data: { status: finalStatus },
     });
     order.status = finalStatus;

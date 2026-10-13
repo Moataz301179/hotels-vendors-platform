@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { apiRoute, authenticate, requirePermission, error as apiError } from "@/lib/api-utils";
+import { UserStatus, SupplierStatus, HotelStatus, OrderStatus, ProductStatus, InvoiceStatus, FactoringRequestStatus, LeadStatus } from "@prisma/client";
 
 const ALLOWED_SORT_FIELDS: Record<string, string[]> = {
   users: ["createdAt", "name", "email", "lastActive"],
@@ -52,11 +53,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
     let total = 0;
 
     // Helper to build where with proper enum typing
-    const buildWhere = (searchFields: Record<string, unknown>, statusValue?: string) => {
-      const where: Record<string, unknown> = { ...searchFields };
-      if (statusValue) where.status = statusValue;
-      return where;
-    };
+    const buildWhere = <T extends object, S extends string>(searchFields: T, statusValue?: S) => ({ ...searchFields, deletedAt: null, ...(statusValue ? { status: statusValue } : {}) });
 
     switch (entity) {
       case "users": {
@@ -69,11 +66,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(UserStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.user.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -92,7 +89,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               factoringCompany: { select: { name: true } },
             },
           }),
-          prisma.user.count({ where: where as any }),
+          prisma.user.count({ where }),
         ]);
         break;
       }
@@ -108,11 +105,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(SupplierStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.supplier.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -131,7 +128,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               _count: { select: { products: true, orders: true } },
             },
           }),
-          prisma.supplier.count({ where: where as any }),
+          prisma.supplier.count({ where }),
         ]);
         break;
       }
@@ -146,11 +143,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(HotelStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.hotel.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -170,7 +167,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               _count: { select: { orders: true, users: true } },
             },
           }),
-          prisma.hotel.count({ where: where as any }),
+          prisma.hotel.count({ where }),
         ]);
         break;
       }
@@ -186,11 +183,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(OrderStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.order.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -209,7 +206,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               _count: { select: { items: true } },
             },
           }),
-          prisma.order.count({ where: where as any }),
+          prisma.order.count({ where }),
         ]);
         break;
       }
@@ -224,11 +221,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(ProductStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.product.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -246,7 +243,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               tenant: { select: { name: true } },
             },
           }),
-          prisma.product.count({ where: where as any }),
+          prisma.product.count({ where }),
         ]);
         break;
       }
@@ -261,11 +258,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(InvoiceStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.invoice.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -282,7 +279,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               order: { select: { orderNumber: true } },
             },
           }),
-          prisma.invoice.count({ where: where as any }),
+          prisma.invoice.count({ where }),
         ]);
         break;
       }
@@ -297,11 +294,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(FactoringRequestStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.factoringRequest.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -317,7 +314,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               factoringCompany: { select: { name: true } },
             },
           }),
-          prisma.factoringRequest.count({ where: where as any }),
+          prisma.factoringRequest.count({ where }),
         ]);
         break;
       }
@@ -333,11 +330,11 @@ export const GET = apiRoute(async (request: NextRequest) => {
                 ],
               }
             : {},
-          status
+          status ? z.nativeEnum(LeadStatus).parse(status) : undefined
         );
         [data, total] = await Promise.all([
           prisma.lead.findMany({
-            where: where as any,
+            where,
             orderBy: { [sortBy]: sortOrder },
             skip,
             take: limit,
@@ -355,7 +352,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
               lastContactAt: true,
             },
           }),
-          prisma.lead.count({ where: where as any }),
+          prisma.lead.count({ where }),
         ]);
         break;
       }
@@ -367,6 +364,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
+    if (error instanceof z.ZodError) return apiError("Invalid entity status", 400);
     console.error("[Admin Explorer] Error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch explorer data" },

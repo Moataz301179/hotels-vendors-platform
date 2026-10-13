@@ -26,7 +26,7 @@ export async function detectNetworkPattern(
   const results: NetworkInsight[] = [];
 
   const activeSuppliers = await prisma.supplier.findMany({
-    where: { tenantId, status: "ACTIVE" }, include: { supplierAudit: true }, take: 10,
+    where: { tenantId, status: "ACTIVE" }, include: { audits: { where: { tenantId }, orderBy: { auditDate: "desc" }, take: 1 } }, take: 10,
   });
   const supplierIds = activeSuppliers.map((s) => s.id);
   const supplierClusters = await prisma.hotelSupplier.groupBy({
@@ -40,8 +40,8 @@ export async function detectNetworkPattern(
     if (!supplier) continue;
     results.push({
       insightId: `network-${focusEntityId || "global"}-${supplier.id}-${new Date().toISOString()}`,
-      description: `Supplier cluster: ${supplier.name} linked to ${cluster._count?.hotelId || 0} hotel(s); audit status: ${supplier.supplierAudit?.status || "PENDING"}.`,
-      reasoning: `Network pattern inferred from HotelSupplier relationships + SupplierAudit + order/procurement footprint. Not autonomous; requires review.`,
+      description: `Supplier cluster: ${supplier.name} linked to ${cluster._count?.hotelId || 0} hotel(s); audit status: ${supplier.audits[0]?.status || "PENDING"}.`,
+      reasoning: `Network pattern inferred from HotelSupplier relationships + SupplierAudit + order/procurement footprint${focusType ? `; requested focus: ${focusType}` : ""}. Not autonomous; requires review.`,
       networkPattern: "SUPPLIER_CLUSTER" as const,
       entityIds: [supplier.id],
       relationshipIds: supplierIds.slice(0, 5),
@@ -78,7 +78,7 @@ export async function detectNetworkPattern(
     where: { entityId: focusEntityId || "", tenantId, status: "ACTIVE", deletedAt: null },
     orderBy: { validFrom: "asc" }, take: 5,
   });
-  const temporalEdgeRefs = temporalEdges.map((e) => e.id);
+  for (const insight of results) insight.provenanceReferences.push(...temporalEdges.map((e) => e.id));
 
   return results;
 }

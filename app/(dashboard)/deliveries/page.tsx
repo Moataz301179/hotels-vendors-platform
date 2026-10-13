@@ -1,11 +1,11 @@
 // app/deliveries/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useApi } from "@/lib/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Badge } from "@/components/ui";
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
+import { Badge, Card, Skeleton } from "@/components/ui";
+import { Table, TableHeader, TableBody, TableRow, TableHead } from "@/components/ui/table";
 import { IcTruck, IcClock, IcMapPin, IcCheck, IcAlert, IcMail } from "@/components/icons";
 import { StatCard } from "@/components/shared/stat-card";
 
@@ -66,37 +66,15 @@ const SERVICE_LABELS: Record<string, string> = {
 };
 
 export default function DeliveriesPage() {
-  const [shipments, setShipments] = useState<Shipment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchShipments = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/logistics/shipments", {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) throw new Error("Failed to load shipments");
-      const data: ShipmentsResponse = await res.json();
-      setShipments(data.shipments);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchShipments(); }, []);
+  const { data, loading, error, refetch: fetchShipments } = useApi<ShipmentsResponse>("/api/v1/logistics/shipments");
+  const shipments = data?.shipments ?? [];
 
   const inTransit = shipments.filter((s) => ["IN_TRANSIT", "OUT_FOR_DELIVERY", "PICKED_UP"].includes(s.stage));
   const delivered = shipments.filter((s) => s.stage === "DELIVERED");
   const pending = shipments.filter((s) => s.stage === "CREATED");
   const exceptions = shipments.filter((s) => s.stage === "EXCEPTION");
 
-  const onTimeRate = delivered.length > 0
-    ? Math.round((delivered.filter((s) => s.stage === "DELIVERED").length / delivered.length) * 100)
-    : 100;
+  const onTimeRate = "Not measured";
 
   return (
     <DashboardShell role="shipping">
@@ -111,7 +89,7 @@ export default function DeliveriesPage() {
         <StatCard title="In Transit" value={inTransit.length} icon={IcClock} iconColor="text-sky-400" />
         <StatCard title="Delivered" value={delivered.length} icon={IcCheck} iconColor="text-emerald-400" />
         <StatCard title="Pending" value={pending.length} icon={IcMail} iconColor="text-amber-400" />
-        <StatCard title="On-Time Rate" value={`${onTimeRate}%`} icon={IcMapPin} iconColor="text-emerald-400" />
+        <StatCard title="On-Time Rate" value={onTimeRate} icon={IcMapPin} iconColor="text-emerald-400" />
       </div>
 
       {error && (

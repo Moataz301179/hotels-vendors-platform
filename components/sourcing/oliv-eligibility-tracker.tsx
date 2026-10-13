@@ -103,7 +103,7 @@ export function OlivEligibilityTracker({ tone = "light" }: { tone?: "light" | "d
           className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#314B43] text-white rounded-lg hover:bg-[#3a544a] disabled:opacity-40 ${dark ? "" : "shadow-sm"}`}
         >
           {running ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
-          {running ? "Referring…" : "Run Referral (CHV000)"}
+          {running ? "Referring…" : "Run Referral (partner)"}
         </button>
       </div>
 
@@ -122,7 +122,7 @@ export function OlivEligibilityTracker({ tone = "light" }: { tone?: "light" | "d
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Kpi tone={tone} icon={Users} label="Eligible suppliers" value={String(mil.eligibleCount)} />
             <Kpi tone={tone} icon={BadgeCheck} label="Min annual revenue" value="EGP 10M" />
-            <Kpi tone={tone} icon={FileSearch} label="Referral code" value="CHV000" />
+            <Kpi tone={tone} icon={FileSearch} label="Partner code" value="partner" />
             <Kpi tone={tone} icon={ShieldCheck} label="Referred to Oliv" value={String((data?.audits ?? []).filter(a => a.olivStatus).length)} />
           </div>
 

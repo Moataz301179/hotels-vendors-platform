@@ -6,7 +6,7 @@ import {
   CreditCard, CheckCircle2, Clock, AlertTriangle, Wallet,
   ArrowUpRight, ArrowDownRight, Search, Download, TrendingUp,
 } from "lucide-react";
-import { OlivReferralCTA } from "@/components/partners/oliv-referral-cta";
+import { ReferralCTA } from "@/components/partners/oliv-referral-cta";
 import { useApi } from "@/lib/hooks/use-api";
 
 const fadeInUp = {
@@ -127,9 +127,9 @@ export default function PaymentsPage() {
         ))}
       </motion.div>
 
-      {/* Oliv Referral Banner */}
+      {/*  Referral Banner */}
       <motion.div variants={fadeInUp}>
-        <OlivReferralCTA variant="banner" />
+        <ReferralCTA variant="banner" />
       </motion.div>
 
       {/* Search + Table */}

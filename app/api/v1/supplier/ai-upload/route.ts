@@ -34,16 +34,36 @@ export const POST = apiRoute(async (request: NextRequest) => {
     SERVICES: "SERVICES",
   };
 
-  const supplierId = auth.platformRole === "SUPPLIER" ? auth.tenantId : body.supplierId;
-  if (!supplierId) {
-    return error("Supplier ID required", 400);
+  let supplierId: string | undefined;
+  if (auth.platformRole === "SUPPLIER") {
+    const user = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { supplierId: true },
+    });
+    supplierId = user?.supplierId ?? undefined;
+  } else if (auth.platformRole === "ADMIN" && typeof body.supplierId === "string") {
+    supplierId = body.supplierId;
   }
+
+  if (!supplierId) {
+    return error("Supplier profile not found. Complete supplier onboarding first.", 400);
+  }
+
+  const supplier = await prisma.supplier.findFirst({
+    where: {
+      id: supplierId,
+      ...(auth.platformRole === "ADMIN" ? {} : { tenantId: auth.tenantId }),
+      deletedAt: null,
+    },
+    select: { id: true, tenantId: true },
+  });
+  if (!supplier) return error("Supplier not found or access denied", 403);
 
   const created = await prisma.$transaction(
     data.products.map((p) =>
       prisma.product.create({
         data: {
-          tenantId: auth.tenantId,
+          tenantId: supplier.tenantId,
           sku: p.sku,
           name: p.name,
           description: p.description,
@@ -51,6 +71,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
           unitPrice: p.unitPrice,
           stockQuantity: p.stockQuantity,
           unitOfMeasure: p.unitOfMeasure,
+          source: "MANUAL",
           supplierId,
         },
       })

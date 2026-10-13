@@ -1,9 +1,9 @@
 "use client";
-import { ArrowRight, Search, ShieldCheck } from "lucide-react";
+import { Search } from "lucide-react";
 import { useApi } from "@/lib/hooks/use-api";
 
 export default function IntelligenceDiscoveryPage() {
-  const { loading } = useApi<{ sources: any[] }>("/api/v1/intelligence/sources");
+  const { loading } = useApi<{ sources: { source: string; adapterVersion: string }[] }>("/api/v1/intelligence/sources");
 
   return (
     <div className="min-h-screen bg-canvas">

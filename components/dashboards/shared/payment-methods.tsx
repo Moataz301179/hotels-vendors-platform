@@ -241,7 +241,7 @@ export function PaymentMethods({ orderId, amount, currency = "EGP", onPaymentCom
               className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/20 transition-colors flex-1"
             >
               <CheckCircle2 size={14} />
-              I've Paid
+              I&apos;ve Paid
             </button>
           </div>
         </div>
@@ -276,7 +276,7 @@ export function PaymentMethods({ orderId, amount, currency = "EGP", onPaymentCom
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/20 transition-colors"
             >
               <CheckCircle2 size={14} />
-              I've Paid
+              I&apos;ve Paid
             </button>
           </div>
         </div>

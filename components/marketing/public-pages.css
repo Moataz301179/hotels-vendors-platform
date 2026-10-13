@@ -1,0 +1,94 @@
+/* Public source reconciliation: neutral hero, participant list and task ledger.
+   Every rule is scoped so it cannot restyle dashboards or unrelated pages. */
+.hv-maintenance-public {
+  --hv-maintenance-paper: #f4f5f3;
+  --hv-maintenance-raised: #ffffff;
+  --hv-maintenance-alt: #e8ebe8;
+  --hv-maintenance-ink: #252e35;
+  --hv-maintenance-muted: #4e5c65;
+  --hv-maintenance-blue: #275b89;
+  --hv-maintenance-line: #cbd2d0;
+  background: var(--hv-maintenance-paper);
+  color: var(--hv-maintenance-ink);
+  min-height: 70vh;
+}
+.hv-maintenance-public .hv-maintenance-shell { width: min(1320px, calc(100% - 64px)); margin-inline: auto; }
+.hv-maintenance-public .hv-maintenance-hero { padding: 76px 0 66px; }
+.hv-maintenance-public .hv-maintenance-split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(32px, 5vw, 70px); align-items: center; }
+.hv-maintenance-public h1 { margin: 0 0 24px; font-size: clamp(36px, 4.5vw, 64px); font-weight: 600; letter-spacing: -.045em; line-height: 1.08; text-wrap: balance; color: var(--hv-maintenance-ink); }
+.hv-maintenance-public h2 { margin: 0 0 22px; font-size: clamp(27px, 3vw, 40px); font-weight: 600; letter-spacing: -.035em; line-height: 1.16; color: var(--hv-maintenance-ink); }
+.hv-maintenance-public h3 { font-size: 20px; line-height: 1.35; margin: 0 0 10px; color: var(--hv-maintenance-ink); }
+.hv-maintenance-public p { font-size: 16px; line-height: 1.75; color: var(--hv-maintenance-muted); margin: 0 0 22px; max-width: 760px; }
+.hv-maintenance-public .hv-maintenance-eyebrow { display: block; margin-bottom: 18px; font-size: 12px; font-weight: 700; line-height: 1.6; letter-spacing: .08em; text-transform: uppercase; color: var(--hv-maintenance-blue); }
+.hv-maintenance-public .hv-maintenance-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-top: 28px; }
+.hv-maintenance-public .hv-maintenance-button,
+.hv-maintenance-public .hv-maintenance-link { display: inline-flex; align-items: center; justify-content: flex-start; gap: 10px; min-height: 44px; max-width: 100%; font-size: 15px; line-height: 1.5; font-weight: 650; text-decoration: none; }
+.hv-maintenance-public .hv-maintenance-button { background: var(--hv-maintenance-blue); color: #fff; padding: 12px 20px; border: 1px solid var(--hv-maintenance-blue); border-radius: 4px; }
+.hv-maintenance-public .hv-maintenance-link { color: var(--hv-maintenance-blue); text-decoration: underline; text-underline-offset: 4px; }
+.hv-maintenance-public a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.hv-maintenance-public a:focus-visible { outline: 3px solid var(--hv-maintenance-blue); outline-offset: 5px; }
+.hv-maintenance-public a svg { flex-shrink: 0; }
+.hv-maintenance-public .hv-maintenance-example { padding: 28px; background: var(--hv-maintenance-raised); border: 1px solid var(--hv-maintenance-line); }
+.hv-maintenance-public .hv-maintenance-example h2 { font-size: 26px; }
+.hv-maintenance-public .hv-maintenance-task-list { margin: 0; padding-left: 22px; }
+.hv-maintenance-public .hv-maintenance-task-list li { padding: 14px 0 14px 6px; border-top: 1px solid var(--hv-maintenance-line); }
+.hv-maintenance-public .hv-maintenance-task-list strong,
+.hv-maintenance-public .hv-maintenance-task-list span { display: block; font-size: 15px; line-height: 1.7; }
+.hv-maintenance-public .hv-maintenance-task-list span { margin-top: 4px; color: var(--hv-maintenance-muted); }
+.hv-maintenance-public .hv-maintenance-caption { font-size: 13px; margin: 16px 0 0; }
+.hv-maintenance-public .hv-maintenance-section { padding: 68px 0 76px; }
+.hv-maintenance-public .hv-maintenance-section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 40px; align-items: start; margin-bottom: 28px; }
+.hv-maintenance-public .hv-maintenance-section-head p { margin-bottom: 0; }
+.hv-maintenance-public .hv-maintenance-actor-list,
+.hv-maintenance-public .hv-maintenance-ledger { border-top: 1px solid var(--hv-maintenance-line); }
+.hv-maintenance-public .hv-maintenance-actor { display: grid; grid-template-columns: 44px minmax(120px, .65fr) minmax(0, 1.3fr) minmax(150px, .7fr); align-items: center; gap: 20px; padding: 24px 4px; border-bottom: 1px solid var(--hv-maintenance-line); color: var(--hv-maintenance-ink); text-decoration: none; }
+.hv-maintenance-public .hv-maintenance-actor:hover { background: #e9eeec; }
+.hv-maintenance-public .hv-maintenance-actor h3,
+.hv-maintenance-public .hv-maintenance-actor p { margin: 0; }
+.hv-maintenance-public .hv-maintenance-actor p { font-size: 15px; }
+.hv-maintenance-public .hv-maintenance-actor-action { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; font-size: 14px; line-height: 1.6; color: var(--hv-maintenance-blue); }
+.hv-maintenance-public .hv-maintenance-icon { display: grid; place-items: center; width: 40px; height: 40px; background: #f9faf8; border: 1px solid #cbd5da; color: var(--hv-maintenance-blue); }
+.hv-maintenance-public .hv-maintenance-alt { background: var(--hv-maintenance-alt); }
+.hv-maintenance-public .hv-maintenance-private { display: flex; margin-top: 12px; }
+.hv-maintenance-public .hv-maintenance-principles { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hv-maintenance-line); counter-reset: purchasing-step; }
+.hv-maintenance-public .hv-maintenance-principles li { counter-increment: purchasing-step; display: grid; grid-template-columns: 24px minmax(110px, .7fr) minmax(0, 1fr); gap: 16px; padding: 21px 0; border-bottom: 1px solid var(--hv-maintenance-line); font-size: 15px; line-height: 1.7; }
+.hv-maintenance-public .hv-maintenance-principles li::before { content: counter(purchasing-step, decimal-leading-zero); color: var(--hv-maintenance-blue); font-size: 12px; }
+.hv-maintenance-public .hv-maintenance-principles span { color: var(--hv-maintenance-muted); }
+.hv-maintenance-public .hv-maintenance-close { padding: 32px 0 72px; }
+.hv-maintenance-public .hv-maintenance-close > div { display: flex; justify-content: space-between; align-items: center; gap: 28px; background: var(--hv-maintenance-alt); padding: 32px; }
+.hv-maintenance-public .hv-maintenance-close h2 { margin: 0; }
+.hv-maintenance-public .hv-maintenance-hero-copy { max-width: 1320px; }
+.hv-maintenance-public .hv-maintenance-hero-copy h1 { max-width: 860px; }
+.hv-maintenance-public .hv-maintenance-solution-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(220px, .55fr); gap: 24px; align-items: start; padding: 28px 4px; border-bottom: 1px solid var(--hv-maintenance-line); }
+.hv-maintenance-public .hv-maintenance-solution-main p,
+.hv-maintenance-public .hv-maintenance-solution-next p { font-size: 15px; margin: 0; }
+.hv-maintenance-public .hv-maintenance-solution-next .hv-maintenance-link { margin-top: 8px; }
+.hv-maintenance-public .hv-maintenance-note { max-width: 1320px; }
+.hv-maintenance-public .surface-card { background: var(--hv-maintenance-raised); color: var(--hv-maintenance-ink); border: 1px solid var(--hv-maintenance-line); box-shadow: none; }
+.hv-maintenance-public .surface-input { background: var(--hv-maintenance-raised); color: var(--hv-maintenance-ink); border: 1px solid var(--hv-maintenance-line); min-height: 44px; }
+.hv-maintenance-public .surface-input::placeholder { color: var(--hv-maintenance-muted); opacity: 1; }
+.hv-maintenance-public :is(input, textarea, select, button):focus-visible { outline: 3px solid var(--hv-maintenance-blue); outline-offset: 3px; }
+.hv-maintenance-public label:has(input[type="radio"]):focus-within { outline: 3px solid var(--hv-maintenance-blue); outline-offset: 3px; }
+@media (max-width: 960px) {
+  .hv-maintenance-public .hv-maintenance-split { grid-template-columns: minmax(0, 1fr); }
+  .hv-maintenance-public .hv-maintenance-actor { grid-template-columns: 44px minmax(0, 1fr); align-items: start; }
+  .hv-maintenance-public .hv-maintenance-actor p,
+  .hv-maintenance-public .hv-maintenance-actor-action { grid-column: 2; }
+  .hv-maintenance-public .hv-maintenance-solution-row { grid-template-columns: 44px minmax(0, 1fr); gap: 16px; }
+  /* The outcome/action must occupy the text column, never the narrow icon column. */
+  .hv-maintenance-public .hv-maintenance-solution-next { grid-column: 2 / -1; }
+}
+@media (max-width: 640px) {
+  .hv-maintenance-public .hv-maintenance-shell { width: calc(100% - 36px); }
+  .hv-maintenance-public .hv-maintenance-hero { padding: 40px 0 44px; }
+  .hv-maintenance-public .hv-maintenance-section { padding: 44px 0 52px; }
+  .hv-maintenance-public .hv-maintenance-section-head { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .hv-maintenance-public .hv-maintenance-example { padding: 20px; }
+  .hv-maintenance-public .hv-maintenance-principles li { grid-template-columns: 24px minmax(0, 1fr); gap: 10px; }
+  .hv-maintenance-public .hv-maintenance-principles span { grid-column: 2; }
+  .hv-maintenance-public .hv-maintenance-close > div { flex-direction: column; align-items: flex-start; padding: 24px; }
+  .hv-maintenance-public .hv-maintenance-solution-row { grid-template-columns: 36px minmax(0, 1fr); gap: 12px; }
+  .hv-maintenance-public .hv-maintenance-icon { width: 34px; height: 34px; }
+  .hv-maintenance-public h3 { font-size: 19px; }
+  .hv-maintenance-public p { font-size: 15px; }
+}

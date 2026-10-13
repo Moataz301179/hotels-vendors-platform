@@ -5,7 +5,7 @@
  *    masking, dynamic margin layer.
  * 2. Order splitting → supplier POs, temporary inventory locks, dispatch webhooks.
  * 3. Merchant of Record — single unified ETA invoice, delivery-validation,
- *    48h Oliv reverse-factoring trigger (CHV000).
+ *    48h financing partner reverse-factoring trigger (partner referral).
  *
  * All prices in EGP, rounded to 2dp. Deterministic, idempotent.
  */
@@ -109,12 +109,12 @@ export function buildUnifiedInvoice(orderRef: string, lines: EtaInvoiceLine[]): 
   return { orderRef, lines: rows, subtotal, tax, total: round2(subtotal + tax) };
 }
 
-/* ── 4. 48h reverse-factoring trigger (Oliv, referral CHV000) ────────────── */
+/* ── 4. 48h reverse-factoring trigger (financing partner, partner referral) ────────────── */
 export function buildOlivPayoutRequest(amountEGP: number, invoiceRef: string) {
   return {
     invoiceRef,
     amountEGP: round2(amountEGP),
-    promo: "CHV000",
+    promo: "partner",
     settlement: "48h",
     // In production this hits POST /api/v1/oliv/payout with server-signed HMAC.
   };

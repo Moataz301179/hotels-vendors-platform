@@ -1,32 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import type { ArenaWorkspaceProps } from "@/components/intelligence/arena-shell";
 import {
   Plus, Search, Loader2, AlertCircle, Eye, Database, Users,
   Target, FileSearch, Network,
 } from "lucide-react";
-import { apiFetch, backendAvailable } from "@/lib/api";
+import { useApi } from "@/lib/hooks/use-api";
 import { IntelligenceArenaShell } from "@/components/intelligence/arena-shell";
 
 export default function IntelligenceOverview() {
-  const [leads, setLeads] = useState<any[]>([]);
-  const [sources, setSources] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!backendAvailable) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    Promise.all([
-      apiFetch("/v1/crm/leads").then((d: any) => setLeads(d.leads || [])).catch(() => setLeads([])),
-      apiFetch("/v1/sourcing/connect").then((d: any) => setSources(d.sources || [])).catch(() => setSources([])),
-    ])
-      .catch((e) => setError(e.message || "Failed to load intelligence data"))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: leadsData, loading: leadsLoading, error: leadsError } = useApi<{ leads: { id: string }[] }>("/api/v1/crm/leads");
+  const { data: sourcesData, loading: sourcesLoading, error: sourcesError } = useApi<{ sources: { source: string }[] }>("/api/v1/intelligence/sources");
+  const { data: identity, error: identityError } = useApi<{ id: string; tenantId: string; platformRole: ArenaWorkspaceProps["role"] }>("/api/v1/auth/me");
+  const leads = leadsData?.leads ?? [];
+  const sources = sourcesData?.sources ?? [];
+  const loading = leadsLoading || sourcesLoading;
+  const error = leadsError || sourcesError || identityError;
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -91,7 +80,7 @@ export default function IntelligenceOverview() {
         )}
 
         {/* Arena Shell — always rendered; connects intelligence phases to real routes */}
-        <IntelligenceArenaShell role="HOTEL" tenantId="demo" userId="user-1" />
+        {identity && <IntelligenceArenaShell role={identity.platformRole} tenantId={identity.tenantId} userId={identity.id} />}
 
         {/* Sub-routes for exploration */}
         <div className="grid md:grid-cols-3 gap-4">

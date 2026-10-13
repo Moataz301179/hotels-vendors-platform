@@ -150,7 +150,7 @@ export function NotificationBell() {
         aria-expanded={open}
       >
         <Bell size={18} />
-        {/* Demo red dot */}
+        {/* Notification indicator */}
         <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent-base ring-2 ring-[#121212]" />
         {/* Unread badge */}
         {unreadCount > 0 && (

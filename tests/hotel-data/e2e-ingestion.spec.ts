@@ -7,7 +7,8 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { ingest } from '../../lib/hotel-data/ingestion-api';
 import { HotelDataEvidenceStore } from '../../lib/hotel-data/hotel-data-evidence-store';
@@ -19,7 +20,7 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
 
   beforeAll(() => {
     evidenceStore = new HotelDataEvidenceStore({
-      dataPath: join(process.cwd(), 'tests', 'hotel-data', 'e2e-evidence-store'),
+      dataPath: mkdtempSync(join(tmpdir(), 'hv-ingestion-test-')),
     });
   });
 
@@ -68,6 +69,21 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
     console.log(`    validationReport.issues: ${result.validationReport.issues?.length ?? 0}`);
   });
 
+  it('persists safely when the evidence store is passed directly to ingest()', async () => {
+    const result = await ingest({
+      data: readFileSync(fixturePath),
+      options: {
+        hotelId: 'TEST-HOTEL-001',
+        tenantId: 'TEST-TENANT-001',
+        sourceSystem: 'TB_EXPORT_PILOT',
+        evidenceStore,
+      },
+    });
+
+    expect(result.validationReport.validRecords).toBeGreaterThan(0);
+    expect(result.validationReport.errorRecords).toBe(0);
+  });
+
   // =========================================================================
   // GATE 2: Persist to evidence store + verify all canonical fields
   // =========================================================================
@@ -82,19 +98,14 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
       },
     });
 
-    const ingestionId = result.ingestionId;
-
     // --- Verify read-back ---
-    // record the ingest() ingestionId BEFORE storeIngestion overwrites it
-    const ingestIngestionId = result.ingestionId;
-
     const stored = evidenceStore.storeIngestion(
       'TEST-HOTEL-001',
       'TEST-TENANT-001',
       'TB_EXPORT_PILOT',
       new Date().toISOString(),
       buffer,
-      result.normalizedTransactions as any,
+      result.normalizedTransactions as unknown as Parameters<typeof evidenceStore.storeIngestion>[5],
       {
         totalRecords: result.normalizedTransactions.length,
         validRecords: result.normalizedTransactions.length,
@@ -106,7 +117,7 @@ describe('E2E: Hotel Data Ingestion Pipeline', () => {
         confidence: 'HIGH' as const,
         summary: 'Ingested successfully',
       },
-      result.detectedSourceCurrency ?? 'EGP',
+      result.detectedSourceCurrency as Parameters<typeof evidenceStore.storeIngestion>[7],
       JSON.stringify({ raw: 'test' })
     );
 

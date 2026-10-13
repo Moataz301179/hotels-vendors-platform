@@ -35,11 +35,11 @@ const CheckoutSchema = z.object({
   items: z.array(
     z.object({
       productId: z.string(),
-      quantity: z.number().min(1),
-      unitPrice: z.number(),
+      quantity: z.number().int().positive(),
+      unitPrice: z.number().positive(),
       notes: z.string().optional(),
     })
-  ),
+  ).min(1).max(100),
   address: z.object({
     label: z.string().optional(),
     address: z.string(),
@@ -73,9 +73,10 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
   // Get product details with supplier info — TENANT SCOPED
   const productIds = data.items.map((i) => i.productId);
+  if (new Set(productIds).size !== productIds.length) return error("Duplicate product lines are not allowed", 400);
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, tenantId: auth.tenantId },
-    include: { supplier: { select: { id: true, name: true } } },
+    where: { id: { in: productIds }, status: "ACTIVE", deletedAt: null, currency: "EGP", pricingMode: "FIXED", supplier: { status: "ACTIVE", deletedAt: null } },
+    include: { supplier: { select: { id: true, name: true, tenantId: true } }, ProductTierPrice: { orderBy: { minQty: "desc" } } },
   });
 
   if (products.length !== data.items.length) {
@@ -89,6 +90,12 @@ export const POST = apiRoute(async (request: NextRequest) => {
   for (const item of data.items) {
     const product = productMap.get(item.productId);
     if (!product) continue;
+    if (product.tenantId !== product.supplier.tenantId) return error("Product ownership could not be verified", 409);
+    if (item.quantity < product.minOrderQty || item.quantity > product.stockQuantity) return error("Order quantity is outside available supplier quantities", 409);
+    const tier = product.ProductTierPrice.find(tier => tier.minQty <= item.quantity);
+    const price = Number(tier?.unitPrice ?? product.unitPrice ?? product.basePrice);
+    if (!Number.isFinite(price) || price <= 0) return error("A verified fixed price is required", 409);
+    item.unitPrice = price;
     const sid = product.supplierId;
     if (!supplierGroups.has(sid)) {
       supplierGroups.set(sid, []);
@@ -98,7 +105,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
   // Get user details
   const user = await prisma.user.findUnique({
-    where: { id: auth.userId },
+    where: { id: auth.userId, tenantId: auth.tenantId },
     include: { hotel: true },
   });
 
@@ -110,6 +117,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   if (!hotelId) {
     return error("No hotel associated with user", 400);
   }
+  if (!user.hotel || user.hotel.tenantId !== auth.tenantId) return error("Hotel not found", 404);
 
   // Pre-calculate grand total across all suppliers for credit gate
   let grandTotal = 0;
@@ -156,9 +164,10 @@ export const POST = apiRoute(async (request: NextRequest) => {
   let createdOrders;
   try {
     createdOrders = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Hotel" WHERE "id" = ${hotelId} AND "tenantId" = ${auth.tenantId} FOR UPDATE`;
       // Re-validate credit inside transaction (race-condition guard)
       const hotel = await tx.hotel.findUniqueOrThrow({
-        where: { id: hotelId },
+        where: { id: hotelId, tenantId: auth.tenantId },
         select: { creditLimit: true, creditUsed: true },
       });
       const currentExposure = Number(hotel.creditUsed ?? 0);
@@ -232,14 +241,14 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
       // ── CAPTURE CREDIT ATOMICALLY ──
       await tx.hotel.update({
-        where: { id: hotelId },
+        where: { id: hotelId, tenantId: auth.tenantId },
         data: { creditUsed: { increment: grandTotal } },
       });
 
       // ── CLEAR CART ATOMICALLY ──
       await tx.cartItem.deleteMany({
         where: {
-          cart: { userId: auth.userId },
+          cart: { userId: auth.userId, tenantId: auth.tenantId },
         },
       });
 
@@ -260,7 +269,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   for (const order of createdOrders) {
     const evaluation = await evaluateAuthority(order.id, {
       userId: auth.userId,
-      userRole: auth.platformRole === "HOTEL" ? "DEPARTMENT_HEAD" : "OWNER",
+      userRole: user.role,
       tenantId: auth.tenantId,
       ipAddress: request.headers.get("x-forwarded-for") || undefined,
       userAgent: request.headers.get("user-agent") ?? undefined,

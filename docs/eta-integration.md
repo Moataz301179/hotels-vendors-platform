@@ -1,5 +1,13 @@
 # ETA E-Invoicing Integration Specification
 
+## Worker safety correction — 2026-10-07
+
+Jobs must load and mutate invoices by both invoice ID and the recorded tenant ID, excluding deleted invoices. Unsigned invoices are refused before status mutation or an external call. A submission receipt records invoice status SUBMITTED with ETA status PENDING; it must not grant ACCEPTED/factoring eligibility before subsequent validation. This is safety hardening, not certification of a functioning production signing/submission adapter. The legacy adapter payload, signing provider, tax mapping and live validation lifecycle still require reconciliation and acceptance testing.
+
+## Transport draft correction — 2026-10-06
+
+`lib/shipping/eta-waybill.ts` produces an unsigned internal transport draft only. Its legacy GSTIN/HSN field names do not establish Egyptian ETA compliance. Seller and buyer tax IDs come from the authenticated tenant's order relations; no fabricated signature is generated. `complianceStatus = UNSIGNED_INTERNAL_DRAFT` and audit provenance remains unverified. Official ETA submission/signing stays in the separate background invoice bridge. Do not present this draft as an accepted ETA document or checkpoint credential.
+
 > Source: Official Egyptian Tax Authority (ETA) — https://sdk.invoicing.eta.gov.eg/api/
 > Scope: Background compliance engine (G4 — invisible to UI). No client references to ETA endpoints, keys, or payloads.
 >
@@ -30,6 +38,8 @@
 - **No client-side role switching:** Server-side only (`middleware.ts` + `requirePermission`).
 
 ## Adapter Pattern
+
+- `lib/agents/compliance-guard.ts` produces an internal invoice draft only. It must not fabricate an ETA UUID, assert submission, or advance order/shipment status. Official identifiers are recorded only from the submission/acceptance adapter.
 
 - `adapter.ts`: Maps internal `Invoice` model → ETA JSON payload. Handles JWT token refresh.
 - `validator.ts`: Pre-submission validation (required fields, UUID presence, serial format, digital signature presence).

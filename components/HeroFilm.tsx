@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { usePrefs } from "@/i18n/provider";
@@ -83,16 +84,14 @@ const useFilm = () => {
   return v;
 };
 
+function subscribeReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
 function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const on = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduced;
+  return useSyncExternalStore(subscribeReducedMotion,
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches, () => false);
 }
 
 /* ---------------- icons ---------------- */
@@ -120,12 +119,8 @@ export function HeroFilm({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
-  const [ready, setReady] = useState(false);
+  const ready = false;
   const reduced = useReducedMotion();
-
-  useEffect(() => {
-    if (reduced) setPlaying(false);
-  }, [reduced]);
 
   const go = useCallback((i: number) => {
     setIndex(((i % FILM_CHAPTERS.length) + FILM_CHAPTERS.length) % FILM_CHAPTERS.length);
@@ -134,7 +129,7 @@ export function HeroFilm({ children }: { children: ReactNode }) {
   const value = useMemo<FilmState>(
     () => ({
       index,
-      playing,
+      playing: playing && !reduced,
       muted,
       ready,
       reduced,
@@ -314,7 +309,6 @@ export function SectionFilm({
     const el = ref.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
-      setLive(true);
       return;
     }
     const io = new IntersectionObserver(
@@ -328,7 +322,7 @@ export function SectionFilm({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (live && !reduced) {
+    if ((live || typeof IntersectionObserver === "undefined") && !reduced) {
       const p = el.play();
       if (p && typeof p.catch === "function") p.catch(() => undefined);
     } else {

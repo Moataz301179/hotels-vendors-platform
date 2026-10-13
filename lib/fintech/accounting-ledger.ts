@@ -9,6 +9,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export interface LedgerLine {
   accountCode: string;
@@ -46,7 +47,7 @@ export interface SettlementLedgerInput {
  * INVARIANT: Debits must balance Credits EXACTLY. Write-once, append-only.
  */
 export async function recordDisbursementJournal(
-  tx: any,
+  tx: Prisma.TransactionClient,
   input: FactoringLedgerInput
 ): Promise<string> {
   const {
@@ -63,7 +64,7 @@ export async function recordDisbursementJournal(
 
   // 1. Fetch Consolidated Invoice details to resolve hotel
   const ci = await tx.consolidatedInvoice.findUnique({
-    where: { id: consolidatedInvoiceId },
+    where: { id: consolidatedInvoiceId, tenantId },
     select: { hotelId: true, invoiceNumber: true },
   });
 
@@ -171,7 +172,7 @@ export async function recordDisbursementJournal(
  * Represents the final payment settlement by the Corporate Hotel Group.
  */
 export async function recordSettlementDisbursalJournal(
-  tx: any,
+  tx: Prisma.TransactionClient,
   input: SettlementLedgerInput
 ): Promise<string> {
   const {
@@ -184,7 +185,7 @@ export async function recordSettlementDisbursalJournal(
   } = input;
 
   const ci = await tx.consolidatedInvoice.findUnique({
-    where: { id: consolidatedInvoiceId },
+    where: { id: consolidatedInvoiceId, tenantId },
     select: { hotelId: true, invoiceNumber: true },
   });
 
@@ -265,7 +266,7 @@ export async function recordSettlementDisbursalJournal(
  * Excludes direct UPDATE/DELETE operations to maintain FRA regulatory compliance.
  */
 export async function recordCompensatingJournal(
-  tx: any,
+  tx: Prisma.TransactionClient,
   originalEntryId: string,
   tenantId: string,
   reason: string
@@ -294,7 +295,7 @@ export async function recordCompensatingJournal(
   const finalDebit = original.totalCredit;
   const finalCredit = original.totalDebit;
 
-  if (finalDebit !== finalCredit) {
+  if (finalDebit === null || finalCredit === null || Number(finalDebit) !== Number(finalCredit)) {
     throw new Error(`LEDGER_MISMATCH_EXCEPTION: Reversal Debits/Credits do not balance. Reversal blocked.`);
   }
 

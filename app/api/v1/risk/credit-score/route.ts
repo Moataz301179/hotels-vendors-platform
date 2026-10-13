@@ -12,9 +12,9 @@ import { computeReliabilityIndex } from "@/lib/data-lake/engine";
 
 /* Demo hotel credit profiles keyed by TRN (Tax Registration Number). */
 const HOTEL_CREDIT: Record<string, { onTimePaymentPct: number; dockDisputeRate: number; etaClearanceDays: number; orderVolume: number }> = {
-  "382-910-112": { onTimePaymentPct: 98, dockDisputeRate: 0.02, etaClearanceDays: 2, orderVolume: 340 },
-  "512-889-003": { onTimePaymentPct: 88, dockDisputeRate: 0.08, etaClearanceDays: 4, orderVolume: 210 },
-  "441-220-778": { onTimePaymentPct: 72, dockDisputeRate: 0.15, etaClearanceDays: 6, orderVolume: 96 },
+  "DEMO-HOTEL-TRN": { onTimePaymentPct: 98, dockDisputeRate: 0.02, etaClearanceDays: 2, orderVolume: 340 },
+  "DEMO-HOTEL-002": { onTimePaymentPct: 88, dockDisputeRate: 0.08, etaClearanceDays: 4, orderVolume: 210 },
+  "DEMO-HOTEL-003": { onTimePaymentPct: 72, dockDisputeRate: 0.15, etaClearanceDays: 6, orderVolume: 96 },
 };
 
 export const GET = apiRoute(async (request: NextRequest) => {

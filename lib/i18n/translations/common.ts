@@ -36,6 +36,7 @@ export const common = {
     vat: "VAT (14%)",
     grandTotal: "Grand Total",
     free: "Free",
+    priceUnavailable: "Price unavailable",
     outOfStock: "Out of Stock",
     lowStock: "Low Stock",
     inStock: "In Stock",
@@ -65,6 +66,7 @@ export const common = {
     english: "English",
   },
   ar: {
+    priceUnavailable: "السعر غير متاح",
     appName: "هوتيلز فيندورز",
     tagline: "أذكى معاً",
     search: "بحث",

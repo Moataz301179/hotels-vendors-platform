@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { apiRoute, authenticate, requirePermission, success, error, validateBody } from "@/lib/api-utils";
-import { unfreezeCreditLine, type OverrideContext } from "@/lib/admin/override-tools";
+import { apiRoute, error, validateBody } from "@/lib/api-utils";
+import { requireSensitiveAdmin } from "@/lib/admin/access";
 import { z } from "zod";
 
 const UnfreezeCreditLineSchema = z.object({
@@ -10,35 +10,9 @@ const UnfreezeCreditLineSchema = z.object({
 });
 
 export const POST = apiRoute(async (request: NextRequest) => {
-  const auth = await authenticate(request);
-  await requirePermission(auth, "admin:credit_line_freeze");
+  await requireSensitiveAdmin(request, "admin:credit_line_freeze");
 
   const body = await request.json();
-  const data = validateBody(UnfreezeCreditLineSchema, body);
-
-  const ctx: OverrideContext = {
-    auth,
-    tenantId: auth.tenantId,
-    userId: auth.userId,
-    platformRole: auth.platformRole,
-    ipAddress: request.headers.get("x-forwarded-for"),
-    userAgent: request.headers.get("user-agent"),
-  };
-
-  try {
-    const result = await unfreezeCreditLine(ctx, {
-      creditFacilityId: data.creditFacilityId,
-      reason: data.reason,
-      coAuthorizerId: data.coAuthorizerId,
-    });
-
-    if (!result.success) {
-      return error(result.error || "Failed to unfreeze credit line", 400);
-    }
-
-    return success({ data: result.data });
-  } catch (err) {
-    console.error("[Unfreeze Credit Line] Error:", err);
-    return error("Failed to unfreeze credit line", 500);
-  }
-});
+  validateBody(UnfreezeCreditLineSchema, body);
+  return error("Credit-line changes are disabled until independent two-person authorization is implemented. No credit line was changed.", 501);
+}, { rateLimit: "financial" });

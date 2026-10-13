@@ -148,8 +148,8 @@ export function explainSmartFix(fix: SmartFix): SmartFixExplanation {
         "Based on your flawless payment history (>85% on-time payments), your credit limit has been automatically extended.",
       whatHappens:
         "Your credit limit has been increased to allow larger orders. This extension is based on your demonstrated payment reliability.",
-      beforeState: `Credit limit: ${(fix.payload as any).currentLimit?.toLocaleString()} EGP`,
-      afterState: `New credit limit: ${(fix.payload as any).newLimit?.toLocaleString()} EGP`,
+      beforeState: `Credit limit: ${"currentLimit" in fix.payload ? fix.payload.currentLimit.toLocaleString() : "Unavailable"} EGP`,
+      afterState: `New credit limit: ${"newLimit" in fix.payload ? fix.payload.newLimit.toLocaleString() : "Unavailable"} EGP`,
     },
     FACTORING_STANDARD: {
       fixType: "FACTORING_STANDARD",

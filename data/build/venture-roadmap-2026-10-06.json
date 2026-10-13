@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "asOf": "2026-10-06",
+  "objective": "Create a verifiable hospitality procurement wedge and investor-ready evidence package within six months.",
+  "rules": {
+    "statusEvidence": ["verified", "in_progress", "blocked", "not_started"],
+    "noClaimsWithoutEvidence": true,
+    "noProductionWritesFromMonitor": true
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "Truth baseline and release control",
+      "window": "week-1",
+      "status": "in_progress",
+      "owner": "CTO",
+      "exitCriteria": [
+        "One canonical checkout, branch and live release identity recorded",
+        "Strict build and test failures classified by owner",
+        "Auth authority decision recorded",
+        "No production deployment while a release blocker remains"
+      ],
+      "evidence": ["git status", "git log", "docs/maintenance-verification-2026-10-06.md", "docs/auth-path-reconciliation-rfc-2026-10-05.md"]
+    },
+    {
+      "id": "M1",
+      "name": "Design-partner wedge",
+      "window": "weeks-1-3",
+      "status": "not_started",
+      "owner": "Founder",
+      "exitCriteria": [
+        "Three hotel procurement interviews with named operational pain and current workflow evidence",
+        "Ten supplier interviews in one geographic/category wedge",
+        "Signed letters of intent or pilot commitments from at least two hotels",
+        "Baseline procurement metrics captured before product claims"
+      ],
+      "evidence": ["redacted interview notes", "pilot LOIs", "baseline KPI sheet"]
+    },
+    {
+      "id": "M2",
+      "name": "Trustworthy transaction slice",
+      "window": "weeks-2-6",
+      "status": "blocked",
+      "owner": "Engineering",
+      "exitCriteria": [
+        "Hotel catalog to fixed-price PO to approval to delivery receipt works in isolated test tenant",
+        "Tenant and permission matrix passes 401/403/cross-tenant tests",
+        "Payment-guarantee and Authority Matrix gates are enforced",
+        "POD is idempotent, audited and assignment-scoped",
+        "ETA integration is sandbox/mocked and invisible to public UI"
+      ],
+      "blockers": ["177 TypeScript diagnostics", "split Clerk/custom/mobile identity", "POD contract mismatch", "missing driver assignment relation"]
+    },
+    {
+      "id": "M3",
+      "name": "Pilot operations and supply density",
+      "window": "weeks-4-10",
+      "status": "not_started",
+      "owner": "Operations",
+      "exitCriteria": [
+        "Two hotels reorder through the same category wedge",
+        "Twenty verified suppliers with current price/quantity/lead-time records",
+        "At least 30 completed orders with delivery and exception data",
+        "Repeat-order rate, fill rate, on-time rate and contribution margin measured"
+      ],
+      "evidence": ["order ledger", "supplier verification records", "delivery exceptions", "unit economics dashboard"]
+    },
+    {
+      "id": "M4",
+      "name": "Regulatory and financing readiness",
+      "window": "weeks-6-14",
+      "status": "blocked",
+      "owner": "Compliance + Finance",
+      "exitCriteria": [
+        "ETA invoice lifecycle tested against official integration requirements",
+        "Factoring partner and license boundary documented",
+        "No financing promise appears without partner-approved terms and eligibility wording",
+        "Fees, consent, dispute, refund and data-retention terms approved"
+      ],
+      "evidence": ["ETA integration test pack", "FRA partner/licensing memo", "approved commercial terms"]
+    },
+    {
+      "id": "M5",
+      "name": "Investor / strategic-sale packet",
+      "window": "weeks-12-24",
+      "status": "not_started",
+      "owner": "Founder + CFO",
+      "exitCriteria": [
+        "Cohort retention and repeat GMV are measured, not forecast-only",
+        "Contribution margin and acquisition payback are reconciled to source data",
+        "Security, tenant isolation, deployment and incident evidence are packaged",
+        "Buyer/investor diligence room contains product, contracts, metrics and known risks"
+      ],
+      "evidence": ["monthly KPI exports", "cohort analysis", "diligence index", "risk register"]
+    }
+  ]
+}

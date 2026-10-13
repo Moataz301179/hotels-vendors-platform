@@ -1,7 +1,32 @@
 # Cross-Module Dependency Audit Log
 
 > Per AGENTS.md (The Auditor scope): Review all development cycles to ensure modules stay synchronized and secure.
-> Last audit: 2026-05-01 (per COO strategic roadmap).
+> The May 1, 2026 checklist below is historical and is not current verification. The current, evidence-scoped status is recorded first.
+
+## Current verification — 2026-10-07
+
+Scope: existing source checkout `/Users/Moatazi/hotels-vendors-new`, branch `ui/virtual-shadow-premium-homepage-20261003`, HEAD `879c90c4f24b4fd30b35d8383f834832be86b39b`. The checkout already contains extensive local modifications and untracked files; they were preserved. No reset, cleanup, stash, branch change, commit, push, migration, production mutation, or deployment was performed. Token rotation is deferred per owner instruction.
+
+| Check | Result | Evidence and limits |
+|---|---|---|
+| Strict TypeScript | PASS | `./node_modules/.bin/tsc --noEmit --incremental false --pretty false` exited 0. |
+| Production build | PASS | `HV_MAINTENANCE_OUTPUT=build npm run build` completed in isolated `.next-maintenance-build`, with `ignoreBuildErrors: false`; 340/340 pages generated. Existing `.next` output was not replaced. |
+| Full test suite | PASS | `npm test`: 44 files, 292 tests passed. Two stale test failures were corrected in the existing untracked tests only; application runtime code was not changed for those failures. |
+| Admin/carrier security suite | PASS | 9 focused files, 84 tests passed. These tests use isolated mocks and do not prove live authentication, database state, or production behavior. |
+| Prisma schema | PASS | `./node_modules/.bin/prisma validate`; schema valid. This does not prove a production migration was applied. |
+| ESLint | PASS WITH WARNINGS | `npm run lint`: 0 errors, 451 warnings. Warnings remain for unused values/hooks and dependency arrays; they are not represented as clean lint. |
+| Diff whitespace | PASS | `git diff --check` exited 0. |
+| Test patch review | PASS WITH COVERAGE NOTES | Independent review found no weakened runtime/security behavior. The VM middleware probe does not exercise the loopback rewrite branch itself. |
+| Mobile TypeScript/native verification | BLOCKED | Mobile package has no typecheck script; its local `tsc` shim fails because `../lib/tsc.js` is missing. Native workspace/Pods are absent. No dependency installation, pod install, or native regeneration was attempted. |
+
+### Still not certified / requires separate evidence or decisions
+
+- Authentication, tenant isolation, and admin permission policy: mocked tests do not establish authenticated production workflows. The auth-path RFC and architecture gate remain relevant; do not treat these local checks as a security sign-off.
+- Admin toolkit: support ticket workflow remains read-only; system health does not establish queue/mail/provider connectivity, backup restore, recovery, or release identity. Finance/authority-sensitive actions remain unavailable pending approved specifications and required independent authorization.
+- Carrier: local POD/API tests do not establish that `20261006023000_private_delivery_proofs` is applied to the live database, that private storage/backups are configured, or that mobile upload works against a non-production backend. Earnings are not settlement-backed; do not present estimates as payable balances.
+- Production: this maintenance run did not deploy. Reconcile the approved release and deployment procedure before any production change. No token rotation was attempted.
+
+The May 1 checklist below is retained as historical context only. Its unchecked/checked boxes are not current sign-off evidence.
 
 ## Audit Findings
 

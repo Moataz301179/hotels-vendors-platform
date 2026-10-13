@@ -10,7 +10,7 @@
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { apiRoute, success, error } from "@/lib/api-utils";
+import { apiRoute, authenticate, requirePermission, success, error, audit } from "@/lib/api-utils";
 import { z } from "zod";
 
 // ─── Constants ────────────────────────────────────────────────────
@@ -77,9 +77,9 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
   // Sector isolation enforcement
   if (isHotelScope(sector)) {
-    console.info(`${logPrefix} [Hotel Sector]: ${companyName} (${email}) routed via Hotel scope. Sector isolation: Supplier/Fintech config lines are structurally barred.`);
+    console.info(`${logPrefix} [Hotel Sector]: request routed via Hotel scope. Sector isolation: Supplier/Fintech config lines are structurally barred.`);
   } else if (isFinancialScope(sector)) {
-    console.info(`${logPrefix} [Financial Sector]: ${companyName} (${email}) routed via Financial scope. Sector isolation: Hotel procurement thresholds are structurally barred.`);
+    console.info(`${logPrefix} [Financial Sector]: request routed via Financial scope. Sector isolation: Hotel procurement thresholds are structurally barred.`);
   }
 
   // Database write with timeout protection
@@ -99,7 +99,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
       "LeadCapture database write"
     );
 
-    console.info(`${logPrefix}: Lead ${lead.id} successfully captured for ${companyName} [${sector}]. Real-time transaction optimization scoring completed. ${CORPORATE_DISCLAIMER}`);
+    console.info(`${logPrefix}: Lead ${lead.id} successfully captured [${sector}]. ${CORPORATE_DISCLAIMER}`);
 
     return success(
       {
@@ -118,14 +118,17 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
 
     // Database state pollution prevention
-    console.error(`${logPrefix}: Database error — ${err instanceof Error ? err.message : "Unknown error"}. Execution sequence halted. ${CORPORATE_DISCLAIMER}`);
+    console.error(`${logPrefix}: Database write failed (${err instanceof Error ? err.name : "UnknownError"}). Execution sequence halted. ${CORPORATE_DISCLAIMER}`);
     return error(`Lead capture failed. ${CORPORATE_DISCLAIMER}`, 500);
   }
 });
 
 // ─── GET — Retrieve Leads (Admin) ────────────────────────────────
 
-export const GET = apiRoute(async () => {
+export const GET = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request);
+  await requirePermission(auth, "admin:manage_platform");
+
   try {
     const leads = await withTimeout(
       prisma.leadCapture.findMany({
@@ -136,8 +139,19 @@ export const GET = apiRoute(async () => {
       "LeadCapture database read"
     );
 
-    console.info(`System Event Log [Admin]: Retrieved ${leads.length} lead records. ${CORPORATE_DISCLAIMER}`);
+    await audit({
+      entityType: "LEAD_CAPTURE",
+      entityId: "lead-capture-list",
+      action: "READ",
+      tenantId: auth.tenantId,
+      actorId: auth.userId,
+      actorRole: auth.platformRole,
+      afterState: { returnedCount: leads.length },
+      ipAddress: request.headers.get("x-forwarded-for") || null,
+      userAgent: request.headers.get("user-agent"),
+    });
 
+    console.info(`System Event Log [Admin]: Retrieved ${leads.length} lead records. ${CORPORATE_DISCLAIMER}`);
     return success({ leads, disclaimer: CORPORATE_DISCLAIMER });
   } catch (err) {
     if (err instanceof Error && err.message.startsWith("TIMEOUT:")) {

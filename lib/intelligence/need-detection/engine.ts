@@ -31,6 +31,7 @@ export async function detectNeeds(input: NeedDetectionInput) {
       });
 
   const findings = relationships.map((r) => ({
+    id: `need-${input.entityId}-${r.id}`,
     findingCategory: "RELATIONSHIP" as const,
     entityId: input.entityId,
     entityName: r.entityId === input.entityId ? r.relatedEntityId : r.entityId,

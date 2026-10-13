@@ -8,9 +8,27 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { transformManyToMarketplace, toPrismaCategory } from "@/lib/marketplace/category-mapper";
+import {
+  transformCatalogItemToMarketplaceProduct,
+  transformManyToMarketplace,
+  toPrismaCategory,
+} from "@/lib/marketplace/category-mapper";
 import { z } from "zod";
 import { authenticate, requirePermission } from "@/lib/api-utils";
+
+/**
+ * Public catalogue responses describe the offer, not the counterparty. The
+ * supplier account and its identifier become available only after the hotel
+ * reaches the permitted order/fulfilment stage.
+ */
+function redactPublicSupplier<T extends { listingKind?: string }>(product: T) {
+  const safe = Object.fromEntries(Object.entries(product).filter(([key]) => key !== "supplierId"));
+  return {
+    ...safe,
+    supplierName: product.listingKind === "MARKET_REFERENCE" ? "Market reference · supplier not onboarded" : "Verified supplier",
+    supplierCity: "",
+  };
+}
 
 // ── GET: Public Catalog ───────────────────────────────────────
 
@@ -19,15 +37,26 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || undefined;
-    const status = searchParams.get("status") || "ACTIVE";
+    // Public browsing must never expose drafts, deleted records, fixtures, or unverified suppliers.
+    const status = "ACTIVE";
     const limit = Math.min(100, parseInt(searchParams.get("limit") || "24", 10));
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const productId = searchParams.get("productId") || undefined;
     const supplierId = searchParams.get("supplierId") || undefined;
+    // Market references are stored under the platform tenant. Never infer a
+    // tenant from a request parameter: the environment must opt this feed in.
+    const publicCatalogTenantId = process.env.PUBLIC_CATALOG_TENANT_ID?.trim() || "";
 
     if (productId) {
-      const product = await prisma.product.findUnique({
-        where: { id: productId },
+      const product = await prisma.product.findFirst({
+        where: {
+          id: productId,
+          status: "ACTIVE",
+          source: { not: "FIXTURE" },
+          OR: [{ unitPrice: { gt: 0 } }, { pricingMode: { in: ["RFQ", "HYBRID"] } }],
+          deletedAt: null,
+          supplier: { is: { status: "ACTIVE", isVerified: true, deletedAt: null } },
+        },
         include: {
           supplier: {
             select: {
@@ -43,19 +72,39 @@ export async function GET(request: NextRequest) {
       });
 
       if (!product) {
-        return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
+        if (!publicCatalogTenantId) {
+          return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
+        }
+
+        const catalogItem = await prisma.catalogItem.findFirst({
+          where: {
+            id: productId,
+            tenantId: publicCatalogTenantId,
+            deletedAt: null,
+            status: { in: ["PENDING_REVIEW", "ACTIVE"] },
+          },
+          include: { sources: { select: { sourceUrl: true } } },
+        });
+
+        if (!catalogItem) {
+          return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
+        }
+
+        const reference = transformCatalogItemToMarketplaceProduct(catalogItem);
+        return NextResponse.json({ success: true, data: { data: reference } });
       }
 
       const marketplaceProduct = transformManyToMarketplace([product as unknown as Parameters<typeof transformManyToMarketplace>[0][0]])[0];
-      return NextResponse.json({ success: true, data: { data: marketplaceProduct } });
+      return NextResponse.json({ success: true, data: { data: redactPublicSupplier(marketplaceProduct) } });
     }
 
-    const where: Record<string, unknown> = {};
-
-    // Always filter by ACTIVE for public catalog unless explicitly overridden
-    if (status) {
-      where.status = status;
-    }
+    const where: Record<string, unknown> = {
+      status,
+      source: { not: "FIXTURE" },
+      AND: [{ OR: [{ unitPrice: { gt: 0 } }, { pricingMode: { in: ["RFQ", "HYBRID"] } }] }],
+      deletedAt: null,
+      supplier: { is: { status: "ACTIVE", isVerified: true, deletedAt: null } },
+    };
 
     if (search) {
       where.OR = [
@@ -97,17 +146,72 @@ export async function GET(request: NextRequest) {
       prisma.product.count({ where }),
     ]);
 
-    const marketplaceProducts = transformManyToMarketplace(products as unknown as Parameters<typeof transformManyToMarketplace>[0]);
+    const marketplaceProducts = transformManyToMarketplace(products as unknown as Parameters<typeof transformManyToMarketplace>[0]).map(redactPublicSupplier);
+
+    let marketReferences: Record<string, unknown>[] = [];
+    let marketReferenceTotal = 0;
+    if (publicCatalogTenantId) {
+      const pageOffset = (page - 1) * limit;
+      const marketOffset = Math.max(0, pageOffset - total);
+      const marketTake = Math.max(0, limit - marketplaceProducts.length);
+      const catalogWhere: Record<string, unknown> = {
+        tenantId: publicCatalogTenantId,
+        deletedAt: null,
+        status: { in: ["PENDING_REVIEW", "ACTIVE"] },
+      };
+
+      if (search) {
+        catalogWhere.OR = [
+          { name: { contains: search, mode: "insensitive" } },
+          { brand: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { category: { contains: search, mode: "insensitive" } },
+        ];
+      }
+
+      if (category) {
+        const categoryNames: Record<string, string[]> = {
+          fb: ["Food and Beverage"],
+          hk: ["Housekeeping and Cleaning"],
+          lin: ["Linen, Uniforms and Textiles"],
+          gra: ["Guest Supplies"],
+          eng: ["Engineering, Maintenance and Utilities"],
+          spa: ["Facilities, Grounds and Recreation"],
+          ffe: ["FF&E, Technology and Hotel Services"],
+        };
+        const names = categoryNames[category];
+        if (names) catalogWhere.category = { in: names };
+      }
+
+      const [rows, catalogTotal] = await Promise.all([
+        prisma.catalogItem.findMany({
+          where: catalogWhere,
+          orderBy: { lastObservedAt: "desc" },
+          take: marketTake,
+          skip: marketOffset,
+          include: { sources: { select: { sourceUrl: true } } },
+        }),
+        prisma.catalogItem.count({ where: catalogWhere }),
+      ]);
+      marketReferences = rows.map(transformCatalogItemToMarketplaceProduct).map(redactPublicSupplier);
+      marketReferenceTotal = catalogTotal;
+    }
+
+    const combined = [...marketplaceProducts, ...marketReferences];
 
     return NextResponse.json({
       success: true,
       data: {
-        products: marketplaceProducts,
+        products: combined,
+        counts: {
+          verifiedSupplierListings: total,
+          marketReferences: marketReferenceTotal,
+        },
         pagination: {
           page,
           limit,
-          total,
-          totalPages: Math.ceil(total / limit),
+          total: total + marketReferenceTotal,
+          totalPages: Math.ceil((total + marketReferenceTotal) / limit),
         },
       },
     });
@@ -228,6 +332,7 @@ export async function POST(request: NextRequest) {
         images: data.images ? JSON.stringify(data.images) : null,
         specs: data.specs ? JSON.stringify(data.specs) : null,
         status: "ACTIVE",
+        source: "MANUAL",
         supplierId: supplierId,
         tenantId: supplier.tenantId,
       },

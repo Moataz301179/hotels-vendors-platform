@@ -1,8 +1,10 @@
 import "@/i18n/provider";
 import { AppProvider } from "@/lib/store";
 import { ToastHost } from "@/components/AppShell";
+import { requireServerPermission } from "@/lib/auth/server-auth";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  await requireServerPermission("admin:read");
   return (
     <AppProvider>
       {children}

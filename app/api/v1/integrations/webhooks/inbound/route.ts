@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { integrationEngine } from '@/lib/integrations/engine';
+import { integrationAdminRoute } from '@/lib/integrations/admin-route';
 
-export async function POST(request: Request) {
+export const POST = integrationAdminRoute(async (request) => {
   try {
     const body = await request.json();
     const result = await integrationEngine.triggerWebhook({
@@ -13,4 +14,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Invalid webhook payload' }, { status: 400 });
   }
-}
+});

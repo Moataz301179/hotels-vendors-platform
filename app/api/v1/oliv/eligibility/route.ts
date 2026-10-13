@@ -76,7 +76,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
     eligible,
     audits,
     message: audits.length >= 4
-      ? "MILESTONE MET: 4+ real suppliers attributed to Oliv (CHV000)."
+      ? "MILESTONE MET: 4+ real suppliers attributed to financing partner (partner referral)."
       : `Referred ${audits.length} real suppliers to Oliv.`,
   }, audits.length >= 4 ? 201 : 200);
 });

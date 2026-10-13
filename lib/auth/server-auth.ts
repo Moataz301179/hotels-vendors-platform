@@ -5,26 +5,25 @@
  */
 import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
-
-export interface ServerUser {
-  id: string; email: string; name: string; role: string; platformRole: string;
-  tenantId: string; hotelId: string | null; supplierId: string | null;
-  factoringCompanyId: string | null; canOverride: boolean;
-}
+import { findActiveAccount, type ServerUser } from "./account-identity";
+import { requirePermission } from "./rbac";
+export type { ServerUser } from "./account-identity";
 
 export const getCurrentUser = cache(async (): Promise<ServerUser | null> => {
   const { userId } = await auth();
   if (!userId) return null;
   const clerkUser = await currentUser();
-  const email = clerkUser?.emailAddresses[0]?.emailAddress;
-  if (!email) return null;
-  const user = await prisma.user.findUnique({ where: { email }, select: {
-    id: true, email: true, name: true, role: true, platformRole: true,
-    tenantId: true, hotelId: true, supplierId: true, factoringCompanyId: true, canOverride: true,
-  }});
-  return user as ServerUser | null;
+  if (!clerkUser || clerkUser.id !== userId) return null;
+  const primary = clerkUser.emailAddresses.find(address => address.id === clerkUser.primaryEmailAddressId);
+  if (!primary || primary.verification?.status !== "verified") return null;
+  return findActiveAccount({ email: primary.emailAddress });
 });
+
+export async function requireServerPermission(permissionCode: string): Promise<ServerUser> {
+  const user = await requireAuth();
+  await requirePermission({ userId: user.id, tenantId: user.tenantId, platformRole: user.platformRole }, permissionCode);
+  return user;
+}
 
 export async function requireAuth(): Promise<ServerUser> {
   const user = await getCurrentUser();

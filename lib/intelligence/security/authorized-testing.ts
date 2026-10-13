@@ -59,14 +59,14 @@ export class SecurityIntelligenceController {
     // Ensure scope covers permitted action
     if (scope && assertion.provenance.accessType) {
       // Map accessType to corresponding permittedAction
-      const accessToAction: Record<string, string> = {
+      const accessToAction: Record<SourceProvenance['accessType'], AuthorizedTestingScope['permittedActions'][number]> = {
         'PASSIVE': 'PASSIVE_DISCOVERY',
         'PUBLIC_DOCUMENT': 'PUBLIC_DOCUMENT',
         'METADATA': 'NON_INTRUSIVE_VALIDATION',
         'AUTHORIZED': 'AUTHORIZED_ACTIVE',
       };
       const requiredAction = accessToAction[assertion.provenance.accessType];
-      if (requiredAction && !scope.permittedActions.includes(requiredAction as any)) {
+      if (requiredAction && !scope.permittedActions.includes(requiredAction)) {
         return { blocked: true, reason: 'scope_does_not_authorize_access_type' };
       }
     }

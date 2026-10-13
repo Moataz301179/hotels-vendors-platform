@@ -1,18 +1,55 @@
 import { NextResponse } from "next/server";
+import { isWebhookIpAllowed, getClientIp } from "@/lib/security/webhook-whitelist";
+import { logSecurityEvent } from "@/lib/security/security-logger";
+import { z } from "zod";
+
+const InventoryWebhookSchema = z.object({
+  provider: z.string().optional(),
+  tenantId: z.string().optional(),
+  propertyId: z.string().optional(),
+  items: z.array(z.any()).optional(),
+  eventId: z.string().optional(),
+  timestamp: z.number().optional(),
+});
 
 export async function POST(req: Request) {
+  const clientIp = getClientIp(req);
+  if (process.env.NODE_ENV === "production" && !isWebhookIpAllowed(clientIp, "generic")) {
+    logSecurityEvent({
+      event: "rbac_denied",
+      severity: "critical",
+      ip: clientIp || undefined,
+      path: "/api/webhooks/inventory/provider",
+      method: "POST",
+      details: { reason: "IP not in inventory webhook whitelist" },
+    });
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const payload = await req.json();
-    // G5: Webhook receiver for inventory sync. No websockets.
-    // All mutations audit-logged and tenant-scoped.
+    const data = InventoryWebhookSchema.parse(payload);
+
+    if (!data.eventId) {
+      return NextResponse.json({ error: "Missing eventId" }, { status: 400 });
+    }
+
+    logSecurityEvent({
+      event: "inventory_webhook_received",
+      severity: "info",
+      ip: clientIp || undefined,
+      path: "/api/webhooks/inventory/provider",
+      method: "POST",
+      details: { provider: data.provider, tenantId: data.tenantId, propertyId: data.propertyId },
+    });
+
     return NextResponse.json({
       status: "received",
-      provider: "inventory_sync",
-      payload,
-      auditRequired: true,
-      tenantScope: payload.tenantId || payload.propertyId,
+      provider: data.provider || "inventory_sync",
+      tenantScope: data.tenantId || data.propertyId,
+      eventId: data.eventId,
     });
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 }

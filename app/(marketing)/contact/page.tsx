@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import "../../../components/marketing/public-pages.css";
 import {
   Mail,
   Phone,
   MapPin,
   Clock,
-  MessageSquare,
   Send,
   CheckCircle,
   AlertCircle,
@@ -20,21 +20,21 @@ const CONTACT_METHODS = [
     title: "Email Us",
     desc: "For general inquiries and support",
     value: "info@hotelsvendors.com",
-    color: "var(--accent-base)",
+    color: "var(--hv-maintenance-blue)",
   },
   {
     icon: Phone,
-    title: "Call Us",
-    desc: "Sunday–Thursday, 9AM–5PM Cairo time",
-    value: "+20 100 XXX XXXX",
-    color: "var(--orange-base)",
+    title: "Request a call",
+    desc: "Include your number and preferred time in your message",
+    value: "Arrange a conversation",
+    color: "var(--hv-maintenance-blue)",
   },
   {
     icon: MapPin,
-    title: "Office",
-    desc: "Visits by appointment",
-    value: "6th of October City, Giza, Egypt",
-    color: "var(--purple-base)",
+    title: "Egyptian hospitality",
+    desc: "For hotel, supplier and partner enquiries",
+    value: "Confirm meeting arrangements by email",
+    color: "var(--hv-maintenance-blue)",
   },
 ];
 
@@ -100,7 +100,7 @@ export default function ContactPage() {
   }
 
   return (
-    <main style={{ backgroundColor: "var(--bg-canvas)", color: "var(--text-primary)", minHeight: "100vh" }}>
+    <div className="hv-maintenance-public">
       {/* ── Hero ── */}
       <section className="pt-28 pb-16 relative overflow-hidden">
         <div
@@ -109,18 +109,17 @@ export default function ContactPage() {
         />
         <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
           <span className="label-upper mb-4 block">Contact</span>
-          <h1 className="text-[clamp(28px,5vw,48px)] font-semibold leading-[1.1] tracking-tight mb-5 text-white">
+          <h1 className="text-[clamp(28px,5vw,48px)] font-semibold leading-[1.1] tracking-tight mb-5 text-[var(--hv-maintenance-ink)]">
             Get in Touch
           </h1>
-          <p className="text-[15px] max-w-xl mx-auto leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Whether you&apos;re a hotel looking to streamline procurement, a supplier seeking faster payments,
-            or a partner exploring integration — we&apos;re here to help.
+          <p className="text-[15px] max-w-xl mx-auto leading-relaxed" style={{ color: "var(--hv-maintenance-muted)" }}>
+            Tell us what your hotel needs to source, what your company supplies, or which partnership you want to discuss. Ask about availability, onboarding and written terms before committing.
           </p>
         </div>
       </section>
 
       {/* ── Contact Methods ── */}
-      <section className="py-12 border-y" style={{ borderColor: "var(--border-subtle)" }}>
+      <section className="py-12 border-y" style={{ borderColor: "var(--hv-maintenance-line)" }}>
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid sm:grid-cols-3 gap-4">
             {CONTACT_METHODS.map((m) => (
@@ -131,8 +130,8 @@ export default function ContactPage() {
                 >
                   <m.icon size={18} style={{ color: m.color }} />
                 </div>
-                <h3 className="text-[14px] font-semibold text-white mb-1">{m.title}</h3>
-                <p className="text-[12px] mb-2" style={{ color: "var(--text-muted)" }}>{m.desc}</p>
+                <h3 className="text-[14px] font-semibold text-[var(--hv-maintenance-ink)] mb-1">{m.title}</h3>
+                <p className="text-[12px] mb-2" style={{ color: "var(--hv-maintenance-muted)" }}>{m.desc}</p>
                 <p className="text-[13px] font-medium" style={{ color: m.color }}>{m.value}</p>
               </div>
             ))}
@@ -145,16 +144,16 @@ export default function ContactPage() {
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-10">
             <span className="label-upper mb-3 block text-foreground">Send a Message</span>
-            <h2 className="text-2xl md:text-3xl font-semibold text-white">How Can We Help?</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold text-[var(--hv-maintenance-ink)]">How Can We Help?</h2>
           </div>
 
           <div className="surface-card p-6 sm:p-8">
             {status === "success" ? (
-              <div className="text-center py-12">
-                <CheckCircle size={40} className="mx-auto mb-4" style={{ color: "var(--accent-base)" }} />
-                <h3 className="text-[18px] font-semibold text-white mb-2">Message Sent</h3>
-                <p className="text-[14px] mb-6" style={{ color: "var(--text-secondary)" }}>
-                  We&apos;ll get back to you within 24 business hours.
+              <div role="status" className="text-center py-12">
+                <CheckCircle size={40} className="mx-auto mb-4" style={{ color: "var(--hv-maintenance-blue)" }} />
+                <h3 className="text-[18px] font-semibold text-[var(--hv-maintenance-ink)] mb-2">Message Sent</h3>
+                <p className="text-[14px] mb-6" style={{ color: "var(--hv-maintenance-muted)" }}>
+                  Your message has been submitted. If you need to follow up, email info@hotelsvendors.com with your company name and enquiry details.
                 </p>
                 <button onClick={() => setStatus("idle")} className="btn-ghost">
                   Send Another Message
@@ -164,18 +163,18 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Inquiry Type */}
                 <div className="space-y-2">
-                  <label className="block text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <label className="block text-[13px] font-medium" style={{ color: "var(--hv-maintenance-muted)" }}>
                     Inquiry Type
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {INQUIRY_TYPES.map((t) => (
                       <label
                         key={t.value}
-                        className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl border text-center cursor-pointer transition-all"
+                        className="hv-maintenance-radio-pill flex items-center justify-center gap-2 px-3 py-3 rounded-xl border text-center cursor-pointer transition-all"
                         style={{
-                          borderColor: form.type === t.value ? "rgba(var(--accent-base-rgb),0.3)" : "var(--border-subtle)",
-                          backgroundColor: form.type === t.value ? "var(--accent-muted)" : "rgba(255,255,255,0.02)",
-                          color: form.type === t.value ? "var(--accent-base)" : "var(--text-muted)",
+                          borderColor: form.type === t.value ? "var(--hv-maintenance-blue)" : "var(--hv-maintenance-line)",
+                          backgroundColor: form.type === t.value ? "var(--hv-maintenance-alt)" : "rgba(255,255,255,0.02)",
+                          color: form.type === t.value ? "var(--hv-maintenance-blue)" : "var(--hv-maintenance-muted)",
                         }}
                       >
                         <input
@@ -195,11 +194,13 @@ export default function ContactPage() {
                 {/* Name & Email */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="block text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                    <label htmlFor="contact-name" className="block text-[13px] font-medium" style={{ color: "var(--hv-maintenance-muted)" }}>
                       Name <span style={{ color: "var(--error)" }}>*</span>
                     </label>
                     <input
                       type="text"
+                      id="contact-name"
+                      autoComplete="name"
                       required
                       placeholder="Your full name"
                       value={form.name}
@@ -208,11 +209,13 @@ export default function ContactPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                    <label htmlFor="contact-email" className="block text-[13px] font-medium" style={{ color: "var(--hv-maintenance-muted)" }}>
                       Email <span style={{ color: "var(--error)" }}>*</span>
                     </label>
                     <input
                       type="email"
+                      id="contact-email"
+                      autoComplete="email"
                       required
                       placeholder="you@company.com"
                       value={form.email}
@@ -225,11 +228,13 @@ export default function ContactPage() {
                 {/* Company & Phone */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="block text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                    <label htmlFor="contact-company" className="block text-[13px] font-medium" style={{ color: "var(--hv-maintenance-muted)" }}>
                       Company
                     </label>
                     <input
                       type="text"
+                      id="contact-company"
+                      autoComplete="organization"
                       placeholder="Your company name"
                       value={form.company}
                       onChange={(e) => updateField("company", e.target.value)}
@@ -237,12 +242,14 @@ export default function ContactPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                      Phone <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>(optional)</span>
+                    <label htmlFor="contact-phone" className="block text-[13px] font-medium" style={{ color: "var(--hv-maintenance-muted)" }}>
+                      Phone <span className="text-[11px]" style={{ color: "var(--hv-maintenance-muted)" }}>(optional)</span>
                     </label>
                     <input
                       type="tel"
-                      placeholder="+20 100 XXX XXXX"
+                      id="contact-phone"
+                      autoComplete="tel"
+                      placeholder="Your phone number, including country code"
                       value={form.phone}
                       onChange={(e) => updateField("phone", e.target.value)}
                       className="surface-input w-full px-4 py-3 text-[14px]"
@@ -252,10 +259,11 @@ export default function ContactPage() {
 
                 {/* Message */}
                 <div className="space-y-2">
-                  <label className="block text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <label htmlFor="contact-message" className="block text-[13px] font-medium" style={{ color: "var(--hv-maintenance-muted)" }}>
                     Message <span style={{ color: "var(--error)" }}>*</span>
                   </label>
                   <textarea
+                    id="contact-message"
                     required
                     rows={5}
                     placeholder="Tell us how we can help..."
@@ -267,7 +275,7 @@ export default function ContactPage() {
 
                 {/* Error */}
                 {status === "error" && (
-                  <div className="flex items-center gap-2 text-[13px] px-4 py-3 rounded-xl" style={{ backgroundColor: "rgba(var(--error-rgb),0.08)", color: "var(--error)" }}>
+                  <div role="alert" className="flex items-center gap-2 text-[13px] px-4 py-3 rounded-xl" style={{ backgroundColor: "rgba(var(--error-rgb),0.08)", color: "var(--error)" }}>
                     <AlertCircle size={14} />
                     {errorMsg}
                   </div>
@@ -277,7 +285,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="btn-accent w-full"
+                  className="hv-maintenance-button w-full"
                   style={{ opacity: status === "loading" ? 0.7 : 1 }}
                 >
                   {status === "loading" ? (
@@ -299,34 +307,29 @@ export default function ContactPage() {
       </section>
 
       {/* ── Response Time + Business Hours + Social ── */}
-      <section className="py-12 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+      <section className="py-12 border-t" style={{ borderColor: "var(--hv-maintenance-line)" }}>
         <div className="max-w-3xl mx-auto px-6">
           <div className="grid sm:grid-cols-3 gap-6 text-center">
             <div>
-              <Clock size={18} className="mx-auto mb-2" style={{ color: "var(--accent-base)" }} />
-              <p className="text-[13px] font-medium text-white mb-1">Response Time</p>
-              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>Within 24 business hours</p>
+              <Clock size={18} className="mx-auto mb-2" style={{ color: "var(--hv-maintenance-blue)" }} />
+              <p className="text-[13px] font-medium text-[var(--hv-maintenance-ink)] mb-1">Following up</p>
+              <p className="text-[12px]" style={{ color: "var(--hv-maintenance-muted)" }}>Keep your company and enquiry details in the same email thread.</p>
             </div>
             <div>
-              <Clock size={18} className="mx-auto mb-2" style={{ color: "var(--orange-base)" }} />
-              <p className="text-[13px] font-medium text-white mb-1">Business Hours</p>
-              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>Sun–Thu: 9AM–5PM Cairo Time</p>
+              <Clock size={18} className="mx-auto mb-2" style={{ color: "var(--hv-maintenance-blue)" }} />
+              <p className="text-[13px] font-medium text-[var(--hv-maintenance-ink)] mb-1">Scheduling</p>
+              <p className="text-[12px]" style={{ color: "var(--hv-maintenance-muted)" }}>Include your time zone and preferred meeting time.</p>
             </div>
             <div>
-              <ExternalLink size={18} className="mx-auto mb-2" style={{ color: "var(--purple-base)" }} />
-              <p className="text-[13px] font-medium text-white mb-1">Follow Us</p>
+              <ExternalLink size={18} className="mx-auto mb-2" style={{ color: "var(--hv-maintenance-blue)" }} />
+              <p className="text-[13px] font-medium text-[var(--hv-maintenance-ink)] mb-1">Email</p>
               <div className="flex justify-center gap-4">
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-[12px] transition-colors" style={{ color: "var(--text-muted)" }}>
-                  LinkedIn
-                </a>
-                <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-[12px] transition-colors" style={{ color: "var(--text-muted)" }}>
-                  Twitter / X
-                </a>
+                <a href="mailto:info@hotelsvendors.com" className="hv-maintenance-link">info@hotelsvendors.com</a>
               </div>
             </div>
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

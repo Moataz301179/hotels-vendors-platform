@@ -323,13 +323,10 @@ export function PulseSidebar({ role, collapsed, onToggle, isMobile }: PulseSideb
         </div>
 
         <div className="mt-auto flex flex-col gap-1 w-full px-2">
-          <Link
-            href="/settings"
-            className="flex items-center justify-center w-10 h-10 rounded-lg text-foreground-muted hover:text-white hover:bg-white/[0.04] transition-all"
-            aria-label="Settings"
-          >
-            <Settings size={18} />
-          </Link>
+          <Link href="/docs" title="Documentation" aria-label="Documentation" className="flex items-center justify-center w-10 h-10 rounded-lg text-foreground-muted hover:text-white hover:bg-white/[0.04] transition-all"><FileText size={18} /></Link>
+          <Link href="/about" title="About" aria-label="About" className="flex items-center justify-center w-10 h-10 rounded-lg text-foreground-muted hover:text-white hover:bg-white/[0.04] transition-all"><Building2 size={18} /></Link>
+          <Link href="/support" title="Support" aria-label="Support" className="flex items-center justify-center w-10 h-10 rounded-lg text-foreground-muted hover:text-white hover:bg-white/[0.04] transition-all"><HelpCircle size={18} /></Link>
+          <Link href="/settings" className="flex items-center justify-center w-10 h-10 rounded-lg text-foreground-muted hover:text-white hover:bg-white/[0.04] transition-all" aria-label="Settings"><Settings size={18} /></Link>
         </div>
       </div>
     );
@@ -385,15 +382,11 @@ export function PulseSidebar({ role, collapsed, onToggle, isMobile }: PulseSideb
         ))}
       </nav>
 
-      <div className="p-3 border-t border-border-invisible">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 px-3 py-2 min-h-[44px] rounded-lg text-sm text-foreground-muted hover:text-white hover:bg-surface-1 transition-all w-full"
-          aria-label="Settings"
-        >
-          <Settings size={17} />
-          <span>Settings</span>
-        </Link>
+      <div className="p-3 border-t border-border-invisible space-y-0.5">
+        <Link href="/docs" className="flex items-center gap-3 px-3 py-2 min-h-[40px] rounded-lg text-sm text-foreground-muted hover:text-white hover:bg-surface-1 transition-all w-full"><FileText size={17} /><span>Documentation</span></Link>
+        <Link href="/about" className="flex items-center gap-3 px-3 py-2 min-h-[40px] rounded-lg text-sm text-foreground-muted hover:text-white hover:bg-surface-1 transition-all w-full"><Building2 size={17} /><span>About</span></Link>
+        <Link href="/support" className="flex items-center gap-3 px-3 py-2 min-h-[40px] rounded-lg text-sm text-foreground-muted hover:text-white hover:bg-surface-1 transition-all w-full"><HelpCircle size={17} /><span>Support</span></Link>
+        <Link href="/settings" className="flex items-center gap-3 px-3 py-2 min-h-[40px] rounded-lg text-sm text-foreground-muted hover:text-white hover:bg-surface-1 transition-all w-full" aria-label="Settings"><Settings size={17} /><span>Settings</span></Link>
       </div>
     </div>
   );

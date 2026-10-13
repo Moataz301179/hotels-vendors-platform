@@ -6,13 +6,13 @@
  *
  * NO-FAKE-DATA: these are ready-to-send templates. They claim only what the
  * product actually does (credit-limit assessment, ETA-verified invoice funding,
- * CHV000 referral). They do NOT claim any supplier was approved or onboarded.
+ * Partner referral). They do NOT claim any supplier was approved or onboarded.
  * "{"{name}"}" is the personalization slot filled at send time.
  */
 export const OUTREACH_TEMPLATE = {
   // Meta requires an approved template name matching the body below.
   templateName: "hotelsvendors_oliv_credit_application_01",
-  ctaUrl: "https://www.hotelsvendors.com/api/v1/oliv/click?source=outreach&ref=CHV000",
+  ctaUrl: "https://www.hotelsvendors.com/api/v1/oliv/click?source=outreach&ref=partner",
 
   en: {
     header: "*HotelsVendors × Financing*",
@@ -24,7 +24,7 @@ export const OUTREACH_TEMPLATE = {
       "• Same-day credit-limit assessment\n" +
       "• Invoices paid in 48 hours\n" +
       "• No integration or fees to start\n\n" +
-      "Apply in minutes (with your referral CHV000):\n" +
+      "Apply in minutes (with your partner referral):\n" +
       "{{1}}",
   },
 
@@ -38,7 +38,7 @@ export const OUTREACH_TEMPLATE = {
       "• تقييم حدّ الائتمان في نفس اليوم\n" +
       "• سداد الفواتير خلال 48 ساعة\n" +
       "• بدون أي تكامل أو رسوم للبدء\n\n" +
-      "قدّم الآن في دقائق (باكود الإحالة CHV000):\n" +
+      "قدّم الآن في دقائق (باكود الإحالة الشريكة):\n" +
       "{{1}}",
   },
 } as const;

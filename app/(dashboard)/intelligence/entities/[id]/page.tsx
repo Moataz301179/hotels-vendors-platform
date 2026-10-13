@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useApi } from "@/lib/hooks/use-api";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft, ExternalLink, Clock, Database, Eye, Shield,
@@ -48,8 +48,8 @@ function DataClassificationBadge({ classification }: { classification: string })
     SEED_DEMO: {
       color: "bg-amber-400/10 text-amber-400 border-amber-400/20",
       icon: <Database size={14} />,
-      label: "Seed / Demo Data",
-      description: "This record was manually entered for development/demo purposes",
+      label: "Unverified fixture",
+      description: "This development fixture cannot establish a real business relationship",
     },
     USER_PROVIDED: {
       color: "bg-blue-400/10 text-blue-400 border-blue-400/20",
@@ -96,25 +96,7 @@ function DataClassificationBadge({ classification }: { classification: string })
 export default function EntityDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const [entity, setEntity] = useState<LeadDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    fetch(`/api/v1/crm/leads/${id}`, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.lead) {
-          setEntity(data.lead);
-        } else {
-          setError(data.error || "Entity not found");
-        }
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+  const { data: entity, loading, error } = useApi<LeadDetail>(id ? `/api/v1/crm/leads/${encodeURIComponent(id)}` : null);
 
   if (loading) {
     return (

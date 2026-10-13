@@ -115,7 +115,7 @@ export default function FoodCostCalculatorPage() {
               <Wallet size={18} className="text-[#8a6d3b] mt-0.5 shrink-0" />
               <div>
                 <div className="text-sm font-semibold text-[#111827]">48h factoring</div>
-                <p className="text-xs text-slate-600 mt-1">Buy at today&apos;s price, pay suppliers via Oliv on net-60 — suppliers get paid in 48h.</p>
+                <p className="text-xs text-slate-600 mt-1">Buy at today&apos;s price, pay suppliers via  on net-60 — suppliers get paid in 48h.</p>
               </div>
             </div>
           </div>

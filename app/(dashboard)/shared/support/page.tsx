@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useApi } from "@/lib/hooks/use-api";
 import {
   LifeBuoy,
   MessageSquare,
@@ -280,35 +281,10 @@ function CreateTicketForm({ onClose, onCreated }: { onClose: () => void; onCreat
 // ─── Main Page ───────────────────────────────────────────
 
 export default function UserSupportPage() {
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error, refetch: fetchTickets } = useApi<{ tickets: SupportTicket[] }>("/api/v1/support/ticket?limit=50");
+  const tickets = data?.tickets ?? [];
   const [showForm, setShowForm] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
-
-  const fetchTickets = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/support/ticket?limit=50", {
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || `HTTP ${res.status}`);
-      }
-      setTickets(json.data.tickets);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
 
   return (
     <div className="space-y-6">

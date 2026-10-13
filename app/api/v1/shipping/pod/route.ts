@@ -1,118 +1,42 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { apiRoute, authenticate, success, ApiError } from "@/lib/api-utils";
+import { apiRoute, authenticate, requirePermission, validateBody, validateQuery, success, error, ApiError } from "@/lib/api-utils";
 import { z } from "zod";
-
-const PodSchema = z.object({
-  stopId: z.string(),
-  photoUrl: z.string().url().optional(),
-  signatureUrl: z.string().url().optional(),
-  notes: z.string().max(500).optional(),
-  receivedBy: z.string().min(1).optional(),
-});
-
-/**
- * POST /api/v1/shipping/pod — Submit proof-of-delivery for a trip stop.
- */
+import { captureDeliveryProof } from "@/lib/shipping/capture-proof";
+import { ProofCaptureSchema } from "@/lib/shipping/proof-contract";
+import { hasPermission } from "@/lib/auth/rbac";
 export const POST = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  const body = await request.json();
-  const validated = PodSchema.parse(body);
-
-  // Verify the stop belongs to this tenant
-  const stop = await prisma.tripStop.findFirst({
-    where: {
-      id: validated.stopId,
-      tenantId: auth.tenantId,
-    },
-    include: {
-      trip: { select: { id: true, tripNumber: true, status: true } },
-    },
-  });
-
-  if (!stop) {
-    throw new ApiError("Trip stop not found", 404);
+  await requirePermission(auth, "shipping:capture_proof");
+  if (Number(request.headers.get("content-length")) > 6 * 1024 * 1024) throw new ApiError("Proof upload is too large", 413);
+  if (!request.headers.get("content-type")?.startsWith("multipart/form-data")) throw new ApiError("Upload proof as multipart form data; public and device URLs are not accepted", 400);
+  const form = await request.formData();
+  const input = validateBody(ProofCaptureSchema, { stopId: form.get("stopId"), receivedBy: form.get("receivedBy"), notes: form.get("notes") || undefined, idempotencyKey: request.headers.get("x-idempotency-key") });
+  const photo = form.get("photo");
+  if (!photo || typeof photo === "string" || photo.size > 5 * 1024 * 1024) throw new ApiError("One proof photo up to 5 MB is required", 400);
+  try {
+    return success(await captureDeliveryProof(auth, input, Buffer.from(await photo.arrayBuffer()), photo.type));
+  } catch (cause) {
+    if ((cause as { code?: string }).code === "P2021" || (cause as { code?: string }).code === "P2022") return error("Delivery proof requires the approved carrier schema migration before use. No delivery was recorded.", 503);
+    if (["P2002", "P2034"].includes((cause as { code?: string }).code || "")) return error("Proof capture conflicted with another request. Retry with the same idempotency key.", 409);
+    throw cause;
   }
-
-  // Update the stop with POD data
-  const updatedStop = await prisma.tripStop.update({
-    where: { id: validated.stopId },
-    data: {
-      podPhotoUrl: validated.photoUrl || stop.podPhotoUrl,
-      signatureUrl: validated.signatureUrl || stop.signatureUrl,
-      status: "POD_CAPTURED",
-      actualArrival: new Date(),
-      arrivedAt: new Date(),
-    },
-    include: {
-      trip: { select: { id: true, tripNumber: true } },
-      hotel: { select: { id: true, name: true } },
-    },
-  });
-
-  // Check if all stops on this trip now have POD
-  const allStops = await prisma.tripStop.findMany({
-    where: { tripId: stop.tripId },
-  });
-  const allCaptured = allStops.every((s) => s.status === "POD_CAPTURED" || s.status === "DELIVERED");
-
-  // Auto-complete trip if all stops have POD
-  if (allCaptured && stop.trip.status !== "COMPLETED") {
-    await prisma.trip.update({
-      where: { id: stop.tripId },
-      data: {
-        status: "COMPLETED",
-        completedAt: new Date(),
-      },
-    });
-  }
-
-  return success({
-    stop: updatedStop,
-    tripComplete: allCaptured,
-    message: allCaptured
-      ? "All stops delivered — trip auto-completed"
-      : "POD captured successfully",
-  });
 }, { rateLimit: "api" });
-
-/**
- * GET /api/v1/shipping/pod?tripId=xxx — Get POD status for a trip.
- */
+const QuerySchema = z.object({ tripId: z.string().min(1).max(128) });
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  const { searchParams } = new URL(request.url);
-  const tripId = searchParams.get("tripId");
-
-  if (!tripId) {
-    throw new ApiError("tripId query param required", 400);
-  }
-
+  await requirePermission(auth, "shipping:read");
+  const { tripId } = validateQuery(QuerySchema, request.nextUrl.searchParams);
+  const trip = await prisma.trip.findFirst({ where: { id: tripId, tenantId: auth.tenantId, deletedAt: null }, select: { id: true, assignedDriverId: true } });
+  if (!trip) throw new ApiError("Trip not found", 404);
+  const dispatcher = await hasPermission(auth, "shipping:create_trip");
+  if (!dispatcher && (trip.assignedDriverId !== auth.userId || !await hasPermission(auth, "shipping:capture_proof"))) throw new ApiError("Proof access requires assigned driver or dispatcher permission", 403);
   const stops = await prisma.tripStop.findMany({
-    where: {
-      tripId,
-      tenantId: auth.tenantId,
-    },
-    select: {
-      id: true,
-      stopNumber: true,
-      status: true,
-      podPhotoUrl: true,
-      signatureUrl: true,
-      actualArrival: true,
-      hotel: { select: { name: true } },
-    },
+    where: { tripId, tenantId: auth.tenantId, deletedAt: null },
+    select: { id: true, stopNumber: true, status: true, actualArrival: true, hotel: { select: { name: true } }, deliveryProofs: { select: { id: true, createdAt: true } } },
     orderBy: { stopOrder: "asc" },
   });
-
-  const total = stops.length;
-  const captured = stops.filter((s) => s.status === "POD_CAPTURED" || s.status === "DELIVERED").length;
-
-  return success({
-    tripId,
-    totalStops: total,
-    capturedStops: captured,
-    percentComplete: total > 0 ? Math.round((captured / total) * 100) : 0,
-    stops,
-  });
+  const captured = stops.filter(stop => stop.deliveryProofs.length > 0).length;
+  // Never expose legacy public proof URLs as private evidence.
+  return success({ tripId, totalStops: stops.length, capturedStops: captured, percentComplete: stops.length ? Math.round(captured / stops.length * 100) : 0, stops, submissionAvailable: trip.assignedDriverId === auth.userId && await hasPermission(auth, "shipping:capture_proof"), message: "Capture records delivery evidence only. Order acceptance and trip completion are governed separately." });
 }, { rateLimit: "api" });

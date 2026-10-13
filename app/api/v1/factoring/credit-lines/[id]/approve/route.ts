@@ -1,3 +1,4 @@
+import { apiErrorResponse as maintenanceRouteError } from "@/lib/api-error-response";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticate, requirePermission, tenantWhereClause } from "@/lib/api-utils";
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
 
     return Response.json({ success: true });
-  } catch (error: any) {
-    return Response.json({ success: false, error: error?.message || "Approval failed" }, { status: 500 });
+  } catch (error: unknown) {
+    return maintenanceRouteError(error);
   }
 }

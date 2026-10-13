@@ -4,11 +4,11 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { createBrowserStore } from "./browser-storage";
 
 export interface CartLine {
   productId: string;
@@ -36,36 +36,16 @@ const Ctx = createContext<StoreShape | null>(null);
 
 const CART_KEY = "hv:cart";
 
-function loadCart(): CartLine[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(CART_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
-  } catch {
-    return [];
-  }
-}
+const cartStore = createBrowserStore<CartLine[]>(CART_KEY, [], (value) =>
+  Array.isArray(value) ? value.filter((line): line is CartLine =>
+    typeof line?.productId === "string" && Number.isFinite(line?.qty) && line.qty > 0) : []);
 
 let toastSeq = 1;
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const cart = cartStore.useValue();
+  const setCart = cartStore.update;
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  useEffect(() => {
-    setCart(loadCart());
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    } catch {
-      /* ignore */
-    }
-  }, [cart]);
 
   const toast = useCallback((msg: string, tone: Toast["tone"] = "ok") => {
     const id = toastSeq++;
@@ -79,7 +59,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (ex) return c.map((l) => (l.productId === productId ? { ...l, qty: l.qty + qty } : l));
       return [...c, { productId, qty }];
     });
-  }, []);
+  }, [setCart]);
 
   const cartSetQty = useCallback((productId: string, qty: number) => {
     setCart((c) =>
@@ -87,13 +67,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? c.filter((l) => l.productId !== productId)
         : c.map((l) => (l.productId === productId ? { ...l, qty } : l))
     );
-  }, []);
+  }, [setCart]);
 
   const cartRemove = useCallback((productId: string) => {
     setCart((c) => c.filter((l) => l.productId !== productId));
-  }, []);
+  }, [setCart]);
 
-  const cartClear = useCallback(() => setCart([]), []);
+  const cartClear = useCallback(() => setCart(() => []), [setCart]);
 
   const cartCount = useMemo(() => cart.reduce((a, l) => a + l.qty, 0), [cart]);
 

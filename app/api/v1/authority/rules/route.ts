@@ -43,7 +43,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
 
 export const POST = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  await requirePermission(auth as any, "admin:manage_authority_rules");
+  await requirePermission(auth, "admin:manage_authority_rules");
 
   const body = await request.json();
   const data = CreateRuleSchema.parse(body);

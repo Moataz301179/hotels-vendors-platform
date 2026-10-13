@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const REFERRAL_CODE = "CHV000";
+const REFERRAL_CODE = "partner";
 
 export async function GET(request: NextRequest) {
   try {

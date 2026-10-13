@@ -1,41 +1,22 @@
 "use client";
 
-import { HV_THEME, HV_CATEGORY_COLORS } from "@/components/theme/tokens";
-import { HOTEL_CATEGORIES } from "@/lib/marketplace/categories";
+import { HV_THEME } from "@/components/theme/tokens";
 import { useApi } from "@/lib/hooks/use-api";
 
 interface OrderRow {
   id: string;
-  supplier: string;
-  category: string;
-  amount: number;
+  orderNumber: string;
+  supplier: { name: string };
+  total: number | string;
   status: string;
-  date: string;
 }
 
 export default function HotelDashboard() {
-  const { data, loading } = useApi<{ orders: OrderRow[] }>("/api/v1/orders?limit=20");
+  const { data, loading, error } = useApi<{ orders: OrderRow[] }>("/api/v1/hotel/orders?limit=20");
   const orders = data?.orders || [];
 
-  // Compute real spend from orders (not fabricated sample data)
-  const totalSpend = orders.reduce((sum, o) => sum + o.amount, 0);
-  const totalPlatformFees = totalSpend > 0 ? totalSpend * 0.025 : 0;
-  const etaSavings = totalSpend > 0 ? totalSpend * 0.015 : 0;
-
-  // Derive spend categories from real order categories (honest aggregation)
-  const categoryMap: Record<string, { label: string; amount: number; percentage: number }> = {};
-  if (orders.length > 0) {
-    orders.forEach((o) => {
-      const cat = HOTEL_CATEGORIES.find((c) => c.id === o.category);
-      const key = o.category || "other";
-      const label = cat?.label || o.category || "Other";
-      if (!categoryMap[key]) categoryMap[key] = { label, amount: 0, percentage: 0 };
-      categoryMap[key].amount += o.amount;
-    });
-    Object.values(categoryMap).forEach((c) => {
-      c.percentage = totalSpend > 0 ? (c.amount / totalSpend) * 100 : 0;
-    });
-  }
+  const totalSpend = orders.reduce((sum, o) => sum + Number(o.total), 0);
+  const categoryMap = orders.length > 0 ? { other: { label: "Unclassified", amount: totalSpend, percentage: 100 } } : {};
 
   return (
     <div
@@ -64,12 +45,13 @@ export default function HotelDashboard() {
       </header>
 
       <main className="mx-auto px-[--hv-px] py-8" style={{ maxWidth: HV_THEME.layout.containerMax }}>
+        {error && <div role="alert" className="text-red-400 p-4">{error}</div>}
         {/* Metrics row — real orders only */}
         <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <MetricCard label="Total Spend" value={totalSpend > 0 ? `EGP ${totalSpend.toLocaleString()}` : "—"} accentColor={HV_THEME.dark.accent.base} />
-          <MetricCard label="Platform Fees" value={totalPlatformFees > 0 ? `EGP ${totalPlatformFees.toLocaleString()}` : "—"} accentColor={HV_THEME.dark.accent.base} />
-          <MetricCard label="ETA Savings" value={etaSavings > 0 ? `EGP ${etaSavings.toLocaleString()}` : "—"} accentColor={HV_THEME.dark.accent.base} />
-          <MetricCard label="Active Orders" value={orders.length.toString()} accentColor={HV_THEME.dark.accent.base} />
+          <MetricCard label="Latest 20 Order Value" value={totalSpend > 0 ? `EGP ${totalSpend.toLocaleString()}` : "—"} accentColor={HV_THEME.dark.accent.base} />
+          <MetricCard label="Platform Fees" value="Not measured" accentColor={HV_THEME.dark.accent.base} />
+          <MetricCard label="ETA Savings" value="Not measured" accentColor={HV_THEME.dark.accent.base} />
+          <MetricCard label="Loaded Orders" value={orders.length.toString()} accentColor={HV_THEME.dark.accent.base} />
         </div>
 
         {/* Main grid */}
@@ -88,7 +70,7 @@ export default function HotelDashboard() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {Object.values(categoryMap).map((item: any) => (
+                  {Object.values(categoryMap).map((item) => (
                     <div key={item.label} className="flex items-center gap-3">
                       <div className="h-2 w-3 rounded" style={{ backgroundColor: HV_THEME.dark.accent.base }} />
                       <span className="w-24 text-xs" style={{ color: HV_THEME.dark.text.secondary, fontWeight: 400 }}>
@@ -125,9 +107,9 @@ export default function HotelDashboard() {
                     <div key={order.id} className="flex items-center justify-between border-b py-2" style={{ borderBottomColor: HV_THEME.dark.border.subtle }}>
                       <div>
                         <span className="text-xs" style={{ color: HV_THEME.dark.text.primary, fontWeight: 400 }}>{order.id}</span>
-                        <span className="ml-2 text-xs" style={{ color: HV_THEME.dark.text.secondary, fontWeight: 400 }}>{order.supplier}</span>
+                        <span className="ml-2 text-xs" style={{ color: HV_THEME.dark.text.secondary, fontWeight: 400 }}>{order.supplier.name}</span>
                       </div>
-                      <span className="text-xs" style={{ color: HV_THEME.dark.text.secondary, fontWeight: 400 }}>EGP {order.amount.toLocaleString()}</span>
+                      <span className="text-xs" style={{ color: HV_THEME.dark.text.secondary, fontWeight: 400 }}>EGP {Number(order.total).toLocaleString()}</span>
                       <StatusBadge status={order.status as OrderRow["status"]} />
                     </div>
                   ))}

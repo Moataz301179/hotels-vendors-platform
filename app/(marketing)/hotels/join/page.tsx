@@ -23,13 +23,13 @@ import {
 
 export const metadata: Metadata = {
   alternates: { canonical: canonicalUrl("/hotels/join") },
-  title: "Onboard Your Hotel — ETA e-Invoicing, Oliv Financing & Shared Logistics | HotelsVendors",
+  title: "Onboard Your Hotel — ETA e-Invoicing,  Financing & Shared Logistics | HotelsVendors",
   description:
-    "Join HotelsVendors: one regulated account for compliant ETA e-invoicing, embedded Oliv reverse-factoring terms, and shared-route logistics for your properties. Register your hotel, connect your ETA token, and start procuring.",
+    "Join HotelsVendors: one regulated account for compliant ETA e-invoicing, embedded  reverse-factoring terms, and shared-route logistics for your properties. Register your hotel, connect your ETA token, and start procuring.",
   openGraph: {
     title: "HotelsVendors — Onboard Your Hotel",
     description:
-      "ETA-native e-invoicing, Olivier reverse-factoring terms, and shared-route coastal logistics — from one regulated account.",
+      "ETA-native e-invoicing, ier reverse-factoring terms, and shared-route coastal logistics — from one regulated account.",
     type: "website",
   },
 };
@@ -68,7 +68,7 @@ const STEPS = [
   },
   {
     step: "03",
-    title: "Set up Oliv financing terms",
+    title: "Set up  financing terms",
     icon: Landmark,
     desc: "Embed non-recourse liquidity on every confirmed invoice. Your supplier is funded directly by the factoring partner; you repay later on agreed terms. Every invoice is locked once in the FRA registry to prevent double financing.",
     points: [

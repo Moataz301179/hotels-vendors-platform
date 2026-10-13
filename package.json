@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && HV_BUILD=1 next build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -15,9 +15,11 @@
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
     "swarm": "tsx scripts/swarm-dev.ts",
+    "roadmap:status": "node scripts/venture-roadmap-status.mjs",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "catalog:ingest:mts": "node scripts/catalog-ingest-mts.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

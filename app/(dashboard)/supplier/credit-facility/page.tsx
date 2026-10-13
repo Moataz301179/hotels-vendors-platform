@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useApi } from '@/lib/hooks/use-api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui';
@@ -53,37 +53,12 @@ interface PaymentSummary {
   pendingCount: number;
 }
 
-export default function OlivCreditFacilityDashboard() {
-  const [facility, setFacility] = useState<CreditFacility | null>(null);
-  const [schedule, setSchedule] = useState<{ payments: Array<Record<string, unknown>>; summary: PaymentSummary } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchFacilityData();
-  }, []);
-
-  const fetchFacilityData = async () => {
-    try {
-      setLoading(true);
-      const facilityRes = await fetch('/api/v1/fintech/oliv-facility');
-      if (!facilityRes.ok) throw new Error('Failed to fetch facility');
-      const facilityData = await facilityRes.json();
-      setFacility(facilityData.data);
-
-      if (facilityData.data?.hasFacility) {
-        const scheduleRes = await fetch('/api/v1/fintech/oliv-facility/schedule');
-        if (scheduleRes.ok) {
-          const scheduleData = await scheduleRes.json();
-          setSchedule(scheduleData.data);
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function CreditFacilityDashboard() {
+  const { data: facility, loading: facilityLoading, error: facilityError, refetch: refreshFacility } = useApi<CreditFacility>('/api/v1/fintech/oliv-facility');
+  const { data: schedule, loading: scheduleLoading, error: scheduleError, refetch: refreshSchedule } = useApi<{ payments: Array<Record<string, unknown>>; summary: PaymentSummary }>(facility?.hasFacility ? '/api/v1/fintech/oliv-facility/schedule' : null);
+  const loading = facilityLoading || scheduleLoading;
+  const error = facilityError || scheduleError;
+  const fetchFacilityData = () => { refreshFacility(); refreshSchedule(); };
 
   const formatEgp = (amount: number) => {
     return new Intl.NumberFormat('ar-EG', {
@@ -138,12 +113,12 @@ export default function OlivCreditFacilityDashboard() {
     return (
       <Card className="bg-surface-1 border-border-subtle">
         <CardContent className="p-8 text-center">
-          <h3 className="text-xl font-semibold text-white mb-2">No Oliv Credit Facility</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">No  Credit Facility</h3>
           <p className="text-gray-400 mb-6">
-            Activate Oliv financing to access working capital for your business.
+            Activate  financing to access working capital for your business.
           </p>
           <Button className="bg-[var(--success)] hover:bg-[var(--success)]/80 text-white">
-            Activate Oliv Financing
+            Activate  Financing
           </Button>
         </CardContent>
       </Card>
@@ -162,7 +137,7 @@ export default function OlivCreditFacilityDashboard() {
       <Card className="bg-surface-1 border-border-subtle">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white text-lg">Oliv Credit Facility</CardTitle>
+            <CardTitle className="text-white text-lg"> Credit Facility</CardTitle>
             {getStatusBadge(data.status)}
           </div>
         </CardHeader>

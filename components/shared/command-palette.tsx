@@ -30,7 +30,6 @@ import {
   Calendar,
   HelpCircle,
   ShoppingBag,
-  FileEdit,
   Plus,
   ArrowRight,
   ShieldCheck,
@@ -171,6 +170,10 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ role, open, onClose }: CommandPaletteProps) {
+  return open ? <OpenCommandPalette role={role} onClose={onClose} /> : null;
+}
+
+function OpenCommandPalette({ role, onClose }: Omit<CommandPaletteProps, "open">) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -212,16 +215,8 @@ export function CommandPalette({ role, open, onClose }: CommandPaletteProps) {
   }, [grouped]);
 
   useEffect(() => {
-    if (open) {
-      setQuery("");
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
+    inputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!listRef.current) return;
@@ -262,8 +257,6 @@ export function CommandPalette({ role, open, onClose }: CommandPaletteProps) {
     [flatList, selectedIndex, executeItem, onClose]
   );
 
-  if (!open) return null;
-
   if (typeof window === "undefined") return null;
 
   let currentIndex = -1;
@@ -293,7 +286,7 @@ export function CommandPalette({ role, open, onClose }: CommandPaletteProps) {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
             placeholder="Type a command or search..."
             className="flex-1 bg-transparent text-white text-sm placeholder:text-foreground-muted outline-none"
             aria-label="Search commands"

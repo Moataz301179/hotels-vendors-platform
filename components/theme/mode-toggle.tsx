@@ -1,38 +1,37 @@
 "use client";
 
 import { Sun, Moon } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback } from "react";
+import { usePrefs } from "@/i18n/provider";
 
 const STORAGE_KEY = "hv-theme-mode";
 
 export function getStoredMode(): "dark" | "light" {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch {
     // ignore
   }
-  return "dark";
+  return "light";
 }
 
 export function setThemeMode(mode: "dark" | "light") {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  if (mode === "light") {
-    root.setAttribute("data-theme", "light");
-  } else {
-    root.removeAttribute("data-theme");
-  }
+  root.classList.toggle("dark", mode === "dark");
+  root.setAttribute("data-theme", mode);
   try {
     localStorage.setItem(STORAGE_KEY, mode);
+    localStorage.setItem("hv:theme", mode);
   } catch {
     // ignore
   }
-  // Update meta theme-color
+  // Keep browser chrome aligned with the selected palette.
   const meta = document.getElementById("theme-color-meta") as HTMLMetaElement | null;
   if (meta) {
-    meta.setAttribute("content", mode === "light" ? "#f8f9fa" : "#121212");
+    meta.setAttribute("content", mode === "light" ? "#FFFFFF" : "#000000");
   }
 }
 
@@ -48,21 +47,14 @@ interface ThemeModeToggleProps {
 }
 
 export function ThemeModeToggle({ variant = "icon", className = "" }: ThemeModeToggleProps) {
-  const [mode, setMode] = useState<"dark" | "light">("dark");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    setMode(getStoredMode());
-  }, []);
+  const { theme, setTheme } = usePrefs();
+  const isLight = theme === "light";
 
   const toggle = useCallback(() => {
-    const next = mode === "dark" ? "light" : "dark";
-    setMode(next);
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
     setThemeMode(next);
-  }, [mode]);
-
-  const isLight = mode === "light";
+  }, [theme, setTheme]);
 
   if (variant === "button") {
     return (

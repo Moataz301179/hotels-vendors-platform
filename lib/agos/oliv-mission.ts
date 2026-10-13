@@ -1,7 +1,7 @@
 /**
  * OLIV MISSION — one AGENT REGISTRATION on the generic AgentOS core.
  *
- * This is NOT a hardcoded pipeline: it registers the Oliv CHV000 onboarding
+ * This is NOT a hardcoded pipeline: it registers the financing partner onboarding
  * agents + tools + workflow into lib/agos/core.ts. Other missions (finance,
  * procurement, ops) register their own agents with the same core.
  *
@@ -74,12 +74,12 @@ export function buildOlivAgentOS(llm?: (system: string, user: string) => Promise
 
   // ── Tasks ──
   os.registerTask({ id: "oliv.verify-lead", agentId: "discovery-agent", name: "Verify lead deliverability", prompt: "Gate lead by MX", expectedOutput: "json" });
-  os.registerTask({ id: "oliv.send-outreach", agentId: "email-outreach-agent", name: "Send CHV000 outreach", prompt: "Send onboarding email from reem@ with CHV000 CTA", expectedOutput: "json" });
+  os.registerTask({ id: "oliv.send-outreach", agentId: "email-outreach-agent", name: "Send partner referral outreach", prompt: "Send onboarding email from reem@ with partner referral CTA", expectedOutput: "json" });
 
   // ── Workflow: discover → verify → contact ──
   os.registerWorkflow({
     id: "oliv-onboarding",
-    name: "Oliv CHV000 onboarding flow",
+    name: "Financing partner onboarding flow",
     tasks: ["oliv.verify-lead", "oliv.send-outreach"],
   });
 

@@ -9,11 +9,14 @@ export const GET = apiRoute(async (request: NextRequest) => {
 
   const query = validateQuery(PaginationSchema, request.nextUrl.searchParams);
 
-  const where: Record<string, unknown> = { tenantId: auth.tenantId };
+  const user = await prisma.user.findFirst({ where: { id: auth.userId, tenantId: auth.tenantId }, select: { supplierId: true } });
+  if (!user?.supplierId) return error("Supplier profile not found", 404);
+  const supplier = await prisma.supplier.findFirst({ where: { id: user.supplierId, tenantId: auth.tenantId, deletedAt: null }, select: { id: true } });
+  if (!supplier) return error("Supplier profile not found", 404);
+  if (query.sortBy && !["createdAt", "orderNumber", "status", "total", "deliveryDate"].includes(query.sortBy)) return error("Invalid sort field", 400);
+  // Buyer-owned orders are visible only to their authenticated supplier.
+  const where = { supplierId: supplier.id, supplier: { tenantId: auth.tenantId }, deletedAt: null, ...(query.search ? { orderNumber: { contains: query.search } } : {}) };
 
-  if (query.search) {
-    where.orderNumber = { contains: query.search };
-  }
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({

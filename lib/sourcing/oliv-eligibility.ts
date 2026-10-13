@@ -3,7 +3,7 @@
  *
  * Due-diligence pipeline that identifies suppliers ELIGIBLE for an Oliv credit
  * line regardless of whether they have signed up on HotelsVendors, then routes
- * them to the HOVIN mobile app / membership with a CHV000-attributed referral.
+ * them to the HOVIN mobile app / membership with a partner-attributed referral.
  *
  * Eligibility criteria (hard):
  *   - TRN (tax registration) present
@@ -16,7 +16,7 @@
 import { prisma } from "@/lib/prisma";
 
 export const OLIV_MIN_ANNUAL_REVENUE = 10_000_000;
-export const OLIV_REFERRAL_CODE = "CHV000";
+export const OLIV_REFERRAL_CODE = "partner";
 export const SOURCE = "OLIV_ELIGIBILITY";
 
 export interface EligibilityLead {

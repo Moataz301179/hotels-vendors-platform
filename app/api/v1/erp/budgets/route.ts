@@ -5,11 +5,13 @@
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { apiRoute, authenticate, success, error } from "@/lib/api-utils";
+import { apiRoute, authenticate, success, error, requirePermission } from "@/lib/api-utils";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 
 /* ── Types ── */
 type ErpProvider = "sap" | "odoo" | "oracle" | "custom";
+type ExportOrder = Prisma.OrderGetPayload<{ include: { items: { include: { product: { select: { sku: true; name: true; id: true } } } }; hotel: { select: { name: true } } } }> & { totalAmount: number };
 
 const PoSyncSchema = z.object({
   orderId: z.string(),
@@ -24,22 +26,22 @@ const EtaSyncSchema = z.object({
 });
 
 /* ── cXML Adapter ── */
-function buildCxml(order: any, supplierDuns: string): string {
-  const items = (order.items || []).map((item: any, i: number) =>
-    `    <ItemOut quantity="${item.quantity}">\n      <ItemID><SupplierPartID>${item.sku || item.product?.sku || "UNKNOWN"}</SupplierPartID></ItemID>\n      <ItemDetail>\n        <UnitPrice><Money currency="EGP">${Number(item.unitPrice || 0).toFixed(2)}</Money></UnitPrice>\n        <Description xml:lang="en">${item.product?.name || "Item"}</Description>\n      </ItemDetail>\n    </ItemOut>`
+function buildCxml(order: ExportOrder, supplierDuns: string): string {
+  const items = order.items.map((item) =>
+    `    <ItemOut quantity="${item.quantity}">\n      <ItemID><SupplierPartID>${item.product.sku || "UNKNOWN"}</SupplierPartID></ItemID>\n      <ItemDetail>\n        <UnitPrice><Money currency="EGP">${Number(item.unitPrice || 0).toFixed(2)}</Money></UnitPrice>\n        <Description xml:lang="en">${item.product?.name || "Item"}</Description>\n      </ItemDetail>\n    </ItemOut>`
   ).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE cXML SYSTEM "http://xml.cXML.org/schemas/cXML/1.2.048/cXML.dtd">\n<cXML version="1.2.048" payloadID="${order.id}" timestamp="${new Date().toISOString()}">\n  <Header>\n    <From><Credential domain="DUNS"><Identity>HOTELSVENDORS</Identity></Credential></From>\n    <To><Credential domain="DUNS"><Identity>${supplierDuns}</Identity></Credential></To>\n  </Header>\n  <Request>\n    <OrderRequest>\n      <OrderRequestHeader orderID="${order.orderNumber || order.id}" orderDate="${new Date().toISOString().split("T")[0]}" type="new">\n        <Total><Money currency="EGP">${Number(order.totalAmount || 0).toFixed(2)}</Money></Total>\n      </OrderRequestHeader>\n${items}\n    </OrderRequest>\n  </Request>\n</cXML>`;
 }
 
 /* ── SAP BAPI Adapter ── */
-function buildSapPayload(order: any) {
+function buildSapPayload(order: ExportOrder) {
   return {
     BAPI_PO_CREATE1: {
       PO_HEADER: { DOC_TYPE: "NB", PURCH_ORG: "HV01", VENDOR: order.supplierId, CURRENCY: "EGP" },
-      PO_ITEMS: (order.items || []).map((item: any, i: number) => ({
+      PO_ITEMS: order.items.map((item, i) => ({
         PO_ITEM: String(i + 1).padStart(5, "0"),
-        MATERIAL: item.sku || item.product?.sku || "UNKNOWN",
+        MATERIAL: item.product.sku || "UNKNOWN",
         QUANTITY: item.quantity,
         NET_PRICE: Number(item.unitPrice || 0).toFixed(2),
       })),
@@ -48,7 +50,7 @@ function buildSapPayload(order: any) {
 }
 
 /* ── Odoo JSON-RPC Adapter ── */
-function buildOdooPayload(order: any) {
+function buildOdooPayload(order: ExportOrder) {
   return {
     jsonrpc: "2.0",
     method: "call",
@@ -58,7 +60,7 @@ function buildOdooPayload(order: any) {
       args: [{
         partner_ref: order.supplierId,
         date_order: new Date().toISOString().split("T")[0],
-        order_line: (order.items || []).map((item: any) => [
+        order_line: order.items.map((item) => [
           0, 0, {
             product_id: item.product?.id || item.id,
             name: item.product?.name || "Item",
@@ -72,15 +74,15 @@ function buildOdooPayload(order: any) {
 }
 
 /* ── Oracle Opera PMS Adapter ── */
-function buildOraclePayload(order: any) {
+function buildOraclePayload(order: ExportOrder) {
   return {
     OPERA_Cloud_PO: {
       propertyCode: order.hotelId || "DEFAULT",
       vendorId: order.supplierId,
       orderReference: order.orderNumber || order.id,
       currencyCode: "EGP",
-      lineItems: (order.items || []).map((item: any) => ({
-        itemCode: item.sku || item.product?.sku || "UNKNOWN",
+      lineItems: order.items.map((item) => ({
+        itemCode: item.product.sku || "UNKNOWN",
         description: item.product?.name || "Item",
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice || 0),
@@ -92,6 +94,7 @@ function buildOraclePayload(order: any) {
 /* ── GET /api/v1/erp/budgets — Departmental spend ceilings ── */
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
+  await requirePermission(auth, "report:read");
   const { searchParams } = new URL(request.url);
   const department = searchParams.get("department");
 
@@ -116,9 +119,9 @@ export const GET = apiRoute(async (request: NextRequest) => {
 
   const budgets = Array.from(categorySpend.entries()).map(([department, spent]) => ({
     department,
-    allocatedAmount: spent * 1.2, // 20% buffer
+    allocatedAmount: null, // No configured departmental budget source exists.
     spentAmount: spent,
-    remainingAmount: Math.max(0, spent * 0.2),
+    remainingAmount: null,
     currency: "EGP",
   }));
 
@@ -128,6 +131,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
 /* ── POST /api/v1/erp/po-sync — Push order to ERP ── */
 export const POST = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
+  await requirePermission(auth, "order:read");
   const body = await request.json();
   const { orderId, erpProvider } = PoSyncSchema.parse(body);
 
@@ -142,7 +146,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   if (!order) return error("Order not found", 404);
   const totalAmount = order.items.reduce((sum, i) => sum + Number(i.total), 0);
 
-  let payload: any;
+  let payload: string | ReturnType<typeof buildSapPayload> | ReturnType<typeof buildOdooPayload> | ReturnType<typeof buildOraclePayload> | Record<string, unknown>;
   let contentType = "application/json";
 
   switch (erpProvider) {
@@ -167,16 +171,17 @@ export const POST = apiRoute(async (request: NextRequest) => {
       changes: {
         erpProvider, format: erpProvider === "custom" ? "cXML" : "JSON",
         orderNumber: order.orderNumber, totalAmount,
-        status: "PO_SYNCED",
+        status: "ERP_EXPORT_PREPARED",
         payload: JSON.stringify(payload).slice(0, 4000), // Truncate for audit
       },
     },
   });
 
   return success({
-    status: "synced", erpProvider,
+    status: "export_prepared", erpProvider,
     format: contentType === "application/xml" ? "cXML" : "JSON",
-    erpPurchaseOrderId: `HV-PO-${order.orderNumber || orderId}`,
+    erpPurchaseOrderId: null,
+    message: "Export payload prepared. No ERP connector has accepted or synchronized it.",
     payload,
   });
 });

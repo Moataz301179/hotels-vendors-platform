@@ -1,8 +1,8 @@
 import type { SVGProps } from "react";
 
-type P = SVGProps<SVGSVGElement>;
+type P = SVGProps<SVGSVGElement> & { size?: number | string };
 
-function S({ children, ...props }: P) {
+function S({ children, size = "1em", ...props }: P) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -11,8 +11,8 @@ function S({ children, ...props }: P) {
       strokeWidth={1.7}
       strokeLinecap="round"
       strokeLinejoin="round"
-      width="1em"
-      height="1em"
+      width={size}
+      height={size}
       aria-hidden="true"
       {...props}
     >

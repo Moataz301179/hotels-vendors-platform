@@ -11,13 +11,31 @@
  * never fabricated. Each task is executed and persisted to the agentRun table.
  */
 
-import { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { apiRoute, authenticate, requirePermission, audit } from "@/lib/api-utils";
 import { AgentOrchestrator } from "@/lib/agents/orchestrator";
 import { WORKFLOWS } from "@/lib/agents/agents";
 import { AgentTaskResult, AgentId } from "@/lib/agents/types";
 
 const WORKFLOW_NAMES = Object.keys(WORKFLOWS) as (keyof typeof WORKFLOWS)[];
+const AgentRunSchema = z.object({
+  workflow: z.string().max(80).optional(),
+  agentId: z.enum([
+    "fintech-architect",
+    "security-expert",
+    "integration-lead",
+    "business-strategist",
+    "seo-strategist",
+    "ux-designer",
+    "data-harvester",
+    "auditor",
+  ]).optional(),
+  customPrompt: z.string().trim().max(4000).optional(),
+}).strict().refine(
+  (input) => !(input.workflow && input.agentId),
+  "Choose either a workflow or a single agent",
+);
 
 function serializeResult(r: AgentTaskResult) {
   return {
@@ -35,10 +53,13 @@ function serializeResult(r: AgentTaskResult) {
   };
 }
 
-export const POST = async (request: NextRequest) => {
-  let body: { workflow?: string; agentId?: string; customPrompt?: string };
+export const POST = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request);
+  await requirePermission(auth, "admin:manage_platform");
+
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return NextResponse.json(
       { success: false, error: "Invalid JSON body" },
@@ -46,10 +67,17 @@ export const POST = async (request: NextRequest) => {
     );
   }
 
-  const orch = new AgentOrchestrator();
-  const { workflow, agentId, customPrompt } = body ?? {};
+  const parsed = AgentRunSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: "Invalid agent run request" },
+      { status: 400 }
+    );
+  }
 
-  // Single-agent mode → one FEATURE_IDEA task for the chosen agent.
+  const { workflow, agentId, customPrompt } = parsed.data;
+  const orch = new AgentOrchestrator();
+
   if (agentId) {
     const task = {
       id: `single-${Date.now()}`,
@@ -57,35 +85,38 @@ export const POST = async (request: NextRequest) => {
       title: `${agentId} features`,
       prompt: customPrompt || "Generate features exploiting our market gaps",
       agentId: agentId as AgentId,
-      tenantId: "system",
+      tenantId: auth.tenantId,
     };
 
     try {
       const result = await orch.runTask(task);
+      await audit({
+        entityType: "AGENT_RUN",
+        entityId: result.taskId,
+        action: "EXECUTE",
+        tenantId: auth.tenantId,
+        actorId: auth.userId,
+        actorRole: auth.platformRole,
+        afterState: { agentId, status: result.status },
+        ipAddress: request.headers.get("x-forwarded-for") || null,
+        userAgent: request.headers.get("user-agent"),
+      });
       return NextResponse.json(
         { success: true, results: [serializeResult(result)] },
         { status: 200 }
       );
-    } catch (err) {
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            err instanceof Error ? err.message : "Agent task execution failed",
-        },
+        { success: false, error: "Agent task execution failed" },
         { status: 500 }
       );
     }
   }
 
-  // Workflow mode.
   const name = workflow ?? "platform_audit";
   if (!WORKFLOW_NAMES.includes(name as keyof typeof WORKFLOWS)) {
     return NextResponse.json(
-      {
-        success: false,
-        error: `Unknown workflow: "${workflow}". Expected one of: ${WORKFLOW_NAMES.join(", ")}`,
-      },
+      { success: false, error: "Unknown workflow" },
       { status: 400 }
     );
   }
@@ -93,19 +124,28 @@ export const POST = async (request: NextRequest) => {
   try {
     const results = await orch.runWorkflow(
       name as keyof typeof WORKFLOWS,
-      customPrompt
+      customPrompt,
+      auth.tenantId
     );
+    await Promise.all(results.map((result) => audit({
+      entityType: "AGENT_RUN",
+      entityId: result.taskId,
+      action: "EXECUTE",
+      tenantId: auth.tenantId,
+      actorId: auth.userId,
+      actorRole: auth.platformRole,
+      afterState: { workflow: name, agentId: result.agentId, status: result.status },
+      ipAddress: request.headers.get("x-forwarded-for") || null,
+      userAgent: request.headers.get("user-agent"),
+    })));
     return NextResponse.json(
       { success: true, results: results.map(serializeResult) },
       { status: 200 }
     );
-  } catch (err) {
+  } catch {
     return NextResponse.json(
-      {
-        success: false,
-        error: err instanceof Error ? err.message : "Workflow execution failed",
-      },
+      { success: false, error: "Agent workflow execution failed" },
       { status: 500 }
     );
   }
-};
+}, { rateLimit: "api" });

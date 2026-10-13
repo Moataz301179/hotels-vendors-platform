@@ -2,11 +2,11 @@
  * ETA e-Waybill Generator — Tax Compliance & QR Code for Transport
  * HotelsVendors Logistics Module
  *
- * Auto-formats validated POs into ETA-compliant e-Waybill JSON payloads.
- * Generates scannable QR codes for highway toll/checkpoint inspection.
+ * Creates an unsigned internal transport draft. This is not an ETA document,
+ * a digital signature, or proof accepted at transport checkpoints.
  */
 import { prisma } from "@/lib/prisma";
-import { linkProcurementAudit, type ProvenanceClassification } from "../audit/procurement-audit-link";
+import { linkProcurementAudit } from "../audit/procurement-audit-link";
 
 interface EtaWaybillItem {
   itemCode: string;
@@ -36,6 +36,7 @@ interface EtaWaybillPayload {
   qrCode: string;
   qrSignature: string;
   generatedAt: string;
+  complianceStatus: "UNSIGNED_INTERNAL_DRAFT";
 }
 
 const HSN_CODES: Record<string, string> = {
@@ -58,6 +59,8 @@ export async function generateEtaWaybill(
     where: { id: orderId, tenantId },
     include: {
       items: { include: { product: { select: { name: true, sku: true, category: true } } } },
+      supplier: { select: { taxId: true } },
+      hotel: { select: { taxId: true } },
     },
   });
 
@@ -80,8 +83,8 @@ export async function generateEtaWaybill(
     version: "1.1",
     waybillId,
     transporterId,
-    supplierGstin: "382-910-112", // HotelsVendors placeholder
-    buyerGstin: "382-910-113", // Hotel's tax ID placeholder
+    supplierGstin: order.supplier.taxId, // Legacy field name; value is Egyptian seller tax ID.
+    buyerGstin: order.hotel.taxId, // Legacy field name; value is Egyptian buyer tax ID.
     vehicleNumber,
     driverName,
     driverMobile,
@@ -93,8 +96,9 @@ export async function generateEtaWaybill(
     totalValue,
     totalQuantity,
     qrCode: `QR:EWB:${waybillId}:${vehicleNumber}`,
-    qrSignature: `SHA256:${waybillId}:${Date.now().toString(36)}`,
+    qrSignature: "", // No digital signature exists for this internal draft.
     generatedAt: new Date().toISOString(),
+    complianceStatus: "UNSIGNED_INTERNAL_DRAFT",
   };
 
   const auditResult = await prisma.auditLog.create({
@@ -109,11 +113,11 @@ export async function generateEtaWaybill(
         totalValue,
         totalQuantity,
         qrCode: waybill.qrCode,
-        status: "EWAYBILL_GENERATED",
+        status: "INTERNAL_TRANSPORT_DRAFT_GENERATED",
       },
     },
   });
-  await linkProcurementAudit(auditResult.id, "VALIDATED" as ProvenanceClassification, "shipping-eta-waybill", { orderId: orderId }).catch((err) => console.error("Audit provenance link failed:", err));
+  await linkProcurementAudit(auditResult.id, "INFERRED", "shipping-eta-waybill", { orderId: orderId }).catch((err) => console.error("Audit provenance link failed:", err));
 
   return { success: true, waybill };
 }

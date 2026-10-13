@@ -15,12 +15,12 @@ export function AuthLeftPanel() {
           procurement infrastructure
         </h2>
         <p className="text-sm text-foreground-muted">
-          AI-powered marketplace connecting hotels with verified suppliers.
-          Streamlined procurement, automated compliance, and integrated
-          financing — backed by Egyptian fintech rails.
+          Connect your hotel purchasing with suppliers. Compare products and
+          commercial terms, then follow your organization’s approvals and delivery.
+          External funding partners make their own eligibility and financing decisions.
         </p>
         <div className="flex flex-wrap gap-3 pt-2">
-          {["PCI-DSS Partners", "ETA Compliant", "AML/KYC"].map((badge) => (
+          {["Hotel purchasing", "Supplier discovery", "Delivery coordination"].map((badge) => (
             <span
               key={badge}
               className="text-[11px] font-medium px-3 py-1.5 rounded-full border border-border-subtle text-foreground-tertiary"

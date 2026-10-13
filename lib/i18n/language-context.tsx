@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useSyncExternalStore, useCallback, useEffect, type ReactNode } from "react";
 import type { Locale } from "./translations";
 import { isRTL } from "./translations";
 
@@ -15,6 +15,14 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 const STORAGE_KEY = "hv_locale";
+function subscribeLocale(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener("hv-locale-change", listener);
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener("hv-locale-change", listener);
+  };
+}
 
 function getInitialLocale(): Locale {
   if (typeof window !== "undefined") {
@@ -25,18 +33,12 @@ function getInitialLocale(): Locale {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setLocaleState(getInitialLocale());
-    setMounted(true);
-  }, []);
+  const locale = useSyncExternalStore(subscribeLocale, getInitialLocale, () => "en" as Locale);
 
   const setLocale = useCallback((newLocale: Locale) => {
-    setLocaleState(newLocale);
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, newLocale);
+      window.dispatchEvent(new Event("hv-locale-change"));
       document.documentElement.lang = newLocale;
       document.documentElement.dir = isRTL(newLocale) ? "rtl" : "ltr";
     }
@@ -48,11 +50,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Sync on mount
   useEffect(() => {
-    if (mounted && typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
       document.documentElement.lang = locale;
       document.documentElement.dir = isRTL(locale) ? "rtl" : "ltr";
     }
-  }, [locale, mounted]);
+  }, [locale]);
 
   const value: LanguageContextValue = {
     locale,

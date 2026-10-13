@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { apiRoute, authenticate, success, error, handleApiError } from "@/lib/api-utils";
+import { apiRoute, authenticate, success, error, requirePermission } from "@/lib/api-utils";
 import { recordApproval, adminOverride, type AdminOverrideRequest } from "@/lib/auth/authority-matrix";
-import { requirePermission } from "@/lib/auth/rbac";
 import { z } from "zod";
+import { requireSensitiveAdmin } from "@/lib/admin/access";
 
 const ApproveSchema = z.object({
   orderId: z.string().min(1),
@@ -13,33 +13,34 @@ const ApproveSchema = z.object({
 const AdminOverrideSchema = z.object({
   orderId: z.string().min(1),
   reason: z.string().min(20, "Reason must be at least 20 characters"),
-  waivePaymentGuarantee: z.boolean(),
-  coAuthorizerId: z.string().min(1),
+  waivePaymentGuarantee: z.literal(false),
+  coAuthorizerId: z.string().min(1).optional(),
 });
 
 export const POST = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
   const body = await request.json();
 
-  if (body.coAuthorizerId) {
-    await requirePermission(auth as any, "admin:override_authority");
+  if (body.waivePaymentGuarantee !== undefined || body.coAuthorizerId) {
+    await requireSensitiveAdmin(request, "admin:override_authority");
+    const data = AdminOverrideSchema.parse(body);
     const overrideReq: AdminOverrideRequest = {
-      orderId: body.orderId,
+      orderId: data.orderId,
       action: "ADMIN_OVERRIDE",
-      reason: body.reason,
-      waivePaymentGuarantee: body.waivePaymentGuarantee,
+      reason: data.reason,
+      waivePaymentGuarantee: data.waivePaymentGuarantee,
       authorizerId: auth.userId,
-      coAuthorizerId: body.coAuthorizerId,
+      coAuthorizerId: data.coAuthorizerId,
       tenantId: auth.tenantId,
     };
     const result = await adminOverride(overrideReq);
     if (!result.success) {
       return error(result.error ?? "Override failed", 400);
     }
-    return success({ overridden: true });
+    return success({ overridden: !result.pending, pending: result.pending, requestId: result.requestId });
   }
 
-  await requirePermission(auth as any, "orders:approve");
+  await requirePermission(auth, "order:approve");
   const { orderId, action, reason } = ApproveSchema.parse(body);
   await recordApproval(orderId, auth.userId, auth.tenantId, action, reason);
   return success({ recorded: true, action });

@@ -285,7 +285,8 @@ export async function parseFile(
   // Excel workbook
   const wb = new ExcelJS.Workbook();
   try {
-    const arrayBuffer = buffer instanceof Buffer ? new Uint8Array(buffer) : (buffer as ArrayBuffer); await wb.xlsx.load(arrayBuffer);
+    // ExcelJS expects a Node Buffer (or ArrayBuffer); Uint8Array is rejected by its ZIP parser.
+    await wb.xlsx.load(buffer as unknown as Parameters<typeof wb.xlsx.load>[0]);
   } catch (e) {
     return { rows: [], sheetName: '', error: `Failed to parse spreadsheet: ${(e as Error).message || 'invalid file'}` };
   }
@@ -716,9 +717,13 @@ export async function ingest(
       validationReport: {
         totalRecords: 0,
         validRecords: 0,
-        issues: [{ field: 'file', message: parseResult.error, severity: 'error' }],
-        detectedSourceCurrency: undefined,
-        schemaVersion: '1.0.0',
+        errorRecords: 0,
+        warningRecords: 0,
+        issues: [{ location: 'file', message: parseResult.error, severity: 'error' }],
+        detectedFields: [],
+        missingFields: [],
+        confidence: 'LOW',
+        summary: 'File parsing failed.',
       },
       normalizedTransactions: [],
       evidenceClassification: 'FACT',
@@ -738,9 +743,13 @@ export async function ingest(
       validationReport: {
         totalRecords: 0,
         validRecords: 0,
-        issues: [{ field: 'file', message: 'No data rows found.', severity: 'error' }],
-        detectedSourceCurrency: undefined,
-        schemaVersion: '1.0.0',
+        errorRecords: 0,
+        warningRecords: 0,
+        issues: [{ location: 'file', message: 'No data rows found.', severity: 'error' }],
+        detectedFields: [],
+        missingFields: [],
+        confidence: 'LOW',
+        summary: 'No data rows found.',
       },
       normalizedTransactions: [],
       evidenceClassification: 'FACT',
@@ -776,10 +785,12 @@ export async function ingest(
 
   // Step 4: Normalize rows
   const dataRows = rows.slice(1);
-  const allIssues: Array<{ field: string; message: string; severity: string }> = [];
+  const allIssues: ValidationIssue[] = [];
   const normalizedTransactions: NormalizedTransaction[] = [];
   let validRows = 0;
   const currenciesSeen = new Set<string>();
+  const sourceSys = sourceSystem ?? 'unknown';
+  const sourceIngId = ingestionId;
 
   for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
     const row = dataRows[rowIndex];
@@ -794,12 +805,9 @@ export async function ingest(
     const rawCurrency = values['currency'] ?? values['curr'] ?? values['ccy'] ?? null;
     if (rawCurrency) currenciesSeen.add(rawCurrency.toUpperCase());
 
-    const sourceSys = sourceSystem ?? 'unknown';
-    const sourceIngId = ingestionId;
-
     if (tableType === 'accounts') {
       const { record, issues } = validateAccountRow(values, Object.keys(detection.headers));
-      allIssues.push(...issues.map(i => ({ field: i.location, message: i.message, severity: i.severity })));
+      allIssues.push(...issues);
       if (!issues.some(i => i.severity === 'error')) {
         normalizedTransactions.push({
           id: record.id ?? generateRecordId(undefined, `account-${rowNumber}`),
@@ -815,13 +823,13 @@ export async function ingest(
           sourceIngestionId: sourceIngId,
           evidenceLabel: 'FACT',
           evidenceClassification: 'FACT',
-          rawData: record.rawData,
+          rawData: values,
         });
         validRows++;
       }
     } else if (tableType === 'transactions') {
       const { record, issues } = validateTransactionRow(values, Object.keys(detection.headers));
-      allIssues.push(...issues.map(i => ({ field: i.location, message: i.message, severity: i.severity })));
+      allIssues.push(...issues);
       if (!issues.some(i => i.severity === 'error')) {
         normalizedTransactions.push({
           id: record.id ?? generateRecordId(undefined, `tx-${rowNumber}`),
@@ -831,7 +839,7 @@ export async function ingest(
           invoiceDate: record.invoiceDate ?? '',
           invoiceAmount: record.invoiceAmount ?? { value: 0, currency: record.currency ?? 'EGP' },
           dueDate: record.dueDate,
-          paymentDate: record.paymentDate,
+          paymentDate: record.paymentDate ?? undefined,
           quantity: record.quantity,
           unitPrice: record.unitPrice,
           poReference: record.poReference,
@@ -844,12 +852,12 @@ export async function ingest(
           sourceIngestionId: sourceIngId,
           evidenceLabel: 'FACT',
           evidenceClassification: 'FACT',
-          rawData: record.rawData,
+          rawData: values,
         });
         validRows++;
       }
     } else {
-      allIssues.push({ field: `row ${rowNumber}`, message: 'Table type undetermined.', severity: 'warning' });
+      allIssues.push({ location: `row ${rowNumber}`, message: 'Table type undetermined.', severity: 'warning' });
     }
   }
 
@@ -867,10 +875,14 @@ export async function ingest(
     fileSizeBytes,
     validationReport: {
       totalRecords: dataRows.length,
-      validRows,
+      validRecords: validRows,
+      errorRecords: allIssues.filter((issue) => issue.severity === 'error').length,
+      warningRecords: allIssues.filter((issue) => issue.severity === 'warning').length,
       issues: allIssues,
-      detectedSourceCurrency,
-      schemaVersion: '1.0.0',
+      detectedFields: Object.keys(detection.headers),
+      missingFields: [],
+      confidence: allIssues.some((issue) => issue.severity === 'error') ? 'LOW' : allIssues.length ? 'MEDIUM' : 'HIGH',
+      summary: `Validated ${validRows} of ${dataRows.length} records.`,
     },
     normalizedTransactions,
     evidenceClassification: 'FACT',
@@ -887,19 +899,19 @@ export async function ingest(
       sourceSys,
       new Date().toISOString(),
       data,
-      normalizedTransactions as any,
+      normalizedTransactions as unknown as Parameters<typeof evidenceStore.storeIngestion>[5],
       {
-        totalRecords: normalizedTransactions.length,
-        validRows: normalizedTransactions.length,
-        errorRecords: 0,
-        warningRecords: 0,
+        totalRecords: dataRows.length,
+        validRecords: normalizedTransactions.length,
+        errorRecords: allIssues.filter((issue) => issue.severity === 'error').length,
+        warningRecords: allIssues.filter((issue) => issue.severity === 'warning').length,
         issues: allIssues,
-        detectedFields: [],
+        detectedFields: Object.keys(detection.headers),
         missingFields: [],
-        confidence: 'HIGH' as const,
-        summary: 'Ingested successfully',
+        confidence: allIssues.some((issue) => issue.severity === 'error') ? 'LOW' as const : allIssues.length ? 'MEDIUM' as const : 'HIGH' as const,
+        summary: `Validated ${validRows} of ${dataRows.length} records.`,
       },
-      detectedSourceCurrency ?? 'EGP',
+      normalizeCurrencyCode(detectedSourceCurrency ?? 'EGP') ?? normalizeCurrencyCode('EGP')!,
       JSON.stringify({ raw: 'test' })
     );
   }

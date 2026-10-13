@@ -34,11 +34,11 @@ export async function connectRecommendationToTransaction(
   return {
     recommendationId: `tx-rec-${opportunity.opportunityId}-${finding.id}-${transactionType}`,
     opportunityId: opportunity.opportunityId,
-    transactionReference: transactionType,
+    transactionReference: transactionReferenceId,
     transactionType: (transactionType.split("-")[0].toUpperCase() + "_" + transactionType.split("-")[1]?.toUpperCase()) as TransactionRecommendation['transactionType'],
     description: opportunity.description,
     reasoning: opportunity.reasoning + `
-Transaction bridge connects opportunity (${opportunity.opportunityCategory}) to transaction event (${transactionType}) based on evidence chain (${opportunity.provenanceReferences.length} reference(s)). Not autonomous execution.`,
+Transaction bridge connects opportunity (${opportunity.findingCategory}) to transaction event (${transactionType}) based on evidence chain (${opportunity.provenanceReferences.length} reference(s)). Not autonomous execution.`,
     recommendationNote: opportunity.affectedParticipants[0]?.recommendation || "Review recommendation based on opportunity evidence before commercial action.",
     evidenceReferences: opportunity.provenanceReferences || [],
     provenanceReferences: opportunity.provenanceReferences || finding.relationshipIds || [],

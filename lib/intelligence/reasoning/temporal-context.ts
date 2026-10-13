@@ -16,7 +16,7 @@ export interface TemporalContext {
   entityName: string;
   temporalObservation: string;
   evidenceChangeCount: number;
-  relationshipChanges: { edgeId: string; relationshipType: string; validFrom: string; validTo: string | null; status: string }[];
+  relationshipChanges: { edgeId: string; relationshipType: string; validFrom: string; validTo: string | null; status: string | null }[];
   reasoning: string; // explains temporal inference, distinguishes observed from inferred
   provenanceReferences: string[];
   confidenceScore: number;

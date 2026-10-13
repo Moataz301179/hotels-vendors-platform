@@ -1,32 +1,29 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
+import { createBrowserStore } from "../../lib/browser-storage";
 import { Rows3, Rows2 } from "lucide-react";
 
 const STORAGE_KEY = "hv_density";
 
 type Density = "compact" | "comfortable";
+const densityStore = createBrowserStore<Density>(STORAGE_KEY, "comfortable", (value) =>
+  value === "compact" ? "compact" : "comfortable");
 
 function applyDensity(density: Density) {
   document.documentElement.dataset.density = density;
 }
 
 export function DensityToggle() {
-  const [density, setDensity] = useState<Density>("comfortable");
-  const [mounted, setMounted] = useState(false);
+  const density = densityStore.useValue();
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) as Density | null;
-    const initial = saved === "compact" || saved === "comfortable" ? saved : "comfortable";
-    setDensity(initial);
-    applyDensity(initial);
-    setMounted(true);
-  }, []);
+    applyDensity(density);
+  }, [density]);
 
   const toggle = useCallback(() => {
     const next = density === "compact" ? "comfortable" : "compact";
-    setDensity(next);
-    localStorage.setItem(STORAGE_KEY, next);
+    densityStore.update(() => next);
     applyDensity(next);
   }, [density]);
 
@@ -37,7 +34,7 @@ export function DensityToggle() {
       aria-label={`Switch to ${density === "compact" ? "comfortable" : "compact"} density`}
       title={density === "compact" ? "Comfortable spacing" : "Compact spacing"}
     >
-      {mounted && density === "compact" ? <Rows3 size={18} /> : <Rows2 size={18} />}
+      {density === "compact" ? <Rows3 size={18} /> : <Rows2 size={18} />}
     </button>
   );
 }

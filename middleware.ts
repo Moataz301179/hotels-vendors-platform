@@ -273,7 +273,7 @@ const authenticatedMiddleware = clerkMiddleware(async (auth, request: NextReques
 
 export default async function middleware(request: NextRequest, event: NextFetchEvent) {
   const response = await authenticatedMiddleware(request, event);
-  if (response) normalizeLoopbackRouting(response.headers, "https://hotelsvendors.com", request.url);
+  if (response) normalizeLoopbackRouting(response.headers, process.env.HV_PUBLIC_ORIGIN || "https://hotelsvendors.com", request.url);
   return response;
 }
 

@@ -13,8 +13,8 @@ export function LegalDisclaimer() {
     >
       <p>
         Factoring and credit facilities are subject to terms, credit approval, and
-        non-recourse limits via FRA-regulated partners such as Oliv under strategic
-        facilities like the Suez Canal Bank line (CHV000). Availability depends on
+        non-recourse limits via FRA-regulated partners such as  under strategic
+        facilities like the Suez Canal Bank line. Availability depends on
         underwriting, eligibility, and approved limits. Nothing on this page
         constitutes an offer, guarantee, or financial advice.
       </p>

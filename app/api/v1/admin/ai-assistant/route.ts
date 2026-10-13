@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeLLM } from "@/lib/ai/llm";
-import { hasEnoughCredits, deductAICredits, getAICreditsBalance } from "@/lib/ai/credits";
+import { hasEnoughCredits, deductAICredits } from "@/lib/ai/credits";
 import { sanitizeUserInput } from "@/lib/ai/sanitization";
+import { apiRoute, authenticate, validateBody } from "@/lib/api-utils";
+import { requirePlatformAdmin } from "@/lib/admin/access";
+import { z } from "zod";
 // PII scrubbing is handled internally by executeLLM for external providers (Ollama is local, no scrub needed)
 
-export async function POST(request: NextRequest) {
-  try {
-    const { message, context } = await request.json();
+export const POST = apiRoute(async (request: NextRequest) => {
+    const auth = await authenticate(request);
+    await requirePlatformAdmin(auth, "admin:read");
+    const { message } = validateBody(z.object({ message: z.string().trim().min(1).max(4000), context: z.unknown().optional() }).strict(), await request.json());
 
     // Extract user info from session (middleware already verified)
-    const userId = request.headers.get("x-user-id") || "anonymous";
-    const tenantId = request.headers.get("x-tenant-id") || "default";
+    const userId = auth.userId;
+    const tenantId = auth.tenantId;
 
     // Check AI credits
-    const { allowed, balance, requiredCredits } = await hasEnoughCredits(userId, tenantId, "ai_assistant");
+    const { allowed, balance } = await hasEnoughCredits(userId, tenantId, "ai_assistant");
 
     if (!allowed) {
       return NextResponse.json({
@@ -45,11 +49,7 @@ export async function POST(request: NextRequest) {
 
 You help admins improve the platform with actionable suggestions.
 
-Current Platform Metrics:
-- Total Users: ${context?.currentMetrics?.totalUsers || 0}
-- Total Orders: ${context?.currentMetrics?.totalOrders || 0}
-- Platform Fees (2%): EGP ${context?.currentMetrics?.platformFees?.toLocaleString() || 0}
-- Factoring Volume: EGP ${context?.currentMetrics?.factoringVolume?.toLocaleString() || 0}
+No trusted operational metrics are attached to this request. Do not invent figures, claim to have inspected records, or treat user-provided statements as verified platform data. You are read-only and cannot execute transactions, grant credit or change permissions.
 
 Respond concisely with bullet points and markdown. Always provide actionable next steps.`;
 
@@ -85,11 +85,7 @@ Respond concisely with bullet points and markdown. Always provide actionable nex
       },
       suggestions: generateFollowUpSuggestions(message),
     });
-  } catch (error) {
-    console.error("[AI-Assistant]", error);
-    return NextResponse.json({ error: "Failed to process request" }, { status: 500 });
-  }
-}
+}, { rateLimit: "api" });
 
 function generateFollowUpSuggestions(message: string): string[] {
   const lower = message.toLowerCase();

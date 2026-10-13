@@ -437,7 +437,7 @@ const TASK_HANDLERS: Record<
           solution: p.description,
           proposedBy: AGENTS[agentId]?.name || agentId,
           gapAddressed: gaps.find((g) => p.description.toLowerCase().includes(g.title.toLowerCase().slice(0, 15)))?.title || "General improvement",
-          tenantId: "system",
+          tenantId: task.tenantId,
         },
       });
     }

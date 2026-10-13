@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useApi } from '@/lib/hooks/use-api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Badge } from '@/components/ui';
@@ -71,28 +72,10 @@ interface CostReduction {
 }
 
 export default function CashflowDashboard() {
-  const [data, setData] = useState<CashflowData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'overdue' | 'factoring' | 'savings'>('overview');
   const [period, setPeriod] = useState('month');
 
-  useEffect(() => {
-    fetchCashflowData();
-  }, [period]);
-
-  const fetchCashflowData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/v1/fintech/cashflow?period=${period}`);
-      if (!res.ok) throw new Error('Failed to fetch cashflow data');
-      const result = await res.json();
-      setData(result.data);
-    } catch (err) {
-      console.error('Cashflow fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, loading, error } = useApi<CashflowData>(`/api/v1/fintech/cashflow?period=${period}`);
 
   const formatEgp = (amount: number) =>
     new Intl.NumberFormat('ar-EG', {
@@ -115,6 +98,8 @@ export default function CashflowDashboard() {
     };
     return <Badge className={variants[status] || 'bg-surface-2 text-white'}>{status}</Badge>;
   };
+
+  if (error) return <div role="alert" className="p-6 text-red-400">{error}</div>;
 
   if (loading) {
     return (
@@ -187,7 +172,7 @@ export default function CashflowDashboard() {
       {data.creditFacility && (
         <Card className="bg-surface-1 border-border-subtle">
           <CardHeader>
-            <CardTitle className="text-white text-lg">Credit Facility (Oliv)</CardTitle>
+            <CardTitle className="text-white text-lg">Credit Facility ()</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4">

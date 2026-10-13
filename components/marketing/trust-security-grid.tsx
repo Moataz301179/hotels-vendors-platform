@@ -24,7 +24,7 @@ const ATTESTATIONS = [
     icon: Landmark,
     title: "FRA-Licensed Factoring Rail",
     caption:
-      "Factoring and credit run through FRA-regulated partners like Oliv, under strategic facilities such as the Suez Canal Bank line CHV000.",
+      "Factoring and credit run through FRA-regulated external partners, under strategic facilities such as the Suez Canal Bank line.",
   },
   {
     icon: FileCheck2,

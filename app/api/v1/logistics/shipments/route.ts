@@ -49,9 +49,12 @@ export const POST = apiRoute(async (request: NextRequest) => {
 });
 
 export const GET = apiRoute(async (request: NextRequest) => {
-  const rows = [...metaStore.entries()].map(([id, meta]) => {
-    const t = shipmentStore.get(id);
-    return { ...meta, stage: t?.stage, stageLabel: t?.stageLabel, timeline: t?.timeline };
-  });
+  const auth = await authenticate(request);
+  const rows = [...metaStore.entries()]
+    .filter(([, meta]) => meta.buyerId === auth.userId)
+    .map(([id, meta]) => {
+      const t = shipmentStore.get(id);
+      return { ...meta, stage: t?.stage, stageLabel: t?.stageLabel, timeline: t?.timeline };
+    });
   return success({ shipments: rows });
 });

@@ -79,3 +79,7 @@ mktemp(5792) MallocStackLogging: could not tag MSL-related memory as no_footprin
 
 # Deployment current symlink is created on the host, never committed
 /current
+.next-maintenance/
+.next-maintenance-build/
+# Public documentation fetch artifacts
+.firecrawl/

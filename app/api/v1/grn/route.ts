@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GrnCreateSchema, PaginationSchema } from "@/lib/zod";
-import { apiRoute, authenticate, validateBody, validateQuery, success, error, requirePermission } from "@/lib/api-utils";
+import { ApiError, apiRoute, authenticate, validateBody, validateQuery, success, error, requirePermission } from "@/lib/api-utils";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 
 export const GET = apiRoute(async (request: NextRequest) => {
@@ -41,34 +41,58 @@ export const POST = apiRoute(async (request: NextRequest) => {
   const body = await request.json();
   const data = validateBody(GrnCreateSchema, body);
 
-  const user = await prisma.user.findUnique({ where: { id: auth.userId } });
+  const user = await prisma.user.findUnique({ where: { id: auth.userId, tenantId: auth.tenantId } });
   if (!user) return error("User account not found", 404);
 
   const hotelId = data.hotelId || user.hotelId;
   if (!hotelId) return error("No hotel associated with user", 400);
 
-  const order = await prisma.order.findUnique({
-    where: { id: data.orderId },
-    include: { items: true },
+  const order = await prisma.order.findFirst({
+    where: { id: data.orderId, tenantId: auth.tenantId, deletedAt: null },
+    include: {
+      items: true,
+      tripStops: {
+        where: { tenantId: auth.tenantId, deletedAt: null },
+        select: { id: true, status: true, deliveryProofs: { select: { id: true }, take: 1 } },
+      },
+    },
   });
   if (!order) return error("Order not found", 404);
 
   const tenantId = auth.tenantId;
-  if (order.tenantId !== tenantId) return error("Order not found", 404);
+  if (user.hotelId && user.hotelId !== order.hotelId) return error("You cannot receive this order", 403);
+  if (data.hotelId && data.hotelId !== order.hotelId) return error("Hotel does not match the order", 400);
+  if (data.supplierId && data.supplierId !== order.supplierId) return error("Supplier does not match the order", 400);
+  if (!order.paymentGuaranteed) return error("Payment guarantee is required before receiving an order", 409);
+  if (!["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED"].includes(order.status)) {
+    return error("Order is not in a receivable delivery state", 409);
+  }
+  const hasCarrierProof = order.tripStops.some((stop) => stop.deliveryProofs.length > 0);
+  if (!hasCarrierProof) return error("Carrier proof of delivery is required before creating a GRN", 409);
 
   const supplierId = data.supplierId || order.supplierId;
 
   // Validate line items reference the order's actual items
   const orderItemIds = order.items.map((i) => i.id);
   for (const li of data.lineItems) {
-    if (!orderItemIds.includes(li.orderItemId)) {
+    const orderItem = order.items.find((item) => item.id === li.orderItemId);
+    if (!orderItemIds.includes(li.orderItemId) || !orderItem) {
       return error(`Order item ${li.orderItemId} not found in order`, 400);
     }
+    if (li.productId !== orderItem.productId) return error(`Product mismatch for order item ${li.orderItemId}`, 400);
+    if (li.orderedQuantity !== orderItem.quantity) return error(`Ordered quantity mismatch for order item ${li.orderItemId}`, 400);
     if (li.receivedQuantity < 0 || li.acceptedQuantity < 0) {
       return error("Quantities cannot be negative", 400);
     }
     if (li.acceptedQuantity > li.receivedQuantity) {
       return error("Accepted quantity cannot exceed received quantity", 400);
+    }
+    if (li.rejectedQuantity > li.receivedQuantity || li.acceptedQuantity + li.rejectedQuantity !== li.receivedQuantity) {
+      return error("Accepted and rejected quantities must account for the received quantity", 400);
+    }
+    const alreadyReceived = orderItem.receivedQuantity ?? 0;
+    if (li.receivedQuantity > orderItem.quantity - alreadyReceived) {
+      return error(`Received quantity exceeds the remaining quantity for order item ${li.orderItemId}`, 409);
     }
   }
 
@@ -82,6 +106,26 @@ export const POST = apiRoute(async (request: NextRequest) => {
   const grnStatus = allRejected ? "REJECTED" : allAccepted ? "ACCEPTED" : "PARTIALLY_ACCEPTED";
 
   const grn = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "Order" WHERE "id" = ${order.id} AND "tenantId" = ${tenantId} FOR UPDATE`;
+    const lockedOrder = await tx.order.findFirst({
+      where: { id: order.id, tenantId, deletedAt: null },
+      include: { items: true },
+    });
+    if (!lockedOrder) throw new Error("Order not found");
+
+    // Re-check the submitted lines after locking the order. A concurrent GRN
+    // may have consumed stock between the initial read and this transaction.
+    for (const li of data.lineItems) {
+      const lockedItem = lockedOrder.items.find((item) => item.id === li.orderItemId);
+      if (!lockedItem || lockedItem.productId !== li.productId || lockedItem.quantity !== li.orderedQuantity) {
+        throw new ApiError(`Order item ${li.orderItemId} changed while receiving`, 409);
+      }
+      const alreadyReceived = lockedItem.receivedQuantity ?? 0;
+      if (li.receivedQuantity > lockedItem.quantity - alreadyReceived) {
+        throw new ApiError(`Received quantity exceeds the remaining quantity for order item ${li.orderItemId}`, 409);
+      }
+    }
+
     const created = await tx.goodsReceiptNote.create({
       data: {
         grnNumber,
@@ -123,7 +167,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
 
     // Update order status based on GRN
-    const allItemsReceived = order.items.every((i) => {
+    const allItemsReceived = lockedOrder.items.every((i) => {
       const grnAccepted = data.lineItems
         .filter((li) => li.orderItemId === i.id)
         .reduce((sum, li) => sum + li.acceptedQuantity, 0);
@@ -144,7 +188,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
       actionType: "CREATE",
       actorId: auth.userId,
       changes: { after: { grnNumber, status: grnStatus, orderId: data.orderId, lineItemCount: data.lineItems.length } },
-    });
+    }, tx);
 
     return created;
   });

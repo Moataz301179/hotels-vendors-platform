@@ -1,72 +1,67 @@
 import type { Metadata } from "next";
 import { canonicalUrl } from "@/lib/seo";
 import Link from "next/link";
+import "../../../components/marketing/public-pages.css";
 import { Check, ArrowRight, Building2, Store, Landmark, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
   alternates: { canonical: canonicalUrl("/pricing") },
   title: "Enterprise Hospitality Procurement Pricing | HotelsVendors Egypt",
-  description: "Transparent pricing for Egyptian hospitality procurement. SaaS listing plans, per-document ETA processing fees, and marketplace commissions. No hidden financial spreads.",
+  description: "Understand which platform, supplier, delivery and funding charges to confirm in writing before purchasing through HotelsVendors.",
   keywords: ["B2B hospitality procurement Egypt", "hotel procurement pricing Egypt", "SaaS marketplace Egypt", "ETA document processing fee", "hospitality platform pricing", "تسعير المشتريات الفندقية مصر"],
   openGraph: {
     title: "Enterprise Hospitality Procurement Pricing | HotelsVendors Egypt",
-    description: "Transparent pricing for Egyptian hospitality procurement. SaaS listing plans, per-document ETA processing fees, and marketplace commissions.",
+    description: "Confirm platform, supplier, delivery and funding terms before committing to a purchase.",
     type: "website",
   },
 };
 
 const tiers = [
   {
-    name: "Starter",
-    price: "Free",
+    name: "Hotel buyers",
+    price: "Confirm terms",
     period: "",
-    desc: "For single-property hotels getting started with digital procurement. No credit card. No commitment.",
+    desc: "Set out your properties and purchasing requirements, then request a written breakdown of applicable charges.",
     features: [
-      "Up to 50 orders/month",
-      "Basic AI demand forecasting",
-      "ETA e-invoicing compliance",
-      "1 user seat",
-      "Email support",
+      "Platform charges and billing basis",
+      "Supplier price, quantities and tax treatment",
+      "Delivery charges and available destinations",
+      "Payment schedule and cancellation terms",
+      "Features and support included in your agreement",
     ],
-    cta: "Get Started Free",
+    cta: "Discuss buyer requirements",
     highlighted: false,
     icon: Building2,
   },
   {
-    name: "Professional",
-    price: "Custom",
-    period: "per property/month",
-    desc: "For growing hotel groups needing full procurement automation, budget control, and embedded factoring.",
+    name: "Suppliers",
+    price: "Confirm terms",
+    period: "",
+    desc: "Confirm listing requirements and commercial terms before publishing offers or accepting an order.",
     features: [
-      "Unlimited orders",
-      "Advanced AI forecasting (14-day)",
-      "Budget blockades & authority matrix",
-      "Multi-property management",
-      "Embedded factoring (net-60)",
-      "Shared-route logistics",
-      "10 user seats",
-      "Priority support",
+      "Business verification and listing eligibility",
+      "Applicable platform or transaction charges",
+      "Who pays each fee and when it is deducted",
+      "Delivery responsibilities and order terms",
+      "Refunds, cancellations and settlement timing",
     ],
-    cta: "Contact Sales",
-    highlighted: true,
+    cta: "Discuss supplier requirements",
+    highlighted: false,
     icon: Store,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
+    name: "Delivery & funding partners",
+    price: "Partner terms",
     period: "",
-    desc: "For large hotel chains and resort groups with complex requirements, custom integrations, and dedicated support.",
+    desc: "External providers confirm their own availability, eligibility and charges. Platform access is not a service approval.",
     features: [
-      "Everything in Professional",
-      "Unlimited properties",
-      "Custom authority matrices",
-      "Dedicated account manager",
-      "API access & integrations",
-      "Custom SLA",
-      "On-premise deployment option",
-      "Unlimited user seats",
+      "Delivery route, capacity and service charges",
+      "Funding eligibility and independent approval",
+      "Funding fees, deductions and settlement dates",
+      "Provider responsibilities and exclusions",
+      "Written terms before accepting a service",
     ],
-    cta: "Talk to Us",
+    cta: "Discuss a partnership",
     highlighted: false,
     icon: Landmark,
   },
@@ -74,35 +69,35 @@ const tiers = [
 
 export default function PricingPage() {
   return (
-    <main style={{ backgroundColor: "#0c0c12", color: "#ffffff", minHeight: "100vh" }}>
+    <div className="hv-maintenance-public">
       {/* Hero */}
       <section className="pt-28 pb-16 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full blur-[120px] pointer-events-none" style={{ background: "radial-gradient(circle, rgba(var(--accent-base-rgb),0.03) 0%, transparent 70%)" }} />
         <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
-          <span className="text-[11px] font-medium text-white/30 uppercase tracking-[0.15em] mb-3 block">Pricing</span>
-          <h1 className="text-[clamp(30px,5vw,52px)] font-medium leading-[1.05] tracking-tight mb-5 text-white">
-            No Per-Transaction Fees.<br />No Hidden Spreads.<br /><span className="text-white">Transparent Enterprise<br />Pricing.</span>
+          <span className="text-[11px] font-medium text-[var(--hv-maintenance-muted)] uppercase tracking-[0.15em] mb-3 block">Pricing</span>
+          <h1 className="text-[clamp(30px,5vw,52px)] font-medium leading-[1.05] tracking-tight mb-5 text-[var(--hv-maintenance-ink)]">
+            Know the charges.<br />Confirm the terms.
           </h1>
-          <p className="text-[15px] text-white/40 max-w-xl mx-auto leading-relaxed">
-            Start free. Scale when you&apos;re ready. No hidden fees, no long-term contracts, no surprises on your invoice.
+          <p className="text-[15px] text-[var(--hv-maintenance-muted)] max-w-xl mx-auto leading-relaxed">
+            Request written confirmation of the platform fee and any supplier, delivery or funding charges before committing. A public price schedule or free-plan entitlement is not confirmed on this page.
           </p>
         </div>
       </section>
 
       {/* Trust Bar */}
-      <section className="py-8 border-y" style={{ borderColor: "rgba(255,255,255,0.04)", backgroundColor: "#12121a" }}>
+      <section className="py-8 border-y" style={{ borderColor: "var(--hv-maintenance-line)", backgroundColor: "var(--hv-maintenance-raised)" }}>
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-wrap justify-center gap-8">
             {[
-              { icon: Check, label: "Free Tier Available", desc: "No credit card" },
-              { icon: Zap, label: "No Hidden Fees", desc: "Transparent pricing" },
-              { icon: Building2, label: "Per-Property Billing", desc: "Scales with you" },
+              { icon: Check, label: "Written fee breakdown", desc: "Confirm amount and billing basis" },
+              { icon: Zap, label: "Separate provider terms", desc: "Delivery and funding charges may apply" },
+              { icon: Building2, label: "Your business requirements", desc: "Confirm what your agreement includes" },
             ].map((b) => (
               <div key={b.label} className="flex items-center gap-3">
-                <b.icon size={16} style={{ color: "var(--accent-base)" }} />
+                <b.icon size={16} style={{ color: "var(--hv-maintenance-blue)" }} />
                 <div>
-                  <p className="text-[11px] font-medium text-white/60">{b.label}</p>
-                  <p className="text-[9px] text-white/25">{b.desc}</p>
+                  <p className="text-[11px] font-medium text-[var(--hv-maintenance-muted)]">{b.label}</p>
+                  <p className="text-[9px] text-[var(--hv-maintenance-muted)]">{b.desc}</p>
                 </div>
               </div>
             ))}
@@ -119,34 +114,31 @@ export default function PricingPage() {
                 key={tier.name}
                 className="rounded-2xl p-7 flex flex-col transition-all hover:border-accent-base/10"
                 style={{
-                  backgroundColor: tier.highlighted ? "#12121a" : "#12121a",
-                  border: tier.highlighted ? "1px solid rgba(var(--accent-base-rgb),0.2)" : "1px solid rgba(255,255,255,0.06)",
+                  backgroundColor: tier.highlighted ? "var(--hv-maintenance-raised)" : "var(--hv-maintenance-raised)",
+                  border: tier.highlighted ? "1px solid var(--hv-maintenance-line)" : "1px solid var(--hv-maintenance-line)",
                 }}
               >
-                {tier.highlighted && (
-                  <span className="text-[10px] font-medium text-accent-base uppercase tracking-wider mb-3">Most Popular</span>
-                )}
-                <tier.icon size={20} className="mb-3" style={{ color: tier.highlighted ? "var(--accent-base)" : "rgba(255,255,255,0.3)" }} />
-                <h3 className="text-[18px] font-medium text-white mb-1">{tier.name}</h3>
+                <tier.icon size={20} className="mb-3" style={{ color: tier.highlighted ? "var(--hv-maintenance-blue)" : "var(--hv-maintenance-blue)" }} />
+                <h3 className="text-[18px] font-medium text-[var(--hv-maintenance-ink)] mb-1">{tier.name}</h3>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-[32px] font-medium text-white">{tier.price}</span>
-                  {tier.period && <span className="text-[12px] text-white/30">{tier.period}</span>}
+                  <span className="text-[32px] font-medium text-[var(--hv-maintenance-ink)]">{tier.price}</span>
+                  {tier.period && <span className="text-[12px] text-[var(--hv-maintenance-muted)]">{tier.period}</span>}
                 </div>
-                <p className="text-[12px] text-white/35 mb-6">{tier.desc}</p>
+                <p className="text-[12px] text-[var(--hv-maintenance-muted)] mb-6">{tier.desc}</p>
                 <ul className="space-y-3 mb-8 flex-1">
                   {tier.features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5">
-                      <Check size={14} className="flex-shrink-0 mt-0.5" style={{ color: "var(--accent-base)" }} />
-                      <span className="text-[12px] text-white/50">{f}</span>
+                      <Check size={14} className="flex-shrink-0 mt-0.5" style={{ color: "var(--hv-maintenance-blue)" }} />
+                      <span className="text-[12px] text-[var(--hv-maintenance-muted)]">{f}</span>
                     </li>
                   ))}
                 </ul>
                 <Link
-                  href="/register"
+                  href="/contact"
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-[13px] font-medium transition-all"
                   style={tier.highlighted
-                    ? { backgroundColor: "var(--accent-base)", color: "var(--surface)" }
-                    : { border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }
+                    ? { backgroundColor: "var(--hv-maintenance-blue)", color: "#ffffff" }
+                    : { border: "1px solid var(--hv-maintenance-line)", color: "var(--hv-maintenance-ink)" }
                   }
                 >
                   {tier.cta} <ArrowRight size={14} />
@@ -158,18 +150,18 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16" style={{ backgroundColor: "#12121a" }}>
+      <section className="py-16" style={{ backgroundColor: "var(--hv-maintenance-raised)" }}>
         <div className="mx-auto max-w-7xl px-6 text-center">
-          <h2 className="text-[11px] font-medium text-white/30 uppercase tracking-[0.15em] mb-6">Frequently Asked</h2>
+          <h2 className="text-[11px] font-medium text-[var(--hv-maintenance-muted)] uppercase tracking-[0.15em] mb-6">Frequently Asked</h2>
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto text-left">
             {[
-              { q: "Is the Starter plan really free?", a: "Yes. Single-property hotels can process up to 50 orders/month at no cost. No credit card required. Full ETA compliance included." },
-              { q: "How is Professional pricing calculated?", a: "Pricing is per property per month, based on order volume and required features. Contact us for a custom quote tailored to your portfolio." },
-              { q: "Can I switch plans later?", a: "Yes. Upgrade or downgrade at any time. No penalties, no data loss, no lock-in contracts." },
+              { q: "What fees should I check?", a: "Ask about the platform or transaction fee, supplier taxes, delivery charges and optional funding costs. Confirm who pays each charge, its billing basis and when it is due." },
+              { q: "Is registration a free-plan guarantee?", a: "No published free-plan entitlement is confirmed here. Confirm account and service charges in writing before using a paid service or accepting an order." },
+              { q: "Does financing have the same price for every hotel?", a: "No. Independent funders set eligibility, approval and terms for each business. Request their written fee breakdown and repayment or settlement terms separately." },
             ].map((faq) => (
-              <div key={faq.q} className="rounded-xl p-5" style={{ backgroundColor: "#12121a", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <h3 className="text-[13px] font-medium text-white mb-2">{faq.q}</h3>
-                <p className="text-[12px] text-white/35 leading-relaxed">{faq.a}</p>
+              <div key={faq.q} className="rounded-xl p-5" style={{ backgroundColor: "var(--hv-maintenance-raised)", border: "1px solid var(--hv-maintenance-line)" }}>
+                <h3 className="text-[13px] font-medium text-[var(--hv-maintenance-ink)] mb-2">{faq.q}</h3>
+                <p className="text-[12px] text-[var(--hv-maintenance-muted)] leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -179,13 +171,13 @@ export default function PricingPage() {
       {/* CTA */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-6 text-center">
-          <h2 className="text-[24px] font-medium mb-4 text-white">Need a Custom Plan?</h2>
-          <p className="text-[13px] text-white/40 mb-8 max-w-lg mx-auto">We work with hotel groups of all sizes. Let&apos;s build a plan that fits your portfolio.</p>
-          <Link href="/register" className="inline-flex items-center gap-2 px-6 py-3 text-[13px] font-medium rounded-xl transition-all hover:shadow-[0_0_30px_rgba(var(--accent-base-rgb),0.2)]" style={{ backgroundColor: "var(--accent-base)", color: "var(--surface)" }}>
-            Contact Sales <ArrowRight size={14} />
+          <h2 className="text-[24px] font-medium mb-4 text-[var(--hv-maintenance-ink)]">Get terms for your business.</h2>
+          <p className="text-[13px] text-[var(--hv-maintenance-muted)] mb-8 max-w-lg mx-auto">Share your business role, properties or product categories and the services you want to discuss.</p>
+          <Link href="/contact" className="hv-maintenance-button">
+            Discuss charges and terms <ArrowRight size={14} />
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

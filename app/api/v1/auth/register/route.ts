@@ -6,6 +6,9 @@ import { apiRoute, validateBody, success, error, audit } from "@/lib/api-utils";
 import { checkRateLimit } from "@/lib/redis";
 import { sendEmail, welcomeTemplate, emailVerificationTemplate } from "@/lib/notifications/email";
 import { randomBytes, createHash } from "crypto";
+import { isNativeTokenRequest } from "@/lib/auth/mobile-session";
+import { verifyOtp, normalizePhone } from "@/lib/auth/otp";
+import { z } from "zod";
 
 function generateToken(): string {
   return randomBytes(32).toString("hex");
@@ -16,6 +19,7 @@ function hashToken(token: string): string {
 }
 
 export const POST = apiRoute(async (request: NextRequest) => {
+  if (!isNativeTokenRequest(request)) return error("Use Clerk to register on the website", 403);
   // Rate limit: 3 registrations per hour per IP
   const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimit = await checkRateLimit(`register:${clientIp}`, 3600, 3);
@@ -25,6 +29,10 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
   const body = await request.json();
   const data = validateBody(BusinessRegisterSchema, body);
+  if (data.type !== "hotel" && data.type !== "supplier") return error("Partner accounts require reviewed admission", 403);
+  const otp = validateBody(z.object({ phone: z.string().min(1), otpCode: z.string().regex(/^\d{6}$/) }), body);
+  const verified = await verifyOtp(normalizePhone(otp.phone), otp.otpCode, "REGISTER");
+  if (!verified.success) return error(verified.message, 400);
 
   // Check if email is already registered
   const existingUser = await prisma.user.findUnique({
@@ -36,6 +44,8 @@ export const POST = apiRoute(async (request: NextRequest) => {
 
   const passwordHash = await hashPassword(data.password);
 
+  const verifyToken = generateToken();
+  const { tenant, user, hotel, supplier, factoringCompany } = await prisma.$transaction(async tx => {
   let hotel;
   let supplier;
   let factoringCompany;
@@ -49,7 +59,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   const uniquePlaceholder = `PENDING-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
   // 1. Create Tenant first — every entity belongs to a tenant
-  const tenant = await prisma.tenant.create({
+  const tenant = await tx.tenant.create({
     data: {
       name: data.name,
       slug: tenantSlug,
@@ -62,7 +72,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   });
 
   // 2. Create a default Owner role for this tenant
-  const ownerRole = await prisma.role.create({
+  const ownerRole = await tx.role.create({
     data: {
       name: "Owner",
       tenantId: tenant.id,
@@ -70,10 +80,19 @@ export const POST = apiRoute(async (request: NextRequest) => {
     },
   });
 
+  const codes = data.type === "hotel"
+    ? ["order:read", "order:create", "product:read", "invoice:read", "report:read"]
+    : ["order:read", "product:read", "product:create", "product:update", "invoice:read", "report:read"];
+  const permissions = await tx.permission.findMany({ where: { code: { in: codes }, deletedAt: null }, select: { id: true } });
+  if (permissions.length !== codes.length) throw new Error("Self-service permission catalog is not configured");
+  await tx.rolePermission.createMany({ data: permissions.map(permission => ({ roleId: ownerRole.id, permissionId: permission.id })) });
+
   const userBase = {
     email: data.email,
     name: data.name,
     passwordHash,
+    phone: normalizePhone(otp.phone),
+    phoneVerifiedAt: new Date(),
     platformRole,
     role: "OWNER" as const,
     tenantId: tenant.id,
@@ -85,7 +104,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
   };
 
   if (data.type === "hotel") {
-    hotel = await prisma.hotel.create({
+    hotel = await tx.hotel.create({
       data: {
         name: data.name,
         taxId: data.taxId || uniquePlaceholder,
@@ -97,11 +116,11 @@ export const POST = apiRoute(async (request: NextRequest) => {
         tenantId: tenant.id,
       },
     });
-    await prisma.user.create({
+    await tx.user.create({
       data: { ...userBase, hotelId: hotel.id },
     });
   } else if (data.type === "supplier") {
-    supplier = await prisma.supplier.create({
+    supplier = await tx.supplier.create({
       data: {
         name: data.name,
         taxId: data.taxId || uniquePlaceholder,
@@ -112,15 +131,15 @@ export const POST = apiRoute(async (request: NextRequest) => {
         commercialReg: data.commercialReg,
         phone: data.phone,
         tenantId: tenant.id,
-        status: "ACTIVE", // Auto-approve for testing
+        status: "PENDING", // Supplier admission requires review
         tier: "CORE",
       },
     });
-    await prisma.user.create({
+    await tx.user.create({
       data: { ...userBase, supplierId: supplier.id },
     });
   } else if (data.type === "factoring") {
-    factoringCompany = await prisma.factoringCompany.create({
+    factoringCompany = await tx.factoringCompany.create({
       data: {
         name: data.name,
         taxId: data.taxId || uniquePlaceholder,
@@ -130,17 +149,17 @@ export const POST = apiRoute(async (request: NextRequest) => {
         status: "ACTIVE",
       },
     });
-    await prisma.user.create({
+    await tx.user.create({
       data: { ...userBase, factoringCompanyId: factoringCompany.id },
     });
   } else {
     // Shipping or individual — create user only, no entity yet
-    await prisma.user.create({
+    await tx.user.create({
       data: userBase,
     });
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await tx.user.findUnique({
     where: { email: data.email },
   });
 
@@ -149,14 +168,16 @@ export const POST = apiRoute(async (request: NextRequest) => {
   }
 
   // Generate email verification token (hash before storage)
-  const verifyToken = generateToken();
   const verifyTokenHash = hashToken(verifyToken);
-  await prisma.emailVerificationToken.create({
+  await tx.emailVerificationToken.create({
     data: {
       email: data.email,
       token: verifyTokenHash,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     },
+  });
+
+  return { tenant, user, hotel, supplier, factoringCompany };
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://hotels-vendors.com";
@@ -199,7 +220,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
     tenantId: tenant.id,
     actorId: user.id,
     actorRole: user.platformRole,
-    afterState: { email: user.email, platformRole: user.platformRole, type: data.type, accountType, tenantId: tenant.id },
+    afterState: { platformRole: user.platformRole, type: data.type, accountType: user.accountType, tenantId: tenant.id },
     ipAddress: request.headers.get("x-forwarded-for") || null,
     userAgent: request.headers.get("user-agent"),
   });

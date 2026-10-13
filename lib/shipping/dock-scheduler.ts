@@ -128,13 +128,11 @@ export async function getAvailableSlots(hotelId: string, date: string): Promise<
         hotelId, hotelName: "", date,
         startTime: start, endTime: end,
         carrierName: "", orderId: "",
-        status: (hour <= 10) ? "reserved" : (hour <= 11) ? "en_route" : (hour >= 12 && slotIndex(hour, minute) % 2 === 0) ? "" as any : "reserved",
+        status: "reserved",
         geofenceAlert: false,
       });
     }
   }
-
-  function slotIndex(h: number, m: number) { return (h - 8) * 2 + (m / 30); }
 
   return slots;
 }

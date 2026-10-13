@@ -46,7 +46,7 @@ export const GET = apiRoute(async (request: NextRequest, { params }: { params: {
 
 export const PUT = apiRoute(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const auth = await authenticate(request);
-  await requirePermission(auth as any, "admin:manage_authority_rules");
+  await requirePermission(auth, "admin:manage_authority_rules");
 
   const body = await request.json();
   const data = UpdateRuleSchema.parse(body);
@@ -96,7 +96,7 @@ export const PUT = apiRoute(async (request: NextRequest, { params }: { params: {
 
 export const PATCH = apiRoute(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const auth = await authenticate(request);
-  await requirePermission(auth as any, "admin:manage_authority_rules");
+  await requirePermission(auth, "admin:manage_authority_rules");
 
   const body = await request.json();
   const data = UpdateRuleSchema.parse(body);
@@ -146,7 +146,7 @@ export const PATCH = apiRoute(async (request: NextRequest, { params }: { params:
 
 export const DELETE = apiRoute(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const auth = await authenticate(request);
-  await requirePermission(auth as any, "admin:manage_authority_rules");
+  await requirePermission(auth, "admin:manage_authority_rules");
 
   const existing = await prisma.authorityRule.findFirst({
     where: {

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePrefs } from "@/i18n/provider";
-import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import AppShell, { RequireAuth } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import { Skeleton, Input } from "@/components/ui";
 import {
   Table,
@@ -16,10 +16,21 @@ import {
 import { IcHistory } from "@/components/icons";
 import { PageHeader } from "@/components/shared/page-header";
 
+interface AuditEntry {
+  id: string;
+  entityName: string | null;
+  entityId: string;
+  actionType: string | null;
+  actorId: string | null;
+  actorRole: string | null;
+  changes: unknown;
+  createdAt: string;
+}
+
 export default function AdminAuditPage() {
   const { t, lang } = usePrefs();
   const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +45,7 @@ export default function AdminAuditPage() {
           throw new Error(`HTTP ${res.status}`);
         }
         const data = await res.json();
-        setEntries(data.entries ?? []);
+        setEntries(data.data?.entries ?? data.entries ?? []);
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") return;
         setError(e instanceof Error ? e.message : "Failed to load audit log");
@@ -103,12 +114,15 @@ export default function AdminAuditPage() {
             <TableBody>
               {filtered.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-medium">{e.action}</TableCell>
-                  <TableCell>{e.actor}</TableCell>
+                  <TableCell className="font-medium">{e.actionType ?? "—"}</TableCell>
+                  <TableCell>{e.actorId ?? e.actorRole ?? "System"}</TableCell>
                   <TableCell className="text-muted text-xs">
-                    {e.timestamp}
+                    {new Date(e.createdAt).toLocaleString(lang === "ar" ? "ar-EG" : "en-EG")}
                   </TableCell>
-                  <TableCell>{e.details}</TableCell>
+                  <TableCell>
+                    {e.entityName ?? "Record"} · {e.entityId}
+                    {e.changes ? ` — ${JSON.stringify(e.changes)}` : ""}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

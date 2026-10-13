@@ -5,10 +5,12 @@ import { apiRoute, validateBody, success, error } from "@/lib/api-utils";
 import { verifyOtp, normalizePhone } from "@/lib/auth/otp";
 import { isValidEgyptianPhone } from "@/lib/auth/phone";
 import { audit } from "@/lib/api-utils";
-import { createSessionPair } from "@/lib/session";
+import { createMobileSession, isNativeTokenRequest } from "@/lib/auth/mobile-session";
+import { findActiveAccount } from "@/lib/auth/account-identity";
 import { checkRateLimit } from "@/lib/redis";
 
 export const POST = apiRoute(async (request: NextRequest) => {
+  if (!isNativeTokenRequest(request)) return error("Use Clerk to sign in on the website", 403);
   const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
 
   const rateLimit = await checkRateLimit(`otp-login:${clientIp}`, 60, 5);
@@ -47,16 +49,18 @@ export const POST = apiRoute(async (request: NextRequest) => {
     }
 
     // Issue session pair (access + refresh tokens)
-    const { accessToken, refreshToken } = await createSessionPair(user.id, user.platformRole, user.tenantId || user.hotelId || "legacy");
+    const account = await findActiveAccount({ id: user.id });
+    if (!account) return error("Account is not active", 403);
+    const { accessToken, refreshToken } = await createMobileSession(account);
 
     await audit({
       entityType: "USER",
       entityId: user.id,
       action: "LOGIN",
-      tenantId: user.tenantId || user.hotelId || "legacy",
+      tenantId: account.tenantId,
       actorId: user.id,
       actorRole: user.platformRole,
-      afterState: { loginAlias: normalizedPhone, method: "otp" },
+      afterState: { method: "otp" },
       ipAddress: clientIp,
       userAgent: request.headers.get("user-agent"),
     });

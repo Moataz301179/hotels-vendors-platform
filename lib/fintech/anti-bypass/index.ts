@@ -5,7 +5,7 @@
  * Flow:
  * 1. Supplier completes KYC during HotelsVendors signup (Layer 3)
  * 2. Supplier imports ETA invoice
- * 3. Supplier clicks "Factor via Oliv"
+ * 3. Supplier clicks "Factor via partner"
  * 4. System generates referral token (Layer 1)
  * 5. System sends invoice + token to Oliv
  * 6. Oliv pings callback with token (Layer 2)

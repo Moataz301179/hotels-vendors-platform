@@ -232,7 +232,7 @@ export default function HotelCatalogPage() {
               <SearchBar
                 onSearch={handleSearch}
                 placeholder="Search products, suppliers, SKUs..."
-                suggestions={["Olive Oil", "Bed Sheets", "HVAC Filters", "Cleaning Chemicals"]}
+                suggestions={["e Oil", "Bed Sheets", "HVAC Filters", "Cleaning Chemicals"]}
                 recentSearches={["Beef Cuts", "Bath Amenities", "Fresh Produce"]}
                 trending={["Rice 25kg", "Salmon Fillet", "Deep Fryer", "Kitchen Equipment"]}
               />

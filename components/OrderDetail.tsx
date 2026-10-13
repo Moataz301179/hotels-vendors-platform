@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import Link from "next/link";
-import { usePrefs } from "@/i18n/provider";
 import { useApi } from "@/lib/hooks/use-api";
-import { Clock, CheckCircle, Truck, FileText, ShieldCheck, AlertCircle } from "lucide-react";
+import { Clock, ShieldCheck, AlertCircle } from "lucide-react";
 
 interface OrderDetailProps {
   orderId: string;
@@ -24,9 +22,9 @@ interface OrderData {
 }
 
 export default function OrderDetail({ orderId, mode }: OrderDetailProps) {
-  const { t } = usePrefs();
-  const { data, loading } = useApi<{ data: OrderData; orders?: OrderData[] }>(`/api/v1/orders/${orderId}`);
-  const order = data?.data || data?.orders?.find((o: any) => o.id === orderId);
+  const { data, loading, error } = useApi<{ order: OrderData }>(`/api/v1/orders/${orderId}`);
+  const order = data?.order;
+  if (error) return <p role="alert">{error}</p>;
 
   if (loading) {
     return <div className="text-center py-12 text-sm text-foreground-muted">Loading order...</div>;
@@ -66,7 +64,7 @@ export default function OrderDetail({ orderId, mode }: OrderDetailProps) {
         <div className="mt-4 pt-4 border-t border-border-subtle">
           <h3 className="text-sm font-medium text-white mb-2">Items</h3>
           <div className="space-y-2">
-            {(order.items || []).map((item: any) => (
+            {(order.items || []).map(item => (
               <div key={item.id} className="flex items-center justify-between bg-ink-950 border border-white/5 rounded p-2">
                 <span className="text-xs text-white">{item.product?.name || item.product?.id}</span>
                 <span className="text-xs text-foreground-subtle">SKU: {item.product?.sku || "—"}</span>
@@ -78,7 +76,7 @@ export default function OrderDetail({ orderId, mode }: OrderDetailProps) {
           </div>
         </div>
         <div className="mt-4 flex gap-2">
-          <Link href="/orders" className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg text-foreground-subtle hover:text-white transition-colors">
+          <Link href={mode === "supplier" ? "/supplier/orders" : "/orders"} className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg text-foreground-subtle hover:text-white transition-colors">
             <Clock size={12} /> Back to Orders
           </Link>
           <Link href="/hotel/checkout" className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 bg-surface-2 hover:bg-surface-3 border border-border-subtle rounded-lg text-foreground-subtle hover:text-white transition-colors">

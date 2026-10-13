@@ -1,9 +1,9 @@
 "use client";
 
 import { Landmark, ArrowRight, ExternalLink } from "lucide-react";
-import { OlivLogo } from "@/components/partners/oliv-logo";
+import { Logo } from "@/components/partners/oliv-logo";
 
-interface OlivReferralCTAProps {
+interface ReferralCTAProps {
   orderId?: string;
   invoiceId?: string;
   amount?: number;
@@ -11,15 +11,15 @@ interface OlivReferralCTAProps {
 }
 
 /**
- * Oliv Referral CTA — shown on order/invoice pages for suppliers.
- * Phase 1: Redirects to Oliv for financing application.
+ *  Referral CTA — shown on order/invoice pages for suppliers.
+ * Phase 1: Redirects to  for financing application.
  */
-export function OlivReferralCTA({
+export function ReferralCTA({
   orderId,
   invoiceId,
   amount,
   variant = "card",
-}: OlivReferralCTAProps) {
+}: ReferralCTAProps) {
   const params = new URLSearchParams();
   if (orderId) params.set("orderId", orderId);
   if (invoiceId) params.set("invoiceId", invoiceId);
@@ -38,8 +38,8 @@ export function OlivReferralCTA({
             <div className="text-[13px] font-semibold text-white">Need Working Capital?</div>
             <div className="text-[12px] text-white/40">
               {amount
-                ? `Finance this EGP ${amount.toLocaleString()} invoice via Oliv — funded in 48h`
-                : "Get your invoices financed in 48 hours via Oliv"}
+                ? `Finance this EGP ${amount.toLocaleString()} invoice via  — funded in 48h`
+                : "Get your invoices financed in 48 hours via "}
             </div>
           </div>
         </div>
@@ -50,7 +50,7 @@ export function OlivReferralCTA({
           className="inline-flex items-center gap-2 px-4 py-2 text-[12px] font-semibold rounded-lg transition-all hover:shadow-[0_0_20px_rgba(var(--success-rgb),0.2)] shrink-0"
           style={{ backgroundColor: "var(--success)", color: "#ffffff" }}
         >
-          Apply on Oliv <ExternalLink size={12} />
+          Apply on  <ExternalLink size={12} />
         </a>
       </div>
     );
@@ -66,7 +66,7 @@ export function OlivReferralCTA({
         style={{ color: "var(--success)" }}
       >
         <Landmark size={13} />
-        Finance via Oliv
+        Finance via Partner
         <ExternalLink size={10} />
       </a>
     );
@@ -76,7 +76,7 @@ export function OlivReferralCTA({
   return (
     <div className="rounded-xl border bg-[#12121a] p-5 hover:border-white/[0.10] transition-all" style={{ borderColor: "rgba(var(--success-rgb),0.22)" }}>
       <div className="flex items-center gap-3 mb-3">
-        <OlivLogo size="sm" variant="green" />
+        <Logo size="sm" variant="green" />
       </div>
       <h3 className="text-[14px] font-semibold text-white mb-1.5">Invoice Financing</h3>
       <p className="text-[12px] text-white/40 leading-relaxed mb-4">

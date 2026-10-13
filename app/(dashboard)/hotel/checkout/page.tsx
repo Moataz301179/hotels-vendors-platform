@@ -17,7 +17,7 @@ import {
   Landmark,
 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
-import { generateOlivCheckoutUrl } from "@/lib/payments/oliv-checkout";
+import { generateCheckoutUrl } from "@/lib/payments/oliv-checkout";
 
 interface UserData {
   userId: string;
@@ -343,7 +343,7 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { id: "bank_transfer", label: "Bank Transfer" },
-                      { id: "oliv_checkout", label: "Pay via Oliv", desc: "Net-60 terms", icon: Landmark },
+                      { id: "oliv_checkout", label: "Pay via financing partner", desc: "Net-60 terms", icon: Landmark },
                       { id: "invoice", label: "Invoice (Net 30)" },
                       { id: "credit_terms", label: "Credit Terms" },
                     ].map((pm) => (
@@ -391,7 +391,7 @@ export default function CheckoutPage() {
                   <button
                     onClick={async () => {
                       if (paymentMethod === "oliv_checkout") {
-                        const result = await generateOlivCheckoutUrl({
+                        const result = await generateCheckoutUrl({
                           hotelId: userData?.userId || "",
                           hotelName: userData?.hotelName || "",
                           orderId: "",
@@ -411,7 +411,7 @@ export default function CheckoutPage() {
                     disabled={loading}
                     className="flex-1 py-3 rounded-xl bg-accent-base text-white font-medium hover:bg-accent-base/90 disabled:opacity-50 transition-colors"
                   >
-                    {loading ? "Placing Order..." : paymentMethod === "oliv_checkout" ? `Pay via Oliv · EGP ${grandTotal.toFixed(2)}` : `Place Order · EGP ${grandTotal.toFixed(2)}`}
+                    {loading ? "Placing Order..." : paymentMethod === "oliv_checkout" ? `Pay via financing partner · EGP ${grandTotal.toFixed(2)}` : `Place Order · EGP ${grandTotal.toFixed(2)}`}
                   </button>
                 </div>
               </motion.div>

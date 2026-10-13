@@ -156,7 +156,7 @@ export default function CreditLineApplicationPage() {
     const score = calculateCreditScore();
 
     // Base: 1-3 months of procurement spend
-    let base = monthlyPurchases * (score >= 80 ? 3 : score >= 60 ? 2 : 1);
+    const base = monthlyPurchases * (score >= 80 ? 3 : score >= 60 ? 2 : 1);
 
     // Cap at 10% of annual revenue
     const cap = rev * 0.1;

@@ -2,7 +2,7 @@
  * Oliv Access Operating System (OAOS) — agentic channel map.
  *
  * MISSION (single): onboard as many Egyptian private supply/trading companies
- * into Oliv via referral CHV000 as possible. A company qualifies if it holds a
+ * into the financing partner via partner referral as possible. A company qualifies if it holds a
  * TRN and does ~EGP 10M+ annual revenue; the decision-maker is the owner/founder.
  *
  * This module is the SINGLE SOURCE OF TRUTH for the agent fleet: every channel,
@@ -12,7 +12,7 @@
  * fake a result; each entry maps to a real capability or is marked NOT_BUILT.
  */
 
-export const REFERRAL = "CHV000" as const;
+export const REFERRAL = "partner" as const;
 export const OUTBOUND_SENDER = "reem@hotelsvendors.com" as const;
 
 /** Eligibility gate every lead must pass before outreach. */
@@ -46,7 +46,7 @@ export type LeadStage =
   | "replied"
   | "interested"
   | "warm_followup"
-  | "referred_to_oliv"   // CHV000 user created / applied
+  | "referred_to_partner"   // partner referral user created / applied
   | "onboarded"          // funded invoice in Oliv (final)
   | "not_interested";
 
@@ -76,7 +76,7 @@ export const AGENTS: AgentSpec[] = [
   {
     id: "email-outreach-agent",
     channel: "email",
-    objective: "Send personalized CHV000 outreach from reem@ to verified leads.",
+    objective: "Send personalized partner referral outreach from reem@ to verified leads.",
     trigger: "new verified lead / batch",
     tasks: ["MX-check email", "personalize (website-grounded)", "send via SMTP", "log messageId + attribution"],
     status: "LIVE",
@@ -103,7 +103,7 @@ export const AGENTS: AgentSpec[] = [
   {
     id: "whatsapp-agent",
     channel: "whatsapp",
-    objective: "Send CHV000 WhatsApp follow-up to owners who engaged.",
+    objective: "Send partner referral WhatsApp follow-up to owners who engaged.",
     trigger: "lead reached 24h window / replied",
     tasks: ["use approved template", "send", "log to attribution"],
     status: "BLOCKED",
@@ -112,9 +112,9 @@ export const AGENTS: AgentSpec[] = [
   {
     id: "meta-ads-agent",
     channel: "meta_ads",
-    objective: "Drive CHV000 CTAs to qualified audience at scale (paid).",
+    objective: "Drive partner referral CTAs to qualified audience at scale (paid).",
     trigger: "on budget approval",
-    tasks: ["build audience (Egypt biz owners)", "run campaign with CHV000 CTA", "track clicks via click route"],
+    tasks: ["build audience (Egypt biz owners)", "run campaign with partner referral CTA", "track clicks via click route"],
     status: "BLOCKED",
     notes: "Needs Meta Ads account/budget. Paid consumer-flavored; LinkedIn likely stronger for this B2B.",
   },
@@ -126,6 +126,6 @@ export const PIPELINE: { stage: LeadStage; agent: string; next: LeadStage }[] = 
   { stage: "verified", agent: "email-outreach-agent", next: "contacted" },
   { stage: "contacted", agent: "reply-agent", next: "replied" },
   { stage: "replied", agent: "reply-agent", next: "interested" },
-  { stage: "interested", agent: "linkedin-agent|whatsapp-agent", next: "referred_to_oliv" },
-  { stage: "referred_to_oliv", agent: "meta-ads-agent", next: "onboarded" },
+  { stage: "interested", agent: "linkedin-agent|whatsapp-agent", next: "referred_to_partner" },
+  { stage: "referred_to_partner", agent: "meta-ads-agent", next: "onboarded" },
 ];

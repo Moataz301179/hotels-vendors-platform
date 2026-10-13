@@ -11,12 +11,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
 export function usePrefs() {
   const { locale, setLocale, toggleLocale, dir, isRTL } = useLanguage();
-  const { t, ready } = useTranslation();
+  const { t } = useTranslation();
   return {
     lang: locale,
     t: useCallback(
       (key: string, fallback?: string) => {
-        if (!ready) return fallback || key;
         try {
           const val = t(key);
           return val !== key ? val : fallback || key;
@@ -24,7 +23,7 @@ export function usePrefs() {
           return fallback || key;
         }
       },
-      [t, ready]
+      [t]
     ),
     setLang: setLocale,
     toggleLang: toggleLocale,

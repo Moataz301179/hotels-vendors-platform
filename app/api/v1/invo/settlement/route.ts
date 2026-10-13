@@ -1,44 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-
-import { requireServiceKey } from "@/lib/api-utils";
-
-function requireAuth(request: NextRequest): void {
-  requireServiceKey(request, "INVO_SERVICE_KEY");
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    requireAuth(request);
-
-    const body = await request.json();
-    const { invoiceId, supplierId, amount, method } = body;
-
-    if (!invoiceId || !supplierId || !amount) {
-      return NextResponse.json(
-        { success: false, error: "invoiceId, supplierId, amount required" },
-        { status: 400 }
-      );
-    }
-
-    const settlementId = `set_${Date.now()}`;
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        settlementId,
-        invoiceId,
-        supplierId,
-        amount,
-        currency: "EGP",
-        method: method || "bank_transfer",
-        status: "completed",
-        executedAt: new Date().toISOString(),
-        receiptUrl: `https://invo.hotelsvendors.com/receipts/${settlementId}`,
-        platformFee: Math.floor(amount * 0.025),
-        netAmount: Math.floor(amount * 0.975),
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { apiRoute, authenticate, requirePermission, validateBody, error, ApiError } from "@/lib/api-utils";
+const SettlementInput = z.object({ invoiceId: z.string().min(1).max(128), supplierId: z.string().min(1).max(128), amount: z.number().finite().positive(), method: z.enum(["bank_transfer"]).default("bank_transfer") });
+export const POST = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request); await requirePermission(auth, "factoring:fund");
+  const input = validateBody(SettlementInput, await request.json());
+  const invoice = await prisma.invoice.findFirst({ where: { id: input.invoiceId, supplierId: input.supplierId, tenantId: auth.tenantId, deletedAt: null }, select: { id: true } });
+  if (!invoice) throw new ApiError("Invoice not found", 404);
+  return error("Settlement requires a verified transfer provider and ledger reconciliation. No transfer was executed.", 503);
+});

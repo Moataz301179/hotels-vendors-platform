@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { apiRoute, authenticate, requirePermission, success, error, validateBody } from "@/lib/api-utils";
+import { apiRoute, success, error, validateBody } from "@/lib/api-utils";
 import { resolveDispute, type OverrideContext } from "@/lib/admin/override-tools";
 import { z } from "zod";
+import { requireSensitiveAdmin } from "@/lib/admin/access";
 
 const ResolveDisputeSchema = z.object({
   disputeId: z.string().cuid(),
@@ -11,8 +12,7 @@ const ResolveDisputeSchema = z.object({
 });
 
 export const POST = apiRoute(async (request: NextRequest) => {
-  const auth = await authenticate(request);
-  await requirePermission(auth, "admin:dispute_resolve");
+  const auth = await requireSensitiveAdmin(request, "admin:dispute_resolve");
 
   const body = await request.json();
   const data = validateBody(ResolveDisputeSchema, body);

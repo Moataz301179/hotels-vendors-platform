@@ -315,12 +315,12 @@ export const BusinessRegisterSchema = z.object({
 });
 
 export const LoginSchema = z.object({
-  email: z.string().email("Valid email is required").or(
-    z.string().min(1).refine(val => val.toLowerCase() === "admin", {
-      message: "Valid email or 'admin' is required"
-    })
-  ),
+  email: z.string().email("Valid email is required").optional(),
+  phone: z.string().min(1, "Phone or email is required").optional(),
   password: z.string().min(1, "Password is required"),
+}).refine((data) => data.email || data.phone, {
+  message: "Either email or phone is required",
+  path: [],
 });
 
 /* ── OTP / Phone Auth Schemas ── */
@@ -360,7 +360,7 @@ export const OpportunityCreateSchema = z.object({
   ]),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
-  evidence: z.record(z.unknown()).optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
   baseline: z.number().optional(),
   currentValue: z.number().optional(),
   potentialImpact: z.number().optional(),
@@ -387,7 +387,7 @@ export const OpportunityUpdateSchema = z.object({
   ]).optional(),
   title: z.string().min(3).optional(),
   description: z.string().optional(),
-  evidence: z.record(z.unknown()).optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
   baseline: z.number().optional(),
   currentValue: z.number().optional(),
   potentialImpact: z.number().optional(),
@@ -398,7 +398,7 @@ export const OpportunityUpdateSchema = z.object({
   affectedCategory: z.string().optional(),
   ownerId: z.string().cuid().optional(),
   resultingTransactionId: z.string().optional(),
-  realizedResult: z.record(z.unknown()).optional(),
+  realizedResult: z.record(z.string(), z.unknown()).optional(),
   verificationState: z.string().optional(),
 }).refine((data) => Object.keys(data).length > 0, {
   message: "At least one field must be provided for update",
@@ -443,7 +443,7 @@ export const SavingsCreateSchema = z.object({
   category: z.string().optional(),
   productId: z.string().cuid().optional(),
   ownerId: z.string().cuid().optional(),
-  evidence: z.record(z.unknown()).optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const SavingsUpdateSchema = z.object({
@@ -463,7 +463,7 @@ export const SavingsUpdateSchema = z.object({
   negotiatedAmount: z.number().optional(),
   realizedAmount: z.number().optional(),
   verifiedAmount: z.number().optional(),
-  evidence: z.record(z.unknown()).optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
   transactionId: z.string().optional(),
   supplierId: z.string().cuid().optional(),
   category: z.string().optional(),
@@ -520,7 +520,7 @@ export const OpportunityConvertSchema = z.object({
   productId: z.string().cuid().optional(),
   ownerId: z.string().cuid().optional(),
   targetStatus: z.enum(["ACTION_READY", "APPROVED", "EXECUTING"]).optional(),
-  evidence: z.record(z.unknown()).optional(),
+  evidence: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const PaginationSchema = z.object({

@@ -72,8 +72,11 @@ export interface TransitionGate {
 
 const TRANSITION_GATES: TransitionGate[] = [
   { from: "APPROVED", to: "CONFIRMED", requires: { paymentGuarantee: true } },
-  { from: "CONFIRMED", to: "IN_TRANSIT", requires: { paymentGuarantee: true, etaValidation: true } },
-  { from: "IN_TRANSIT", to: "DELIVERED", requires: { authorityApproval: true } },
+  // ETA belongs to invoice/factoring validation. It must not block dispatch
+  // before a supplier invoice exists. Payment guarantee remains mandatory.
+  { from: "CONFIRMED", to: "IN_TRANSIT", requires: { paymentGuarantee: true } },
+  // The status route additionally requires carrier proof and a hotel GRN.
+  { from: "IN_TRANSIT", to: "DELIVERED", requires: { paymentGuarantee: true } },
 ];
 
 /**

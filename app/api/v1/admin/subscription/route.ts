@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAICreditsBalance, createSubscription, getUsageHistory, SUBSCRIPTION_TIERS } from "@/lib/ai/credits";
+import { getAICreditsBalance, getUsageHistory, SUBSCRIPTION_TIERS } from "@/lib/ai/credits";
+import { apiRoute, authenticate, validateBody, validateQuery, error } from "@/lib/api-utils";
+import { requirePlatformAdmin, requireSensitiveAdmin } from "@/lib/admin/access";
+import { z } from "zod";
 
-export async function GET(request: NextRequest) {
-  try {
-    const userId = request.headers.get("x-user-id") || "anonymous";
-    const tenantId = request.headers.get("x-tenant-id") || "default";
+export const GET = apiRoute(async (request: NextRequest) => {
+    const auth = await authenticate(request);
+    await requirePlatformAdmin(auth, "admin:read");
+    validateQuery(z.object({}).strict(), request.nextUrl.searchParams);
+    const userId = auth.userId;
+    const tenantId = auth.tenantId;
 
     const balance = await getAICreditsBalance(userId, tenantId);
     const history = await getUsageHistory(userId, tenantId, 30);
@@ -24,38 +29,10 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch subscription info" }, { status: 500 });
-  }
-}
+}, { rateLimit: "api" });
 
-export async function POST(request: NextRequest) {
-  try {
-    const { tier, paymentReference } = await request.json();
-    const userId = request.headers.get("x-user-id") || "anonymous";
-    const tenantId = request.headers.get("x-tenant-id") || "default";
-
-    if (!tier || !SUBSCRIPTION_TIERS[tier as keyof typeof SUBSCRIPTION_TIERS]) {
-      return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
-    }
-
-    if (tier === "FREE") {
-      return NextResponse.json({ error: "Cannot subscribe to FREE tier" }, { status: 400 });
-    }
-
-    const result = await createSubscription({
-      userId,
-      tenantId,
-      tier: tier as keyof typeof SUBSCRIPTION_TIERS,
-      paymentReference,
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: result,
-      message: `Successfully subscribed to ${tier} tier`,
-    });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create subscription" }, { status: 500 });
-  }
-}
+export const POST = apiRoute(async (request: NextRequest) => {
+  await requireSensitiveAdmin(request, "admin:manage_platform");
+  validateBody(z.object({ tier: z.string().min(1).max(40), paymentReference: z.string().max(200).optional() }).strict(), await request.json());
+  return error("Subscription changes require verified payment evidence. No subscription or credits were changed.", 501);
+}, { rateLimit: "financial" });

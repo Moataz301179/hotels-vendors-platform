@@ -1,9 +1,9 @@
 "use client";
-import { ArrowRight, Users, ShieldCheck } from "lucide-react";
+import { Users } from "lucide-react";
 import { useApi } from "@/lib/hooks/use-api";
 
 export default function IntelligenceEntitiesPage() {
-  const { data, loading } = useApi<{ entities: any[] }>("/api/v1/intelligence/entities");
+  const { data, loading, error } = useApi<{ entities: { resolvedId?: string; entityId?: string; entityType?: string }[] }>("/api/v1/intelligence/entities");
   const entities = data?.entities || [];
 
   return (
@@ -15,7 +15,7 @@ export default function IntelligenceEntitiesPage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading entities...</div> :
+        {error ? <div role="alert" className="p-4 text-red-400">{error}</div> : loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading entities...</div> :
          entities.length === 0 ? (
           <div className="bg-surface-1 border border-border-subtle rounded-xl p-8 text-center text-sm text-foreground-muted">
             <Users size={20} className="mx-auto text-foreground-muted mb-2" />
@@ -24,7 +24,7 @@ export default function IntelligenceEntitiesPage() {
           </div>
          ) : (
           <div className="grid md:grid-cols-3 gap-3 text-[10px] text-foreground-subtle">
-            {entities.map((e: any) => (
+            {entities.map((e) => (
               <div key={e.resolvedId || e.entityId} className="bg-ink-950 border border-white/5 rounded p-3"><span className="text-white font-medium">{e.entityType || "Entity"}</span><span className="block text-[9px]">{e.resolvedId || e.entityId}</span></div>
             ))}
           </div>

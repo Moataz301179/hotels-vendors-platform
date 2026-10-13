@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { apiRoute, authenticate, requirePermission, success, error, validateBody } from "@/lib/api-utils";
+import { apiRoute, success, error, validateBody } from "@/lib/api-utils";
 import { retryEtaSubmission, type OverrideContext } from "@/lib/admin/override-tools";
 import { z } from "zod";
+import { requireSensitiveAdmin } from "@/lib/admin/access";
 
 const RetryEtaSchema = z.object({
   deadLetterJobId: z.string().cuid(),
@@ -9,8 +10,7 @@ const RetryEtaSchema = z.object({
 });
 
 export const POST = apiRoute(async (request: NextRequest) => {
-  const auth = await authenticate(request);
-  await requirePermission(auth, "admin:eta_retry");
+  const auth = await requireSensitiveAdmin(request, "admin:eta_retry");
 
   const body = await request.json();
   const data = validateBody(RetryEtaSchema, body);

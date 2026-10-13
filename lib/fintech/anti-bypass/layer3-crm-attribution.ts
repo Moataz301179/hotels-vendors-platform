@@ -2,7 +2,7 @@
  * LAYER 3: Telemetry & ID Tagging for CRM Automation
  * Oliv Onboarding Handoff Payload Builder
  *
- * When a supplier clicks "Factor via Oliv", this module builds
+ * When a supplier clicks "Factor via partner", this module builds
  * the pre-fill payload with mandatory attribution metadata.
  *
  * Oliv's CRM MUST write partner_id + attribution_type during

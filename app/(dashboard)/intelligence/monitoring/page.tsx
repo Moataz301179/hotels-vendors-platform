@@ -1,9 +1,10 @@
 "use client";
-import { ArrowRight, Clock, ShieldCheck } from "lucide-react";
+import { Clock } from "lucide-react";
+import type { IntelligenceUpdate } from "@/lib/intelligence/monitoring/change-detection";
 import { useApi } from "@/lib/hooks/use-api";
 
 export default function IntelligenceMonitoringPage() {
-  const { data, loading } = useApi<{ updates: any[] }>("/api/v1/intelligence/monitoring");
+  const { data, loading, error } = useApi<{ updates: IntelligenceUpdate[] }>("/api/v1/intelligence/monitoring");
   const updates = data?.updates || [];
 
   return (
@@ -15,7 +16,7 @@ export default function IntelligenceMonitoringPage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-        {loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading updates...</div> :
+        {error ? <div role="alert" className="p-4 text-red-400">{error}</div> : loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading updates...</div> :
          updates.length === 0 ? (
           <div className="bg-surface-1 border border-border-subtle rounded-xl p-8 text-center text-sm text-foreground-muted">
             <Clock size={20} className="mx-auto text-foreground-muted mb-2" />
@@ -24,7 +25,7 @@ export default function IntelligenceMonitoringPage() {
           </div>
          ) : (
           <div className="space-y-3">
-            {updates.map((upd: any) => (
+            {updates.map((upd) => (
               <div key={upd.updateId} className="bg-ink-950 border border-white/5 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-white">{upd.description}</h3>
                 <p className="text-xs text-foreground-subtle">{upd.reasoning}</p>

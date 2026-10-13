@@ -1,28 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getRedis } from "@/lib/redis";
 
-const startTime = Date.now();
-
-export async function GET(request: NextRequest) {
-  try {
-    return NextResponse.json({
-      success: true,
-      data: {
-        status: "ok",
-        service: "invo",
-        version: "1.0.0",
-        timestamp: new Date().toISOString(),
-        uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
-        dependencies: {
-          database: "connected",
-          redis: "connected",
-          eta_bridge: "ready",
-        },
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  const [database, redis] = await Promise.allSettled([
+    prisma.$queryRaw`SELECT 1`,
+    (async () => { const client = getRedis(); if (!client) throw new Error("Redis unavailable"); return client.ping(); })(),
+  ]);
+  const healthy = database.status === "fulfilled" && redis.status === "fulfilled";
+  return Response.json({ success: healthy, data: { status: healthy ? "ok" : "degraded", service: "invo", timestamp: new Date().toISOString(), dependencies: { database: database.status === "fulfilled" ? "connected" : "unavailable", redis: redis.status === "fulfilled" ? "connected" : "unavailable", eta_bridge: "not_verified" } } }, { status: healthy ? 200 : 503 });
 }

@@ -1,11 +1,12 @@
 // app/invoices/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Link from "next/link";
+import { useApi } from "@/lib/hooks/use-api";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/shared/page-header";
-import { Badge } from "@/components/ui";
+import { Badge, Card, Skeleton, Button, Table, TableHeader, TableBody, TableRow, TableHead } from "@/components/ui";
 import { IcInvoice } from "@/components/icons";
 import { StatCard } from "@/components/shared/stat-card";
 
@@ -60,34 +61,12 @@ const STATUS_TONE: Record<string, "default" | "success" | "warning" | "error" | 
 };
 
 export default function InvoicesPage() {
-  const router = useRouter();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
 
-  const fetchInvoices = async (p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/v1/invoices?page=${p}&limit=${limit}`,
-        { headers: { Accept: "application/json" } }
-      );
-      if (!res.ok) throw new Error("Failed to load invoices");
-      const data: InvoicesResponse = await res.json();
-      setInvoices(data.invoices);
-      setTotal(data.pagination.total);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchInvoices(page); }, [page]);
+  const { data, loading, error, refetch } = useApi<InvoicesResponse>(`/api/v1/invoices?page=${page}&limit=${limit}`);
+  const invoices = data?.invoices ?? [];
+  const total = data?.pagination.total ?? 0;
 
   const totalPages = Math.ceil(total / limit);
 
@@ -98,7 +77,7 @@ export default function InvoicesPage() {
         description="View and manage billing invoices for procurement orders"
         action={
           <Button size="sm" asChild>
-            <a href="/api/v1/invoices">Export</a>
+            <Link href="/api/v1/invoices" download="invoices.json">Download JSON</Link>
           </Button>
         }
       />
@@ -155,7 +134,7 @@ export default function InvoicesPage() {
             Invoices will appear here once procurement orders are billed.
           </p>
           <Button size="sm" variant="outline" asChild>
-            <a href="/orders">Browse Orders</a>
+            <Link href="/orders">Browse Orders</Link>
           </Button>
         </Card>
       ) : (

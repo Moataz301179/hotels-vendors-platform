@@ -1,0 +1,16 @@
+---
+description: Preserve HotelsVendors source, deployment, identity, and evidence boundaries.
+alwaysApply: true
+---
+
+# HotelsVendors operating rules
+
+- Work only from `/Users/Moatazi/hotels-vendors-new` for the web platform. Before any deployment, read that checkout's configured Git remote; never invent, substitute, or copy from another workspace or repository.
+- Live VPS trace, verified 2026-10-10: public Nginx traffic goes to PM2 `hotels-vendors-role-images`, port `3057`, running `/var/www/hv-releases/hv-integration-356ef-20261009`. The earlier PM2 `hotels-vendors-production` process and `/var/www/hv-release-production` are not the current public route.
+- Do not create a second PM2 candidate process or send public traffic to a different port. Before a deployment, read the current Nginx upstream, active PM2 process, working directory, and release timestamp; stop and report any difference.
+- Before a deployment, the named commit must be pushed to the Git remote from the local checkout and identified by SHA. Feature work and deployment work are separate tasks; do not deploy while implementing features.
+- Never deploy, restart PM2, edit Nginx, migrate data, change secrets, commit, push, reset, clean, stash, or overwrite existing work without explicit user authority.
+- Web identity authority is Clerk, mapped to the HotelsVendors tenant/user record. The mobile app currently uses backend-issued mobile JWT sessions; do not merge or replace these identity paths without an explicit approved auth decision.
+- The Expo iOS/Android app is `/Users/Moatazi/hotels-vendors-new/mobile`, repository `Moataz301179/hotels-vendors-mobile`. It must use the same web backend through `${API_BASE}/api/v1` (default `https://www.hotelsvendors.com/api/v1`); a simulator is not production-readiness proof.
+- Data access uses Prisma with Neon-hosted PostgreSQL (`prisma/schema.prisma`); this was confirmed from the live process without exposing credentials. Do not substitute Supabase, SQLite, another ORM, or another provider without an approved architecture decision.
+- Never claim a test, build, deployment, authentication flow, mobile integration, or external integration succeeded without command or environment evidence. State failures, conflicts, and untested areas plainly.

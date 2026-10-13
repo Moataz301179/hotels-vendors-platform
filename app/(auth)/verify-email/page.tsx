@@ -10,18 +10,16 @@ function VerifyEmailForm() {
   const token = searchParams.get("token");
   const emailParam = searchParams.get("email");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("Verifying your email...");
+  const [verificationStatus, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [verificationMessage, setMessage] = useState("Verifying your email...");
+  const status = token ? verificationStatus : "error";
+  const message = token ? verificationMessage : "Invalid or missing verification token.";
   const [resending, setResending] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
   const [email, setEmail] = useState(emailParam || "");
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
-      setMessage("Invalid or missing verification token.");
-      return;
-    }
+    if (!token) return;
 
     fetch("/api/v1/auth/verify-email", {
       method: "POST",
@@ -30,7 +28,7 @@ function VerifyEmailForm() {
     })
       .then(async (res) => {
         const data = await res.json();
-        if (data.success) {
+        if (res.ok && data.success) {
           setStatus("success");
           setMessage("Your email has been verified successfully.");
         } else {
@@ -55,7 +53,7 @@ function VerifyEmailForm() {
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      setResendMsg(data.data?.message || "Verification email sent if account exists.");
+      setResendMsg(res.ok && data.success ? (data.data?.message || "Verification email sent if account exists.") : (data.error || "Failed to send. Please try again."));
     } catch {
       setResendMsg("Failed to send. Please try again.");
     } finally {

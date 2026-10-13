@@ -1,82 +1,80 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { ShoppingCart, Package, Building2, Truck, TrendingUp, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import {
-  ShoppingCart, Package, Users, Building2, TrendingUp, AlertCircle, Loader2,
-} from "lucide-react";
-import { useApi } from "@/lib/hooks/use-api";
-import AppShell, { RequireAuth } from "@/components/AppShell";
 
-interface DashboardStats {
-  orders: { total: number; pending: number; delivered: number };
-  suppliers: { total: number };
-  products: { total: number };
-}
+export const dynamic = "force-dynamic";
 
-export default function DashboardPage() {
-  const { data, loading, error } = useApi<DashboardStats>("/api/v1/admin/dashboard");
+export default async function DashboardPage() {
+  const clerkUser = await currentUser();
+  const email = clerkUser?.emailAddresses.find((item) => item.id === clerkUser.primaryEmailAddressId)?.emailAddress
+    || clerkUser?.emailAddresses[0]?.emailAddress;
+  if (!email) redirect("/login");
 
-  if (loading) {
-    return (
-      <RequireAuth>
-        <AppShell active="/dashboard">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 size={32} className="text-accent animate-spin" />
-          </div>
-        </AppShell>
-      </RequireAuth>
-    );
-  }
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, name: true, tenantId: true, platformRole: true, tenant: { select: { name: true } } },
+  });
+  if (!user) redirect("/onboarding");
 
-  const stats = data || { orders: { total: 0, pending: 0, delivered: 0 }, suppliers: { total: 0 }, products: { total: 0 } };
+  // Every metric is scoped to the authenticated user's tenant; no sample values or cross-tenant totals.
+  const [orders, pendingOrders, deliveredOrders, suppliers, products] = await Promise.all([
+    prisma.order.count({ where: { tenantId: user.tenantId, deletedAt: null } }),
+    prisma.order.count({ where: { tenantId: user.tenantId, deletedAt: null, status: { in: ["PENDING_APPROVAL", "CONFIRMED"] } } }),
+    prisma.order.count({ where: { tenantId: user.tenantId, deletedAt: null, status: "DELIVERED" } }),
+    prisma.supplier.count({ where: { tenantId: user.tenantId, deletedAt: null } }),
+    prisma.product.count({ where: { tenantId: user.tenantId, deletedAt: null } }),
+  ]);
+
+  const roleLabels: Record<string, string> = {
+    HOTEL: "Hotel procurement workspace",
+    SUPPLIER: "Supplier workspace",
+    FACTORING: "Funder workspace",
+    SHIPPING: "Carrier workspace",
+    ADMIN: "Platform administration",
+  };
+  const stats = [
+    { label: "Orders", value: orders, icon: ShoppingCart },
+    { label: "Awaiting action", value: pendingOrders, icon: Package },
+    { label: "Delivered", value: deliveredOrders, icon: Truck },
+    { label: "Suppliers in your network", value: suppliers, icon: Building2 },
+  ];
 
   return (
-    <RequireAuth>
-      <AppShell active="/dashboard">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-white mb-1">Dashboard</h1>
-            <p className="text-sm text-foreground-muted">Procurement overview and activity</p>
-          </div>
+    <section className="mx-auto w-full max-w-7xl space-y-8">
+      <header>
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">{roleLabels[user.platformRole] || "HotelsVendors workspace"}</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">{user.tenant.name}</h1>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">Your procurement network, live activity and verified opportunities.</p>
+      </header>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-surface-1 border border-border-subtle rounded-xl p-4">
-              <ShoppingCart size={16} className="text-foreground-muted mb-2" />
-              <div className="text-2xl font-semibold text-white">{stats.orders.total}</div>
-              <div className="text-xs text-foreground-muted">Total Orders</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map(({ label, value, icon: Icon }) => (
+          <article key={label} className="rounded-2xl border p-5" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+            <div className="flex items-center justify-between">
+              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{label}</span>
+              <Icon size={17} style={{ color: "var(--text-muted)" }} />
             </div>
-            <div className="bg-surface-1 border border-border-subtle rounded-xl p-4">
-              <Package size={16} className="text-amber-400 mb-2" />
-              <div className="text-2xl font-semibold text-white">{stats.orders.pending}</div>
-              <div className="text-xs text-foreground-muted">Pending</div>
-            </div>
-            <div className="bg-surface-1 border border-border-subtle rounded-xl p-4">
-              <TrendingUp size={16} className="text-green-400 mb-2" />
-              <div className="text-2xl font-semibold text-white">{stats.orders.delivered}</div>
-              <div className="text-xs text-foreground-muted">Delivered</div>
-            </div>
-            <div className="bg-surface-1 border border-border-subtle rounded-xl p-4">
-              <Building2 size={16} className="text-blue-400 mb-2" />
-              <div className="text-2xl font-semibold text-white">{stats.suppliers.total}</div>
-              <div className="text-xs text-foreground-muted">Suppliers</div>
-            </div>
-          </div>
+            <p className="mt-5 text-3xl font-semibold tracking-tight tabular-nums">{value.toLocaleString()}</p>
+          </article>
+        ))}
+      </div>
 
-          {/* Empty state */}
-          {stats.orders.total === 0 && (
-            <div className="text-center py-12 bg-surface-1 border border-border-subtle rounded-xl">
-              <AlertCircle size={32} className="mx-auto text-foreground-muted mb-3" />
-              <h3 className="text-lg font-medium text-white mb-1">No Activity Yet</h3>
-              <p className="text-foreground-muted text-sm max-w-md mx-auto">
-                Your dashboard will populate as you create orders, connect with suppliers,
-                and process deliveries. All activity is tracked and auditable.
-              </p>
-            </div>
-          )}
-        </div>
-      </AppShell>
-    </RequireAuth>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <article className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
+          <TrendingUp size={20} style={{ color: "var(--signal)" }} />
+          <h2 className="mt-4 text-lg font-semibold">Find measurable savings</h2>
+          <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>Review supplier value deals and quote opportunities. Reference prices and savings are shown only when supported by actual listing data.</p>
+          <Link href="/marketplace" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">Explore opportunities <ArrowRight size={15} /></Link>
+        </article>
+        <article className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
+          <Package size={20} style={{ color: "var(--text-muted)" }} />
+          <h2 className="mt-4 text-lg font-semibold">Your live catalog</h2>
+          <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{products.toLocaleString()} product listing{products === 1 ? "" : "s"} currently associated with your workspace. Counts are read from the database and scoped to your tenant.</p>
+          <Link href={user.platformRole === "SUPPLIER" ? "/supplier/products" : "/hotel/catalog"} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">Open catalog <ArrowRight size={15} /></Link>
+        </article>
+      </div>
+    </section>
   );
 }

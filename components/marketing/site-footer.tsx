@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BrandLogo } from "@/components/layout/brand-logo";
+import Image from "next/image";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 /* ── Real brand glyphs (inline SVG paths, official marks) ── */
@@ -35,38 +35,38 @@ export function SiteFooter() {
   ];
 
   return (
-    <footer className={`border-t py-12 px-6 bg-black text-white ${ar ? "font-cairo" : ""}`} style={{ borderColor: "rgba(255,255,255,0.10)", backgroundColor: "#000000" }}>
+    <footer className={`hv-site-footer border-t py-12 px-6 ${ar ? "font-cairo" : ""}`}>
       <div className="max-w-6xl mx-auto">
         {/* Top: brand + about + socials + store badges */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Brand + About + Founder */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-3" dir="ltr">
-              <BrandLogo variant="light" size="md" showText={false} />
-              <span className="font-semibold text-white uppercase text-[15px]" style={{ letterSpacing: "0.2em" }}>
+              <Image src="/logo-white.svg" alt="HotelsVendors" width={165} height={38} />
+              <span className="font-semibold text-slate-900 uppercase text-[15px]" style={{ letterSpacing: "0.2em" }}>
                 Hotels Vendors
               </span>
             </div>
-            <p className="text-white/55 text-sm leading-relaxed mb-4">
+            <p className="text-slate-600 text-sm leading-relaxed mb-4">
               {ar
                 ? "شبكة أعمال مترابطة للمشتريات الفندقية والموردين والخدمات اللوجستية والفرص التجارية المدعومة بالأدلة."
                 : "A connected business network for hospitality procurement, suppliers, logistics and evidence-backed commercial opportunities."}
             </p>
             <div className="mb-4">
-              <p className="text-[11px] text-white/40 uppercase tracking-widest mb-1">{ar ? "عن الشركة" : "About"}</p>
-              <p className="text-sm text-white/70">
+              <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-1">{ar ? "عن الشركة" : "About"}</p>
+              <p className="text-sm text-slate-600">
                 {ar
                   ? " مطور بواسطة Restaurants for E-Marketing، القاهرة، مصر. تأسست لتحرير سلسلة توريد الضيافة المصرية."
                   : "Built by Restaurants for E-Marketing, Cairo, Egypt — founded to unbundle the Egyptian hospitality supply chain."}
               </p>
-              <p className="text-sm text-white/70 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 <span className="text-[var(--accent-base)] font-semibold">{ar ? "المؤسس :" : "Founder: "}</span>
                 {ar ? "معتز إبراهيم" : "Moataz Ibrahim"}
               </p>
             </div>
             {/* Real brand socials */}
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-[11px] text-white/40 uppercase tracking-widest">{ar ? "تابعنا" : "Follow us"}</span>
+              <span className="text-[11px] text-slate-600 uppercase tracking-widest">{ar ? "تابعنا" : "Follow us"}</span>
               {socials.map(({ label, href, Icon }) => (
                 <a
                   key={label}
@@ -74,8 +74,8 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="hv-hover-accent w-9 h-9 rounded-lg flex items-center justify-center text-white/70 hover:text-[var(--accent-base)] transition-colors"
-                  style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  className="hv-hover-accent w-9 h-9 rounded-lg flex items-center justify-center text-slate-600 hover:text-[var(--accent-base)] transition-colors"
+                  style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid #cbd5e1" }}
                 >
                   <Icon size={17} />
                 </a>
@@ -85,38 +85,41 @@ export function SiteFooter() {
 
           {/* Platform links */}
           <div>
-            <div className="font-semibold mb-3 text-white">{ar ? "المنتج" : "Platform"}</div>
-            <ul className="flex flex-col gap-2 text-sm">
-              <li><Link href="/marketplace" className="text-white/50 hover:text-white transition-colors">HotelsVendors</Link></li>
-              <li><Link href="/sandbox" className="text-white/50 hover:text-white transition-colors">{ar ? "تجربة المنصة" : "Sandbox"}</Link></li>
-              <li><Link href="/financing" className="text-white/50 hover:text-white transition-colors"> {ar ? "التمويل" : "Financing"}</Link></li>
-              <li><Link href="/suppliers/join" className="text-white/50 hover:text-white transition-colors">{ar ? "للموردين" : "For Suppliers"}</Link></li>
-              <li><Link href="/hotels/join" className="text-white/50 hover:text-white transition-colors">{ar ? "للفنادق" : "For Hotels"}</Link></li>
-              <li><Link href="/eta-compliance" className="text-white/50 hover:text-white transition-colors">{ar ? "الامتثال الضريبي" : "ETA Compliance"}</Link></li>
+            <div className="font-semibold mb-3 text-slate-900">{ar ? "المنتج" : "Platform"}</div>
+            <ul aria-label={ar ? "روابط المنصة" : "Platform links"} className="flex flex-col gap-2 text-sm">
+              <li><Link href="/platform" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "نظرة عامة على المنصة" : "Platform overview"}</Link></li>
+              <li><Link href="/marketplace" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "شبكة المشتريات" : "Procurement network"}</Link></li>
+              <li><Link href="/#market-compass" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "بوصلة السوق — نظرة عامة" : "Market Compass overview"}</Link></li>
+              <li><Link href="/login?redirect_url=%2Fintelligence" prefetch={false} className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "مساحة بوصلة السوق — تسجيل الدخول" : "Market Compass workspace — sign in"}</Link></li>
+              <li><Link href="/sandbox" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "تجربة المنصة" : "Sandbox"}</Link></li>
+              <li><Link href="/login?redirect_url=%2Ffinancing" className="text-slate-600 hover:text-slate-900 transition-colors"> {ar ? "التمويل" : "Funding workspace — sign in"}</Link></li>
+              <li><Link href="/suppliers/join" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "للموردين" : "For Suppliers"}</Link></li>
+              <li><Link href="/hotels/join" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "للفنادق" : "For Hotels"}</Link></li>
+              <li><Link href="/platform" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "الامتثال الضريبي" : "Procurement workflows"}</Link></li>
             </ul>
           </div>
 
           {/* Company + Legal */}
           <div>
-            <div className="font-semibold mb-3 text-white">{ar ? "الشركة" : "Company"}</div>
+            <div className="font-semibold mb-3 text-slate-900">{ar ? "الشركة" : "Company"}</div>
             <ul className="flex flex-col gap-2 text-sm">
-              <li><Link href="/about" className="text-white/50 hover:text-white transition-colors">{ar ? "عنّا" : "About"}</Link></li>
-              <li><Link href="/founder" className="text-white/50 hover:text-white transition-colors">{ar ? "رسالة المؤسس" : "Founder's Message"}</Link></li>
-              <li><Link href="/support" className="text-white/50 hover:text-white transition-colors">{ar ? "الدعم" : "Support"}</Link></li>
-              <li><Link href="/contact" className="text-white/50 hover:text-white transition-colors">{ar ? "تواصل معنا" : "Contact"}</Link></li>
-              <li><Link href="/privacy" className="text-white/50 hover:text-white transition-colors">{ar ? "الخصوصية" : "Privacy"}</Link></li>
-              <li><Link href="/terms" className="text-white/50 hover:text-white transition-colors">{ar ? "الشروط" : "Terms"}</Link></li>
+              <li><Link href="/about" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "عنّا" : "About"}</Link></li>
+              <li><Link href="/founder" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "رسالة المؤسس" : "Founder's Message"}</Link></li>
+              <li><Link href="/support" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "الدعم" : "Support"}</Link></li>
+              <li><Link href="/contact" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "تواصل معنا" : "Contact"}</Link></li>
+              <li><Link href="/privacy" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "الخصوصية" : "Privacy"}</Link></li>
+              <li><Link href="/terms" className="text-slate-600 hover:text-slate-900 transition-colors">{ar ? "الشروط" : "Terms"}</Link></li>
             </ul>
           </div>
         </div>
 
         {/* Bottom bar — real trust badges as small chips */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t text-xs text-white/35" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t text-xs text-slate-600" style={{ borderColor: "#cbd5e1" }}>
           <span>&copy; {new Date().getFullYear()} {ar ? " Restaurants for E-Marketing. جميع الحقوق محفوظة." : "Restaurants for E-Marketing. All rights reserved."}</span>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full border text-[10px] font-medium bg-white/5" style={{ borderColor: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.55)" }}>{ar ? "صلاحيات حسب المؤسسة" : "Organization-scoped access"}</span>
-            <span className="px-2.5 py-1 rounded-full border text-[10px] font-medium bg-white/5" style={{ borderColor: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.55)" }}>{ar ? "إحالات لممولين خارجيين" : "External funding referrals"}</span>
-            <span className="px-2.5 py-1 rounded-full border text-[10px] font-medium bg-white/5" style={{ borderColor: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.55)" }}>{ar ? "سجل تدقيق" : "Auditable workflows"}</span>
+            <span className="px-2.5 py-1 rounded-full border text-[10px] font-medium bg-slate-200" style={{ borderColor: "#cbd5e1", color: "#475569" }}>{ar ? "صلاحيات حسب المؤسسة" : "Organization-scoped access"}</span>
+            <span className="px-2.5 py-1 rounded-full border text-[10px] font-medium bg-slate-200" style={{ borderColor: "#cbd5e1", color: "#475569" }}>{ar ? "إحالات لممولين خارجيين" : "External funding referrals"}</span>
+            <span className="px-2.5 py-1 rounded-full border text-[10px] font-medium bg-slate-200" style={{ borderColor: "#cbd5e1", color: "#475569" }}>{ar ? "سجل تدقيق" : "Auditable workflows"}</span>
           </div>
         </div>
       </div>

@@ -31,7 +31,7 @@ export interface RealHotel {
   monthlyGmvEgp: number;
 }
 
-const suppliers: RealSupplier[] = (marketData as any).suppliers.map((s: any) => ({
+const suppliers: RealSupplier[] = marketData.suppliers.map((s) => ({
   id: s.id,
   name: s.name,
   city: s.city,
@@ -42,7 +42,7 @@ const suppliers: RealSupplier[] = (marketData as any).suppliers.map((s: any) => 
   monthlyCapacityEgp: s.monthly_capacity_egp,
 }));
 
-const products: RealProduct[] = (marketData as any).product_catalog.map((p: any) => ({
+const products: RealProduct[] = marketData.product_catalog.map((p) => ({
   sku: p.sku,
   name: p.name,
   category: p.category,
@@ -51,7 +51,7 @@ const products: RealProduct[] = (marketData as any).product_catalog.map((p: any)
   supplierId: p.supplier_id,
 }));
 
-const hotels: RealHotel[] = (marketData as any).hotels.map((h: any) => ({
+const hotels: RealHotel[] = marketData.hotels.map((h) => ({
   id: h.id,
   name: h.name,
   city: h.city,

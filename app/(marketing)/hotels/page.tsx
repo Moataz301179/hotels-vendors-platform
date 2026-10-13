@@ -5,11 +5,11 @@ import { ArrowRight, CheckCircle2, Shield, Zap, Building2, CreditCard, FileText,
 
 export const metadata: Metadata = {
   alternates: { canonical: canonicalUrl("/hotels") },
-  title: "Hotels — B2B Procurement + Oliv Factoring | HotelsVendors",
-  description: "Centralize procurement across all properties. Get Net-60 terms via Oliv reverse factoring. Suppliers paid instantly. ETA-compliant invoicing. EGP 10M+ credit facility.",
+  title: "Hotels — B2B Procurement +  Factoring | HotelsVendors",
+  description: "Centralize procurement across all properties. Get Net-60 terms via our external financing partner. Suppliers paid instantly. ETA-compliant invoicing. EGP 10M+ credit facility.",
   openGraph: {
-    title: "Hotels — B2B Procurement + Oliv Factoring | HotelsVendors",
-    description: "Centralize procurement. Net-60 terms via Oliv. Suppliers paid instantly. ETA-compliant.",
+    title: "Hotels — B2B Procurement +  Factoring | HotelsVendors",
+    description: "Centralize procurement. Net-60 terms via . Suppliers paid instantly. ETA-compliant.",
     type: "website",
   },
 };
@@ -33,16 +33,16 @@ const ONBOARDING_STEPS = [
   },
   {
     step: "3",
-    title: "Connect Oliv Finance",
-    desc: "Link your HotelsVendors account to Oliv. Choose factoring or reverse factoring based on your needs.",
+    title: "Connect  Finance",
+    desc: "Link your HotelsVendors account to . Choose factoring or reverse factoring based on your needs.",
     icon: Landmark,
     color: "var(--success)",
-    detail: "Oliv evaluates your credit profile and assigns a revolving facility up to EGP 10M+.",
+    detail: " evaluates your credit profile and assigns a revolving facility up to EGP 10M+.",
   },
   {
     step: "4",
     title: "Start Procuring",
-    desc: "Browse the marketplace, place orders, and let Oliv handle supplier payments. You pay at Net-60.",
+    desc: "Browse the marketplace, place orders, and let  handle supplier payments. You pay at Net-60.",
     icon: Package,
     color: "var(--orange-base)",
     detail: "500+ suppliers, 10,000+ products, fixed pricing. All invoices ETA-compliant automatically.",
@@ -52,7 +52,7 @@ const ONBOARDING_STEPS = [
 const FACTORING_OPTIONS = [
   {
     title: "Factoring (Supplier-Initiated)",
-    desc: "Suppliers submit verified invoices to Oliv for immediate payment. You maintain your payment terms.",
+    desc: "Suppliers submit verified invoices to  for immediate payment. You maintain your payment terms.",
     icon: RefreshCw,
     color: "var(--accent-base)",
     benefits: [
@@ -64,7 +64,7 @@ const FACTORING_OPTIONS = [
   },
   {
     title: "Reverse Factoring (Hotel-Initiated)",
-    desc: "You approve invoices and Oliv pays suppliers early. You settle with Oliv at Net-60.",
+    desc: "You approve invoices and  pays suppliers early. You settle with  at Net-60.",
     icon: ArrowRight,
     color: "var(--success)",
     benefits: [
@@ -77,9 +77,9 @@ const FACTORING_OPTIONS = [
 ];
 
 const BENEFITS = [
-  { icon: Clock, title: "Net-60 Payment Terms", desc: "Pay Oliv at Net-60 instead of Net-15/30 to suppliers. Preserve working capital for operations.", color: "var(--success)" },
-  { icon: Shield, title: "Supplier Priority", desc: "Suppliers get paid instantly via Oliv. They prioritize your orders — better fill rates, faster delivery.", color: "var(--accent-base)" },
-  { icon: Users, title: "One Monthly Payment", desc: "Single wire to Oliv covers all financed invoices. Simplified AP. Auto-reconciled to PO level.", color: "var(--purple-base)" },
+  { icon: Clock, title: "Net-60 Payment Terms", desc: "Pay  at Net-60 instead of Net-15/30 to suppliers. Preserve working capital for operations.", color: "var(--success)" },
+  { icon: Shield, title: "Supplier Priority", desc: "Suppliers get paid instantly via . They prioritize your orders — better fill rates, faster delivery.", color: "var(--accent-base)" },
+  { icon: Users, title: "One Monthly Payment", desc: "Single wire to  covers all financed invoices. Simplified AP. Auto-reconciled to PO level.", color: "var(--purple-base)" },
   { icon: Building2, title: "Multi-Property Support", desc: "Centralized procurement across all properties. Budget controls per outlet. Authority Matrix governance.", color: "var(--orange-base)" },
   { icon: BarChart3, title: "Full Spend Visibility", desc: "Real-time dashboard: PO → Delivery → Invoice → Financing → Payment. Complete audit trail.", color: "#64b5f6" },
   { icon: Landmark, title: "ETA & FRA Compliant", desc: "Every invoice ETA-validated. Digital signatures. Audit-ready trail for Egyptian Tax Authority.", color: "var(--success)" },
@@ -91,16 +91,16 @@ const METRICS = [
   { label: "Supplier Fill Rate", value: "+23%", icon: TrendingUp, color: "var(--purple-base)" },
   { label: "AP Workload", value: "-60%", icon: Wallet, color: "var(--orange-base)" },
   { label: "ETA Compliance", value: "100%", icon: Shield, color: "#64b5f6" },
-  { label: "Oliv Credit Facility", value: "EGP 10M+", icon: Landmark, color: "var(--success)" },
+  { label: " Credit Facility", value: "EGP 10M+", icon: Landmark, color: "var(--success)" },
 ];
 
 const FAQ = [
   { q: "What is the ETA token and why do I need it?", a: "The ETA token is your Egyptian Tax Authority digital identity. It's required for all B2B invoicing in Egypt. Without it, invoices aren't legally compliant. We guide you through the registration process during onboarding." },
-  { q: "What's the difference between factoring and reverse factoring?", a: "Factoring is supplier-initiated — suppliers submit invoices to Oliv for early payment. Reverse factoring is hotel-initiated — you approve invoices and Oliv pays suppliers early. Both result in Net-60 terms for you." },
-  { q: "Does this change our existing supplier contracts?", a: "No. Your contracts remain unchanged. Oliv is an optional financing layer. Suppliers choose whether to use it. Your payment obligation stays Net-60 to Oliv." },
-  { q: "What if a supplier doesn't want financing?", a: "They get paid on your normal terms. Oliv financing is optional. You still benefit from the platform's ordering, logistics, and ETA compliance." },
-  { q: "How do I get started?", a: "Register as a hotel → Get your ETA token → Connect Oliv → Start procuring. The entire process takes 1-2 business days." },
-  { q: "Is this Shariah-compliant?", a: "Oliv offers Shariah-compliant financing structures. Discuss with their team during onboarding for your specific requirements." },
+  { q: "What's the difference between factoring and reverse factoring?", a: "Factoring is supplier-initiated — suppliers submit invoices to  for early payment. Reverse factoring is hotel-initiated — you approve invoices and  pays suppliers early. Both result in Net-60 terms for you." },
+  { q: "Does this change our existing supplier contracts?", a: "No. Your contracts remain unchanged.  is an optional financing layer. Suppliers choose whether to use it. Your payment obligation stays Net-60 to ." },
+  { q: "What if a supplier doesn't want financing?", a: "They get paid on your normal terms.  financing is optional. You still benefit from the platform's ordering, logistics, and ETA compliance." },
+  { q: "How do I get started?", a: "Register as a hotel → Get your ETA token → Connect  → Start procuring. The entire process takes 1-2 business days." },
+  { q: "Is this Shariah-compliant?", a: " offers Shariah-compliant financing structures. Discuss with their team during onboarding for your specific requirements." },
 ];
 
 export default function HotelsPage() {
@@ -122,7 +122,7 @@ export default function HotelsPage() {
           </h1>
           <p className="text-[15px] text-white/40 max-w-2xl mx-auto leading-relaxed mb-8">
             Centralize multi-property procurement. Connect your ETA token for compliant invoicing.
-            Choose <strong style={{ color: "var(--success)" }}>factoring</strong> or <strong style={{ color: "var(--success)" }}>reverse factoring</strong> through Oliv.
+            Choose <strong style={{ color: "var(--success)" }}>factoring</strong> or <strong style={{ color: "var(--success)" }}>reverse factoring</strong> through .
             Suppliers get paid instantly. You settle at Net-60.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -139,8 +139,8 @@ export default function HotelsPage() {
       {/* Trust Bar */}
       <section className="py-6 border-y" style={{ borderColor: "rgba(var(--success-rgb),0.18)" }}>
         <div className="max-w-4xl mx-auto px-6 flex flex-wrap justify-center gap-6 text-[12px] text-white/30">
-          <span className="flex items-center gap-2"><Landmark size={14} style={{ color: "var(--success)" }} /> Oliv: FRA-Licensed Digital Factoring (Partner)</span>
-          <span className="flex items-center gap-2"><Shield size={14} style={{ color: "var(--success)" }} /> Oliv Partner Facility: EGP 30M (Suez Canal Bank)</span>
+          <span className="flex items-center gap-2"><Landmark size={14} style={{ color: "var(--success)" }} /> : FRA-Licensed Digital Factoring (Partner)</span>
+          <span className="flex items-center gap-2"><Shield size={14} style={{ color: "var(--success)" }} />  Partner Facility: EGP 30M (Suez Canal Bank)</span>
           <span className="flex items-center gap-2"><CheckCircle2 size={14} style={{ color: "var(--success)" }} /> Net-60 Payment Terms</span>
           <span className="flex items-center gap-2"><Zap size={14} style={{ color: "var(--success)" }} /> ETA Token Integration</span>
         </div>
@@ -181,7 +181,7 @@ export default function HotelsPage() {
       <section className="py-20 border-y" style={{ borderColor: "rgba(var(--success-rgb),0.18)" }}>
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
-            <span className="text-[11px] font-medium uppercase tracking-[0.15em] mb-3 block" style={{ color: "var(--success)" }}>Oliv Financing Options</span>
+            <span className="text-[11px] font-medium uppercase tracking-[0.15em] mb-3 block" style={{ color: "var(--success)" }}> Financing Options</span>
             <h2 className="text-3xl md:text-4xl font-semibold text-white">Choose What Works for You</h2>
             <p className="text-[14px] text-white/40 max-w-2xl mx-auto mt-4">
               Both options give you Net-60 terms. The difference is who initiates the financing.
@@ -217,15 +217,15 @@ export default function HotelsPage() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
             <span className="text-[11px] font-medium uppercase tracking-[0.15em] mb-3 block" style={{ color: "var(--orange-base)" }}>Marketplace Integration</span>
-            <h2 className="text-3xl md:text-4xl font-semibold text-white">Shop. Checkout. Oliv Handles Payment.</h2>
+            <h2 className="text-3xl md:text-4xl font-semibold text-white">Shop. Checkout.  Handles Payment.</h2>
           </div>
           <div className="rounded-2xl border border-white/[0.06] bg-[#12121a] p-8 md:p-10">
             <div className="grid sm:grid-cols-4 gap-6">
               {[
                 { step: "1", title: "Browse Catalog", desc: "Search 10,000+ products from 500+ verified suppliers.", color: "var(--accent-base)" },
                 { step: "2", title: "Place Order", desc: "Add to cart, apply Authority Matrix approvals, confirm PO.", color: "var(--purple-base)" },
-                { step: "3", title: "Checkout via Oliv", desc: "At checkout, Oliv processes the payment. Your terms: Net-60.", color: "var(--success)" },
-                { step: "4", title: "Suppliers Paid", desc: "Suppliers receive payment in 48 hours. You pay Oliv later.", color: "var(--orange-base)" },
+                { step: "3", title: "Checkout via financing partner", desc: "At checkout,  processes the payment. Your terms: Net-60.", color: "var(--success)" },
+                { step: "4", title: "Suppliers Paid", desc: "Suppliers receive payment in 48 hours. You pay  later.", color: "var(--orange-base)" },
               ].map((s) => (
                 <div key={s.step} className="text-center">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-3 text-[16px] font-bold" style={{ backgroundColor: `${s.color}15`, border: `1px solid ${s.color}33`, color: s.color }}>
@@ -321,7 +321,7 @@ export default function HotelsPage() {
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4">Ready to Transform Your Hotel Procurement?</h2>
           <p className="text-[14px] text-white/40 mb-8 max-w-md mx-auto">
-            Join leading hotel groups in Egypt. Connect your ETA token, set up Oliv financing,
+            Join leading hotel groups in Egypt. Connect your ETA token, set up  financing,
             and start procuring with Net-60 terms.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">

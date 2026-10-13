@@ -27,7 +27,7 @@ export {
   Tabs,
   Pager,
   Img,
-} from "./ui-primitives.tsx";
+} from "./ui-primitives";
 
 // ─── shadcn components (stable APIs — backward compat) ───
 export { Button, buttonVariants } from "./button";

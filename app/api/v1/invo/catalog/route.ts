@@ -1,105 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
-
-// Mock catalog database
-interface CatalogItem {
-  id: string;
-  sku: string;
-  name: string;
-  category: string;
-  price: number;
-  quantity: number;
-  supplierId: string;
-  unit: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-let catalog: CatalogItem[] = [
-  { id: "cat_1", sku: "HV-FB-001", name: "Extra Virgin Olive Oil 5L", category: "F&B", price: 12500, quantity: 500, supplierId: "sup_1", unit: "bottle", createdAt: "2026-06-01T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z" },
-  { id: "cat_2", sku: "HV-HK-002", name: "Premium Bath Amenities Set", category: "Housekeeping", price: 8500, quantity: 200, supplierId: "sup_2", unit: "set", createdAt: "2026-06-01T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z" },
-  { id: "cat_3", sku: "HV-ENG-003", name: "LED Panel Light 24W", category: "Engineering", price: 3200, quantity: 100, supplierId: "sup_3", unit: "piece", createdAt: "2026-06-01T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z" },
-  { id: "cat_4", sku: "HV-FB-004", name: "Egyptian Rice 10kg", category: "F&B", price: 4800, quantity: 1000, supplierId: "sup_1", unit: "bag", createdAt: "2026-06-01T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z" },
-  { id: "cat_5", sku: "HV-HK-005", name: "Egyptian Cotton Towels", category: "Housekeeping", price: 15000, quantity: 300, supplierId: "sup_2", unit: "dozen", createdAt: "2026-06-01T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z" },
-];
-
-import { requireServiceKey } from "@/lib/api-utils";
-
-function requireAuth(request: NextRequest): void {
-  requireServiceKey(request, "INVO_SERVICE_KEY");
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    requireAuth(request);
-
-    const { searchParams } = new URL(request.url);
-    const supplierId = searchParams.get("supplierId");
-    const category = searchParams.get("category");
-    const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
-
-    let results = [...catalog];
-
-    if (supplierId) results = results.filter((i) => i.supplierId === supplierId);
-    if (category) results = results.filter((i) => i.category.toLowerCase() === category.toLowerCase());
-    if (search) {
-      const q = search.toLowerCase();
-      results = results.filter((i) => i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q));
-    }
-
-    const total = results.length;
-    const start = (page - 1) * limit;
-    const paginated = results.slice(start, start + limit);
-
-    return NextResponse.json({
-      success: true,
-      data: paginated,
-      meta: { page, limit, total, pages: Math.ceil(total / limit) },
-    });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    requireAuth(request);
-
-    const body = await request.json();
-    const { sku, name, category, price, quantity, supplierId, unit } = body;
-
-    if (!sku || !name || !supplierId) {
-      return NextResponse.json({ success: false, error: "sku, name, supplierId required" }, { status: 400 });
-    }
-
-    const existing = catalog.find((i) => i.sku === sku);
-    if (existing) {
-      existing.name = name || existing.name;
-      existing.category = category || existing.category;
-      existing.price = price ?? existing.price;
-      existing.quantity = quantity ?? existing.quantity;
-      existing.unit = unit || existing.unit;
-      existing.updatedAt = new Date().toISOString();
-      return NextResponse.json({ success: true, data: existing, action: "updated" });
-    }
-
-    const item: CatalogItem = {
-      id: `cat_${Date.now()}`,
-      sku,
-      name,
-      category: category || "Uncategorized",
-      price: price || 0,
-      quantity: quantity || 0,
-      supplierId,
-      unit: unit || "piece",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    catalog.push(item);
-    return NextResponse.json({ success: true, data: item, action: "created" }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
+import { NextRequest } from "next/server";
+import { ProductCategory } from "@prisma/client";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { apiRoute, authenticate, requirePermission, validateBody, validateQuery, success, ApiError } from "@/lib/api-utils";
+import { requireAnyPermission } from "@/lib/auth/rbac";
+import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+const Query = z.object({ supplierId: z.string().max(128).optional(), category: z.nativeEnum(ProductCategory).optional(), search: z.string().max(200).optional(), page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(100).default(20) });
+const Item = z.object({ sku: z.string().min(1).max(128), name: z.string().min(1).max(300), category: z.nativeEnum(ProductCategory), price: z.number().finite().positive(), quantity: z.number().int().nonnegative(), supplierId: z.string().min(1).max(128), unit: z.string().min(1).max(50).default("piece") });
+export const GET = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request); await requirePermission(auth, "product:read");
+  const query = validateQuery(Query, request.nextUrl.searchParams);
+  const where = { tenantId: auth.tenantId, deletedAt: null, source: { not: "FIXTURE" as const }, supplierId: query.supplierId, category: query.category, ...(query.search ? { OR: [{ name: { contains: query.search, mode: "insensitive" as const } }, { sku: { contains: query.search, mode: "insensitive" as const } }] } : {}) };
+  const [products, total] = await Promise.all([prisma.product.findMany({ where, skip: (query.page - 1) * query.limit, take: query.limit, orderBy: { createdAt: "desc" } }), prisma.product.count({ where })]);
+  return success({ products: products.map(product => ({ id: product.id, sku: product.sku, name: product.name, category: product.category, price: product.unitPrice === null ? null : Number(product.unitPrice), quantity: product.stockQuantity, supplierId: product.supplierId, unit: product.unitOfMeasure, createdAt: product.createdAt, updatedAt: product.updatedAt })), meta: { page: query.page, limit: query.limit, total, pages: Math.ceil(total / query.limit) } });
+});
+export const POST = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request); await requireAnyPermission(auth, ["product:create", "product:update"]);
+  const input = validateBody(Item, await request.json());
+  const supplier = await prisma.supplier.findFirst({ where: { id: input.supplierId, tenantId: auth.tenantId, deletedAt: null }, select: { id: true } });
+  if (!supplier) throw new ApiError("Supplier not found", 404);
+  const existing = await prisma.product.findFirst({ where: { sku: input.sku, tenantId: auth.tenantId, supplierId: supplier.id, deletedAt: null }, select: { id: true } });
+  await requirePermission(auth, existing ? "product:update" : "product:create");
+  const result = await prisma.$transaction(async tx => {
+    const data = { name: input.name, category: input.category, unitPrice: input.price, stockQuantity: input.quantity, unitOfMeasure: input.unit, source: "MANUAL" as const };
+    const product = existing ? await tx.product.update({ where: { id: existing.id, tenantId: auth.tenantId }, data }) : await tx.product.create({ data: { ...data, sku: input.sku, supplierId: supplier.id, tenantId: auth.tenantId } });
+    await appendAuditEntry({ tenantId: auth.tenantId, entityName: "PRODUCT", entityId: product.id, actionType: existing ? "UPDATE" : "CREATE", actorId: auth.userId, actorRole: auth.platformRole, changes: { source: "MANUAL", sku: product.sku, stockQuantity: product.stockQuantity } }, tx);
+    return product;
+  });
+  return success({ product: result, action: existing ? "updated" : "created" }, existing ? 200 : 201);
+});

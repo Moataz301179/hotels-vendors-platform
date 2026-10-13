@@ -1,23 +1,20 @@
-
-// SHIPPING DASHBOARD (G6 — logistics + delivery optimization)
-import { deliveries, orders } from "@/db/schema";
-import { db } from "@/db";
-
+import "server-only";
+import { prisma } from "@/lib/prisma";
+import { requireServerPermission } from "@/lib/auth/server-auth";
 export interface ShippingDashboardData {
-  deliveriesInTransit: number;
-  onTimeRate: number;
-  delayedDeliveries: number;
-  fuelCostEstimate: number;
+  deliveriesInTransit: number; onTimeRate: number | null;
+  delayedDeliveries: number; fuelCostEstimate: number | null;
 }
-
 export async function loadShippingData(): Promise<ShippingDashboardData> {
-  const delivs = await db.select().from(deliveries);
-  const delivered = delivs.filter(d => d.status === "delivered");
-  const onTime = delivered.filter(d => !d.delayed).length;
+  const user = await requireServerPermission("shipping:manage_trips");
+  if (user.platformRole !== "SHIPPING") throw new Error("Shipping workspace required");
+  const trips = await prisma.trip.findMany({ where: { tenantId: user.tenantId, deletedAt: null }, select: { status: true, stops: { where: { tenantId: user.tenantId, deletedAt: null }, select: { status: true, estimatedArrival: true, eta: true, actualArrival: true, arrivedAt: true } } } });
+  const completed = trips.flatMap(trip => trip.stops).filter(stop => ["DELIVERED", "POD_CAPTURED"].includes(stop.status));
+  const measured = completed.filter(stop => (stop.estimatedArrival || stop.eta) && (stop.actualArrival || stop.arrivedAt));
+  const delayed = measured.filter(stop => (stop.actualArrival || stop.arrivedAt)!.getTime() > (stop.estimatedArrival || stop.eta)!.getTime()).length;
   return {
-    deliveriesInTransit: delivs.filter(d => ["picked_up", "in_transit", "out_for_delivery"].includes(d.status)).length,
-    onTimeRate: delivered.length ? Math.round((onTime / delivered.length) * 100) : 100,
-    delayedDeliveries: delivered.filter(d => d.delayed).length,
-    fuelCostEstimate: 0,
+    deliveriesInTransit: trips.filter(trip => ["PICKED_UP", "LOADING", "IN_TRANSIT"].includes(trip.status)).length,
+    onTimeRate: measured.length ? Math.round((measured.length - delayed) / measured.length * 100) : null,
+    delayedDeliveries: delayed, fuelCostEstimate: null,
   };
 }

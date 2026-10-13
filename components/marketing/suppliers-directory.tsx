@@ -24,7 +24,7 @@ interface Supplier {
   monthly_capacity_egp: number;
 }
 
-const SUPPLIERS: Supplier[] = (marketData as any).suppliers || [];
+const SUPPLIERS: Supplier[] = marketData.suppliers ?? [];
 
 const CATEGORY_LABELS: Record<string, string> = {
   chemicals: "Chemicals",

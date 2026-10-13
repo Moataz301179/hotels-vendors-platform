@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 const CONSENT_KEY = "hv-cookie-consent";
 
@@ -27,22 +27,21 @@ function storeConsent(level: ConsentLevel) {
   localStorage.setItem(CONSENT_KEY, JSON.stringify(state));
 }
 
-export function CookieConsentBanner() {
-  const [visible, setVisible] = useState(false);
+function subscribeToConsent(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
 
-  useEffect(() => {
-    const consent = getStoredConsent();
-    if (!consent) {
-      setVisible(true);
-    }
-  }, []);
+export function CookieConsentBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  const needsConsent = useSyncExternalStore(subscribeToConsent, () => !getStoredConsent(), () => false);
 
   const accept = (level: ConsentLevel) => {
     storeConsent(level);
-    setVisible(false);
+    setDismissed(true);
   };
 
-  if (!visible) return null;
+  if (dismissed || !needsConsent) return null;
 
   return (
     <div
@@ -50,13 +49,13 @@ export function CookieConsentBanner() {
       aria-label="Cookie consent"
       className="fixed bottom-0 left-0 right-0 z-[9998] p-4 sm:p-6"
     >
-      <div className="max-w-3xl mx-auto rounded-2xl border border-border-subtle bg-surface-1/95 backdrop-blur-xl p-5 sm:p-6 shadow-2xl">
+      <div className="max-w-3xl mx-auto rounded-2xl border border-slate-300 bg-slate-50 text-slate-900 p-5 sm:p-6 shadow-2xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
-            <p className="text-sm text-white font-medium mb-1">
+            <p className="text-sm text-slate-900 font-medium mb-1">
               We use cookies to improve your experience
             </p>
-            <p className="text-xs text-foreground-secondary leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Essential cookies keep the platform secure. Analytics cookies help
               us understand usage. You can choose which to accept.
             </p>
@@ -64,19 +63,19 @@ export function CookieConsentBanner() {
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={() => accept("essential")}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-border-subtle text-foreground-tertiary hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              className="min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-400 text-slate-800 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 cursor-pointer"
             >
               Essential Only
             </button>
             <button
               onClick={() => accept("analytics")}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-border-subtle text-foreground-tertiary hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              className="min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-400 text-slate-800 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 cursor-pointer"
             >
               + Analytics
             </button>
             <button
               onClick={() => accept("all")}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent-base text-surface hover:bg-accent-light transition-colors cursor-pointer"
+              className="min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-800 text-white hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-800 cursor-pointer"
             >
               Accept All
             </button>

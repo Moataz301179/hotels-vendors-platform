@@ -44,29 +44,22 @@ export default function SupplierCentralPage() {
     );
   }
 
+  if (error) return <RequireAuth><AppShell active="/supplier"><p role="alert">{error}</p></AppShell></RequireAuth>;
   const kpis = data?.kpis || {
     totalOrders: 0, pendingOrders: 0, approvedOrders: 0, inTransitOrders: 0,
     deliveredOrders: 0, totalRevenue: 0, productsCount: 0, lowStockCount: 0,
   };
+  const formatMoney = (amount: number) => new Intl.NumberFormat("en-US", {
+    style: "currency", currency: "EGP", maximumFractionDigits: 2,
+  }).format(amount);
 
-  const recentOrders = data?.recentOrders || [];
-  const lowStock = data?.lowStock || [];
-
-  const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency", currency: "EGP", maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-  };
 
   return (
     <RequireAuth>
       <AppShell active="/supplier">
         <Guard roles={["supplier_manager"]}>
           <div className="space-y-6">
+            {error ? <p role="alert" className="text-red-400">{error}</p> : null}
             <div>
               <h1 className="text-2xl font-semibold text-white mb-1">Supplier Central</h1>
               <p className="text-sm text-foreground-muted">Sales pipeline and inventory overview</p>
@@ -122,7 +115,7 @@ export default function SupplierCentralPage() {
                 <Package size={32} className="mx-auto text-foreground-muted mb-3" />
                 <h3 className="text-lg font-medium text-white mb-1">No Orders Yet</h3>
                 <p className="text-foreground-muted text-sm max-w-md mx-auto">
-                  When hotels place orders with you, they'll appear here along with revenue analytics and inventory alerts.
+                  When hotels place orders with you, they will appear here along with order analytics and inventory alerts.
                 </p>
               </div>
             )}

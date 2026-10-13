@@ -1,6 +1,8 @@
 name: HotelsVendors Production Deploy
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       confirm:
@@ -27,13 +29,13 @@ jobs:
       postgres:
         image: postgres:16
         env: { POSTGRES_USER: ci, POSTGRES_PASSWORD: ci, POSTGRES_DB: ci }
-        ports: [5432:5432]
+        ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U ci -d ci"
           --health-interval 5s --health-timeout 5s --health-retries 10
       redis:
         image: redis:7
-        ports: [6379:6379]
+        ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -65,10 +67,14 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
       - name: Upload release
-        env: { VPS_HOST: ${{ secrets.VPS_HOST }}, VPS_USER: ${{ secrets.VPS_USER }} }
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: scp hv-release.tgz "$VPS_USER@$VPS_HOST:/tmp/hv-release-${GITHUB_SHA}.tgz"
       - name: Activate release and verify
-        env: { VPS_HOST: ${{ secrets.VPS_HOST }}, VPS_USER: ${{ secrets.VPS_USER }} }
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           ssh "$VPS_USER@$VPS_HOST" "GITHUB_SHA=$GITHUB_SHA bash -s" <<'REMOTE'
           set -euo pipefail
@@ -86,5 +92,8 @@ jobs:
           sleep 3
           test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/)" = "200"
           test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/api/health)" = "200"
+          test "$(curl -ks -o /dev/null -w '%{http_code}' 'https://hotelsvendors.com/api/v1/products?limit=1')" = "200"
+          LOGIN_HTML=$(curl -ks https://hotelsvendors.com/login)
+          printf '%s' "$LOGIN_HTML" | grep -Eq 'publishableKey[^p]*pk_[A-Za-z0-9_-]+'
           pm2 save
           REMOTE

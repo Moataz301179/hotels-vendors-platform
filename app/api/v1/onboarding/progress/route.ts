@@ -1,7 +1,24 @@
 import { NextRequest } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { apiRoute, authenticate, success, error, handleApiError } from "@/lib/api-utils";
+import { apiRoute, success, error } from "@/lib/api-utils";
 import { z } from "zod";
+import { jsonValueSchema } from "@/lib/validators/json-value";
+
+async function clerkContext() {
+  const { userId } = await auth();
+  if (!userId) return null;
+  const clerkUser = await currentUser();
+  const email = clerkUser?.emailAddresses.find((item) => item.id === clerkUser.primaryEmailAddressId)?.emailAddress
+    || clerkUser?.emailAddresses[0]?.emailAddress;
+  if (!email) return null;
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, tenantId: true, platformRole: true },
+  });
+  if (!user) return null;
+  return { userId: user.id, tenantId: user.tenantId, platformRole: user.platformRole };
+}
 
 const STEPS_BY_ROLE: Record<string, string[]> = {
   HOTEL: ["profile_complete", "phone_verified", "kyc_level1", "property_added", "eta_setup", "first_order"],
@@ -14,12 +31,13 @@ const STEPS_BY_ROLE: Record<string, string[]> = {
 const updateStepSchema = z.object({
   stepKey: z.string(),
   completed: z.boolean(),
-  data: z.record(z.string(), z.unknown()).optional(),
+  data: z.record(z.string(), jsonValueSchema).optional(),
 });
 
 // GET — fetch onboarding progress for the current user
 export const GET = apiRoute(async (_request: NextRequest) => {
-  const ctx = await authenticate(_request);
+  const ctx = await clerkContext();
+  if (!ctx) return error("Authenticated workspace required", 401);
 
   const user = await prisma.user.findUnique({
     where: { id: ctx.userId },
@@ -35,28 +53,26 @@ export const GET = apiRoute(async (_request: NextRequest) => {
   const autoSteps: Record<string, boolean> = {};
   if (user.phoneVerifiedAt) autoSteps.phone_verified = true;
 
-  // Fetch or create progress record
-  let progress = await prisma.onboardingProgress.findUnique({
+  // GET is read-only. A missing progress record is represented as the
+  // initial state and is created only by an explicit onboarding mutation.
+  const progress = await prisma.onboardingProgress.findUnique({
     where: { userId: ctx.userId },
   });
 
-  if (!progress) {
-    progress = await prisma.onboardingProgress.create({
-      data: {
-        userId: ctx.userId,
-        tenantId: ctx.tenantId,
-        platformRole: role as any,
-        overallStatus: "IN_PROGRESS",
-      },
-    });
-  }
+  // Stored progress is tenant-scoped and survives reloads and new sessions.
+  const storedSteps = await prisma.onboardingStepProgress.findMany({
+    where: { userId: ctx.userId, tenantId: ctx.tenantId, deletedAt: null },
+    select: { stepKey: true, completed: true, data: true },
+  });
+  const storedByKey = new Map(storedSteps.map((item) => [item.stepKey, item]));
 
-  // Build step statuses from stored JSON + auto-detected
   const stepStatuses = steps.map((stepKey) => {
+    const stored = storedByKey.get(stepKey);
     const isAutoCompleted = autoSteps[stepKey] || false;
     return {
       stepKey,
-      completed: isAutoCompleted,
+      completed: isAutoCompleted || stored?.completed === true,
+      data: stored?.data ?? null,
       label: getStepLabel(stepKey),
       description: getStepDescription(stepKey, role),
       required: isRequiredStep(stepKey, role),
@@ -65,23 +81,25 @@ export const GET = apiRoute(async (_request: NextRequest) => {
 
   const completedCount = stepStatuses.filter((s) => s.completed).length;
   const totalRequired = stepStatuses.filter((s) => s.required).length;
-  const progressPercent = totalRequired > 0 ? Math.round((completedCount / totalRequired) * 100) : 0;
+  const completedRequired = stepStatuses.filter((s) => s.required && s.completed).length;
+  const progressPercent = totalRequired > 0 ? Math.round((completedRequired / totalRequired) * 100) : 0;
 
   return success({
     userId: ctx.userId,
     platformRole: role,
-    overallStatus: progress.overallStatus,
+    overallStatus: progress?.overallStatus ?? "IN_PROGRESS",
     progressPercent,
     completedCount,
     totalSteps: steps.length,
     steps: stepStatuses,
-    completedAt: progress.completedAt,
+    completedAt: progress?.completedAt ?? null,
   });
 });
 
 // POST — mark a step as completed or update step data
 export const POST = apiRoute(async (request: NextRequest) => {
-  const ctx = await authenticate(request);
+  const ctx = await clerkContext();
+  if (!ctx) return error("Authenticated workspace required", 401);
   const body = await request.json();
   const parsed = updateStepSchema.parse(body);
 
@@ -99,42 +117,51 @@ export const POST = apiRoute(async (request: NextRequest) => {
     return error(`Invalid step key "${parsed.stepKey}" for role ${role}`, 400);
   }
 
-  // Upsert progress record
-  let progress = await prisma.onboardingProgress.findUnique({
-    where: { userId: ctx.userId },
+  // Persist the individual step first, then derive overall status from all stored steps.
+  await prisma.onboardingStepProgress.upsert({
+    where: { userId_stepKey: { userId: ctx.userId, stepKey: parsed.stepKey } },
+    create: {
+      userId: ctx.userId,
+      tenantId: ctx.tenantId,
+      stepKey: parsed.stepKey,
+      completed: parsed.completed,
+      data: parsed.data,
+    },
+    update: {
+      completed: parsed.completed,
+      data: parsed.data,
+      deletedAt: null,
+    },
   });
 
+  let progress = await prisma.onboardingProgress.findUnique({ where: { userId: ctx.userId } });
   if (!progress) {
     progress = await prisma.onboardingProgress.create({
       data: {
         userId: ctx.userId,
         tenantId: ctx.tenantId,
-        platformRole: role as any,
+        platformRole: role,
         overallStatus: "IN_PROGRESS",
       },
     });
   }
 
-  // Check if all required steps are now complete
-  const autoSteps: Record<string, boolean> = {};
   const userFull = await prisma.user.findUnique({
     where: { id: ctx.userId },
     select: { phoneVerifiedAt: true },
   });
-  if (userFull?.phoneVerifiedAt) autoSteps.phone_verified = true;
-
-  // For now, we track completion via the overall status
-  // The actual step data will be derived from entity existence (hotel, supplier, etc.)
-  const allComplete = steps.every((step) => autoSteps[step] || step === parsed.stepKey ? parsed.completed : false);
-
+  const storedSteps = await prisma.onboardingStepProgress.findMany({
+    where: { userId: ctx.userId, tenantId: ctx.tenantId, deletedAt: null, completed: true },
+    select: { stepKey: true },
+  });
+  const completedKeys = new Set(storedSteps.map((item) => item.stepKey));
+  if (userFull?.phoneVerifiedAt) completedKeys.add("phone_verified");
+  const allComplete = steps.filter((step) => isRequiredStep(step, role)).every((step) => completedKeys.has(step));
   const newStatus = allComplete ? "COMPLETED" : "IN_PROGRESS";
 
   await prisma.onboardingProgress.update({
     where: { id: progress.id },
-    data: {
-      overallStatus: newStatus as any,
-      completedAt: allComplete ? new Date() : null,
-    },
+    data: { overallStatus: newStatus, completedAt: allComplete ? new Date() : null },
   });
 
   return success({
@@ -171,7 +198,7 @@ function getStepDescription(stepKey: string, role: string): string {
     eta_setup: "Connect your Egyptian Tax Authority token for compliant invoicing",
     first_order: "Browse the catalog and place your first procurement order",
     product_listed: "Add your first product to the marketplace catalog",
-    oliv_activated: "Activate Oliv financing to get paid in 48 hours",
+    oliv_activated: "Review financing eligibility and partner terms",
     zones_selected: "Choose the governorates you deliver to",
     documents_uploaded: "Upload vehicle registration and insurance documents",
   };

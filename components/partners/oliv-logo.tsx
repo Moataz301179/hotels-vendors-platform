@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-interface OlivLogoProps {
+interface LogoProps {
   className?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   variant?: "dark" | "light" | "green";
@@ -23,9 +23,9 @@ const COLOR_MAP = {
 };
 
 /**
- * Oliv logo — wordmark with leaf accent.
+ *  logo — wordmark with leaf accent.
  */
-export function OlivLogo({ className, size = "md", variant = "dark" }: OlivLogoProps) {
+export function Logo({ className, size = "md", variant = "dark" }: LogoProps) {
   const dims = SIZE_MAP[size];
   const colors = COLOR_MAP[variant];
 
@@ -36,7 +36,7 @@ export function OlivLogo({ className, size = "md", variant = "dark" }: OlivLogoP
       width={dims.width}
       height={dims.height}
       className={cn("shrink-0", className)}
-      aria-label="Oliv"
+      aria-label=""
     >
       {/* Leaf icon */}
       <path

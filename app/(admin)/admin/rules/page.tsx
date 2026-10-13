@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Scale, Loader2, AlertCircle, Plus } from "lucide-react";
+import { Scale, Loader2, AlertCircle } from "lucide-react";
 import { useApi } from "@/lib/hooks/use-api";
 import AppShell, { Guard, RequireAuth } from "@/components/AppShell";
 
@@ -9,25 +8,21 @@ interface AuthorityRule {
   id: string;
   name: string;
   role: string;
-  minValue: number;
-  maxValue: number | null;
+  minValue: number | string;
+  maxValue: number | string | null;
   action: string;
   priority: number;
   slaHours: number | null;
-  approvers: string[];
-}
-
-interface RulesResponse {
-  rules: AuthorityRule[];
+  routeToRole: string | null;
 }
 
 export default function RulesPage() {
-  const { data, loading, error } = useApi<RulesResponse>("/api/v1/authority/rules");
+  const { data, loading, error } = useApi<AuthorityRule[]>("/api/v1/authority/rules");
 
-  const rules = data?.rules || [];
+  const rules = data || [];
 
-  const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "EGP", maximumFractionDigits: 0 }).format(amount);
+  const formatMoney = (amount: number | string) => {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "EGP", maximumFractionDigits: 0 }).format(Number(amount));
   };
 
   return (
@@ -42,10 +37,7 @@ export default function RulesPage() {
                   {rules.length} approval rules configured
                 </p>
               </div>
-              <button className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors">
-                <Plus size={16} />
-                Add Rule
-              </button>
+              <p className="text-sm">Read-only rule inspection</p>
             </div>
 
             {loading ? (
@@ -65,10 +57,6 @@ export default function RulesPage() {
                   Authority Matrix rules define approval workflows based on order value thresholds.
                   Configure rules to automate purchase order approvals.
                 </p>
-                <button className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors">
-                  <Plus size={16} />
-                  Create First Rule
-                </button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -106,15 +94,13 @@ export default function RulesPage() {
                       </div>
                     </div>
 
-                    {rule.approvers.length > 0 && (
+                    {rule.routeToRole && (
                       <div className="mt-4 pt-4 border-t border-border-subtle">
                         <div className="text-xs text-foreground-muted mb-2">Approvers</div>
                         <div className="flex flex-wrap gap-2">
-                          {rule.approvers.map((role) => (
-                            <span key={role} className="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
-                              {role}
+                            <span className="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
+                              {rule.routeToRole}
                             </span>
-                          ))}
                         </div>
                       </div>
                     )}

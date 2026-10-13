@@ -1,8 +1,9 @@
 /**
  * Supplier Discovery Scraper — REAL engine.
- * Logs into Egyptian B2B supplier portals (via stored creds), navigates the
- * product catalog, extracts SKUs (name, sku, price EGP, stock, image), and
- * upserts them tagged as SUPPLIER_SYNC so they show as REAL marketplace stock.
+ * Imports supplier-approved catalog data only when the caller has permission
+ * to access the source. Discovery data is staged inactive and never appears
+ * in the public marketplace until the supplier relationship and listing are
+ * verified by an administrator.
  *
  * Unlike the old stub, this one actually drives a browser headlessly.
  * Run: node scripts/run-scraper.mjs --source <sourceId>
@@ -184,7 +185,11 @@ export async function scrapeSource(sourceId: string, opts: { headless?: boolean;
   return extracted;
 }
 
-/** Upsert scraped products tagged SUPPLIER_SYNC (REAL source). */
+/**
+ * Stage imported products for review. This deliberately does not publish
+ * third-party observations as marketplace inventory: price, stock, ownership
+ * and re-publication rights must be confirmed by the supplier first.
+ */
 export async function upsertScraped(sourceId: string, products: ExtractedProduct[], supplierId: string, tenantId: string) {
   let created = 0; let updated = 0; let skipped = 0;
   for (const p of products) {
@@ -194,12 +199,12 @@ export async function upsertScraped(sourceId: string, products: ExtractedProduct
       if (existing) {
         await prisma.product.update({
           where: { id: existing.id },
-          data: { name: p.name, unitPrice: p.priceEGP, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined, source: "SUPPLIER_SYNC", sourceProvider: sourceId, sourceKey: p.sku, stockQuantity: p.stock ?? 0 },
+          data: { name: p.name, unitPrice: p.priceEGP, status: "INACTIVE", images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined, source: "SUPPLIER_SYNC", sourceProvider: sourceId, sourceKey: p.sku, stockQuantity: 0 },
         });
         updated++;
       } else {
         await prisma.product.create({
-          data: { sku: p.sku, name: p.name, unitPrice: p.priceEGP, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined, source: "SUPPLIER_SYNC", sourceProvider: sourceId, sourceKey: p.sku, stockQuantity: p.stock ?? 0, supplierId, tenantId, category: "CONSUMABLES" as any },
+          data: { sku: p.sku, name: p.name, unitPrice: p.priceEGP, status: "INACTIVE", images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined, source: "SUPPLIER_SYNC", sourceProvider: sourceId, sourceKey: p.sku, stockQuantity: 0, supplierId, tenantId, category: "CONSUMABLES" },
         });
         created++;
       }

@@ -1,28 +1,102 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 
-const ROLE_MAP = { HOTEL: "HOTEL", SUPPLIER: "SUPPLIER", FACTORING: "FACTORING", SHIPPING: "SHIPPING" } as const;
-const ROLE_NAMES = { HOTEL: "Hotel Manager", SUPPLIER: "Supplier Manager", FACTORING: "Factoring Agent", SHIPPING: "Logistics Coordinator" } as const;
-const TENANT_TYPES = { HOTEL: "HOTEL_GROUP", SUPPLIER: "SUPPLIER", FACTORING: "FACTORING", SHIPPING: "LOGISTICS" } as const;
+const ROLE_MAP = { HOTEL: "HOTEL", SUPPLIER: "SUPPLIER" } as const;
+const TENANT_TYPES = { HOTEL: "HOTEL_GROUP", SUPPLIER: "SUPPLIER" } as const;
+const SELF_SERVICE_PERMISSIONS = {
+  HOTEL: ["order:read", "order:create", "product:read", "invoice:read", "report:read"],
+  SUPPLIER: ["order:read", "product:read", "product:create", "product:update", "invoice:read", "report:read"],
+};
 
 export async function POST() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  const clerkUser = await currentUser();
-  const email = clerkUser?.emailAddresses[0]?.emailAddress;
-  if (!email) return NextResponse.json({ ok: false, error: "Verified email required" }, { status: 400 });
-  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true, tenantId: true, platformRole: true } });
-  if (existing) return NextResponse.json({ ok: true, ...existing });
-  const requested = String((clerkUser?.unsafeMetadata as any)?.platformRole || "HOTEL").toUpperCase() as keyof typeof ROLE_MAP;
-  const platformRole = ROLE_MAP[requested] || "HOTEL";
-  const roleName = ROLE_NAMES[requested] || ROLE_NAMES.HOTEL;
-  const type = TENANT_TYPES[requested] || "HOTEL_GROUP";
-  const base = (clerkUser?.firstName || "workspace").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workspace";
-  const slug = `${base}-${clerkUser!.id.slice(-8).toLowerCase()}`;
-  const role = await prisma.role.findFirst({ where: { name: roleName }, select: { id: true } }) || await prisma.role.findFirst({ where: { isGlobal: true, name: "Platform Admin" }, select: { id: true } });
-  if (!role) return NextResponse.json({ ok: false, error: "Role configuration is missing" }, { status: 500 });
-  const tenant = await prisma.tenant.create({ data: { name: clerkUser?.firstName ? `${clerkUser.firstName}'s Workspace` : "HotelsVendors Workspace", slug, type: type as any } });
-  const user = await prisma.user.create({ data: { email, name: [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ") || email, tenantId: tenant.id, roleId: role.id, platformRole, status: "ACTIVE", accountType: "BUSINESS", emailVerifiedAt: new Date() } });
-  return NextResponse.json({ ok: true, userId: user.id, tenantId: tenant.id, platformRole: user.platformRole });
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+
+    const clerkUser = await currentUser();
+    const primary = clerkUser?.emailAddresses.find((item) => item.id === clerkUser.primaryEmailAddressId);
+    const email = primary?.emailAddress;
+    if (!email || !clerkUser || clerkUser.id !== clerkId || primary?.verification?.status !== "verified")
+      return NextResponse.json({ ok: false, error: "Verified primary email required" }, { status: 400 });
+
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, tenantId: true, platformRole: true },
+    });
+
+    if (existing) {
+      const auditExists = await prisma.auditLog.findFirst({
+        where: { tenantId: existing.tenantId, entityId: existing.id, actionType: "CREATE" },
+        select: { id: true },
+      });
+      if (!auditExists) {
+        await appendAuditEntry({
+          entityName: "USER",
+          entityId: existing.id,
+          actionType: "CREATE",
+          tenantId: existing.tenantId,
+          actorId: existing.id,
+          actorRole: existing.platformRole,
+          changes: { provider: "clerk", clerkId, outcome: "existing_identity_linked" },
+        });
+      }
+      return NextResponse.json({ ok: true, ...existing });
+    }
+
+    const requested = String((clerkUser.unsafeMetadata as Record<string, unknown> | null)?.platformRole || "HOTEL").toUpperCase();
+    if (requested !== "HOTEL" && requested !== "SUPPLIER")
+      return NextResponse.json({ ok: false, error: "Partner accounts require reviewed admission" }, { status: 403 });
+    const platformRole = ROLE_MAP[requested];
+    const requestedTenantType = TENANT_TYPES[platformRole];
+    const displayName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() || email;
+    const companyName = String((clerkUser.unsafeMetadata as Record<string, unknown> | null)?.companyName || displayName).trim().slice(0, 160);
+    const base = (clerkUser.firstName || "workspace").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workspace";
+    const slug = `${base}-${clerkId.slice(-8).toLowerCase()}`;
+
+    // Tenant, scoped Owner role and user must commit together. Never fall back to a global/admin role.
+    const created = await prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.create({
+        data: { name: companyName || "HotelsVendors Workspace", slug, type: requestedTenantType },
+      });
+      const role = await tx.role.create({
+        data: { name: "Owner", tenantId: tenant.id, isGlobal: false },
+      });
+      const grants = await tx.permission.findMany({
+        where: { code: { in: SELF_SERVICE_PERMISSIONS[platformRole] }, deletedAt: null }, select: { id: true },
+      });
+      if (grants.length !== SELF_SERVICE_PERMISSIONS[platformRole].length)
+        throw new Error("Self-service permission catalog is not configured");
+      await tx.rolePermission.createMany({ data: grants.map(permission => ({ roleId: role.id, permissionId: permission.id })) });
+      const user = await tx.user.create({
+        data: {
+          email,
+          name: displayName,
+          companyName,
+          tenantId: tenant.id,
+          roleId: role.id,
+          role: "OWNER",
+          platformRole,
+          status: "ACTIVE",
+          accountType: "BUSINESS",
+          emailVerifiedAt: new Date(),
+          termsAcceptedAt: new Date(),
+          privacyPolicyVersion: process.env.PRIVACY_POLICY_VERSION || "1.0",
+        },
+        select: { id: true, tenantId: true, platformRole: true },
+      });
+      await appendAuditEntry({
+        entityName: "USER", entityId: user.id, actionType: "CREATE", tenantId: tenant.id,
+        actorId: user.id, actorRole: user.platformRole,
+        changes: { provider: "clerk", clerkId, platformRole: user.platformRole, tenantProvisioned: true },
+      }, tx);
+      return user;
+    });
+
+    return NextResponse.json({ ok: true, ...created }, { status: 201 });
+  } catch (error) {
+    console.error("[clerk-sync] Account provisioning failed", error);
+    return NextResponse.json({ ok: false, error: "Account setup could not be completed. Please retry; your sign-in remains secure." }, { status: 500 });
+  }
 }

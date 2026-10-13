@@ -1,116 +1,31 @@
-import { NextRequest } from "next/server"
-import { z } from "zod"
-import { prisma } from "@/lib/prisma"
-import { apiRoute, authenticate, requirePermission, success, error } from "@/lib/api-utils"
-import crypto from "crypto"
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { randomUUID } from "node:crypto";
+import { prisma } from "@/lib/prisma";
+import { apiRoute, authenticate, requirePermission, validateBody, success, ApiError } from "@/lib/api-utils";
+import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 
-const VAT_RATE = 0.14
-const SERVICE_FEE_RATE = 0.01
+const DraftInput = z.object({ orderId: z.string().min(1).max(128) });
 
-const VATItemSchema = z.object({
-  description: z.string().min(1, "Item description is required"),
-  quantity: z.number().int().positive("Quantity must be positive"),
-  unitPrice: z.number().positive("Unit price must be positive"),
-  vatRate: z.number().refine((r) => [0, 5, 8, 10, 14].includes(r), "Invalid VAT rate"),
-})
-
-const VATIssueSchema = z.object({
-  companyTaxId: z.string().min(1, "Company Tax ID is required"),
-  buyerName: z.string().min(1, "Buyer name is required"),
-  buyerTaxId: z.string().min(1, "Buyer Tax ID is required"),
-  items: z.array(VATItemSchema).min(1, "At least one item is required"),
-  notes: z.string().max(500).optional(),
-})
-
-function generateEtaUuid(payload: object): string {
-  const hash = crypto.createHash("sha256")
-  hash.update(JSON.stringify(payload) + Date.now().toString())
-  return hash.digest("hex")
-}
-
-function generateInvoiceRef(): string {
-  const prefix = "VAT"
-  const ts = Date.now().toString(36).toUpperCase()
-  const rand = crypto.randomBytes(3).toString("hex").toUpperCase()
-  return `${prefix}-${ts}-${rand}`
-}
-
-export const POST = apiRoute(async (req: NextRequest) => {
-  const auth = await authenticate(req);
+/** Prepare a real linked invoice draft. ETA acceptance is supplied only by the compliance bridge. */
+export const POST = apiRoute(async (request: NextRequest) => {
+  const auth = await authenticate(request);
   await requirePermission(auth, "invoice:create");
-
-  try {
-    const body = await req.json()
-    const parsed = VATIssueSchema.safeParse(body)
-    if (!parsed.success) {
-      return error(parsed.error.issues[0]?.message || "Invalid request body", 400)
-    }
-    const { companyTaxId, buyerName, buyerTaxId, items, notes } = parsed.data
-
-    // Calculate amounts
-    const subtotal = items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
-      0
-    )
-
-    const vatAmount = Math.round(subtotal * VAT_RATE * 100) / 100
-    const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE * 100) / 100
-    const total = subtotal + vatAmount + serviceFee
-
-    // Generate identifiers
-    const etaPayload = {
-      companyTaxId,
-      buyerName,
-      buyerTaxId,
-      items,
-      subtotal,
-      vatAmount,
-      total,
-      timestamp: new Date().toISOString(),
-    }
-    const etaUuid = generateEtaUuid(etaPayload)
-    const invoiceRef = generateInvoiceRef()
-
-    // Simulate ETA submission — store record in DB
-    const invoice = await prisma.invoice.create({
-      data: {
-        id: etaUuid,
-        invoiceNumber: invoiceRef,
-        etaUuid,
-        subtotal,
-        vatRate: 14,
-        vatAmount,
-        total,
-        status: "ISSUED" as any,
-        paymentStatus: "UNPAID" as any,
-        orderId: "VAT-STANDALONE",
-        hotelId: "VAT-STANDALONE",
-        supplierId: "VAT-STANDALONE",
-        tenantId: auth.tenantId,
-        issueDate: new Date(),
-        updatedAt: new Date(),
-        submissionLog: JSON.stringify({
-          submissionId: `ETA-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
-          submittedAt: new Date().toISOString(),
-          status: "ACCEPTED",
-        }),
-      },
-    })
-
-    const etaResponse = invoice.submissionLog ? JSON.parse(invoice.submissionLog) as Record<string, unknown> : null
-
-    return success({
-      etaUuid,
-      invoiceRef,
-      subtotal,
-      vatAmount,
-      serviceFee,
-      total,
-      etaSubmissionId: etaResponse?.submissionId || undefined,
-      submittedAt: new Date().toISOString(),
-    })
-  } catch (e) {
-    console.error("Invoice issue error:", e)
-    return error("Internal server error", 500)
-  }
-})
+  const { orderId } = validateBody(DraftInput, await request.json());
+  const result = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Order" WHERE "id" = ${orderId} AND "tenantId" = ${auth.tenantId} FOR UPDATE`;
+    const order = await tx.order.findFirst({ where: { id: orderId, tenantId: auth.tenantId, deletedAt: null } });
+    if (!order) throw new ApiError("Order not found", 404);
+    const existing = await tx.invoice.findFirst({ where: { orderId, tenantId: auth.tenantId, deletedAt: null } });
+    if (existing) throw new ApiError("This order already has an invoice", 409);
+    if (!["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"].includes(order.status)) throw new ApiError("A confirmed order is required to prepare an invoice", 409);
+    const invoice = await tx.invoice.create({ data: {
+      invoiceNumber: `VAT-${randomUUID()}`, orderId, hotelId: order.hotelId, supplierId: order.supplierId, tenantId: auth.tenantId,
+      subtotal: order.subtotal, vatAmount: order.vatAmount, total: order.total, currency: order.currency,
+      status: "DRAFT", paymentStatus: "UNPAID", etaStatus: "PENDING", issueDate: new Date(),
+    } });
+    await appendAuditEntry({ tenantId: auth.tenantId, entityName: "INVOICE", entityId: invoice.id, actorId: auth.userId, actorRole: auth.platformRole, actionType: "CREATE", changes: { event: "INVOICE_DRAFT_PREPARED", orderId, status: "DRAFT", etaStatus: "PENDING" } }, tx);
+    return invoice;
+  });
+  return success({ invoiceId: result.id, invoiceRef: result.invoiceNumber, subtotal: Number(result.subtotal), vatAmount: Number(result.vatAmount), total: Number(result.total), status: "DRAFT", etaStatus: "PENDING", message: "Invoice draft prepared from the order. It has not been issued or accepted by ETA." }, 201);
+});

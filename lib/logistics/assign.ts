@@ -1,242 +1,55 @@
-/**
- * Carrier Auto-Assignment Engine
- * Matches orders to carriers based on zone, capacity, and rating.
- *
- * Flow: Order placed → Platform finds eligible carriers → Auto-assigns best match → Notifies carrier
- */
-
+/** Tenant-owned, verified driver assignment. No name-based identity or fabricated vehicles. */
+import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { ApiError } from "@/lib/api-utils";
 
-interface AssignmentResult {
-  carrierId: string;
-  carrierName: string;
-  tripId: string | null;
-  estimatedDelivery: Date;
-  score: number;
-  reason: string;
-}
+interface AssignmentResult { carrierId: string; carrierName: string; tripId: string; estimatedDelivery: Date | null; score: number; reason: string; replayed: boolean }
+interface AssignmentActor { userId: string; platformRole: string }
 
-interface CarrierProfile {
-  id: string;
-  name: string;
-  rating: number;
-  vehicleCount: number;
-  zones: string[];
-  activeTrips: number;
-  maxCapacity: number;
-  completedTrips: number;
-  onTimeRate: number;
-}
-
-/**
- * Find the best carrier for an order based on delivery zone, capacity, and rating.
- */
-export async function assignCarrier(
-  orderId: string,
-  tenantId: string
-): Promise<AssignmentResult | null> {
-  // 1. Load order with hotel location
-  const order = await prisma.order.findUnique({
-    where: { id: orderId, tenantId },
-    include: {
-      hotel: { select: { city: true, governorate: true, id: true } },
-      items: { include: { product: true } },
-    },
-  });
-
-  if (!order) throw new Error("Order not found");
-  if (!order.hotel) throw new Error("Order has no hotel");
-
-  const deliveryCity = order.hotel.city;
-  const deliveryGovernorate = order.hotel.governorate;
-  const orderTotal = Number(order.total ?? 0);
-
-  // 2. Find eligible carriers (active, with matching zone)
-  const carriers = await prisma.user.findMany({
-    where: {
-      tenantId,
-      role: "LOGISTICS_COORDINATOR",
-      status: "ACTIVE",
-    },
-    include: {
-      carrierProfile: true,
-    },
-  });
-
-  if (carriers.length === 0) return null;
-
-  // 3. Score each carrier
-  const scored: Array<{ carrier: typeof carriers[0]; score: number; reason: string }> = [];
-
-  for (const carrier of carriers) {
-    const profile = carrier.carrierProfile;
-    if (!profile) continue;
-
-    const zones = (profile.zones as string[]) ?? [];
-    const zoneMatch = zones.includes(deliveryCity) || zones.includes(deliveryGovernorate) || zones.includes("ALL");
-    if (!zoneMatch) continue;
-
-    const activeTrips = await prisma.trip.count({
-      where: { driverName: carrier.name, status: { in: ["SCHEDULED", "LOADING", "IN_TRANSIT"] } },
-    });
-
-    const maxCapacity = profile.vehicleCount ?? 1;
-    if (activeTrips >= maxCapacity * 3) continue; // Capacity full (3 trips per vehicle max)
-
-    const completedTrips = await prisma.trip.count({
-      where: { driverName: carrier.name, status: "COMPLETED" },
-    });
-
-    const recentTrips = await prisma.trip.findMany({
-      where: { driverName: carrier.name, status: "COMPLETED" },
-      orderBy: { completedAt: "desc" },
-      take: 20,
-    });
-
-    const onTimeCount = recentTrips.filter((t) => {
-      if (!t.arrivalDate || !t.scheduledDate) return true;
-      return new Date(t.arrivalDate) <= new Date(t.scheduledDate);
-    }).length;
-    const onTimeRate = recentTrips.length > 0 ? onTimeCount / recentTrips.length : 0.8;
-
-    // Score calculation (0-100)
-    let score = 0;
-    let reason = "";
-
-    // Zone proximity (0-30 points)
-    if (zones.includes(deliveryCity)) {
-      score += 30;
-      reason = "City match";
-    } else if (zones.includes(deliveryGovernorate)) {
-      score += 20;
-      reason = "Governorate match";
-    } else {
-      score += 10;
-      reason = "National coverage";
+export async function assignCarrier(orderId: string, tenantId: string, actor: AssignmentActor): Promise<AssignmentResult | null> {
+  return prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT "id" FROM "Order" WHERE "id" = ${orderId} AND "tenantId" = ${tenantId} FOR UPDATE`;
+    const order = await tx.order.findFirst({ where: { id: orderId, tenantId, deletedAt: null }, include: { hotel: { select: { city: true, governorate: true, id: true } } } });
+    if (!order) throw new ApiError("Order not found", 404);
+    if (!order.paymentGuaranteed || !["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED"].includes(order.status)) throw new ApiError("Order requires confirmed approval and payment guarantee before dispatch assignment", 409);
+    const existing = await tx.tripStop.findFirst({ where: { orderId, tenantId, deletedAt: null, trip: { tenantId, deletedAt: null, status: { notIn: ["CANCELLED", "RETURNING"] } } }, include: { trip: { include: { assignedDriver: { select: { id: true, name: true } } } } } });
+    if (existing) {
+      if (!existing.trip.assignedDriver) throw new ApiError("Existing trip requires explicit authenticated driver assignment", 409);
+      return { carrierId: existing.trip.assignedDriver.id, carrierName: existing.trip.assignedDriver.name, tripId: existing.trip.id, estimatedDelivery: existing.estimatedArrival, score: 0, reason: "Existing assignment", replayed: true };
     }
-
-    // Rating (0-25 points)
-    const rating = profile.rating ?? 3.0;
-    score += (rating / 5) * 25;
-    if (rating >= 4.5) reason += ", top rated";
-
-    // On-time rate (0-25 points)
-    score += onTimeRate * 25;
-    if (onTimeRate >= 0.95) reason += ", excellent punctuality";
-
-    // Capacity availability (0-15 points)
-    const capacityUsed = activeTrips / (maxCapacity * 3);
-    score += (1 - capacityUsed) * 15;
-    if (capacityUsed < 0.3) reason += ", available";
-
-    // Experience (0-5 points)
-    if (completedTrips >= 100) score += 5;
-    else if (completedTrips >= 50) score += 3;
-    else if (completedTrips >= 10) score += 1;
-
-    scored.push({ carrier, score, reason });
-  }
-
-  if (scored.length === 0) return null;
-
-  // 4. Pick the best carrier
-  scored.sort((a, b) => b.score - a.score);
-  const best = scored[0];
-
-  // 5. Calculate estimated delivery (zone-based)
-  const deliveryZone = await prisma.deliveryZone.findFirst({
-    where: {
-      zone: deliveryCity,
-      tenantId,
-    },
-  });
-
-  const minDays = deliveryZone?.minDays ?? 2;
-  const maxDays = deliveryZone?.maxDays ?? 5;
-  const estimatedDays = Math.ceil((minDays + maxDays) / 2);
-  const estimatedDelivery = new Date();
-  estimatedDelivery.setDate(estimatedDelivery.getDate() + estimatedDays);
-
-  // 6. Find or create a trip for this carrier
-  let trip = await prisma.trip.findFirst({
-    where: {
-      driverName: best.carrier.name,
-      status: "SCHEDULED",
-      tenantId,
-      scheduledDate: {
-        gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        lt: new Date(new Date().setHours(23, 59, 59, 999)),
-      },
-    },
-  });
-
-  if (!trip) {
-    const tripNumber = `TRP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    trip = await prisma.trip.create({
-      data: {
-        tripNumber,
-        hubId: null,
-        driverName: best.carrier.name,
-        driverPhone: best.carrier.phone ?? "",
-        vehiclePlate: `VH-${Date.now().toString(36).toUpperCase()}`,
-        scheduledDate: estimatedDelivery,
-        status: "SCHEDULED",
-        tenantId,
-      },
-    });
-  }
-
-  // 7. Create trip stop for this order
-  await prisma.tripStop.create({
-    data: {
-      tripId: trip.id,
-      hotelId: order.hotelId,
-      orderId: order.id,
-      tenantId,
-      stopOrder: 1,
-      stopNumber: 1,
-      estimatedArrival: estimatedDelivery,
-      status: "PENDING",
-    },
-  });
-
-  // 8. Update order with shipping info
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      shippingMethod: "PLATFORM_ASSIGNED",
-      estimatedDelivery,
-      deliveryAddress: order.hotel.city,
-    },
-  });
-
-  return {
-    carrierId: best.carrier.id,
-    carrierName: best.carrier.name,
-    tripId: trip.id,
-    estimatedDelivery,
-    score: Math.round(best.score * 10) / 10,
-    reason: best.reason,
-  };
+    const candidates = await tx.user.findMany({ where: { tenantId, platformRole: "SHIPPING", status: "ACTIVE", deletedAt: null, carrierProfile: { tenantId, deletedAt: null, status: { in: ["VERIFIED", "ACTIVE"] }, verifiedAt: { not: null } } }, include: { carrierProfile: true } });
+    const eligible: { driver: typeof candidates[number]; score: number; reason: string }[] = [];
+    for (const driver of candidates) {
+      const profile = driver.carrierProfile;
+      if (!profile || profile.tenantId !== tenantId || (profile.licenseExpiry && profile.licenseExpiry <= new Date()) || (profile.insuranceExpiry && profile.insuranceExpiry <= new Date())) continue;
+      const cityMatch = profile.zones.includes(order.hotel.city);
+      const governorateMatch = profile.zones.includes(order.hotel.governorate);
+      if (!cityMatch && !governorateMatch && !profile.zones.includes("ALL")) continue;
+      const active = await tx.trip.count({ where: { tenantId, assignedDriverId: driver.id, deletedAt: null, status: { in: ["SCHEDULED", "LOADING", "IN_TRANSIT"] } } });
+      if (profile.vehicleCount < 1 || active >= profile.vehicleCount) continue;
+      // Rating is usable only with recorded reviews; no guessed punctuality or reliability scores.
+      const ratingPoints = profile.reviewCount > 0 ? Math.max(0, Math.min(5, profile.rating)) * 5 : 0;
+      eligible.push({ driver, score: (cityMatch ? 60 : governorateMatch ? 40 : 20) + ratingPoints + (1 - active / profile.vehicleCount) * 15, reason: cityMatch ? "Verified city coverage" : governorateMatch ? "Verified governorate coverage" : "Verified national coverage" });
+    }
+    eligible.sort((a, b) => b.score - a.score || a.driver.id.localeCompare(b.driver.id));
+    if (!eligible[0]) return null;
+    const best = eligible[0];
+    const zone = await tx.deliveryZone.findFirst({ where: { tenantId, zone: order.hotel.city, deletedAt: null } });
+    const estimatedDelivery = zone ? new Date(Date.now() + Math.ceil((zone.minDays + zone.maxDays) / 2) * 86400000) : null;
+    const trip = await tx.trip.create({ data: { tenantId, tripNumber: `TRP-${randomUUID()}`, assignedDriverId: best.driver.id, driverName: best.driver.name, driverPhone: best.driver.phone, vehiclePlate: null, scheduledDate: estimatedDelivery || new Date(), status: "SCHEDULED" } });
+    const stop = await tx.tripStop.create({ data: { tripId: trip.id, hotelId: order.hotelId, orderId, tenantId, stopOrder: 1, stopNumber: 1, estimatedArrival: estimatedDelivery, status: "PENDING" } });
+    await appendAuditEntry({ tenantId, entityName: "ORDER", entityId: orderId, actorId: actor.userId, actorRole: actor.platformRole, actionType: "UPDATE", changes: { event: "DRIVER_ASSIGNED", tripId: trip.id, stopId: stop.id, assignedDriverId: best.driver.id, vehiclePlate: null, estimatedDelivery: estimatedDelivery?.toISOString() || null } }, tx);
+    return { carrierId: best.driver.id, carrierName: best.driver.name, tripId: trip.id, estimatedDelivery, score: Math.round(best.score * 10) / 10, reason: best.reason, replayed: false };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
-/**
- * Batch assign multiple orders to carriers.
- */
-export async function batchAssign(
-  orderIds: string[],
-  tenantId: string
-): Promise<Array<{ orderId: string; result: AssignmentResult | null; error?: string }>> {
-  const results: Array<{ orderId: string; result: AssignmentResult | null; error?: string }> = [];
-
-  for (const orderId of orderIds) {
-    try {
-      const result = await assignCarrier(orderId, tenantId);
-      results.push({ orderId, result });
-    } catch (err) {
-      results.push({ orderId, result: null, error: (err as Error).message });
-    }
+export async function batchAssign(orderIds: string[], tenantId: string, actor: AssignmentActor) {
+  const results: { orderId: string; result: AssignmentResult | null; error?: string }[] = [];
+  for (const orderId of [...new Set(orderIds)]) {
+    try { results.push({ orderId, result: await assignCarrier(orderId, tenantId, actor) }); }
+    catch (cause) { results.push({ orderId, result: null, error: cause instanceof Error ? cause.message : "Assignment failed" }); }
   }
-
   return results;
 }

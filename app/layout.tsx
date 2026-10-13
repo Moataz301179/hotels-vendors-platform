@@ -91,16 +91,16 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   other: {
-    "msapplication-TileColor": "var(--accent-base)",
+    "msapplication-TileColor": "#98D640",
     "msapplication-TileImage": "/logo-icon-white.png",
-    "theme-color": "#0c0c12",
+    "theme-color": "#FFFFFF",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0c0c12" },
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -116,6 +116,7 @@ export default function RootLayout({
       lang="en"
       dir="ltr"
       className="h-full"
+      data-scroll-behavior="smooth"
     >
       <head>
         <link rel="dns-prefetch" href="https://www.hotelsvendors.com" />
@@ -127,23 +128,13 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0c0c12" id="theme-color-meta" />
+        <meta name="theme-color" content="#FFFFFF" id="theme-color-meta" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                try {
-                  var mode = localStorage.getItem('hv-theme-mode') || 'dark';
-                  if (mode === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    var meta = document.getElementById('theme-color-meta');
-                    if (meta) meta.setAttribute('content', '#f8f9fa');
-                  } else {
-                    document.documentElement.removeAttribute('data-theme');
-                    var meta = document.getElementById('theme-color-meta');
-                    if (meta) meta.setAttribute('content', '#0c0c12');
-                  }
-                } catch (e) {}
+                // PrefsProvider applies stored theme preferences after hydration.
+                // Mutating React-owned html attributes here caused SSR mismatches.
                 if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
                   if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
                     window.addEventListener('load', function() {

@@ -10,6 +10,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 interface EtaVerificationPayload {
   userId: string;
@@ -23,8 +24,7 @@ const ETA_API_KEY = process.env.ETA_API_KEY || "";
 
 async function callEtaApi(endpoint: string, payload: Record<string, unknown>, timeout = 15000) {
   if (!ETA_API_KEY) {
-    console.warn("[ETA Worker] ETA_API_KEY not configured — using mock mode");
-    return { status: "MOCK_VERIFIED", verified: true, source: "mock" };
+    throw new Error("ETA verification integration is not configured");
   }
 
   const res = await fetch(`${ETA_BASE_URL}${endpoint}`, {
@@ -42,13 +42,14 @@ async function callEtaApi(endpoint: string, payload: Record<string, unknown>, ti
     throw new Error(`ETA API returned ${res.status}: ${await res.text().catch(() => "")}`);
   }
 
-  return res.json();
+  return z.object({ status: z.string(), verified: z.boolean() }).parse(await res.json());
 }
 
 export async function processEtaVerification(payload: EtaVerificationPayload) {
   const { userId, taxId, commercialReg, tenantId } = payload;
+  const startTime = Date.now();
 
-  console.log(`[ETA Worker] Verifying user ${userId} — Tax ID: ${taxId}, CR: ${commercialReg}`);
+  console.log(`[ETA Worker] Verifying user ${userId}`);
 
   try {
     // 1. Verify Tax ID against ETA eInvoicing
@@ -63,16 +64,16 @@ export async function processEtaVerification(payload: EtaVerificationPayload) {
     const docResult = await callEtaApi("/document-queries", {
       taxId,
       queryType: "STATUS_CHECK",
-    }).catch(() => ({ status: "UNKNOWN" }));
+    }).catch(() => ({ status: "UNKNOWN", verified: false }));
 
-    const verified = taxResult?.verified === true || taxResult?.status === "MOCK_VERIFIED";
+    const verified = taxResult.verified === true && taxResult.status !== "MOCK_VERIFIED";
     const status = verified ? "VERIFIED" : "FAILED";
 
     // 3. Update user KYC status
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: userId, tenantId },
       data: {
-        kycStatus: status as any,
+        kycStatus: status,
         kycVerifiedAt: verified ? new Date() : undefined,
         kycLevel: verified ? 1 : 0,
       },
@@ -90,13 +91,13 @@ export async function processEtaVerification(payload: EtaVerificationPayload) {
           commercialReg,
           verified,
           etaStatus: taxResult?.status || "mock",
-          processingTimeMs: Date.now() - (payload as any)._startTime || 0,
+          processingTimeMs: Date.now() - startTime,
         },
       },
     });
 
     console.log(`[ETA Worker] User ${userId}: ${status}`);
-    return { success: true, status, userId };
+    return { success: verified, status, userId };
   } catch (err) {
     console.error(`[ETA Worker] Failed for user ${userId}:`, err instanceof Error ? err.message : err);
 

@@ -65,3 +65,7 @@ export async function generateOlivCheckoutUrl(
 
   return response.json();
 }
+
+
+// Alias for backward compatibility with dashboard checkout pages
+export { generateOlivCheckoutUrl as generateCheckoutUrl };

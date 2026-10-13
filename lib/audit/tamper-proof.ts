@@ -9,6 +9,7 @@
 
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 // ─────────────────────────────────────────
 // 1. HASH CHAIN
@@ -66,7 +67,10 @@ export async function appendAuditEntry(params: {
   changes?: Record<string, unknown> | string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
-}): Promise<string> {
+}, transaction?: Prisma.TransactionClient): Promise<string> {
+  if (!transaction) return prisma.$transaction(tx => appendAuditEntry(params, tx));
+  // Serialize the existing global hash chain and commit the entry with its owner mutation.
+  await transaction.$queryRaw`SELECT pg_advisory_xact_lock(481516234)`;
   const {
     entityName,
     entityId,
@@ -80,7 +84,7 @@ export async function appendAuditEntry(params: {
   } = params;
 
   // Get previous entry's hash
-  const previousEntry = await prisma.auditLog.findFirst({
+  const previousEntry = await transaction.auditLog.findFirst({
     orderBy: { createdAt: "desc" },
     select: { hash: true },
   });
@@ -88,7 +92,7 @@ export async function appendAuditEntry(params: {
   const previousHash = previousEntry?.hash || "genesis";
 
   // Create entry
-  const entry = await prisma.auditLog.create({
+  const entry = await transaction.auditLog.create({
     data: {
       entityName: entityName as never,
       entityId,
@@ -120,7 +124,7 @@ export async function appendAuditEntry(params: {
   });
 
   // Update with hash
-  await prisma.auditLog.update({
+  await transaction.auditLog.update({
     where: { id: entry.id },
     data: { hash },
   });

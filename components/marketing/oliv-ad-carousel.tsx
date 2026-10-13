@@ -3,23 +3,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ExternalLink, QrCode } from "lucide-react";
-import { OlivLogo } from "@/components/partners/oliv-logo";
+import { Logo } from "@/components/partners/oliv-logo";
 import { useTranslation } from "@/lib/i18n/hooks/use-translation";
 
 /**
- * Oliv Ad Carousel — Replaces the text-only marquee ticker in the hero section.
+ *  Ad Carousel — Replaces the text-only marquee ticker in the hero section.
  *
  * Features:
  * - Image-based advertisement slides (not just text)
  * - Auto-playing Framer Motion transitions
  * - CTA button linking through the /api/v1/oliv/click route (which appends
- *   the referral code CHV000 as the `ref` param)
- * - QR code/barcode on each slide for mobile users to scan → opens Oliv
- *   registration page with CHV000 pre-filled
+ *   the partner referral code as the `ref` param)
+ * - QR code/barcode on each slide for mobile users to scan → opens
+ *   registration page with referral pre-filled
  * - RTL support + i18n translations
  */
 
-interface OlivAdSlide {
+interface AdSlide {
   id: number;
   image: string;
   alt: string;
@@ -32,16 +32,16 @@ interface OlivAdSlide {
   qrText: string;
 }
 
-// The Oliv click API route already injects referral code CHV000
-const OLIV_CLICK_URL = "/api/v1/oliv/click?ref=CHV000";
+// The click API route already injects the partner referral code
+const OLIV_CLICK_URL = "/api/v1/oliv/click?ref=partner";
 
-// QR code that encodes the Oliv apply URL with referral code CHV000
+// QR code that encodes the  apply URL with referral code partner
 const OLIV_APPLY_QR =
   "https://api.qrserver.com/v1/api/qr-code/?size=160x160&data=" +
-  encodeURIComponent("https://oliv.finance/apply?ref=CHV000&source=hotelsvendors");
+  encodeURIComponent("https:///apply?ref=partner&source=hotelsvendors");
 
 // Static slide skeleton — translatable strings are injected inside the component
-const SLIDE_SKELETON: Omit<OlivAdSlide, "title" | "subtitle" | "badge" | "ctaText" | "qrText">[] = [
+const SLIDE_SKELETON: Omit<AdSlide, "title" | "subtitle" | "badge" | "ctaText" | "qrText">[] = [
   {
     id: 1,
     image: "https://images.unsplash.com/photo-1582192688549-e38c0329be50?w=1920&q=85",
@@ -87,11 +87,11 @@ const slideVariants = {
   }),
 };
 
-export function OlivAdCarousel() {
+export function AdCarousel() {
   const { t } = useTranslation("homepage");
 
   // Build slides with translated strings
-  const SLIDES: OlivAdSlide[] = SLIDE_SKELETON.map((s) => {
+  const SLIDES: AdSlide[] = SLIDE_SKELETON.map((s) => {
     const num = s.id;
     return {
       ...s,
@@ -159,7 +159,7 @@ export function OlivAdCarousel() {
             {/* Left: text + logo + CTA */}
             <div className="flex-1 text-center md:text-left space-y-3">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                <OlivLogo size="sm" variant="dark" />
+                <Logo size="sm" variant="dark" />
                 <span
                   className="px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider"
                   style={{
@@ -197,7 +197,7 @@ export function OlivAdCarousel() {
 
               <div className="flex items-center gap-2 text-[10px] text-white/40">
                 <span>Referral code:</span>
-                <span className="font-mono font-semibold text-accent-base tracking-wider">CHV000</span>
+                <span className="font-mono font-semibold text-accent-base tracking-wider">partner</span>
               </div>
             </div>
 
@@ -206,7 +206,7 @@ export function OlivAdCarousel() {
               <div className="rounded-xl bg-white p-2 shadow-lg">
                 <img
                   src={OLIV_APPLY_QR}
-                  alt="QR code to apply on Oliv with referral code CHV000"
+                  alt="QR code to apply on financing partner with referral pre-filled"
                   className="w-28 h-28 object-contain"
                   width={112}
                   height={112}

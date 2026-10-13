@@ -43,11 +43,14 @@ export class AdaptiveInvestigator {
 
   // §10 — smallest loop demonstration, reproducible fixtures (not simulated live web access — §26 no fabricated results)
   runDemonstrationCycle(initialEntityId: string, initialWindowType: string): LoopResult {
+    const surfaceTypes: WindowDefinition['surfaceType'][] = ['WEB_PAGE', 'APPLICATION', 'AI_INTERFACE', 'DOCUMENT', 'TECHNICAL_INFRASTRUCTURE', 'HUMAN_SIGNAL', 'THIRD_PARTY'];
+    const surfaceType = surfaceTypes.find(type => type === initialWindowType);
+    if (!surfaceType) throw new Error('Unsupported investigation surface type');
     const cycle = 1;
     // Initialize state from an observed surface (§7 exposure window concept)
     const initialWindow: WindowDefinition = {
       surfaceId: `demo:${initialEntityId}:${initialWindowType}`,
-      surfaceType: initialWindowType as any,
+      surfaceType,
       observedPath: ['demo_start', initialEntityId],
       informationRevealed: [
         'Surface discovered for entity',
@@ -103,7 +106,7 @@ export class AdaptiveInvestigator {
 
     // §8 window expansion: finding generates new seeds (§7, §8, §13 graph-driven)
     const expanded = this.expander.expandFromFinding(
-      'SECURITY_EXPOSURE' as any,
+      'SECURITY_EXPOSURE',
       initialEntityId,
       ['demo_start', initialEntityId],
     );
@@ -116,9 +119,9 @@ export class AdaptiveInvestigator {
     );
 
     // §9 "So What?" automatic — business significance (§9) with domain classification (§14)
-    const significance = {
+    const significance: LoopResult['businessSignificance'] = {
       signal: 'External surface discovered; pathway investigation creates new entity relationships and potential security/commercial signals (§6 ecosystem, §9 transition)',
-      domain: 'SECURITY' as any,
+      domain: 'SECURITY',
       confidence: 0.7,
       reason: 'Passively observable; deeper assessment requires authorization scope (§11); impact range shown with assumption (§10 value map)',
     };

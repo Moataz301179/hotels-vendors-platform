@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { AgentContext } from "./swarm-orchestrator";
 
 interface EtaInvoicePayload {
-  uuid: string;
+  uuid: string | null;
   seller: { taxId: string; name: string };
   buyer: { taxId: string; name: string };
   items: Array<{ name: string; quantity: number; unitPrice: number; total: number }>;
@@ -23,19 +23,20 @@ export const ComplianceGuardAgent = {
     if (!orderId) return { success: false, output: "Missing orderId" };
 
     const order = await prisma.order.findUnique({
-      where: { id: orderId },
+      where: { id: orderId, tenantId: ctx.tenantId },
       include: {
         items: { include: { product: { select: { name: true, sku: true } } } },
         hotel: { select: { name: true, taxId: true } },
+        supplier: { select: { name: true, taxId: true } },
       },
     });
 
     if (!order) return { success: false, output: "Order not found" };
 
-    // Generate ETA-compliant e-invoice JSON
+    // Build an internal draft. Only ETA acceptance may assign an official UUID.
     const invoice: EtaInvoicePayload = {
-      uuid: order.etaSubmissionId || `ETA-${Date.now().toString(36).toUpperCase()}`,
-      seller: { taxId: "382-910-112", name: "HotelsVendors Marketplace" },
+      uuid: order.etaSubmissionId,
+      seller: { taxId: order.supplier.taxId, name: order.supplier.name },
       buyer: { taxId: order.hotel?.taxId || "UNKNOWN", name: order.hotel?.name || "Unknown Hotel" },
       items: order.items.map((i) => ({
         name: i.product?.name || "Unknown",
@@ -46,17 +47,8 @@ export const ComplianceGuardAgent = {
       totalAmount: order.items.reduce((sum, i) => sum + Number(i.total), 0),
       currency: order.currency || "EGP",
       generatedAt: new Date().toISOString(),
-      qrCode: `QR:ETA:${order.etaSubmissionId || order.id}:${Date.now().toString(36)}`,
+      qrCode: "",
     };
-
-    // Store ETA payload and update order
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        etaSubmissionId: invoice.uuid,
-        status: order.status === "APPROVED" ? "IN_TRANSIT" : order.status,
-      },
-    });
 
     await prisma.auditLog.create({
       data: {
@@ -64,10 +56,11 @@ export const ComplianceGuardAgent = {
         entityId: orderId,
         actorId: "ComplianceGuard",
         actionType: "UPDATE",
-        changes: { etaUuid: invoice.uuid, status: "ETA_INVOICE_GENERATED", qrCode: invoice.qrCode },
+        entityName: "ORDER",
+        changes: { status: "INVOICE_DRAFT_GENERATED", submitted: false },
       },
     });
 
-    return { success: true, output: { invoice } };
+    return { success: true, output: { invoice, submitted: false } };
   },
-};
+} as const;

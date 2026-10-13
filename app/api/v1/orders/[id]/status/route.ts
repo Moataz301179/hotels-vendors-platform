@@ -3,8 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { OrderStatus } from "@prisma/client";
 import { validateStatusTransition, getTransitionGate } from "@/lib/auth/state-machine";
-import { evaluateAuthority } from "@/lib/auth/authority-matrix";
-import { reserveCredit } from "@/lib/credit-gate";
+import { evaluateAuthority, releaseGuaranteeReservations } from "@/lib/auth/authority-matrix";
+import { randomUUID } from "node:crypto";
 import {
   apiRoute,
   authenticate,
@@ -36,10 +36,18 @@ export const POST = apiRoute(
     const requestedStatus = data.status as OrderStatus;
 
     const order = await prisma.order.findFirst({
-      where: { id, tenantId: auth.tenantId },
+      where: { id, tenantId: auth.tenantId, deletedAt: null },
       include: {
         items: { include: { product: true } },
         invoices: true,
+        tripStops: {
+          where: { tenantId: auth.tenantId, deletedAt: null },
+          select: { deliveryProofs: { select: { id: true }, take: 1 } },
+        },
+        goodsReceiptNotes: {
+          where: { tenantId: auth.tenantId, deletedAt: null },
+          select: { status: true },
+        },
       },
     });
 
@@ -66,50 +74,24 @@ export const POST = apiRoute(
         );
       }
     }
+    if (requestedStatus === "DELIVERED") {
+      if (!order.tripStops.some((stop) => stop.deliveryProofs.length > 0)) return error("Carrier proof of delivery is required before delivery completion", 409);
+      if (!order.goodsReceiptNotes.some((grn) => grn.status === "ACCEPTED" || grn.status === "PARTIALLY_ACCEPTED")) return error("Hotel goods receipt is required before delivery completion", 409);
+    }
 
     const beforeState = { status: order.status, paymentGuaranteed: order.paymentGuaranteed };
 
-    // DELIVERED → auto-generate Invoice
-    if (requestedStatus === "DELIVERED") {
-      const existingInvoice = order.invoices[0];
-      if (!existingInvoice) {
-        const deliveryDate = order.deliveryDate ?? new Date();
-        const dueDate = new Date(deliveryDate);
-        dueDate.setDate(dueDate.getDate() + 30);
-
-        const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
-
-        await prisma.invoice.create({
-          data: {
-            invoiceNumber,
-            orderId: order.id,
-            hotelId: order.hotelId,
-            supplierId: order.supplierId,
-            tenantId: auth.tenantId,
-            issueDate: new Date(),
-            dueDate,
-            subtotal: order.subtotal ?? 0,
-            vatRate: 0.14,
-            vatAmount: order.vatAmount ?? 0,
-            total: order.total ?? 0,
-            status: "DRAFT",
-            paymentStatus: "UNPAID",
-          },
-        });
-
-        // Reserve credit: order drops out of uncaptured set, so creditUsed must absorb it
-        await reserveCredit(order.hotelId, Number(order.total ?? 0));
-      }
-    }
-
+    const user = await prisma.user.findFirst({ where: { id: auth.userId, tenantId: auth.tenantId }, select: { role: true } });
+    if (!user) return error("User not found", 404);
     // Authority evaluation for payment guarantee check
     const evaluation = await evaluateAuthority(order.id, {
       userId: auth.userId,
-      userRole: auth.platformRole === "HOTEL" ? "DEPARTMENT_HEAD" : "OWNER",
+      userRole: user.role,
       tenantId: auth.tenantId,
       ipAddress: request.headers.get("x-forwarded-for") || undefined,
       userAgent: request.headers.get("user-agent") ?? undefined,
     });
+    if (["APPROVED", "CONFIRMED", "IN_TRANSIT", "DELIVERED"].includes(requestedStatus) && (!evaluation.canProceed || (evaluation.routeToRole && evaluation.routeToRole !== user.role))) return error(evaluation.reason ?? "Authority Matrix requirements are not satisfied", 403);
 
     // Atomic status update with row locking to prevent race conditions
     const updatedOrder = await prisma.$transaction(async (tx) => {
@@ -117,7 +99,7 @@ export const POST = apiRoute(
       const locked = await tx.$queryRaw<Array<{ id: string; status: string; paymentGuaranteed: boolean }>>`
         SELECT "id", "status", "paymentGuaranteed"
         FROM "Order"
-        WHERE "id" = ${id}
+        WHERE "id" = ${id} AND "tenantId" = ${auth.tenantId}
         FOR UPDATE
       `;
 
@@ -133,9 +115,15 @@ export const POST = apiRoute(
       if (!reTransition.valid) {
         throw new Error(reTransition.reason || "Invalid status transition (concurrent modification)");
       }
+      if (["CONFIRMED", "IN_TRANSIT", "DELIVERED"].includes(requestedStatus) && !locked[0].paymentGuaranteed) throw new Error("Payment guarantee required");
+      if (requestedStatus === "CANCELLED") await releaseGuaranteeReservations(tx, id, auth.tenantId, auth.userId);
+      if (requestedStatus === "DELIVERED") {
+        const invoice = await tx.invoice.findFirst({ where: { orderId: id, tenantId: auth.tenantId } });
+        if (!invoice) await tx.invoice.create({ data: { invoiceNumber: `INV-${randomUUID()}`, orderId: id, hotelId: order.hotelId, supplierId: order.supplierId, tenantId: auth.tenantId, currency: order.currency, issueDate: new Date(), subtotal: order.subtotal ?? 0, vatRate: 0.14, vatAmount: order.vatAmount ?? 0, total: order.total ?? 0, status: "DRAFT", paymentStatus: "UNPAID" } });
+      }
 
       return tx.order.update({
-        where: { id },
+        where: { id, tenantId: auth.tenantId },
         data: { status: requestedStatus },
         include: {
           items: { include: { product: true } },

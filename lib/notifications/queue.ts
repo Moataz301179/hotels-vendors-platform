@@ -7,13 +7,13 @@
  */
 
 import { Queue, Worker, Job } from "bullmq";
-import { getRedisConnection } from "@/lib/queues/connection";
+import { getRedisConnection, isBuildEnvironment } from "@/lib/queues/connection";
 import { sendEmail } from "./email";
 import { recordSwarmEvent } from "@/lib/swarm/monitoring";
 
-export const emailQueue = new Queue("email-notifications", {
-  connection: getRedisConnection(),
-});
+export const emailQueue = isBuildEnvironment()
+  ? (null as unknown as Queue)
+  : new Queue("email-notifications", { connection: getRedisConnection() });
 
 export interface EmailJobPayload {
   to: string[];

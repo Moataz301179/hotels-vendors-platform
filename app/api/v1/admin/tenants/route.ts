@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiRoute, authenticate, requirePermission } from "@/lib/api-utils";
+import { apiRoute, authenticate, validateQuery } from "@/lib/api-utils";
+import { requirePlatformAdmin } from "@/lib/admin/access";
+import { adminTenantQuery } from "@/lib/validators/admin-directory";
 import { prisma } from "@/lib/prisma";
 
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  await requirePermission(auth, "admin:manage_tenants");
+  await requirePlatformAdmin(auth, "admin:manage_tenants");
+  const { search, status, limit, page } = validateQuery(adminTenantQuery, request.nextUrl.searchParams);
 
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const status = request.nextUrl.searchParams.get("status") || undefined;
-  const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20", 10);
-  const page = parseInt(request.nextUrl.searchParams.get("page") || "1", 10);
-
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { deletedAt: null };
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
@@ -38,5 +36,5 @@ export const GET = apiRoute(async (request: NextRequest) => {
   return NextResponse.json({
     success: true,
     data: { tenants, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } },
-  });
-});
+  }, { headers: { "Cache-Control": "private, no-store" } });
+}, { rateLimit: "api" });

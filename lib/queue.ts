@@ -32,7 +32,8 @@ function redisConnection() {
 
 let queueInstance: Queue<SourceJobData> | null = null;
 function getQueue(): Queue<SourceJobData> | null {
-  if (!REDIS_URL && !process.env.REDIS_HOST) return null;
+  const isBuild = process.env.HV_BUILD === "1" || process.env.NEXT_PHASE === "phase-production-build" || process.env.CI === "true";
+  if (isBuild || (!REDIS_URL && !process.env.REDIS_HOST)) return null;
   if (!queueInstance) {
     queueInstance = new Queue<SourceJobData>("hv-sourcing", { connection: redisConnection() });
   }

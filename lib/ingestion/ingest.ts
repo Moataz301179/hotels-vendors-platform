@@ -7,8 +7,8 @@
  *   → upsertCatalog()   → deterministic DB write (idempotent by sku)
  */
 
+import { ProductCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getProductImage } from "@/lib/marketplace/product-images";
 
 /* ── 1. Scraper Engine interface ─────────────────────────────────────────── */
 export interface ScraperSource {
@@ -112,7 +112,7 @@ export interface EnrichedProduct {
   supplierName: string;
 }
 
-export function enrichProduct(raw: EnrichmentInput, supplierTenantId: string): EnrichedProduct {
+export function enrichProduct(raw: EnrichmentInput, _supplierTenantId: string): EnrichedProduct {
   // Clean title (trim, collapse spaces, strip noise)
   const title = raw.title.replace(/\s+/g, " ").trim();
   const category = (raw.category || autoMapCategory(title)).toUpperCase();
@@ -120,14 +120,12 @@ export function enrichProduct(raw: EnrichmentInput, supplierTenantId: string): E
   const unitPrice = parseEGP(raw.priceEGP);
   const sku = raw.sku || `HV-${category}-${Math.abs(hash(title)).toString(36).toUpperCase().slice(0, 8)}`;
 
-  // Image: use scraped one if valid http, else category-accurate resolver fallback
-  const imgURL = raw.imageURL && /^https?:/.test(raw.imageURL)
-    ? raw.imageURL
-    : (() => { const r = getProductImage({ name: title, category }); return r.type === "url" ? r.src : ""; })();
+  // Never substitute a generic stock image for a real supplier product image.
+  const imgURL = raw.imageURL && /^https?:/.test(raw.imageURL) ? raw.imageURL : "";
 
   const description = `${title} — ${category} hospitality supply item, ${unit} unit.`;
 
-  return { title, category, description, unit, unitPrice, imageURL: imgURL, sku, supplierName: raw.supplierName || "Verified Supplier" };
+  return { title, category, description, unit, unitPrice, imageURL: imgURL, sku, supplierName: raw.supplierName || "" };
 }
 
 /* ── 6. Idempotent DB upsert (by sku within tenant) ─────────────────────── */
@@ -136,20 +134,21 @@ export async function upsertCatalog(products: EnrichedProduct[], supplierTenantI
   for (const p of products) {
     try {
       const existing = await prisma.product.findFirst({
-        where: { sku: p.sku, tenantId: supplierTenantId },
+        where: { sku: p.sku, tenantId: supplierTenantId, source: "FIXTURE" },
       });
       if (existing) {
         await prisma.product.update({
           where: { id: existing.id },
-          data: { name: p.title, description: p.description, category: p.category as any, unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined },
+          data: { name: p.title, description: p.description, category: p.category as ProductCategory, unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined },
         });
         updated++;
       } else {
         await prisma.product.create({
           data: {
-            sku: p.sku, name: p.title, description: p.description, category: p.category as any,
+            sku: p.sku, name: p.title, description: p.description, category: p.category as ProductCategory,
             unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined,
-            stockQuantity: 100,
+            stockQuantity: 0,
+            source: "FIXTURE",
             tenantId: supplierTenantId, supplierId,
           },
         });

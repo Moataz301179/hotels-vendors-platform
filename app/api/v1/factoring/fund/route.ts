@@ -14,6 +14,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { submitFactoringInstruction } from "@/lib/fintech/factoring-bridge";
+import { validateForFactoring } from "@/lib/eta/validator";
 import {
   apiRoute,
   authenticate,
@@ -38,18 +39,44 @@ export const POST = apiRoute(async (request: NextRequest) => {
   const data = FundSchema.parse(body);
 
   // Fetch invoice with hotel and supplier details
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: data.invoiceId },
-    include: { hotel: true, supplier: true, order: true },
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: data.invoiceId, tenantId: auth.tenantId, deletedAt: null, order: { tenantId: auth.tenantId, deletedAt: null } },
+    include: {
+      hotel: true,
+      supplier: true,
+      order: {
+        include: {
+          tripStops: {
+            where: { tenantId: auth.tenantId, deletedAt: null },
+            select: { deliveryProofs: { select: { id: true }, take: 1 } },
+          },
+          goodsReceiptNotes: {
+            where: { tenantId: auth.tenantId, deletedAt: null },
+            select: { status: true },
+          },
+        },
+      },
+    },
   });
 
   if (!invoice) {
     return error("Invoice not found", 404);
   }
+  if (invoice.order.status !== "DELIVERED") return error("Funding requires a fully delivered order", 409);
+  if (!invoice.order.paymentGuaranteed) return error("Funding requires a payment-guaranteed order", 409);
+  if (!invoice.order.tripStops.some((stop) => stop.deliveryProofs.length > 0)) return error("Funding requires carrier proof of delivery", 409);
+  if (!invoice.order.goodsReceiptNotes.some((grn) => grn.status === "ACCEPTED" || grn.status === "PARTIALLY_ACCEPTED")) {
+    return error("Funding requires a hotel goods receipt", 409);
+  }
+  if (invoice.factoringStatus !== "ACCEPTED" || invoice.factoringCompanyId !== data.partnerId) {
+    return error("Funding requires an accepted factoring offer for this partner", 409);
+  }
+  const etaValid = await validateForFactoring(data.invoiceId);
+  if (!etaValid.valid) return error(`Funding blocked: ${etaValid.message}`, 422);
 
   // Verify the user's entity matches the invoice (tenant isolation)
   const user = await prisma.user.findUnique({
-    where: { id: auth.userId },
+    where: { id: auth.userId, tenantId: auth.tenantId },
     select: { hotelId: true, supplierId: true },
   });
   if (auth.platformRole === "HOTEL" && invoice.hotelId !== user?.hotelId) {
@@ -58,6 +85,18 @@ export const POST = apiRoute(async (request: NextRequest) => {
   if (auth.platformRole === "SUPPLIER" && invoice.supplierId !== user?.supplierId) {
     return error("Forbidden", 403);
   }
+
+  const approvedOffer = await prisma.factoringRequest.findFirst({
+    where: {
+      invoiceId: invoice.id,
+      tenantId: auth.tenantId,
+      factoringCompanyId: data.partnerId,
+      status: "APPROVED",
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
+  if (!approvedOffer) return error("No approved factoring request exists for this invoice", 409);
 
   // Idempotency — prevent duplicate factoring submissions
   const idempotencyKey = await requireIdempotencyKey(request, {
@@ -72,6 +111,8 @@ export const POST = apiRoute(async (request: NextRequest) => {
     where: {
       hotelId: invoice.hotelId,
       factoringCompanyId: data.partnerId,
+      tenantId: auth.tenantId,
+      deletedAt: null,
       status: "ACTIVE",
     },
   });
@@ -207,7 +248,7 @@ export const POST = apiRoute(async (request: NextRequest) => {
     userAgent: request.headers.get("user-agent"),
   });
 
-  completeIdempotency(idempotencyKey, data.invoiceId);
+  await completeIdempotency(idempotencyKey, data.invoiceId);
 
   return success({
     instructionId: result.instructionId,

@@ -8,19 +8,20 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { apiRoute, authenticate, requirePermission, success, error } from "@/lib/api-utils";
+import { apiRoute, authenticate, success, error } from "@/lib/api-utils";
+import { requirePlatformAdmin } from "@/lib/admin/access";
 
 const ListSchema = z.object({
   status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   category: z.enum(["BILLING", "TECHNICAL", "ORDER", "SUPPLIER", "FACTORING", "ETA", "OTHER"]).optional(),
-  page: z.coerce.number().int().min(1).default(1),
+  page: z.coerce.number().int().min(1).max(10000).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
 export const GET = apiRoute(async (request: NextRequest) => {
   const auth = await authenticate(request);
-  await requirePermission(auth, "admin:manage_platform");
+  await requirePlatformAdmin(auth, "admin:manage_tenants");
 
   const { searchParams } = new URL(request.url);
   const parsed = ListSchema.safeParse({
@@ -36,6 +37,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
   const { status, priority, category, page, limit } = parsed.data;
 
   const where = {
+    tenant: { deletedAt: null },
     ...(status ? { status } : {}),
     ...(priority ? { priority } : {}),
     ...(category ? { category } : {}),
@@ -47,6 +49,7 @@ export const GET = apiRoute(async (request: NextRequest) => {
       orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
       take: limit,
       skip: (page - 1) * limit,
+      select: { id: true, tenantId: true, subject: true, category: true, priority: true, status: true, createdAt: true, updatedAt: true },
     }),
     prisma.supportTicket.count({ where }),
   ]);

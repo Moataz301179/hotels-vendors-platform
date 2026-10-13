@@ -10,6 +10,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 interface FactoringPayload {
   invoiceId: string;
@@ -24,13 +25,21 @@ interface FactoringPayload {
 const FRA_API_URL = process.env.FRA_API_URL || "";
 const FRA_API_KEY = process.env.FRA_API_KEY || "";
 
-async function checkFraDoubleFinancing(etaUuid: string): Promise<{ locked: boolean; existingReference?: string }> {
+async function checkFraDoubleFinancing(
+  etaUuid: string,
+  invoiceId: string,
+  tenantId: string,
+  supplierId: string,
+  hotelId: string,
+  amount: number,
+): Promise<{ locked: boolean; existingReference?: string }> {
   if (!FRA_API_KEY) {
-    console.warn("[FRA Worker] FRA_API_KEY not configured — using mock mode");
-    return { locked: false };
+    throw new Error("FRA verification integration is not configured");
   }
 
   try {
+    const invoice = await prisma.invoice.findFirst({ where: { id: invoiceId, tenantId, supplierId, hotelId, deletedAt: null } });
+    if (!invoice || invoice.etaUuid !== etaUuid || !["ACCEPTED", "VALIDATED"].includes(invoice.etaStatus) || !invoice.digitalSignature || Number(invoice.total) !== amount) throw new Error("Verified invoice identity, amount and ETA acceptance required");
     const res = await fetch(`${FRA_API_URL}/factoring/check`, {
       method: "POST",
       headers: {
@@ -42,31 +51,17 @@ async function checkFraDoubleFinancing(etaUuid: string): Promise<{ locked: boole
     });
 
     if (res.ok) {
-      const data = await res.json();
-      return { locked: data.locked || false, existingReference: data.referenceId };
+      const data = z.object({ locked: z.boolean(), referenceId: z.string().optional() }).parse(await res.json());
+      return { locked: data.locked, existingReference: data.referenceId };
     }
-    return { locked: false };
+    throw new Error("FRA verification was not successful");
   } catch {
-    console.warn("[FRA Worker] FRA API unreachable — proceeding with internal check");
-    return { locked: false };
+    throw new Error("FRA verification unavailable; financing remains blocked");
   }
 }
 
 async function triggerPayout(amount: number, supplierId: string, method: string = "bank_transfer"): Promise<{ success: boolean; reference: string; method: string }> {
-  // In production: call Paymob, InstaPay, or bank rail API
-  // Mock implementation for now — returns simulated success
-  const reference = `HV-PAYOUT-${Date.now().toString(36).toUpperCase()}`;
-
-  console.log(`[FRA Worker] Triggering payout: ${amount} EGP to supplier ${supplierId} via ${method}`);
-
-  // Simulate processing delay
-  await new Promise((r) => setTimeout(r, 500));
-
-  return {
-    success: true,
-    reference,
-    method,
-  };
+  throw new Error(`Verified ${method} payout adapter is not configured for supplier ${supplierId} amount ${amount}`);
 }
 
 export async function processFactoringRequest(payload: FactoringPayload) {
@@ -77,8 +72,14 @@ export async function processFactoringRequest(payload: FactoringPayload) {
 
   try {
     // 1. Verify order delivery status (proxy for Goods Received)
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, tenantId, supplierId, hotelId, deletedAt: null },
+    });
+    if (!invoice) throw new Error("Invoice not found in the requested tenant scope");
+
     const order = await prisma.order.findFirst({
       where: {
+        id: invoice.orderId,
         tenantId,
         status: "DELIVERED",
         items: { some: { quantity: { gt: 0 } } },
@@ -99,9 +100,11 @@ export async function processFactoringRequest(payload: FactoringPayload) {
       console.warn(`[FRA Worker] Invoice ${invoiceId}: No delivered order — marked for review`);
       return { success: false, reason: "GRN_NOT_FOUND", invoiceId };
     }
+    const receipt = await prisma.goodsReceiptNote.findFirst({ where: { orderId: invoice.orderId, tenantId, status: "ACCEPTED", deletedAt: null } });
+    if (!receipt) throw new Error("Accepted goods receipt for this invoice is required");
 
     // 2. FRA anti-double-financing check
-    const fraCheck = await checkFraDoubleFinancing(etaUuid);
+    const fraCheck = await checkFraDoubleFinancing(etaUuid, invoiceId, tenantId, supplierId, hotelId, amount);
     if (fraCheck.locked) {
       await prisma.auditLog.create({
         data: {
@@ -244,7 +247,7 @@ async function main() {
     amount,
     etaUuid: process.argv.find((a) => a.startsWith("--etaUuid="))?.split("=")[1] || "eta-uuid-placeholder",
     tenantId: process.env.DEFAULT_TENANT_ID || "TENANT_001",
-    payoutMethod: (process.argv.find((a) => a.startsWith("--payoutMethod="))?.split("=")[1] as any) || "bank_transfer",
+    payoutMethod: parsePayoutMethod(process.argv.find((a) => a.startsWith("--payoutMethod="))?.split("=")[1]),
   });
 
   console.log("Done.");
@@ -253,4 +256,10 @@ async function main() {
 
 if (require.main === module) {
   main().catch((err) => { console.error(err); process.exit(1); });
+}
+
+function parsePayoutMethod(value: string | undefined): FactoringPayload['payoutMethod'] {
+  if (value === undefined || value === "bank_transfer") return "bank_transfer";
+  if (value === "instapay" || value === "paymob") return value;
+  throw new Error("Unsupported payout method");
 }

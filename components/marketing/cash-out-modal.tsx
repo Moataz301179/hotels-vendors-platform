@@ -103,8 +103,8 @@ export function CashOutModal({ poRef, property, lines, gross, spreadPct, open, o
             </span>
           </div>
           <p className="mt-1.5 text-[10px] text-slate-400 leading-relaxed">
-            48h disbursal via licensed grantors (Oliv / Suez Canal Bank). Non-recourse facility — credit
-            underwriting held against the corporate hotel buyer, off HotelsVendors' balance sheet.
+            48h disbursal via licensed grantors ( / Suez Canal Bank). Non-recourse facility — credit
+            underwriting held against the corporate hotel buyer, off HotelsVendors&apos; balance sheet.
           </p>
         </div>
 

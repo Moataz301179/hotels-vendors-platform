@@ -8,7 +8,7 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Textarea } from "@/components/ui";
 import { Label } from "@/components/ui";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui";
 
 export default function InviteSupplierPage() {
@@ -41,7 +41,10 @@ export default function InviteSupplierPage() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const registrationUrl = `${window.location.origin}/register?role=SUPPLIER`;
+    const subject = `Supplier invitation from ${formData.hotelOrgName}`;
+    const body = `Hello ${formData.supplierCompanyName},\n\n${formData.hotelOrgName} invites you to register with HotelsVendors.\n\n${registrationUrl}\n\n${formData.notes}`;
+    window.location.href = `mailto:${encodeURIComponent(formData.supplierEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setIsSubmitting(false);
     setStep("success");
   };
@@ -61,17 +64,15 @@ export default function InviteSupplierPage() {
               <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: "rgba(200,168,107,0.15)" }}>
                 <CheckCircle2 size={32} style={{ color: "#314B43" }} />
               </div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: "#c8a86b" }}>Invitation Sent</h2>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: "#c8a86b" }}>Invitation Draft Prepared</h2>
               <p className="text-sm mb-6 leading-relaxed" style={{ color: "rgba(49,75,67,0.75)" }}>
-                An automated email has been sent to <strong style={{ color: "#314B43" }}>{formData.supplierEmail}</strong> with the HOVIN mobile app download link and onboarding instructions.
+                An invitation draft for <strong style={{ color: "#314B43" }}>{formData.supplierEmail}</strong> has been opened in your email app. Review and send it there. HotelsVendors has not sent an automated email.
               </p>
               <div className="text-left rounded-lg p-4 mb-6" style={{ backgroundColor: "rgba(171,162,148,0.14)", border: "1px solid rgba(171,162,148,0.3)" }}>
                 <p className="text-xs mb-3 font-semibold uppercase tracking-wide" style={{ color: "#314B43" }}>What happens next:</p>
                 <ul className="space-y-3 text-sm" style={{ color: "#314B43" }}>
-                  <li className="flex items-start gap-2 leading-relaxed"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Supplier receives invite email with HOVIN download link</li>
-                  <li className="flex items-start gap-2 leading-relaxed"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Supplier downloads HOVIN from App Store / Google Play</li>
-                  <li className="flex items-start gap-2 leading-relaxed"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Supplier completes KYC &amp; bank details in-app</li>
-                  <li className="flex items-start gap-2 leading-relaxed"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> You receive notification when supplier is live</li>
+                  <li className="flex items-start gap-2 leading-relaxed"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Review the draft and send it from your email app.</li>
+                  <li className="flex items-start gap-2 leading-relaxed"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> The supplier can open the web registration link.</li>
                 </ul>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -105,7 +106,7 @@ export default function InviteSupplierPage() {
             Invite a Supplier
           </h1>
           <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: "rgba(49,75,67,0.8)" }}>
-            Send an automated invitation with the HOVIN app download link. Your supplier gets onboarded in minutes — not weeks.
+            Prepare an email invitation with a link to supplier web registration.
           </p>
         </div>
 
@@ -114,7 +115,7 @@ export default function InviteSupplierPage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold" style={{ color: "#314B43" }}>Supplier Details</CardTitle>
             <CardDescription style={{ color: "rgba(49,75,67,0.6)" }}>
-              Fill in your supplier&apos;s information. We&apos;ll send them an invite email with the HOVIN mobile app download link for accelerated onboarding.
+              Fill in your supplier&apos;s information, then review and send the draft in your email app.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -127,7 +128,7 @@ export default function InviteSupplierPage() {
                   name="hotelOrgName"
                   value={formData.hotelOrgName}
                   onChange={handleChange}
-                  placeholder="e.g., Meridian Hospitality Group"
+                  placeholder="e.g., Your Hotel Group Name"
                   className={errors.hotelOrgName ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""}
                   disabled={isSubmitting}
                 />
@@ -220,10 +221,8 @@ export default function InviteSupplierPage() {
                   <div className="min-w-0">
                     <h4 className="font-semibold mb-3" style={{ color: "#314B43" }}>What the supplier receives:</h4>
                     <ul className="space-y-3 text-sm leading-relaxed" style={{ color: "#314B43" }}>
-                      <li className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Automated email with HOVIN App Store &amp; Google Play download links</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> 48h factoring eligibility on verified invoices</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Step-by-step KYC &amp; bank onboarding guide</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Your hotel&apos;s contact as their dedicated account manager</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> An email draft containing the supplier registration link</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#c8a86b" }} /> Your optional invitation message</li>
                     </ul>
                   </div>
                 </div>
@@ -243,7 +242,7 @@ export default function InviteSupplierPage() {
                   ) : (
                     <>
                       <Send size={15} className="mr-2" />
-                      Send Invitation Email
+                      Open Invitation in Email App
                     </>
                   )}
                 </Button>
@@ -260,9 +259,9 @@ export default function InviteSupplierPage() {
         {/* Benefits reminder */}
         <div className="mt-10 grid md:grid-cols-3 gap-5">
           {[
-            { icon: Zap, title: "48-Hour Payout", desc: "Reverse factoring via Oliv Finance" },
-            { icon: ShieldCheck, title: "ETA Compliant", desc: "Phase 2 e-invoicing ready" },
-            { icon: Smartphone, title: "Mobile-First", desc: "HOVIN app for field operations" },
+            { icon: Zap, title: "Financing Interest", desc: "Availability and terms depend on partner approval" },
+            { icon: ShieldCheck, title: "Business Verification", desc: "Company details are reviewed during onboarding" },
+            { icon: Smartphone, title: "Web Registration", desc: "Register from desktop or a mobile browser" },
           ].map((b, i) => (
             <div key={i} className="rounded-xl p-5 text-center border" style={{ backgroundColor: "rgba(171,162,148,0.10)", borderColor: "rgba(171,162,148,0.35)" }}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: "rgba(200,168,107,0.18)" }}>

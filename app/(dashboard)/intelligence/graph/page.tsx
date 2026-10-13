@@ -1,9 +1,10 @@
 "use client";
-import { ArrowRight, Network, ShieldCheck } from "lucide-react";
+import { Network } from "lucide-react";
+import type { NetworkInsight } from "@/lib/intelligence/network/network-engine";
 import { useApi } from "@/lib/hooks/use-api";
 
 export default function IntelligenceGraphPage() {
-  const { data, loading } = useApi<{ insights: any[] }>("/api/v1/intelligence/graph");
+  const { data, loading, error } = useApi<{ insights: NetworkInsight[] }>("/api/v1/intelligence/graph");
   const insights = data?.insights || [];
 
   return (
@@ -15,7 +16,7 @@ export default function IntelligenceGraphPage() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-        {loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading network insights...</div> :
+        {error ? <div role="alert" className="p-4 text-red-400">{error}</div> : loading ? <div className="text-center p-8 text-sm text-foreground-muted">Loading network insights...</div> :
          insights.length === 0 ? (
           <div className="bg-surface-1 border border-border-subtle rounded-xl p-8 text-center text-sm text-foreground-muted">
             <Network size={20} className="mx-auto text-foreground-muted mb-2" />
@@ -24,7 +25,7 @@ export default function IntelligenceGraphPage() {
           </div>
          ) : (
           <div className="grid md:grid-cols-2 gap-4">
-            {insights.map((ni: any) => (
+            {insights.map((ni) => (
               <div key={ni.insightId} className="bg-surface-1 border border-border-subtle rounded-xl p-5">
                 <h3 className="text-sm font-medium text-white mb-2">{ni.description}</h3>
                 <p className="text-xs text-foreground-subtle mb-2">{ni.networkValueEstimate}</p>
