@@ -54,17 +54,18 @@ export async function POST(req: Request) {
       });
       await appendAuditEntry({
         entityName: "INVOICE",
-        entityId: invoice.id,
+        entityId: created.id,
         actionType: "SUBMITTED",
         tenantId: order.tenantId,
         actorId: actor.id,
         actorRole: actor.platformRole,
-        changes: { orderId: order.id, invoiceNumber, subtotal, vatAmount, total, etaStatus: invoice.etaStatus },
+        changes: { orderId: order.id, invoiceNumber, subtotal, vatAmount, total, etaStatus: created.etaStatus },
       }, tx);
-      return invoice;
+      return created;
     });
     return NextResponse.json({ invoice, outcome: { invoice: "SUBMITTED", eta: invoice.etaStatus } }, { status: 201 });
   } catch (error: any) {
+    console.error("[invoice] failed to record", error);
     if (error?.code === "P2002") return NextResponse.json({ error: "Invoice number already exists." }, { status: 409 });
     return NextResponse.json({ error: "INVOICE_COULD_NOT_BE_RECORDED" }, { status: 500 });
   }
