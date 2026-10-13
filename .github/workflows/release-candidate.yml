@@ -1,0 +1,77 @@
+name: HotelsVendors Release Candidate
+
+on:
+  push:
+    branches:
+      - ui/virtual-shadow-premium-homepage-20261003
+  workflow_dispatch:
+
+concurrency:
+  group: hv-release-candidate
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+      CLERK_SECRET_KEY: sk_test_placeholder
+      SESSION_SECRET: ci-only-not-used-by-clerk
+      REDIS_URL: redis://127.0.0.1:6379
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+      - run: npx vitest run
+      - run: npm run build
+      - name: Verify standalone release mechanism
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .next/BUILD_ID
+          test -s .next/standalone/server.js
+          chunks=$(find .next/standalone/.next/server/chunks/ssr -type f -print | wc -l)
+          test "$chunks" -gt 0
+          rm -rf deploy
+          mkdir -p deploy/.next
+          cp -a .next/standalone/. deploy/
+          cp -a .next/static deploy/.next/static
+          cp -a public deploy/public
+          test -s deploy/server.js
+          tar -C deploy -czf hv-release-candidate.tgz .
+      - name: Smoke test packaged server
+        shell: bash
+        run: |
+          set -euo pipefail
+          HV_PUBLIC_ORIGIN=http://127.0.0.1:3210 PORT=3210 node deploy/server.js > /tmp/hv-release-candidate.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:3210/api/health >/dev/null && break
+            sleep 1
+          done
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/)" = "200"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/marketplace)" = "200"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/hovin)" = "200"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' 'http://127.0.0.1:3210/api/v1/products?limit=1')" = "200"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/dashboard)" = "307"
