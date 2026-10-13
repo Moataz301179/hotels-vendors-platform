@@ -4,11 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: Type DEPLOY to deploy this ref to production
+        description: Type DEPLOY to deploy main to production
         required: true
         type: string
-  push:
-    branches: [main]
 
 concurrency:
   group: hv-production
@@ -16,7 +14,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.confirm == 'DEPLOY'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
