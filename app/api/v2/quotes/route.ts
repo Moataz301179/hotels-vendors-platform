@@ -28,7 +28,7 @@ export async function GET(){
  const where=grants?{supplierId:user.supplierId!,rfqId:{in:grants.map(grant=>grant.rfqId)},deletedAt:null}:{tenantId:user.tenantId,deletedAt:null};
  const quotes=await prisma.procurementQuote.findMany({where,include:{rfq:{select:{id:true,productId:true,requestedQty:true,status:true,tenantId:true}},supplier:{select:{id:true,name:true,isVerified:true}}},orderBy:{submittedAt:"desc"},take:100});
  if(user.platformRole==='SUPPLIER')return NextResponse.json({quotes});
- return NextResponse.json({quotes:quotes.map(({supplier,...quote})=>({...quote,cost:costBreakdown(quote)}))});
+ return NextResponse.json({quotes:quotes.map(({supplier,...quote})=>{void supplier;return {...quote,cost:costBreakdown(quote)}})});
 }
 export async function POST(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
@@ -39,9 +39,11 @@ export async function POST(req:Request){
  if(unitPrice*quantity>9000000000)return NextResponse.json({error:"The stated product amount is too large"},{status:400});
  const grant=await prisma.rfqSupplierAccess.findFirst({where:{rfqId,supplierId:supplier.id,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true,hotelTenantId:true}});
  if(!grant)return NextResponse.json({error:"RFQ is not assigned to your supplier tenant"},{status:404});
- const rfq=await prisma.rfqRequest.findFirst({where:{id:grant.rfqId,tenantId:grant.hotelTenantId,supplierId:supplier.id,deletedAt:null},select:{id:true,supplierId:true,buyerId:true,requestedQty:true,tenantId:true,status:true}});
+ const rfq=await prisma.rfqRequest.findFirst({where:{id:grant.rfqId,tenantId:grant.hotelTenantId,supplierId:supplier.id,deletedAt:null},select:{id:true,productId:true,supplierId:true,buyerId:true,requestedQty:true,tenantId:true,status:true}});
  if(!rfq)return NextResponse.json({error:"RFQ is not assigned to your supplier account"},{status:404});
  if(rfq.status!=="PENDING")return NextResponse.json({error:"RFQ is no longer accepting a new fixed response"},{status:409});
+ const product=await prisma.product.findFirst({where:{id:rfq.productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null},select:{id:true}});
+ if(!product)return NextResponse.json({error:"The RFQ product is no longer active"},{status:409});
  try{const quote=await prisma.$transaction(async tx=>{
   const claimed=await tx.rfqRequest.updateMany({where:{id:rfq.id,tenantId:grant.hotelTenantId,supplierId:supplier.id,status:'PENDING',deletedAt:null},data:{status:"QUOTED"}});
   if(claimed.count!==1)throw new Error('RFQ_ALREADY_QUOTED');

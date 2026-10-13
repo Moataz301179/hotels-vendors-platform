@@ -11,7 +11,10 @@ export async function GET() {
   if(user.platformRole==="SUPPLIER"){
    if(!user.supplierId)return NextResponse.json({error:"VERIFIED_SUPPLIER_CONTEXT_REQUIRED"},{status:403});
    const grants=await prisma.rfqSupplierAccess.findMany({where:{supplierId:user.supplierId,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true}});
-   return NextResponse.json({rfqs:await prisma.rfqRequest.findMany({where:{id:{in:grants.map(grant=>grant.rfqId)},supplierId:user.supplierId,deletedAt:null},orderBy:{createdAt:"desc"},take:100})});
+   const rfqs=await prisma.rfqRequest.findMany({where:{id:{in:grants.map(grant=>grant.rfqId)},supplierId:user.supplierId,deletedAt:null},orderBy:{createdAt:"desc"},take:100});
+   const products=await prisma.product.findMany({where:{id:{in:rfqs.map(rfq=>rfq.productId)},supplierId:user.supplierId,deletedAt:null,status:"ACTIVE"},select:{id:true,name:true,sku:true,unitOfMeasure:true}});
+   const productById=new Map(products.map(product=>[product.id,product]));
+   return NextResponse.json({rfqs:rfqs.map(rfq=>({...rfq,product:productById.get(rfq.productId)??null}))});
   }
   const where = {tenantId:user.tenantId,deletedAt:null};
   return NextResponse.json({rfqs:await prisma.rfqRequest.findMany({where,orderBy:{createdAt:"desc"},take:100})});

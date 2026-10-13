@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   grants: vi.fn(),
   quotes: vi.fn(),
   rfq: vi.fn(),
+  product: vi.fn(),
   quoteCreate: vi.fn(),
   updateMany: vi.fn(),
   audit: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('@/lib/prisma', () => ({
     supplier: { findFirst: m.supplier },
     rfqSupplierAccess: { findFirst: m.grant, findMany: m.grants },
     rfqRequest: { findFirst: m.rfq },
+    product: { findFirst: m.product },
     procurementQuote: { findMany: m.quotes },
     $transaction: m.transaction,
   },
@@ -44,7 +46,8 @@ describe('supplier quote submission boundary', () => {
     m.grant.mockResolvedValue({ rfqId: 'rfq-a', hotelTenantId: 'hotel-tenant' });
     m.grants.mockResolvedValue([{ rfqId: 'rfq-a' }]);
     m.quotes.mockResolvedValue([]);
-    m.rfq.mockResolvedValue({ id: 'rfq-a', supplierId: 'supplier-a', buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING' });
+    m.rfq.mockResolvedValue({ id: 'rfq-a', productId: 'product-a', supplierId: 'supplier-a', buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING' });
+    m.product.mockResolvedValue({ id: 'product-a' });
     m.quoteCreate.mockResolvedValue({ id: 'quote-a', ...quote });
     m.updateMany.mockResolvedValue({ count: 1 });
     m.audit.mockResolvedValue('audit-a');
@@ -79,6 +82,16 @@ describe('supplier quote submission boundary', () => {
     expect(m.grant.mock.calls[0][0].where).toMatchObject({ rfqId: 'rfq-a', supplierId: 'supplier-a', supplierTenantId: 'supplier-tenant' });
     expect(m.rfq.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a' });
     expect(m.updateMany.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a', status: 'PENDING' });
+  });
+
+  it('rejects a direct quote when the RFQ product is no longer active', async () => {
+    m.product.mockResolvedValue(null);
+    const response = await submitQuote(request(quote));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'The RFQ product is no longer active' });
+    expect(m.product).toHaveBeenCalledWith({ where: { id: 'product-a', supplierId: 'supplier-a', status: 'ACTIVE', deletedAt: null }, select: { id: true } });
+    expect(m.updateMany).not.toHaveBeenCalled();
+    expect(m.quoteCreate).not.toHaveBeenCalled();
   });
 
   it('refuses supplier quote listing when its tenant-scoped supplier profile is inactive or unverified', async () => {
