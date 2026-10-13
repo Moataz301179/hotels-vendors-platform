@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import { Archivo, Source_Sans_3 } from 'next/font/google';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n/language-context';
 
-const bodyFont = Source_Sans_3({ subsets: ['latin'], variable: '--font-body', display: 'swap', weight: 'variable' });
-const displayFont = Archivo({ subsets: ['latin'], variable: '--font-display', display: 'swap', weight: 'variable' });
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.hotelsvendors.com'),
   title: {
@@ -28,4 +30,4 @@ export const metadata: Metadata = {
     images: ['/hero-clean.jpeg'],
   },
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <ClerkProvider localization={{signIn:{start:{title:"Sign in to HotelsVendors",titleCombined:"Sign in to HotelsVendors"}},signUp:{start:{title:"Join HotelsVendors",titleCombined:"Join HotelsVendors"}}}}><html lang="en"><body className={`${bodyFont.variable} ${displayFont.variable}`}><LanguageProvider>{children}</LanguageProvider></body></html></ClerkProvider>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <ClerkProvider localization={{signIn:{start:{title:"Sign in to HotelsVendors",titleCombined:"Sign in to HotelsVendors"}},signUp:{start:{title:"Join HotelsVendors",titleCombined:"Join HotelsVendors"}}}}><html lang="en"><body><LanguageProvider>{children}</LanguageProvider></body></html></ClerkProvider>}
