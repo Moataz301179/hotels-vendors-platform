@@ -8,6 +8,7 @@
 - Dashboard and floating assistant clients now call the implemented authenticated `/api/v2/assistant` contract and parse its JSON response. Unauthenticated use reports that a Clerk session is required; provider-unavailable responses remain explicit. No fabricated assistant output is permitted.
 - Verification: `npx tsc --noEmit` passed; `SESSION_SECRET=staging-build-only-20261013 NODE_ENV=production npm run build` passed; Vitest passed 21 files / 99 tests. Commit pushed to `origin/codex/latest-frontend-promotion-20261012`.
 - Staging promotion of `14067cf` is not claimed from this checkout because the configured shell SSH alias is unavailable. Existing staging release `staging-b491d3b-20261013` remains the last independently verified runtime; production routing and data were not changed.
+- A standalone artifact for `14067cf` was rebuilt locally and SHA-256 verified as `3d8dc538c4514f823decc9f52ec0a181104c1609a3bfad4e264b70d6a0398b6b`. Hostinger promotion remains blocked by the expired/Cloudflare-challenged hPanel session and unavailable SSH alias; no production or staging process was altered by this attempt.
 
 ## 2026-10-13 execution update
 
