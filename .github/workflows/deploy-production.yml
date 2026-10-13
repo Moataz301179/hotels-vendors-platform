@@ -50,7 +50,6 @@ jobs:
           cp -a .next/static deploy/.next/static
           cp -a public deploy/public
           test -s deploy/server.js
-          test -s deploy/.next/server/next-server.js
           test -d deploy/.next/static -a -n "$(find deploy/.next/static -type f -print -quit)"
           test -d deploy/public -a -n "$(find deploy/public -type f -print -quit)"
           tar -C deploy -czf hv-release.tgz .

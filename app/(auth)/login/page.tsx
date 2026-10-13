@@ -1,17 +1,31 @@
 "use client";
 
 import { SignIn } from "@clerk/nextjs";
+import Link from "next/link";
 
 export default function LoginPage() {
+  const hasClerkConfiguration = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
   return (
-    <main className="min-h-screen bg-[#0c0c12] flex items-center justify-center px-6 py-16">
+    <section aria-label="Sign in to your workspace" className="w-full flex items-center justify-center px-2 py-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-white text-2xl font-semibold tracking-tight">HotelsVendors</div>
-          <p className="mt-2 text-white/50 text-sm">Enter your workspace securely with Clerk.</p>
+          <p className="text-slate-900 text-2xl font-semibold tracking-tight">Sign in to HotelsVendors</p>
+          <p className="mt-2 text-slate-600 text-sm">Continue to your organization’s workspace.</p>
         </div>
-        <SignIn path="/login" routing="path" signUpUrl="/register" fallbackRedirectUrl="/dashboard" />
+        {hasClerkConfiguration ? (
+          <SignIn routing="hash" signUpUrl="/register" fallbackRedirectUrl="/dashboard" />
+        ) : (
+          <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+            Sign-in is temporarily unavailable because the workspace authentication service is not configured. Please contact support and include code <code className="font-semibold">AUTH_CONFIG_MISSING</code>.
+          </div>
+        )}
+        <nav aria-label="Sign-in help and policies" className="flex flex-wrap justify-center gap-4 mt-5 text-sm text-blue-800">
+          <Link href="/privacy" className="min-h-11 py-3">Privacy</Link>
+          <Link href="/terms" className="min-h-11 py-3">Terms</Link>
+          <Link href="/support" className="min-h-11 py-3">Help with sign-in</Link>
+        </nav>
       </div>
-    </main>
+    </section>
   );
 }
