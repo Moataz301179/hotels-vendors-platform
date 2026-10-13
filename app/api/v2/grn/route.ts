@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { validateReceipt, type ReceiptLineInput } from "@/lib/logistics/grn-acceptance";
+import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 
 const receivingRoles = ["OWNER", "REGIONAL_GM", "GM", "FINANCIAL_CONTROLLER", "RECEIVING_CLERK"];
 
@@ -12,6 +13,12 @@ export async function POST(req: Request) {
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   if (!["HOTEL", "ADMIN"].includes(actor.platformRole) || (actor.platformRole !== "ADMIN" && !receivingRoles.includes(actor.role))) {
     return NextResponse.json({ error: "RECEIVING_ROLE_REQUIRED" }, { status: 403 });
+  }
+  try {
+    await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, "order:update");
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) return NextResponse.json({ error: "RECEIPT_PERMISSION_REQUIRED" }, { status: 403 });
+    throw error;
   }
   const body = await req.json().catch(() => null);
   if (typeof body?.orderId !== "string" || !Array.isArray(body?.lines)) {
