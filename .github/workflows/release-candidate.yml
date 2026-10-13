@@ -58,6 +58,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --legacy-peer-deps
+      - run: npx playwright install chromium
       - run: npx prisma generate
       - run: npx prisma db push --skip-generate --accept-data-loss
       - run: npx vitest run
@@ -93,3 +94,18 @@ jobs:
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/hovin)" = "200"
           test "$(curl -sS -o /dev/null -w '%{http_code}' 'http://127.0.0.1:3210/api/v1/products?limit=1')" = "200"
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/dashboard)" = "307"
+          node <<'NODE'
+          const { chromium } = require("playwright");
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage();
+            for (const route of ["/", "/marketplace", "/hovin", "/register", "/login", "/rfq", "/storefront"]) {
+              const response = await page.goto(`http://127.0.0.1:3210${route}`, { waitUntil: "domcontentloaded" });
+              if (!response || response.status() !== 200) throw new Error(`${route} returned ${response?.status()}`);
+              if (!(await page.locator("body").innerText()).trim()) throw new Error(`${route} rendered empty body`);
+            }
+            await page.goto("http://127.0.0.1:3210/dashboard", { waitUntil: "domcontentloaded" });
+            if (!page.url().includes("/login")) throw new Error(`dashboard did not redirect: ${page.url()}`);
+            await browser.close();
+          })().catch((error) => { console.error(error); process.exit(1); });
+          NODE
