@@ -3,12 +3,6 @@ name: HotelsVendors Production Deploy
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      confirm:
-        description: Type DEPLOY to deploy main to production
-        required: true
-        type: string
 
 concurrency:
   group: hv-production
