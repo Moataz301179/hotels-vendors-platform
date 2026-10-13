@@ -63,6 +63,7 @@ jobs:
           set -euo pipefail
           npx playwright install --with-deps
           node -e 'const { chromium } = require("playwright"); console.log(chromium.executablePath());'
+          test -n "$(command -v chromium || true)"
       - run: npx prisma generate
       - run: npx prisma db push --skip-generate --accept-data-loss
       - run: npx vitest run
@@ -102,10 +103,11 @@ jobs:
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/hovin)" = "200"
           test "$(curl -sS -o /dev/null -w '%{http_code}' 'http://127.0.0.1:3210/api/v1/products?limit=1')" = "200"
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/dashboard)" = "307"
+          export CHROMIUM_PATH="$(command -v chromium)"
           node <<'NODE'
           const { chromium } = require("playwright");
           (async () => {
-            const browser = await chromium.launch({ headless: true });
+            const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
             const page = await browser.newPage();
             for (const route of ["/", "/marketplace", "/hovin", "/register", "/login", "/rfq", "/storefront"]) {
               const response = await page.goto(`http://127.0.0.1:3210${route}`, { waitUntil: "domcontentloaded" });
