@@ -65,13 +65,13 @@
 .emptyGrid .eyebrow { margin:0 0 14px; }
 .emptyGrid .actions { margin-top:20px; }
 .mobileDownload { padding:0 0 84px; background:var(--paper-50); }
-.mobileDownloadGrid { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:36px; align-items:center; padding:42px 48px; background:var(--charcoal); color:#f7f8f5; }
-.mobileDownloadGrid h2 { color:#f7f8f5; }
-.mobileDownloadGrid p:not(.eyebrow) { max-width:620px; color:#bcc7cf; }
-.mobileDownloadGrid .textLink { color:#d9e6f4; }
-.mobileDownloadGrid .eyebrow { color:#9dc5ff; }
-.mobileDownloadGrid :global(.bg-white) { box-shadow:0 14px 32px rgba(0,0,0,.22); }
-.mobileDownloadGrid :global(span) { color:#c4cbd0; }
+.mobileDownloadGrid { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:36px; align-items:center; padding:42px 48px; background:var(--paper-200); color:var(--ink); border:1px solid var(--line); }
+.mobileDownloadGrid h2 { color:var(--ink); }
+.mobileDownloadGrid p:not(.eyebrow) { max-width:620px; color:var(--muted); }
+.mobileDownloadGrid .textLink { color:var(--ink); }
+.mobileDownloadGrid .eyebrow { color:var(--muted); }
+.mobileDownloadGrid :global(.bg-white) { box-shadow:0 14px 32px rgba(25,35,43,.12); }
+.mobileDownloadGrid :global(span) { color:var(--muted); }
 .mobileStatus { display:grid; gap:8px; min-width:290px; max-width:340px; padding:22px; border:1px solid #8796a3; background:#f5f7f8; color:var(--ink); }
 .mobileStatus span { color:#53616d !important; font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:700; }
 .mobileStatus strong { font-size:17px; line-height:1.25; }

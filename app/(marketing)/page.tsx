@@ -7,7 +7,7 @@ import { ArrowRight, ArrowUpRight, Building2, FileCheck2, PackageCheck, ScanSear
 import styles from "./public-home.module.css";
 
 const actors = [
-  { title: "Hotels", text: "Find products, compare terms and follow purchasing approvals.", href: "/register", action: "Start registration", icon: Building2, image: "/IMG_9943.PNG", imageAlt: "Hotel bedroom prepared for guest arrival" },
+  { title: "Hotels", text: "Find products, compare terms and follow purchasing approvals.", href: "/register", action: "Start registration", icon: Building2, image: "/IMG_9945.PNG", imageAlt: "Hotel lobby and guest property operations" },
   { title: "Suppliers", text: "Present your products and respond to hotel purchasing needs.", href: "/register", action: "Start registration", icon: PackageCheck, image: "/IMG_9942.PNG", imageAlt: "Hotel guest amenity supplies" },
 ];
 
@@ -25,10 +25,10 @@ const engineOutputs = [
 ];
 
 const supplyCategories = [
-  { title: "Guest-room supplies", text: "Linen, amenities and in-room essentials.", image: "/IMG_9943.PNG" },
+  { title: "Guest-room supplies", text: "Linen, amenities and in-room essentials.", image: "/IMG_9942.PNG" },
   { title: "Housekeeping & operations", text: "Cleaning, carts and property consumables.", image: "/IMG_9946.PNG" },
   { title: "Food & beverage", text: "Kitchen equipment and service operations.", image: "/IMG_9944.PNG" },
-  { title: "Supplier catalogue", text: "Verified active listings, specifications and terms.", image: "/IMG_9942.PNG" },
+  { title: "Supplier catalogue", text: "Verified active listings, specifications and terms.", image: "/IMG_9947.PNG" },
 ];
 
 // Reconciled from the deployed SignalFolio interaction, with practical sample copy.
@@ -58,9 +58,9 @@ export default function MarketingPage() {
       <div className={styles.ledger}>{actors.map(({title,text,href,action,icon:Icon,image,imageAlt}) => <Link key={title} href={href} className={styles.actor}><Image className={styles.actorImage} src={image} alt={imageAlt} width={96} height={72}/><div className={styles.actorTitle}><Icon size={19} aria-hidden="true"/><strong>{title}</strong></div><span>{text}</span><small>{action} <ArrowUpRight size={15} aria-hidden="true"/></small></Link>)}</div>
     </div></section>
 
-    <section className={styles.visualRail} aria-labelledby="visual-rail-title"><div className={styles.shell}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Built for the work behind the stay</p><h2 id="visual-rail-title">A clearer view of hospitality supply.</h2></div><p>See the real operating context behind each buying decision: guest-room standards, property upkeep and kitchen service.</p></div><div className={styles.visualGrid}><figure><Image src="/IMG_9943.PNG" alt="Hotel bedding and room supplies" fill sizes="(max-width: 700px) 100vw, 33vw"/><figcaption>Guest-room essentials</figcaption></figure><figure><Image src="/IMG_9946.PNG" alt="Housekeeping cart with towels and cleaning supplies" fill sizes="(max-width: 700px) 100vw, 33vw"/><figcaption>Property operations</figcaption></figure><figure><Image src="/IMG_9944.PNG" alt="Professional kitchen and service equipment" fill sizes="(max-width: 700px) 100vw, 33vw"/><figcaption>F&amp;B equipment</figcaption></figure></div></div></section>
+    <section className={styles.visualRail} aria-labelledby="visual-rail-title"><div className={styles.shell}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Built for the work behind the stay</p><h2 id="visual-rail-title">A clearer view of hospitality supply.</h2></div><p>See the real operating context behind each buying decision: guest-room standards, property upkeep and kitchen service.</p></div><div className={styles.visualGrid}><figure><Image src="/IMG_9942.PNG" alt="Hotel guest amenities and in-room supplies" fill sizes="(max-width: 700px) 100vw, 33vw"/><figcaption>Guest-room essentials</figcaption></figure><figure><Image src="/IMG_9946.PNG" alt="Housekeeping cart with towels and cleaning supplies" fill sizes="(max-width: 700px) 100vw, 33vw"/><figcaption>Property operations</figcaption></figure><figure><Image src="/IMG_9944.PNG" alt="Professional kitchen and service equipment" fill sizes="(max-width: 700px) 100vw, 33vw"/><figcaption>F&amp;B equipment</figcaption></figure></div></div></section>
 
-    <section className={styles.categoryRail} aria-labelledby="category-title"><div className={styles.shell}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Supply coverage</p><h2 id="category-title">Start with the category behind the request.</h2></div><p>Explore the operating categories that shape a hotel purchase. Listings are shown only when verified supplier records are available.</p></div><div className={styles.categoryGrid}>{supplyCategories.map(({title,text,image}) => <Link key={title} href="/marketplace" className={styles.categoryCard}><Image src={image} alt="" fill sizes="(max-width: 700px) 50vw, 25vw"/><div><strong>{title}</strong><span>{text}</span></div></Link>)}</div></div></section>
+    <section className={styles.categoryRail} aria-labelledby="category-title"><div className={styles.shell}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Supply coverage</p><h2 id="category-title">Start with the category behind the request.</h2></div><p>Explore the operating categories that shape a hotel purchase. Listings are shown only when verified supplier records are available.</p></div><div className={styles.categoryGrid}>{supplyCategories.map(({title,text,image}) => <Link key={title} href="/marketplace" className={styles.categoryCard}><Image src={image} alt={`${title} supplier records`} fill sizes="(max-width: 700px) 50vw, 25vw"/><div><strong>{title}</strong><span>{text}</span></div></Link>)}</div></div></section>
 
     <section className={styles.volume} id="volume-deals"><div className={styles.shell}><div className={styles.sectionHeading}><h2>Review purchasing volume.<br/>Across your own properties.</h2><p>Compare purchases of equivalent products across your hotel group before discussing volume and commercial terms with suppliers.</p></div><p>This is not an advertised group-buying offer. Cross-organization buying rounds and negotiated group deals are not currently available.</p><Link href="/login?redirect_url=%2Fintelligence" className={styles.textLink}>Sign in to review purchasing records <ArrowRight size={17}/></Link></div></section>
 
