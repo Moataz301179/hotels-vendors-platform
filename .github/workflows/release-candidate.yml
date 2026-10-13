@@ -58,7 +58,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --legacy-peer-deps
-      - run: npx playwright install chromium
+      - run: npx playwright install --with-deps chromium
       - run: npx prisma generate
       - run: npx prisma db push --skip-generate --accept-data-loss
       - run: npx vitest run
@@ -86,9 +86,13 @@ jobs:
           pid=$!
           trap 'status=$?; cat /tmp/hv-release-candidate.log; kill "$pid" 2>/dev/null || true; exit "$status"' EXIT
           for attempt in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:3210/api/health >/dev/null && break
+            if curl -fsS http://127.0.0.1:3210/api/health >/dev/null; then
+              ready=1
+              break
+            fi
             sleep 1
           done
+          test "${ready:-0}" = "1"
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/)" = "200"
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/marketplace)" = "200"
           test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3210/hovin)" = "200"
