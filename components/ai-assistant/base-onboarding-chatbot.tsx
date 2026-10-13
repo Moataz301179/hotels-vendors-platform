@@ -44,40 +44,31 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_VPS_API_URL
-          ? `${process.env.NEXT_PUBLIC_VPS_API_URL}/ai/public`
-          : "/api/v1/ai/public";
+          ? `${process.env.NEXT_PUBLIC_VPS_API_URL}/api/v2/assistant`
+          : "/api/v2/assistant";
 
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: [...messages, userMsg] }),
+          body: JSON.stringify({ question: userMsg, messages: [...messages, userMsg], role: "supplier" }),
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const reader = res.body!.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-
-          setMessages((prev) => {
-            const newMsgs = [...prev];
-            const last = newMsgs[newMsgs.length - 1];
-            if (last?.role === "assistant") {
-              last.content += chunk;
-            }
-            return newMsgs;
-          });
-        }
-      } catch {
+        if (!res.ok) throw new Error(res.status === 401 ? "SIGN_IN_REQUIRED" : `HTTP ${res.status}`);
+        const payload = await res.json() as { text?: string; content?: string };
+        setMessages((prev) => {
+          const next = [...prev];
+          const last = next[next.length - 1];
+          if (last?.role === "assistant") last.content = payload.text || payload.content || "The assistant returned no answer.";
+          return next;
+        });
+      } catch (error) {
         setMessages((prev) => {
           const newMsgs = [...prev];
           const last = newMsgs[newMsgs.length - 1];
           if (last?.role === "assistant" && !last.content) {
-            last.content = "Connection issue detected. Please retry in a moment.";
+            last.content = error instanceof Error && error.message === "SIGN_IN_REQUIRED"
+              ? "Sign in to use the tenant-scoped procurement assistant."
+              : "Connection issue detected. Please retry in a moment.";
           }
           return newMsgs;
         });
@@ -99,21 +90,22 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
           onClick={() => setOpen(true)}
           className="fixed bottom-6 right-6 z-50 group"
           title={config.tooltip}
+          aria-label="Open HOVIN procurement assistant"
         >
           <div className="relative">
-            {/* Brand AI Agent bubble — white icon on brand-green #314B43 squircle, gold ring */}
+            {/* HOVIN assistant: dark-grey/ice palette, with a restrained cobalt status dot. */}
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg"
               style={{
-                backgroundColor: "#314B43",
-                border: "2px solid #8a6d3b",
-                boxShadow: "0 0 24px rgba(138,109,59,0.35)",
+                backgroundColor: "#3d4a56",
+                border: "2px solid #9fc8ef",
+                boxShadow: "0 0 24px rgba(55,111,168,0.24)",
               }}
             >
               <Icon size={24} className="text-white" strokeWidth={2} />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-accent-base border-2 border-[#0c0c12] animate-pulse" />
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#12121a] border border-white/10 text-[11px] text-white/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#9fc8ef] border-2 border-[#3d4a56] animate-pulse" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#3d4a56] border border-white/10 text-[11px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               {config.tooltip}
             </div>
           </div>

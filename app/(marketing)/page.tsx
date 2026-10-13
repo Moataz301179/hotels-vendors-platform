@@ -3,15 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowUpRight, Building2, CircleDollarSign, FileCheck2, PackageCheck, ScanSearch, Target, Truck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Building2, FileCheck2, PackageCheck, ScanSearch, Target } from "lucide-react";
 import { DownloadQR } from "@/components/marketing/download-qr";
 import styles from "./public-home.module.css";
 
 const actors = [
   { title: "Hotels", text: "Find products, compare terms and follow purchasing approvals.", href: "/register", action: "Start registration", icon: Building2, image: "/IMG_9947.PNG", imageAlt: "Hotel lobby and guest seating" },
   { title: "Suppliers", text: "Present your products and respond to hotel purchasing needs.", href: "/register", action: "Start registration", icon: PackageCheck, image: "/IMG_9942.PNG", imageAlt: "Hotel guest amenity supplies" },
-  { title: "Carriers", text: "Discuss delivery coverage and partner access with our team.", href: "/contact", action: "Discuss a partnership", icon: Truck, image: "/IMG_9944.PNG", imageAlt: "Hospitality kitchen equipment" },
-  { title: "Funders", text: "Discuss eligible referrals; your organization makes funding decisions.", href: "/contact", action: "Discuss a partnership", icon: CircleDollarSign, image: "/IMG_9946.PNG", imageAlt: "Hotel reception and guest lounge" },
 ];
 
 const signalSteps = [
@@ -22,9 +20,9 @@ const signalSteps = [
 ];
 
 const engineOutputs = [
-  { title: "Demand Signal", text: "Turns your permitted purchasing records and verified market sources into traceable needs: what is needed, where, when and with what evidence.", icon: ScanSearch },
-  { title: "Market Compass", text: "Maps each need to eligible suppliers, delivery options and next actions. It recommends a route; your authorized team decides.", icon: Target },
-  { title: "Control record", text: "Keeps source, timestamp, confidence, approval and outcome together so a recommendation is reviewable—not a black-box promise.", icon: FileCheck2 },
+  { title: "Normalize the requirement", text: "Capture pack size, grade, quantity, delivery window and property before a comparison. Missing fields stay visible instead of being guessed.", status: "Available in workspace", icon: ScanSearch },
+  { title: "Compare permitted sources", text: "Compare only connected, reviewed or staged records that your organization is allowed to use. Unavailable sources are labelled; we do not silently scrape the market.", status: "Source-dependent", icon: Target },
+  { title: "Route an approval", text: "Carry the selected terms into your Authority Matrix, purchase order, receiving check and ETA-ready record. Each action keeps its source and timestamp.", status: "Workflow control", icon: FileCheck2 },
 ];
 
 // Reconciled from the deployed SignalFolio interaction, with practical sample copy.
@@ -44,13 +42,13 @@ export function SignalFolio() {
 export default function MarketingPage() {
   return <div className={styles.home}>
     <section className={styles.hero}><div className={styles.shell + " " + styles.heroGrid}>
-      <div><p className={styles.eyebrow}>Hotel procurement · Egypt</p><h1>Hotel procurement.<br/>From sourcing to delivery.</h1><p className={styles.lead}>Connect your hotel purchasing with suppliers. Compare product specifications and commercial terms, then follow approvals and delivery. Market Compass helps your team review purchasing differences.</p>
+      <div><p className={styles.eyebrow}>Procurement intelligence · Egypt</p><h1>The layer above<br/>disconnected supply.</h1><p className={styles.lead}>Start with a product or requirement. HotelsVendors normalizes the pack, specification, price and lead-time fields in the sources your organization is permitted to use, then routes the next approval. It is a reviewable purchasing network—not a claim of silent access to every marketplace.</p>
         <div className={styles.actions}><Link href="/register" className={styles.primary}>Join the network <ArrowRight size={17}/></Link><Link href="#market-compass" className={styles.textLink}>See a purchasing example <ArrowUpRight size={17}/></Link></div>
       </div>
       <figure className={styles.photo}><Image src="/hero-clean.jpeg" alt="A hotel suite overlooking the sea" fill sizes="(max-width: 900px) 100vw, 48vw" preload/><figcaption>The work behind every hotel stay.</figcaption></figure>
     </div></section>
 
-    <section className={styles.section}><div className={styles.shell}><div className={styles.sectionHeading}><h2>One purchasing network.<br/>Four distinct roles.</h2><p>Hotels buy, suppliers offer products, carriers coordinate delivery and independent funders review eligible opportunities.</p></div>
+    <section className={styles.section}><div className={styles.shell}><div className={styles.sectionHeading}><h2>One purchasing network.<br/>Two public workspaces.</h2><p>Hotels buy and suppliers offer products. Carriers and funders join as provisioned partners through the footer portal, with no public role signup.</p></div>
       <div className={styles.ledger}>{actors.map(({title,text,href,action,icon:Icon,image,imageAlt}) => <Link key={title} href={href} className={styles.actor}><Image className={styles.actorImage} src={image} alt={imageAlt} width={96} height={72}/><div className={styles.actorTitle}><Icon size={19} aria-hidden="true"/><strong>{title}</strong></div><span>{text}</span><small>{action} <ArrowUpRight size={15} aria-hidden="true"/></small></Link>)}</div>
     </div></section>
 
@@ -60,7 +58,7 @@ export default function MarketingPage() {
 
     <section className={styles.compass} id="market-compass"><div className={styles.shell + " " + styles.compassGrid}><div><h2>See the difference.<br/>Check the whole purchase.</h2><p>Explore this purchasing review to see how product comparisons, quantities and receiving records become a decision trail. Check the basis of each comparison before acting.</p><Link href="/login?redirect_url=%2Fintelligence" className={styles.textLink}>Open Market Compass <ArrowRight size={17}/></Link><p className={styles.disclaimer}>Your organization’s purchasing records stay in its protected workspace. No public listing or funding approval is implied by an analysis.</p></div><SignalFolio/></div></section>
 
-    <section className={styles.engineSection}><div className={styles.shell}><div className={styles.sectionHeading}><h2>From signal to action.<br/>With evidence at every step.</h2><p>These are operating engines, not decorative dashboards. Each output has a source, an owner and a next action.</p></div><div className={styles.engineGrid}>{engineOutputs.map(({title,text,icon:Icon}) => <article key={title} className={styles.engineCard}><Icon size={22} aria-hidden="true"/><h3>{title}</h3><p>{text}</p><Link href="/login?redirect_url=%2Fintelligence" className={styles.cardLink}>View the workspace <ArrowRight size={15}/></Link></article>)}</div></div></section>
+    <section className={styles.engineSection}><div className={styles.shell}><div className={styles.sectionHeading}><h2>From signal to action.<br/>With evidence at every step.</h2><p>Every engine states what it can read, what it cannot verify and which person owns the next decision.</p></div><div className={styles.engineGrid}>{engineOutputs.map(({title,text,status,icon:Icon}) => <article key={title} className={styles.engineCard}><Icon size={22} aria-hidden="true"/><span className={styles.eyebrow}>{status}</span><h3>{title}</h3><p>{text}</p><Link href="/login?redirect_url=%2Fintelligence" className={styles.cardLink}>Open the workspace <ArrowRight size={15}/></Link></article>)}</div></div></section>
 
     <section className={styles.emptyState}><div className={styles.shell + " " + styles.emptyGrid}><div><p className={styles.eyebrow}>No verified offer yet?</p><h2>Start with a requirement.<br/>Do not fill the gap with invented data.</h2></div><div><p>When a matching product or supplier is not verified, HotelsVendors keeps the request open, records the criteria and routes it for sourcing. The hotel sees the status; it does not see fake stock, balances or logos.</p><div className={styles.actions}><Link href="/rfq" className={styles.primary}>Submit a requirement <ArrowRight size={17}/></Link><Link href="/contact" className={styles.textLink}>Talk to sourcing</Link></div></div></div></section>
 
@@ -78,7 +76,7 @@ export default function MarketingPage() {
       <details><summary>Where can I get help?</summary><p>Use our contact page for sourcing, onboarding and partnership enquiries.</p><Link href="/contact">Contact HotelsVendors</Link></details>
     </div></div></section>
 
-    <section className={styles.final}><div className={styles.shell + " " + styles.finalPanel}><div><h2>Start with your next purchase.</h2><p>Choose your workspace or speak with us about sourcing and onboarding.</p></div><div className={styles.actions}><Link href="/register" className={styles.primary}>Join the network <ArrowRight size={17}/></Link><Link href="/contact" className={styles.textLink}>Contact our team</Link></div></div></section>
+    <section className={styles.final} aria-labelledby="walkthrough-title"><div className={styles.shell + " " + styles.finalPanel}><div><p className={styles.eyebrow}>Product walkthrough · illustrative preview</p><h2 id="walkthrough-title">See the work before you join.</h2><p>From an incomplete requirement to a comparable option, an approval trail and a receiving check. This preview is a UI explanation; it does not execute a live transaction or invent a supplier result.</p></div><div className={styles.actions}><Link href="/marketplace" className={styles.primary}>Open supplier catalogue <ArrowRight size={17}/></Link><Link href="/register" className={styles.textLink}>Choose a workspace</Link></div></div></section>
   </div>;
 }
 

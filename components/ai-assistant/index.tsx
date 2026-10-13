@@ -28,7 +28,7 @@ export default function SmartAssistant({ role, tenantId }: SmartAssistantProps) 
     setError("");
 
     try {
-      const res = await fetch("/api/v1/ai/assistant", {
+      const res = await fetch("/api/v2/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -41,7 +41,7 @@ export default function SmartAssistant({ role, tenantId }: SmartAssistantProps) 
       if (!res.ok) {
         let errorMsg = "LLM not reachable. Please try again later.";
         if (res.status === 401) {
-          errorMsg = "Session expired. Please log in again.";
+          errorMsg = "Sign in to use the tenant-scoped procurement assistant.";
         } else if (res.status === 429) {
           errorMsg = "Quota exceeded. Please try again later.";
         } else if (res.status === 402) {
@@ -55,33 +55,9 @@ export default function SmartAssistant({ role, tenantId }: SmartAssistantProps) 
         return;
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) {
-        const errorMsg = "LLM not reachable. Please try again later.";
-        setError(errorMsg);
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: errorMsg },
-        ]);
-        return;
-      }
-
-      const decoder = new TextDecoder();
-      let assistantMsg = "";
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        assistantMsg += chunk;
-        setMessages((prev) => {
-          const next = [...prev];
-          const last = next[next.length - 1];
-          if (last?.role === "assistant") last.content = assistantMsg;
-          return next;
-        });
-      }
+      const payload = await res.json() as { text?: string; content?: string };
+      const assistantMsg = payload.text || payload.content || "The assistant returned no answer.";
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantMsg }]);
     } catch {
       const errorMsg = "LLM not reachable. Please try again later.";
       setError(errorMsg);

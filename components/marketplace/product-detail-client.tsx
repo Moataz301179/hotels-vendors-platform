@@ -20,7 +20,6 @@ import { getCategoryById } from "@/lib/marketplace/categories";
 import { getProductImage } from "@/lib/marketplace/product-images";
 import { MarketingNav } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
-import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useTranslation } from "@/lib/i18n/hooks/use-translation";
 import { useCart } from "@/components/cart/cart-context";
 import type { MarketplaceProduct } from "@/lib/marketplace/category-mapper";
@@ -106,7 +105,6 @@ export default function ProductDetailClient({ product }: { product: MarketplaceP
             {t("backToMarketplace")}
           </Link>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher />
             <button
               onClick={() => setMemberMode(!memberMode)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
