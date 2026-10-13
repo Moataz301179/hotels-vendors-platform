@@ -1,8 +1,7 @@
 name: HotelsVendors Production Deploy
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: hv-production
@@ -34,6 +33,7 @@ jobs:
         with: { node-version: 20, cache: npm }
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
+      - run: npm test
       - run: npm run build
       - name: Package standalone release
         run: |
@@ -56,10 +56,14 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
       - name: Upload release
-        env: { VPS_HOST: ${{ secrets.VPS_HOST }}, VPS_USER: ${{ secrets.VPS_USER }} }
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: scp hv-release.tgz "$VPS_USER@$VPS_HOST:/tmp/hv-release-${GITHUB_SHA}.tgz"
       - name: Activate release and verify
-        env: { VPS_HOST: ${{ secrets.VPS_HOST }}, VPS_USER: ${{ secrets.VPS_USER }} }
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           ssh "$VPS_USER@$VPS_HOST" "GITHUB_SHA=$GITHUB_SHA bash -s" <<'REMOTE'
           set -euo pipefail
@@ -73,9 +77,16 @@ jobs:
           tar -xzf "$ARCHIVE" -C "$RELEASE"
           rm -f "$ARCHIVE"
           cd "$RELEASE"
-          PORT=3008 pm2 restart hotels-vendors-production --update-env
+          HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 pm2 restart hotels-vendors-production --update-env
           sleep 3
           test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/)" = "200"
-          test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/api/health)" = "200"
+          health="$(curl -ksSf https://hotelsvendors.com/api/health)"
+          node - "$GITHUB_SHA" "$health" <<'VERIFY_HEALTH'
+          const [expectedSha, responseBody] = process.argv.slice(2);
+          const health = JSON.parse(responseBody);
+          if (health.ok !== true) throw new Error("Health check did not report ok");
+          if (health.sourceCommit !== expectedSha) throw new Error("Running source commit does not match this release");
+          if (health.releaseId !== `github-${expectedSha}`) throw new Error("Running release identity does not match this release");
+          VERIFY_HEALTH
           pm2 save
           REMOTE
