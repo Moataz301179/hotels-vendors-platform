@@ -38,12 +38,11 @@ jobs:
       - name: Package standalone release
         run: |
           set -euo pipefail
-          rm -rf deploy && mkdir -p deploy
-          cp -a .next/standalone/. deploy/
-          mkdir -p deploy/.next
-          cp -a .next/static deploy/.next/static
-          cp -a public deploy/public
-          tar -C deploy -czf hv-release.tgz .
+          tar -C .next/standalone -cf hv-release.tar .
+          tar -C .next --transform='s,^static,.next/static,' -rf hv-release.tar static
+          tar -C . -rf hv-release.tar public
+          gzip hv-release.tar
+          mv hv-release.tar.gz hv-release.tgz
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -67,18 +66,44 @@ jobs:
         run: |
           ssh "$VPS_USER@$VPS_HOST" "GITHUB_SHA=$GITHUB_SHA bash -s" <<'REMOTE'
           set -euo pipefail
-          RELEASE=/var/www/hv-release-production
-          BACKUP=/var/www/hv-release-production-backup-${GITHUB_SHA::12}
+          RELEASE_ROOT=/var/www/hv-releases
+          RELEASE="$RELEASE_ROOT/github-${GITHUB_SHA}"
           ARCHIVE=/tmp/hv-release-${GITHUB_SHA}.tgz
           test -s "$ARCHIVE"
-          cp -a "$RELEASE" "$BACKUP"
-          pm2 stop hotels-vendors-production || true
-          find "$RELEASE" -mindepth 1 -maxdepth 1 ! -name .env -exec rm -rf {} +
+          test ! -e "$RELEASE"
+          ACTIVE_RELEASE="$(pm2 jlist | node -e '
+            const fs = require("fs");
+            const entry = JSON.parse(fs.readFileSync(0, "utf8"))
+              .find((entry) => entry.name === "hotels-vendors-production");
+            if (!entry?.pm2_env?.pm_cwd) process.exit(1);
+            process.stdout.write(entry.pm2_env.pm_cwd);
+          ')"
+          test -f "$ACTIVE_RELEASE/.env"
+          mkdir -p "$RELEASE"
           tar -xzf "$ARCHIVE" -C "$RELEASE"
           rm -f "$ARCHIVE"
-          cd "$RELEASE"
-          HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 pm2 restart hotels-vendors-production --update-env
-          sleep 3
+          cp "$ACTIVE_RELEASE/.env" "$RELEASE/.env"
+          chmod 600 "$RELEASE/.env"
+          (
+            cd "$RELEASE"
+            HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3010 HOSTNAME=127.0.0.1 NODE_ENV=production node server.js > preflight.log 2>&1 &
+            preflight_pid=$!
+            trap 'kill "$preflight_pid" 2>/dev/null || true' EXIT
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              health="$(curl -fsS http://127.0.0.1:3010/api/health 2>/dev/null || true)"
+              test -n "$health" && break
+              sleep 1
+            done
+            test -n "${health:-}"
+            kill "$preflight_pid"
+            wait "$preflight_pid" 2>/dev/null || true
+            trap - EXIT
+          )
+          pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
+          if ! HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 NODE_ENV=production pm2 start "$RELEASE/server.js" --name hotels-vendors-production --cwd "$RELEASE" --time >/dev/null; then
+            PORT=3008 NODE_ENV=production pm2 start "$ACTIVE_RELEASE/server.js" --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
+            exit 1
+          fi
           test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/)" = "200"
           health="$(curl -ksSf https://hotelsvendors.com/api/health)"
           node - "$GITHUB_SHA" "$health" <<'VERIFY_HEALTH'
