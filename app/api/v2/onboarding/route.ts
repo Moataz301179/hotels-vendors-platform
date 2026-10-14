@@ -30,6 +30,9 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Enter valid organization details and a tax ID where required' }, { status: 400 });
   const b = parsed.data;
   if (!b.name || !b.city || !b.governorate || (u.platformRole !== 'SHIPPING' && !b.taxId)) return NextResponse.json({ error: 'name, city and governorate are required; taxId is required for this actor type' }, { status: 400 });
+  if (u.platformRole === 'HOTEL' || u.platformRole === 'SUPPLIER' || u.platformRole === 'FACTORING') {
+    await prisma.tenant.update({ where: { id: u.tenantId }, data: { name: b.name, legalName: b.name, taxId: b.taxId, verificationStatus: 'PENDING', verifiedAt: null, verifiedBy: null } });
+  }
   let resource: { id: string } | null = null;
   if (u.platformRole === 'HOTEL' && await prisma.hotel.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your hotel profile is already connected. Refresh the page.' }, { status: 409 });
   if (u.platformRole === 'SUPPLIER' && await prisma.supplier.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your supplier profile is already connected. Refresh the page.' }, { status: 409 });

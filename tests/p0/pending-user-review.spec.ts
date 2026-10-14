@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ actor: vi.fn(), users: vi.fn(), user: vi.fn(), userUpdate: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
+const m = vi.hoisted(() => ({ actor: vi.fn(), users: vi.fn(), user: vi.fn(), userUpdate: vi.fn(), tenant: vi.fn(), tenantUpdate: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
 
 vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
 vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findMany: m.users, findFirst: m.user }, $transaction: m.transaction } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { user: { findMany: m.users, findFirst: m.user }, tenant: { findFirst: m.tenant }, $transaction: m.transaction } }));
 
 import { GET, PATCH } from "@/app/api/v2/admin/pending-users/route";
 
@@ -21,9 +21,10 @@ describe("platform review of pending workspaces", () => {
     m.actor.mockResolvedValue(admin);
     m.users.mockResolvedValue([{ id: "supplier-user", tenantId: "supplier-tenant", platformRole: "SUPPLIER" }]);
     m.user.mockResolvedValue({ id: "supplier-user", tenantId: "supplier-tenant", status: "PENDING_VERIFICATION", platformRole: "SUPPLIER" });
+    m.tenant.mockResolvedValue({ id: "supplier-tenant", taxId: "EG-123" });
     m.userUpdate.mockResolvedValue({ id: "supplier-user", status: "ACTIVE" });
     m.audit.mockResolvedValue(undefined);
-    m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({ user: { update: m.userUpdate } }));
+    m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({ user: { update: m.userUpdate }, tenant: { update: m.tenantUpdate } }));
   });
 
   it("lists pending supplier workspaces outside the platform administrator tenant", async () => {

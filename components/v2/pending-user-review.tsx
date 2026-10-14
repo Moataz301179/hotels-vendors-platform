@@ -15,7 +15,8 @@ export function PendingUserReview() {
     const reviewNote = window.prompt('Review note (at least 10 characters):', decision === 'APPROVE' ? 'Organization details reviewed and approved.' : 'Organization details did not pass verification.') ?? '';
     if (reviewNote.trim().length < 10) { setMessage('A review note of at least 10 characters is required.'); return; }
     setBusy(userId);
-    try { await requestJson('/api/v2/admin/pending-users', { method: 'PATCH', body: JSON.stringify({ userId, decision, reviewNote }) }); setMessage(`Registration ${decision === 'APPROVE' ? 'approved' : 'rejected'}.`); await load(); }
+    const taxVerification = decision === 'APPROVE' && window.confirm('Has the organization tax ID been checked and approved for financial activity?') ? 'VERIFY' : decision === 'REJECT' ? 'REJECT' : 'PENDING';
+    try { await requestJson('/api/v2/admin/pending-users', { method: 'PATCH', body: JSON.stringify({ userId, decision, taxVerification, reviewNote }) }); setMessage(`Registration ${decision === 'APPROVE' ? 'approved' : 'rejected'}. Financial activity remains blocked unless the tax ID was verified.`); await load(); }
     catch (e) { setMessage(e instanceof Error ? e.message : 'Unable to update registration.'); }
     finally { setBusy(''); }
   }

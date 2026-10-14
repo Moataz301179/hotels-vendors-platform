@@ -4,6 +4,7 @@ import { getActor } from '@/lib/v2-auth';
 import { appendAuditEntry } from '@/lib/audit/tamper-proof';
 import { costBreakdown } from '@/lib/procurement/pre-spend';
 import { PermissionDeniedError, requirePermission } from '@/lib/auth/rbac';
+import { FinancialAccessDeniedError, requireFinancialAccess } from '@/lib/auth/financial-access';
 import { z } from 'zod';
 
 const acceptQuoteInput = z.object({ quoteId: z.string().min(1) });
@@ -12,6 +13,7 @@ export async function POST(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});
  if(!['HOTEL','ADMIN'].includes(user.platformRole))return NextResponse.json({error:'HOTEL_ROLE_REQUIRED'},{status:403});
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:create');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_CREATE_PERMISSION_REQUIRED'},{status:403});throw error;}
+ try{await requireFinancialAccess(user);}catch(error){if(error instanceof FinancialAccessDeniedError)return NextResponse.json({error:error.code},{status:403});throw error;}
  const parsed=acceptQuoteInput.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:'quoteId is required'},{status:400});
  const quote=await prisma.procurementQuote.findFirst({where:{id:parsed.data.quoteId,tenantId:user.tenantId,deletedAt:null,status:'SUBMITTED',supplier:{isVerified:true,status:'ACTIVE',deletedAt:null}},include:{rfq:true}});
  if(!quote)return NextResponse.json({error:'An available verified quote was not found'},{status:404});
