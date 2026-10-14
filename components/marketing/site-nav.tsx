@@ -21,7 +21,7 @@ export function SiteNav() {
   const platform = [
     { href: "/platform", label: "How procurement connects" },
     { href: "/marketplace", label: "Open supplier catalogue" },
-    { href: "/#market-compass", label: "See the comparison workflow" },
+    { href: "/platform", label: "See the comparison workflow" },
   ];
   const audiences = [
     { href: "/hotels/join", label: "For hotels" },
@@ -32,10 +32,10 @@ export function SiteNav() {
   return <nav className={styles.nav} aria-label="Main navigation" onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
     <div className={styles.inner}>
       <Link href="/" className={styles.brand} aria-label="HotelsVendors home"><Image src="/logo-white.svg" alt="HotelsVendors" width={165} height={38} className={styles.wordmark} unoptimized /></Link>
-      <div className={styles.desktop}><PublicDropdown title="How it works" links={platform}/><PublicDropdown title="Choose your workspace" links={audiences}/><Link href="/#volume-deals">Review purchasing volume</Link></div>
+      <div className={styles.desktop}><PublicDropdown title="How it works" links={platform}/><PublicDropdown title="Choose your workspace" links={audiences}/><Link href="/login?redirect_url=%2Fintelligence">Review purchasing volume</Link></div>
       <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join network</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>
-    {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/#volume-deals",label:"Review purchasing volume"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
+    {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/login?redirect_url=%2Fintelligence",label:"Review purchasing volume"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
   </nav>;
 }
 

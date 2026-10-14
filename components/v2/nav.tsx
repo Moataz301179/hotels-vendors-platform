@@ -19,12 +19,12 @@ export function Nav() {
         </Link>
         <nav id="hv-main-navigation" className={`nav-links${menuOpen ? " nav-links-open" : ""}`} aria-label="Main navigation">
           <NavDropdown title="Platform" closeMenu={closeMenu} links={[
-            ['/platform','Platform overview'],['/marketplace','Procurement network'],['/#market-compass','Market Compass'],['/security-overview','Security overview'],
+            ['/platform','Platform overview'],['/marketplace','Procurement network'],['/login?redirect_url=%2Fintelligence','Market Compass'],['/security-overview','Security overview'],
           ]}/>
           <NavDropdown title="Who it’s for" closeMenu={closeMenu} links={[
             ['/solutions','All solutions'],['/solutions/hotels','Hotels'],['/solutions/suppliers','Suppliers'],['/solutions/carriers','Carriers'],['/solutions/funders','Funders'],
           ]}/>
-          <Link href="/#volume-deals" onClick={closeMenu}>HV Volume Deals</Link>
+          <Link href="/login?redirect_url=%2Fdemand-aggregation" onClick={closeMenu}>HV Volume Deals</Link>
         </nav>
         <div className="nav-actions">
           {isSignedIn ? <><Link href="/dashboard" className="btn btn-blue">Workspace <ArrowUpRight size={13} aria-hidden="true" /></Link><UserButton /></> : <><Link href="/login" className="btn btn-ghost">Sign in</Link><Link href="/register" className="btn btn-blue">Join network</Link></>}
