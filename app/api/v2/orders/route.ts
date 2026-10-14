@@ -5,12 +5,25 @@ import { evaluateV2Authority } from "@/lib/auth/v2-authority";
 import { orderActions } from "@/lib/v2-order-actions";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
+import { managedHotelTenants } from "@/lib/admin/managed-hotel-tenants";
 
-export async function GET(){
+export async function GET(request:Request){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:read');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_READ_PERMISSION_REQUIRED'},{status:403});throw error;}
- const orders=await prisma.order.findMany({where:{...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId}),deletedAt:null},include:{supplier:{select:{name:true}},hotel:{select:{name:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
- return NextResponse.json({orders:orders.map(order=>({...order,allowedActions:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'}))});
+ let tenants: {id:string;name:string}[]|undefined;
+ let where:{supplierId?:string;tenantId?:string;deletedAt:null};
+ if(user.platformRole==='SUPPLIER') where={supplierId:user.supplierId||'__unassigned__',deletedAt:null};
+ else if(user.platformRole==='ADMIN'){
+  const manageable=await managedHotelTenants(user.tenantId);
+  if(!manageable)return NextResponse.json({error:'PLATFORM_TENANT_REQUIRED'},{status:403});
+  tenants=manageable;
+  const tenantId=new URL(request.url).searchParams.get('tenantId');
+  if(!tenantId)return NextResponse.json({orders:[],tenants});
+  if(!tenants.some(tenant=>tenant.id===tenantId))return NextResponse.json({error:'HOTEL_TENANT_NOT_FOUND'},{status:404});
+  where={tenantId,deletedAt:null};
+ }else where={tenantId:user.tenantId,deletedAt:null};
+ const orders=await prisma.order.findMany({where,include:{supplier:{select:{name:true}},hotel:{select:{name:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
+ return NextResponse.json({orders:orders.map(order=>({...order,allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'})),tenants});
 }
 
 export async function POST(req:Request){

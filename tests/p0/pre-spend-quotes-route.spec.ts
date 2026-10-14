@@ -84,6 +84,16 @@ describe('supplier quote submission boundary', () => {
     expect(m.updateMany.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a', status: 'PENDING' });
   });
 
+  it('rejects a supplier response whose quantity does not match the assigned RFQ', async () => {
+    const response = await submitQuote(request({ ...quote, quantity: 1 }));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'QUOTE_QUANTITY_MISMATCH' });
+    expect(m.product).not.toHaveBeenCalled();
+    expect(m.updateMany).not.toHaveBeenCalled();
+    expect(m.quoteCreate).not.toHaveBeenCalled();
+  });
+
   it('rejects a direct quote when the RFQ product is no longer active', async () => {
     m.product.mockResolvedValue(null);
     const response = await submitQuote(request(quote));

@@ -42,6 +42,7 @@ export async function POST(req:Request){
  const rfq=await prisma.rfqRequest.findFirst({where:{id:grant.rfqId,tenantId:grant.hotelTenantId,supplierId:supplier.id,deletedAt:null},select:{id:true,productId:true,supplierId:true,buyerId:true,requestedQty:true,tenantId:true,status:true}});
  if(!rfq)return NextResponse.json({error:"RFQ is not assigned to your supplier account"},{status:404});
  if(rfq.status!=="PENDING")return NextResponse.json({error:"RFQ is no longer accepting a new fixed response"},{status:409});
+ if(quantity!==rfq.requestedQty)return NextResponse.json({error:"QUOTE_QUANTITY_MISMATCH"},{status:409});
  const product=await prisma.product.findFirst({where:{id:rfq.productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null},select:{id:true}});
  if(!product)return NextResponse.json({error:"The RFQ product is no longer active"},{status:409});
  try{const quote=await prisma.$transaction(async tx=>{
