@@ -7,7 +7,7 @@ import { SupplierOnboardingBot } from "@/components/ai-assistant/supplier-onboar
 export const metadata: Metadata = {
   title: "HotelsVendors — Hotel Procurement in Egypt",
   description:
-    "Hotel procurement in Egypt: discover suppliers, compare purchasing terms and follow approvals and delivery. Explore a public Market Compass example before joining.",
+    "Hotel procurement in Egypt: connect a requirement to supplier terms, purchase approval and receiving evidence in a protected organization workspace.",
   keywords: [
     "B2B hospitality procurement Egypt",
     "automated factoring lines Cairo",
