@@ -30,4 +30,6 @@ fi
 set -a
 source "$HV_RUNTIME_ENV_FILE"
 set +a
-exec node .next/standalone/server.js
+# The deployment archive is assembled from `.next/standalone`, so its runtime
+# entry point is at the immutable release root rather than under `.next`.
+exec node server.js

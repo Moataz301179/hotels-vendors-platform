@@ -122,7 +122,7 @@ jobs:
               sleep 1
             done
             test -n "${health:-}"
-            kill "$preflight_pid"
+            kill "$preflight_pid" 2>/dev/null || true
             wait "$preflight_pid" 2>/dev/null || true
             trap - EXIT
           )

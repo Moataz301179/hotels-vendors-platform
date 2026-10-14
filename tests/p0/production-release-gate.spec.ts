@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const workflow = readFileSync(".github/workflows/deploy-production.yml", "utf8");
+const launcher = readFileSync("deploy/pm2/start-protected.sh", "utf8");
 
 describe("production release gate", () => {
   it("requires a manual dispatch and verifies the running source identity", () => {
@@ -19,5 +20,7 @@ describe("production release gate", () => {
     expect(workflow).toContain('CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}');
     expect(workflow).toContain('HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env"');
     expect(workflow).toContain('pk_live_');
+    expect(launcher).toContain("exec node server.js");
+    expect(launcher).not.toContain(".next/standalone/server.js");
   });
 });
