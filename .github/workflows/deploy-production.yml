@@ -104,8 +104,8 @@ jobs:
             PORT=3008 NODE_ENV=production pm2 start "$ACTIVE_RELEASE/server.js" --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
             exit 1
           fi
-          test "$(curl -ks -o /dev/null -w '%{http_code}' https://hotelsvendors.com/)" = "200"
-          health="$(curl -ksSf https://hotelsvendors.com/api/health)"
+          test "$(curl -ks -o /dev/null -w '%{http_code}' https://www.hotelsvendors.com/)" = "200"
+          health="$(curl -ksSf https://www.hotelsvendors.com/api/health)"
           node - "$GITHUB_SHA" "$health" <<'VERIFY_HEALTH'
           const [expectedSha, responseBody] = process.argv.slice(2);
           const health = JSON.parse(responseBody);
