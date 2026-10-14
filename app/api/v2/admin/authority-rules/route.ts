@@ -13,11 +13,13 @@ const authorityRuleInput = z.object({
   minValue: z.coerce.number().finite().min(0).optional().nullable(),
   maxValue: z.coerce.number().finite().min(0).optional().nullable(),
   priority: z.coerce.number().int().min(-1000).max(1000).default(0),
+  tenantId: z.string().min(1),
 });
 
 const authorityRuleStatusInput = z.object({
   id: z.string().min(1),
   isActive: z.boolean(),
+  tenantId: z.string().min(1),
 });
 
 async function requireAdmin() {
@@ -33,14 +35,37 @@ async function requireAdmin() {
   return { actor } as const;
 }
 
-export async function GET() {
+async function manageableHotelTenants(actorTenantId: string) {
+  const platformTenant = await prisma.tenant.findFirst({
+    where: { id: actorTenantId, type: "PLATFORM", status: "ACTIVE", deletedAt: null },
+    select: { id: true },
+  });
+  if (!platformTenant) return null;
+  return prisma.tenant.findMany({
+    where: { type: "HOTEL_GROUP", status: "ACTIVE", deletedAt: null },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+async function selectedHotelTenant(actorTenantId: string, tenantId: string) {
+  const tenants = await manageableHotelTenants(actorTenantId);
+  return tenants?.find((tenant) => tenant.id === tenantId) ?? null;
+}
+
+export async function GET(request: Request) {
   const auth = await requireAdmin();
   if ("error" in auth) return auth.error;
+  const tenants = await manageableHotelTenants(auth.actor.tenantId);
+  if (!tenants) return NextResponse.json({ error: "PLATFORM_TENANT_REQUIRED" }, { status: 403 });
+  const tenantId = new URL(request.url).searchParams.get("tenantId");
+  if (!tenantId) return NextResponse.json({ rules: [], tenants });
+  if (!tenants.some((tenant) => tenant.id === tenantId)) return NextResponse.json({ error: "HOTEL_TENANT_NOT_FOUND" }, { status: 404 });
   const rules = await prisma.authorityRule.findMany({
-    where: { tenantId: auth.actor.tenantId, deletedAt: null },
+    where: { tenantId, deletedAt: null },
     orderBy: [{ isActive: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
   });
-  return NextResponse.json({ rules });
+  return NextResponse.json({ rules, tenants });
 }
 
 export async function POST(request: Request) {
@@ -48,6 +73,8 @@ export async function POST(request: Request) {
   if ("error" in auth) return auth.error;
   const parsed = authorityRuleInput.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "VALID_AUTHORITY_RULE_REQUIRED" }, { status: 400 });
+  const targetTenant = await selectedHotelTenant(auth.actor.tenantId, parsed.data.tenantId);
+  if (!targetTenant) return NextResponse.json({ error: "HOTEL_TENANT_NOT_FOUND" }, { status: 404 });
   const { minValue, maxValue } = parsed.data;
   if (minValue !== null && minValue !== undefined && maxValue !== null && maxValue !== undefined && minValue > maxValue) {
     return NextResponse.json({ error: "INVALID_AMOUNT_RANGE" }, { status: 400 });
@@ -55,7 +82,7 @@ export async function POST(request: Request) {
   const rule = await prisma.$transaction(async (tx) => {
     const created = await tx.authorityRule.create({
       data: {
-        tenantId: auth.actor.tenantId,
+        tenantId: targetTenant.id,
         name: parsed.data.name,
         description: parsed.data.description || null,
         role: parsed.data.role,
@@ -69,7 +96,7 @@ export async function POST(request: Request) {
       entityName: "PROCUREMENT_APPROVAL_POLICY",
       entityId: created.id,
       actionType: "CREATED",
-      tenantId: auth.actor.tenantId,
+      tenantId: targetTenant.id,
       actorId: auth.actor.id,
       actorRole: auth.actor.platformRole,
       changes: { kind: "AUTHORITY_RULE", role: created.role, action: created.action, minValue: created.minValue?.toString() ?? null, maxValue: created.maxValue?.toString() ?? null, priority: created.priority },
@@ -84,8 +111,10 @@ export async function PATCH(request: Request) {
   if ("error" in auth) return auth.error;
   const parsed = authorityRuleStatusInput.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "RULE_ID_AND_ACTIVE_STATUS_REQUIRED" }, { status: 400 });
+  const targetTenant = await selectedHotelTenant(auth.actor.tenantId, parsed.data.tenantId);
+  if (!targetTenant) return NextResponse.json({ error: "HOTEL_TENANT_NOT_FOUND" }, { status: 404 });
   const existing = await prisma.authorityRule.findFirst({
-    where: { id: parsed.data.id, tenantId: auth.actor.tenantId, deletedAt: null },
+    where: { id: parsed.data.id, tenantId: targetTenant.id, deletedAt: null },
     select: { id: true, isActive: true },
   });
   if (!existing) return NextResponse.json({ error: "AUTHORITY_RULE_NOT_FOUND" }, { status: 404 });
@@ -95,7 +124,7 @@ export async function PATCH(request: Request) {
       entityName: "PROCUREMENT_APPROVAL_POLICY",
       entityId: updated.id,
       actionType: "UPDATED",
-      tenantId: auth.actor.tenantId,
+      tenantId: targetTenant.id,
       actorId: auth.actor.id,
       actorRole: auth.actor.platformRole,
       changes: { kind: "AUTHORITY_RULE", fromActive: existing.isActive, toActive: updated.isActive },
