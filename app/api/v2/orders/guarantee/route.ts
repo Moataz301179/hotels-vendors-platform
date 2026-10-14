@@ -10,7 +10,10 @@ const allowedMethods = ["FACTORING", "DEPOSIT", "SPLIT", "DIRECT"] as const;
 export async function POST(req: Request) {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-  if (!["HOTEL", "ADMIN"].includes(actor.platformRole)) return NextResponse.json({ error: "HOTEL_ROLE_REQUIRED" }, { status: 403 });
+  // A hotel requester cannot unlock supplier fulfilment by asserting that its
+  // own payment is guaranteed. This action is an auditable platform-control
+  // step performed after independent verification.
+  if (actor.platformRole !== "ADMIN") return NextResponse.json({ error: "PAYMENT_GUARANTEE_VERIFICATION_REQUIRED" }, { status: 403 });
   try {
     await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, "order:approve");
   } catch (error) {
@@ -24,6 +27,7 @@ export async function POST(req: Request) {
   const order = await prisma.order.findFirst({ where: { id: body.orderId, tenantId: actor.tenantId, deletedAt: null }, select: { id: true, paymentGuaranteed: true, status: true } });
   if (!order) return NextResponse.json({ error: "ORDER_NOT_FOUND" }, { status: 404 });
   if (order.paymentGuaranteed) return NextResponse.json({ orderId: order.id, paymentGuaranteed: true, alreadySet: true });
+  if (order.status !== "PENDING_APPROVAL") return NextResponse.json({ error: "ORDER_NOT_PENDING_APPROVAL" }, { status: 409 });
   await setPaymentGuarantee({ orderId: order.id, tenantId: actor.tenantId, method: body.method, etaValidated: body.etaValidated === true, verifiedBy: actor.id, verifiedAt: new Date() });
   return NextResponse.json({ orderId: order.id, paymentGuaranteed: true, method: body.method }, { status: 201 });
 }
