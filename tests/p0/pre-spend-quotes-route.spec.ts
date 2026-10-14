@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const PermissionDeniedError = vi.hoisted(() => class PermissionDeniedError extends Error {});
+const FinancialAccessDeniedError = vi.hoisted(() => class FinancialAccessDeniedError extends Error { constructor(public code: string) { super(code); } });
 const m = vi.hoisted(() => ({
   actor: vi.fn(),
   supplier: vi.fn(),
@@ -13,12 +14,14 @@ const m = vi.hoisted(() => ({
   updateMany: vi.fn(),
   audit: vi.fn(),
   permission: vi.fn(),
+  financial: vi.fn(),
   transaction: vi.fn(),
 }));
 
 vi.mock('@/lib/v2-auth', () => ({ getActor: m.actor }));
 vi.mock('@/lib/audit/tamper-proof', () => ({ appendAuditEntry: m.audit }));
 vi.mock('@/lib/auth/rbac', () => ({ requirePermission: m.permission, PermissionDeniedError }));
+vi.mock('@/lib/auth/financial-access', () => ({ requireFinancialAccess: m.financial, FinancialAccessDeniedError }));
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     supplier: { findFirst: m.supplier },
@@ -52,6 +55,7 @@ describe('supplier quote submission boundary', () => {
     m.updateMany.mockResolvedValue({ count: 1 });
     m.audit.mockResolvedValue('audit-a');
     m.permission.mockResolvedValue(undefined);
+    m.financial.mockResolvedValue(undefined);
     m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({
       rfqRequest: { updateMany: m.updateMany },
       procurementQuote: { create: m.quoteCreate },
@@ -72,6 +76,15 @@ describe('supplier quote submission boundary', () => {
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ error: 'QUOTE_SUBMIT_PERMISSION_REQUIRED' });
     expect(m.supplier).not.toHaveBeenCalled();
+  });
+
+  it('blocks a priced supplier quote until the supplier tenant tax ID is verified', async () => {
+    m.financial.mockRejectedValue(new FinancialAccessDeniedError('TAX_ID_VERIFICATION_REQUIRED'));
+    const response = await submitQuote(request(quote));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'TAX_ID_VERIFICATION_REQUIRED' });
+    expect(m.supplier).not.toHaveBeenCalled();
+    expect(m.grant).not.toHaveBeenCalled();
   });
 
   it('allows a verified supplier tenant to respond only through its assigned RFQ relationship', async () => {

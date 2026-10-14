@@ -4,6 +4,7 @@ import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { costBreakdown } from "@/lib/procurement/pre-spend";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
+import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
 import { z } from "zod";
 
 const quoteInput=z.object({rfqId:z.string().min(1),unitPrice:z.number().finite().positive().max(10_000_000),quantity:z.number().int().positive().max(1_000_000),deliveryFee:z.number().finite().min(0).max(1_000_000).optional(),taxAmount:z.number().finite().min(0).max(1_000_000).optional(),leadTimeDays:z.number().int().positive().max(365).optional(),validUntil:z.coerce.date().optional(),notes:z.string().trim().max(2000).optional()});
@@ -34,6 +35,7 @@ export async function POST(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
  if(user.platformRole!=="SUPPLIER"||!user.supplierId)return NextResponse.json({error:"VERIFIED_SUPPLIER_CONTEXT_REQUIRED"},{status:403});
  const permissionError=await requireProcurementPermission(user,'quote:submit','QUOTE_SUBMIT_PERMISSION_REQUIRED');if(permissionError)return permissionError;
+ try{await requireFinancialAccess(user);}catch(error){if(error instanceof FinancialAccessDeniedError)return NextResponse.json({error:error.code},{status:403});throw error;}
  const supplier=await prisma.supplier.findFirst({where:{id:user.supplierId,tenantId:user.tenantId,status:"ACTIVE",isVerified:true,deletedAt:null},select:{id:true}});if(!supplier)return NextResponse.json({error:"Supplier verification is required before submitting quotes"},{status:403});
  const parsed=quoteInput.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"rfqId, unitPrice and quantity are required"},{status:400});const b=parsed.data;const {rfqId,unitPrice,quantity}=b;
  if(unitPrice*quantity>9000000000)return NextResponse.json({error:"The stated product amount is too large"},{status:400});
