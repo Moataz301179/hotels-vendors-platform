@@ -13,4 +13,11 @@ describe("production release gate", () => {
     expect(workflow).toContain('sourceCommit !== expectedSha');
     expect(workflow).toContain('releaseId !== `github-${expectedSha}`');
   });
+
+  it("builds and runs the release with the protected production Clerk credentials", () => {
+    expect(workflow).toContain('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}');
+    expect(workflow).toContain('CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}');
+    expect(workflow).toContain('HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env"');
+    expect(workflow).toContain('pk_live_');
+  });
 });

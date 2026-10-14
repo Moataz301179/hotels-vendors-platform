@@ -6,7 +6,7 @@ export function WorkspaceNavigation({role}:{role:string}) {
  const links=[{href:'/dashboard',label:'Overview'},{href:'/onboarding',label:'Organization profile'}];
  if(['HOTEL','ADMIN'].includes(role))links.push({href:'/intelligence',label:'Market Compass'},{href:'/demand-aggregation',label:'HV Volume Deals'},{href:'/workspace/marketplace',label:'Procurement'});
  if(['SUPPLIER','ADMIN'].includes(role))links.push({href:'/suppliers',label:'Supplier demand'});
- if(['HOTEL','SUPPLIER','ADMIN'].includes(role))links.push({href:'/orders',label:'Orders'});
+ if(['HOTEL','SUPPLIER','ADMIN'].includes(role))links.push({href:'/orders',label:'Orders'},{href:'/eta-compliance',label:'ETA compliance'});
  if(['SHIPPING','ADMIN'].includes(role))links.push({href:'/carrier',label:'Carrier operations'});
  if(['HOTEL','SUPPLIER','FACTORING','ADMIN'].includes(role))links.push({href:'/funding',label:'Funding records'});
  if(role==='ADMIN')links.push({href:'/admin',label:'Admin control center'},{href:'/audit',label:'Audit logs'});

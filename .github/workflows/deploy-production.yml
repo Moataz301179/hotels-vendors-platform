@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 25
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
-      CLERK_SECRET_KEY: sk_test_placeholder
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       SESSION_SECRET: ci-only-not-used-by-clerk
       REDIS_URL: redis://127.0.0.1:6379
     services:
@@ -41,6 +41,7 @@ jobs:
           tar -C .next/standalone -cf hv-release.tar .
           tar -C .next --transform='s,^static,.next/static,' -rf hv-release.tar static
           tar -C . -rf hv-release.tar public
+          tar -C . -rf hv-release.tar deploy/pm2/start-protected.sh
           gzip hv-release.tar
           mv hv-release.tar.gz hv-release.tgz
       - name: Configure SSH
@@ -59,6 +60,21 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: scp hv-release.tgz "$VPS_USER@$VPS_HOST:/tmp/hv-release-${GITHUB_SHA}.tgz"
+      - name: Upload protected production runtime environment
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          set -euo pipefail
+          case "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" in pk_live_*) ;; *) echo "Production Clerk publishable key is missing or not live" >&2; exit 1;; esac
+          case "$CLERK_SECRET_KEY" in sk_live_*) ;; *) echo "Production Clerk secret key is missing or not live" >&2; exit 1;; esac
+          umask 077
+          {
+            printf 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=%q\n' "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+            printf 'CLERK_SECRET_KEY=%q\n' "$CLERK_SECRET_KEY"
+          } > hv-runtime.env
+          scp hv-runtime.env "$VPS_USER@$VPS_HOST:/tmp/hv-runtime-${GITHUB_SHA}.env"
+          rm -f hv-runtime.env
       - name: Activate release and verify
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -69,7 +85,9 @@ jobs:
           RELEASE_ROOT=/var/www/hv-releases
           RELEASE="$RELEASE_ROOT/github-${GITHUB_SHA}"
           ARCHIVE=/tmp/hv-release-${GITHUB_SHA}.tgz
+          RUNTIME_ARCHIVE=/tmp/hv-runtime-${GITHUB_SHA}.env
           test -s "$ARCHIVE"
+          test -s "$RUNTIME_ARCHIVE"
           test ! -e "$RELEASE"
           ACTIVE_RELEASE="$(pm2 jlist | node -e '
             const fs = require("fs");
@@ -84,9 +102,18 @@ jobs:
           rm -f "$ARCHIVE"
           cp "$ACTIVE_RELEASE/.env" "$RELEASE/.env"
           chmod 600 "$RELEASE/.env"
+          cp "$ACTIVE_RELEASE/.env" "$RELEASE/.runtime-env"
+          cat "$RUNTIME_ARCHIVE" >> "$RELEASE/.runtime-env"
+          rm -f "$RUNTIME_ARCHIVE"
+          chmod 600 "$RELEASE/.runtime-env"
+          set -a
+          source "$RELEASE/.runtime-env"
+          set +a
+          case "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" in pk_live_*) ;; *) echo "Refusing to deploy without a live Clerk publishable key" >&2; exit 1;; esac
+          case "$CLERK_SECRET_KEY" in sk_live_*) ;; *) echo "Refusing to deploy without a live Clerk secret key" >&2; exit 1;; esac
           (
             cd "$RELEASE"
-            HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3010 HOSTNAME=127.0.0.1 NODE_ENV=production node server.js > preflight.log 2>&1 &
+            HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env" HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3010 HOSTNAME=127.0.0.1 NODE_ENV=production bash deploy/pm2/start-protected.sh > preflight.log 2>&1 &
             preflight_pid=$!
             trap 'kill "$preflight_pid" 2>/dev/null || true' EXIT
             for attempt in 1 2 3 4 5 6 7 8 9 10; do
@@ -100,7 +127,7 @@ jobs:
             trap - EXIT
           )
           pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
-          if ! HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 NODE_ENV=production pm2 start "$RELEASE/server.js" --name hotels-vendors-production --cwd "$RELEASE" --time >/dev/null; then
+          if ! HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env" HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 NODE_ENV=production pm2 start "$RELEASE/deploy/pm2/start-protected.sh" --interpreter bash --name hotels-vendors-production --cwd "$RELEASE" --time >/dev/null; then
             PORT=3008 NODE_ENV=production pm2 start "$ACTIVE_RELEASE/server.js" --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
             exit 1
           fi
