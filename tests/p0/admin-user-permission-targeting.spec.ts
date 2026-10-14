@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ actor: vi.fn(), tenants: vi.fn(), tenant: vi.fn(), grants: vi.fn(), users: vi.fn(), user: vi.fn(), permission: vi.fn(), upsert: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
+const m = vi.hoisted(() => ({ actor: vi.fn(), tenants: vi.fn(), tenant: vi.fn(), grants: vi.fn(), users: vi.fn(), user: vi.fn(), userUpdate: vi.fn(), permission: vi.fn(), upsert: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
 
 vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
 vi.mock("@/lib/admin/managed-hotel-tenants", () => ({ managedHotelTenants: m.tenants, managedHotelTenant: m.tenant }));
 vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
 vi.mock("@/lib/prisma", () => ({ prisma: { userPermissionGrant: { findMany: m.grants, upsert: m.upsert }, user: { findMany: m.users, findFirst: m.user }, permission: { findFirst: m.permission }, $transaction: m.transaction } }));
 
-import { GET, POST } from "@/app/api/v2/admin/user-permissions/route";
+import { GET, PATCH, POST } from "@/app/api/v2/admin/user-permissions/route";
 
 const actor = { id: "platform-admin", tenantId: "platform-tenant", platformRole: "ADMIN", role: "OWNER" };
 const request = (body: unknown) => new Request("https://hotelsvendors.com/api/v2/admin/user-permissions", {
@@ -24,11 +24,12 @@ describe("hotel organization permission grants", () => {
     m.tenant.mockResolvedValue({ id: "hotel-tenant", name: "Cairo Hotel Group" });
     m.grants.mockResolvedValue([]);
     m.users.mockResolvedValue([{ id: "hotel-owner", name: "Hotel Owner", email: "owner@example.test", role: "OWNER" }]);
-    m.user.mockResolvedValue({ id: "hotel-owner" });
+    m.user.mockResolvedValue({ id: "hotel-owner", role: "DEPARTMENT_HEAD" });
+    m.userUpdate.mockResolvedValue({ id: "hotel-owner", role: "OWNER" });
     m.permission.mockResolvedValue({ id: "approve-permission", code: "order:approve" });
     m.upsert.mockResolvedValue({ id: "grant-1", tenantId: "hotel-tenant", userId: "hotel-owner" });
     m.audit.mockResolvedValue(undefined);
-    m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({ userPermissionGrant: { upsert: m.upsert } }));
+    m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({ userPermissionGrant: { upsert: m.upsert }, user: { update: m.userUpdate } }));
   });
 
   it("lists grants and active hotel members only for the selected hotel organization", async () => {
@@ -55,5 +56,14 @@ describe("hotel organization permission grants", () => {
 
     expect(response.status).toBe(404);
     expect(m.upsert).not.toHaveBeenCalled();
+  });
+
+  it("assigns an explicit organization approver role to a selected hotel member and audits it", async () => {
+    const response = await PATCH(request({ tenantId: "hotel-tenant", userId: "hotel-owner", role: "OWNER" }));
+
+    expect(response.status).toBe(200);
+    expect(m.user).toHaveBeenCalledWith({ where: { id: "hotel-owner", tenantId: "hotel-tenant", status: "ACTIVE", deletedAt: null }, select: { id: true, role: true } });
+    expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "hotel-owner" }, data: { role: "OWNER" } });
+    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ tenantId: "hotel-tenant", changes: expect.objectContaining({ organizationRole: { from: "DEPARTMENT_HEAD", to: "OWNER" } }) }), expect.anything());
   });
 });

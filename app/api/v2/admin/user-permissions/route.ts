@@ -7,6 +7,7 @@ import { managedHotelTenant, managedHotelTenants } from "@/lib/admin/managed-hot
 
 const grantInput = z.object({ tenantId: z.string().min(1), userId: z.string().min(1), permissionCode: z.string().min(1) });
 const revokeInput = z.object({ tenantId: z.string().min(1), grantId: z.string().min(1) });
+const roleInput = z.object({ tenantId: z.string().min(1), userId: z.string().min(1), role: z.enum(["OWNER", "REGIONAL_GM", "GM", "FINANCIAL_CONTROLLER", "DEPARTMENT_HEAD", "CLERK", "RECEIVING_CLERK", "LOGISTICS_COORDINATOR"]) });
 
 async function requireAdmin() {
   const actor = await getActor();
@@ -60,6 +61,23 @@ export async function POST(request: Request) {
     return created;
   });
   return NextResponse.json({ grant }, { status: 201 });
+}
+
+export async function PATCH(request: Request) {
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth.error;
+  const parsed = roleInput.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "TENANT_USER_AND_ROLE_REQUIRED" }, { status: 400 });
+  const targetTenant = await managedHotelTenant(auth.actor.tenantId, parsed.data.tenantId);
+  if (!targetTenant) return NextResponse.json({ error: "HOTEL_TENANT_NOT_FOUND" }, { status: 404 });
+  const user = await prisma.user.findFirst({ where: { id: parsed.data.userId, tenantId: targetTenant.id, status: "ACTIVE", deletedAt: null }, select: { id: true, role: true } });
+  if (!user) return NextResponse.json({ error: "HOTEL_MEMBER_NOT_FOUND" }, { status: 404 });
+  const updated = await prisma.$transaction(async (tx) => {
+    const member = await tx.user.update({ where: { id: user.id }, data: { role: parsed.data.role } });
+    await appendAuditEntry({ entityName: "USER", entityId: member.id, actionType: "UPDATED", tenantId: targetTenant.id, actorId: auth.actor.id, actorRole: auth.actor.platformRole, changes: { organizationRole: { from: user.role, to: member.role } } }, tx);
+    return member;
+  });
+  return NextResponse.json({ user: updated });
 }
 
 export async function DELETE(request: Request) {
