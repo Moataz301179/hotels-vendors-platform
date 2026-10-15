@@ -104,7 +104,7 @@ describe('procurement lifecycle against the isolated database', () => {
   });
 
   it('persists request, quote, order, payment gate, approval, dispatch, and receipt', async () => {
-    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM' });
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
     const rfqResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId, quantity: 4 }));
     expect(rfqResponse.status).toBe(201);
     const { rfq } = await rfqResponse.json() as { rfq: { id: string } };
@@ -114,7 +114,7 @@ describe('procurement lifecycle against the isolated database', () => {
     expect(quoteResponse.status).toBe(201);
     const { quote } = await quoteResponse.json() as { quote: { id: string } };
 
-    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM' });
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
     const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id }));
     expect(orderResponse.status).toBe(201);
     const { order } = await orderResponse.json() as { order: { id: string } };
