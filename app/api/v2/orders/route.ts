@@ -6,6 +6,7 @@ import { orderActions } from "@/lib/v2-order-actions";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { managedHotelTenants } from "@/lib/admin/managed-hotel-tenants";
+import { classifyEtaCompliance } from "@/lib/logistics/eta-compliance";
 
 export async function GET(request:Request){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
@@ -23,7 +24,7 @@ export async function GET(request:Request){
   where={tenantId,deletedAt:null};
  }else where={tenantId:user.tenantId,deletedAt:null};
  const orders=await prisma.order.findMany({where,include:{supplier:{select:{name:true}},hotel:{select:{name:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
- return NextResponse.json({orders:orders.map(order=>({...order,allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'})),tenants});
+ return NextResponse.json({orders:orders.map(order=>({...order,etaCompliance:classifyEtaCompliance(order),allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'})),tenants});
 }
 
 export async function POST(req:Request){

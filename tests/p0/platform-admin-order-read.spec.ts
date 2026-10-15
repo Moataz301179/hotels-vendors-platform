@@ -28,4 +28,12 @@ describe("platform-admin order review", () => {
     expect(m.orders).toHaveBeenCalledWith(expect.objectContaining({ where: { tenantId: "hotel-tenant", deletedAt: null } }));
     expect(await response.json()).toMatchObject({ tenants: [{ id: "hotel-tenant", name: "Cairo Hotel Group" }] });
   });
+
+  it("returns the ETA state derived from the recorded delivery commitment", async () => {
+    m.orders.mockResolvedValue([{ id: "order-a", status: "CONFIRMED", estimatedDelivery: null, paymentGuaranteed: true, items: [] }]);
+
+    const response = await GET(new Request("https://hotelsvendors.com/api/v2/orders?tenantId=hotel-tenant"));
+
+    expect((await response.json()).orders[0]).toMatchObject({ id: "order-a", etaCompliance: "MISSING" });
+  });
 });
