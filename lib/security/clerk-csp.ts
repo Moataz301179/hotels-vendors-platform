@@ -34,7 +34,10 @@ export function buildClerkContentSecurityPolicy(publishableKey: string | undefin
     "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://images.unsplash.com https://cdn.jsdelivr.net https://api.qrserver.com https://img.clerk.com",
+    // Published supplier images are reviewed before activation and are loaded
+    // directly by the browser. Keep the policy HTTPS-only: no server-side
+    // image proxy fetches untrusted supplier URLs.
+    "img-src 'self' data: blob: https: https://img.clerk.com",
     `connect-src 'self' ${configuredClerkOrigins} https://*.clerk.accounts.dev https://api.clerk.com https://api.clerk.dev https://clerk-telemetry.com wss://*.clerk.accounts.dev https://api.oliv.finance https://sandbox.oliv.finance https://invoicing.eta.gov.eg https://api.fawry.com https://*.protect.clerk.com:*`,
     `frame-src 'self' ${configuredClerkOrigins} https://*.clerk.accounts.dev https://challenges.cloudflare.com ${CLERK_PROTECT}`,
     "frame-ancestors 'none'",

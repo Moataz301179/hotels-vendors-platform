@@ -4,8 +4,9 @@ import { AdminClient } from "@/components/v2/admin-client";
 import { AdminControls } from "@/components/v2/admin-controls";
 import { PendingUserReview } from "@/components/v2/pending-user-review";
 import { CatalogDiscovery } from "@/components/v2/catalog-discovery";
+import { CatalogPublicationReview } from "@/components/v2/catalog-publication-review";
 
 export default async function AdminPage() {
   await requireActorRole(['ADMIN']);
-  return <><AdminClient /><PendingUserReview /><AdminControls /><CatalogDiscovery /><SupplierReview /></>;
+  return <><AdminClient /><PendingUserReview /><AdminControls /><CatalogDiscovery /><CatalogPublicationReview /><SupplierReview /></>;
 }
