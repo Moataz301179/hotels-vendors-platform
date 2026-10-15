@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { Client } from "pg";
 
 /**
@@ -26,11 +28,31 @@ const requiredSchema = {
   AuditLog: ["id", "tenantId", "entityId", "actionType", "actorId"],
 };
 
-if (!process.env.DATABASE_URL) {
+async function loadDatabaseUrlFromEnvFile() {
+  for (const name of [".runtime-env", ".env"]) {
+    try {
+      const source = await readFile(resolve(process.cwd(), name), "utf8");
+      const line = source.split(/\r?\n/).find((candidate) => candidate.startsWith("DATABASE_URL="));
+      if (!line) continue;
+      const raw = line.slice("DATABASE_URL=".length).trim();
+      if (!raw) continue;
+      return (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+        ? raw.slice(1, -1)
+        : raw;
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+  }
+  return undefined;
+}
+
+const databaseUrl = process.env.DATABASE_URL || await loadDatabaseUrlFromEnvFile();
+if (!databaseUrl) {
   throw new Error("DATABASE_URL is required for the read-only procurement schema gate.");
 }
 
-const client = new Client({ connectionString: process.env.DATABASE_URL });
+const client = new Client({ connectionString: databaseUrl });
 
 try {
   await client.connect();
