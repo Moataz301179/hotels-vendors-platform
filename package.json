@@ -9,7 +9,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run tests/unit/",
-    "test:integration": "vitest run tests/integration/",
+    "test:integration": "HV_RUN_DB_INTEGRATION=1 vitest run --config vitest.integration.config.ts",
     "test:setup-db": "bash scripts/setup-test-db.sh",
     "start": "next start",
     "lint": "eslint",

@@ -46,6 +46,8 @@ jobs:
       - name: Initialize CI database schema
         run: npx prisma db push --skip-generate
       - run: npm test
+      - name: Prove procurement lifecycle against the isolated database
+        run: npm run test:integration
       - name: Lint maintained transaction flows
         run: >-
           npx eslint
