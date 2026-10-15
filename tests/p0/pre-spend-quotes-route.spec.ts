@@ -10,6 +10,7 @@ const m = vi.hoisted(() => ({
   quotes: vi.fn(),
   rfq: vi.fn(),
   product: vi.fn(),
+  evidence: vi.fn(),
   products: vi.fn(),
   quoteCreate: vi.fn(),
   updateMany: vi.fn(),
@@ -28,7 +29,7 @@ vi.mock('@/lib/prisma', () => ({
     supplier: { findFirst: m.supplier },
     rfqSupplierAccess: { findFirst: m.grant, findMany: m.grants },
     rfqRequest: { findFirst: m.rfq },
-    product: { findFirst: m.product, findMany: m.products },
+    product: { findFirst: m.product, findMany: m.products }, evidenceRecord: { findFirst: m.evidence },
     procurementQuote: { findMany: m.quotes },
     $transaction: m.transaction,
   },
@@ -51,7 +52,8 @@ describe('supplier quote submission boundary', () => {
     m.grants.mockResolvedValue([{ rfqId: 'rfq-a' }]);
     m.quotes.mockResolvedValue([]);
     m.rfq.mockResolvedValue({ id: 'rfq-a', productId: 'product-a', supplierId: 'supplier-a', buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING' });
-    m.product.mockResolvedValue({ id: 'product-a' });
+    m.product.mockResolvedValue({ id: 'product-a', sourceKey: 'https://supplier.example/products/product-a' });
+    m.evidence.mockResolvedValue({ id: 'evidence-a' });
     m.products.mockResolvedValue([]);
     m.quoteCreate.mockResolvedValue({ id: 'quote-a', ...quote });
     m.updateMany.mockResolvedValue({ count: 1 });
@@ -122,7 +124,7 @@ describe('supplier quote submission boundary', () => {
     const response = await submitQuote(request(quote));
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: 'The RFQ product is no longer active' });
-    expect(m.product).toHaveBeenCalledWith({ where: { id: 'product-a', supplierId: 'supplier-a', status: 'ACTIVE', deletedAt: null }, select: { id: true } });
+    expect(m.product).toHaveBeenCalledWith({ where: { id: 'product-a', supplierId: 'supplier-a', status: 'ACTIVE', deletedAt: null, source: { not: 'FIXTURE' } }, select: { id: true, sourceKey: true } });
     expect(m.updateMany).not.toHaveBeenCalled();
     expect(m.quoteCreate).not.toHaveBeenCalled();
   });

@@ -5,6 +5,7 @@ import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { costBreakdown } from "@/lib/procurement/pre-spend";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
+import { hasResolvedProductEvidence } from "@/lib/catalog/resolved-product-evidence";
 import { z } from "zod";
 
 const quoteInput=z.object({rfqId:z.string().min(1),unitPrice:z.number().finite().positive().max(10_000_000),quantity:z.number().int().positive().max(1_000_000),deliveryFee:z.number().finite().min(0).max(1_000_000),taxAmount:z.number().finite().min(0).max(1_000_000),leadTimeDays:z.number().int().positive().max(365).optional(),validUntil:z.coerce.date().optional(),notes:z.string().trim().max(2000).optional()});
@@ -51,8 +52,9 @@ export async function POST(req:Request){
  if(rfq.status!=="PENDING")return NextResponse.json({error:"RFQ is no longer accepting a new fixed response"},{status:409});
  if(quantity!==rfq.requestedQty)return NextResponse.json({error:"QUOTE_QUANTITY_MISMATCH"},{status:409});
  if(!rfq.productId)return NextResponse.json({error:"This unlisted requirement must be matched to a verified product before it can receive a commercial response"},{status:409});
- const product=await prisma.product.findFirst({where:{id:rfq.productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null},select:{id:true}});
+ const product=await prisma.product.findFirst({where:{id:rfq.productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null,source:{not:'FIXTURE'}},select:{id:true,sourceKey:true}});
  if(!product)return NextResponse.json({error:"The RFQ product is no longer active"},{status:409});
+ if(!await hasResolvedProductEvidence(prisma,product))return NextResponse.json({error:'RESOLVED_PRODUCT_EVIDENCE_REQUIRED'},{status:409});
  try{const quote=await prisma.$transaction(async tx=>{
   const claimed=await tx.rfqRequest.updateMany({where:{id:rfq.id,tenantId:grant.hotelTenantId,supplierId:supplier.id,status:'PENDING',deletedAt:null},data:{status:"QUOTED"}});
   if(claimed.count!==1)throw new Error('RFQ_ALREADY_QUOTED');

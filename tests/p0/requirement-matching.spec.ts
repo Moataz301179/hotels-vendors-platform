@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const PermissionDeniedError = vi.hoisted(() => class PermissionDeniedError extends Error {});
-const m = vi.hoisted(() => ({ actor: vi.fn(), permission: vi.fn(), tenants: vi.fn(), tenant: vi.fn(), requirement: vi.fn(), requirements: vi.fn(), product: vi.fn(), update: vi.fn(), grant: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
+const m = vi.hoisted(() => ({ actor: vi.fn(), permission: vi.fn(), tenants: vi.fn(), tenant: vi.fn(), requirement: vi.fn(), requirements: vi.fn(), product: vi.fn(), evidence: vi.fn(), update: vi.fn(), grant: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
 
 vi.mock('@/lib/v2-auth', () => ({ getActor: m.actor }));
 vi.mock('@/lib/auth/rbac', () => ({ requirePermission: m.permission, PermissionDeniedError }));
 vi.mock('@/lib/admin/managed-hotel-tenants', () => ({ managedHotelTenants: m.tenants, managedHotelTenant: m.tenant }));
 vi.mock('@/lib/audit/tamper-proof', () => ({ appendAuditEntry: m.audit }));
-vi.mock('@/lib/prisma', () => ({ prisma: { rfqRequest: { findFirst: m.requirement, findMany: m.requirements, updateMany: m.update }, product: { findFirst: m.product }, rfqSupplierAccess: { create: m.grant }, $transaction: m.transaction } }));
+vi.mock('@/lib/prisma', () => ({ prisma: { rfqRequest: { findFirst: m.requirement, findMany: m.requirements, updateMany: m.update }, product: { findFirst: m.product }, evidenceRecord: { findFirst: m.evidence }, rfqSupplierAccess: { create: m.grant }, $transaction: m.transaction } }));
 
 import { GET, POST } from '@/app/api/v2/rfq/match/route';
 
@@ -24,7 +24,8 @@ describe('queued requirement matching', () => {
     m.tenant.mockResolvedValue({ id: 'hotel-tenant', name: 'Hotel group' });
     m.requirement.mockResolvedValue({ id: 'rfq', itemName: 'Bath towels', unitOfMeasure: 'piece' });
     m.requirements.mockResolvedValue([]);
-    m.product.mockResolvedValue({ id: 'product', name: 'Bath towel', sku: 'BT-01', supplierId: 'supplier', supplier: { tenantId: 'supplier-tenant' } });
+    m.product.mockResolvedValue({ id: 'product', name: 'Bath towel', sku: 'BT-01', sourceKey: 'https://supplier.example/products/bt-01', supplierId: 'supplier', supplier: { tenantId: 'supplier-tenant' } });
+    m.evidence.mockResolvedValue({ id: 'evidence' });
     m.update.mockResolvedValue({ count: 1 });
     m.grant.mockResolvedValue({ id: 'grant' });
     m.audit.mockResolvedValue('audit');
@@ -57,6 +58,14 @@ describe('queued requirement matching', () => {
     expect(response.status).toBe(409);
     expect(m.update).not.toHaveBeenCalled();
     expect(m.grant).not.toHaveBeenCalled();
+  });
+
+  it('does not disclose a requirement to a product without resolved source evidence', async () => {
+    m.evidence.mockResolvedValue(null);
+    const response = await POST(request({ tenantId: 'hotel-tenant', rfqId: 'rfq', productId: 'product' }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'RESOLVED_PRODUCT_EVIDENCE_REQUIRED' });
+    expect(m.update).not.toHaveBeenCalled();
   });
 
   it('matches once, grants only the selected supplier, and records the evidence trail', async () => {

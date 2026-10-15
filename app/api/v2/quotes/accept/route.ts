@@ -5,6 +5,7 @@ import { appendAuditEntry } from '@/lib/audit/tamper-proof';
 import { costBreakdown } from '@/lib/procurement/pre-spend';
 import { PermissionDeniedError, requirePermission } from '@/lib/auth/rbac';
 import { FinancialAccessDeniedError, requireFinancialAccess } from '@/lib/auth/financial-access';
+import { hasResolvedProductEvidence } from '@/lib/catalog/resolved-product-evidence';
 import { z } from 'zod';
 
 const acceptQuoteInput = z.object({ quoteId: z.string().min(1) });
@@ -22,8 +23,9 @@ export async function POST(req:Request){
  if(quote.validUntil&&quote.validUntil<new Date())return NextResponse.json({error:'This quote has expired. Request an updated quote.'},{status:409});
  if(!['PENDING','QUOTED'].includes(quote.rfq.status)||quote.rfq.tenantId!==user.tenantId||quote.rfq.deletedAt)return NextResponse.json({error:'This request is no longer available for conversion'},{status:409});
  if(!quote.rfq.productId)return NextResponse.json({error:'An unlisted requirement must be matched to a verified product before it can become an order.'},{status:409});
- const [hotel,product]=await Promise.all([prisma.hotel.findFirst({where:{tenantId:user.tenantId,status:'ACTIVE',deletedAt:null},select:{id:true}}),prisma.product.findFirst({where:{id:quote.rfq.productId,supplierId:quote.supplierId,status:'ACTIVE',deletedAt:null},select:{id:true}})]);
+ const [hotel,product]=await Promise.all([prisma.hotel.findFirst({where:{tenantId:user.tenantId,status:'ACTIVE',deletedAt:null},select:{id:true}}),prisma.product.findFirst({where:{id:quote.rfq.productId,supplierId:quote.supplierId,status:'ACTIVE',deletedAt:null,source:{not:'FIXTURE'}},select:{id:true,sourceKey:true}})]);
  if(!hotel||!product)return NextResponse.json({error:'An active hotel profile and product are required'},{status:409});
+ if(!await hasResolvedProductEvidence(prisma,product))return NextResponse.json({error:'RESOLVED_PRODUCT_EVIDENCE_REQUIRED'},{status:409});
  const policyCandidates=user.departmentId?await prisma.procurementApprovalPolicy.findMany({where:{tenantId:user.tenantId,isActive:true,deletedAt:null,OR:[{departmentId:user.departmentId},{departmentId:null}],AND:[{OR:[{minAmount:null},{minAmount:{lte:costs.totalCost}}]},{OR:[{maxAmount:null},{maxAmount:{gte:costs.totalCost}}]}]},orderBy:{createdAt:'asc'},select:{id:true,departmentId:true,minAmount:true,maxAmount:true,primaryApproverId:true,secondaryApproverId:true}}):[];
  const policy=policyCandidates.sort((a,b)=>Number(Boolean(b.departmentId))-Number(Boolean(a.departmentId)))[0];
  if(user.departmentId&&!policy)return NextResponse.json({error:'APPROVAL_POLICY_REQUIRED'},{status:409});

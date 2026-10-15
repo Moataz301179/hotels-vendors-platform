@@ -83,6 +83,7 @@ describe('procurement lifecycle against the isolated database', () => {
     supplierId = supplier.id;
     const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Verified lifecycle product', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
     productId = product.id;
+    await prisma.evidenceRecord.create({ data: { tenantId: ids.supplierTenant, entityId: product.id, entityName: 'PRODUCT', sourceUrl: 'https://supplier.example.test/products/lifecycle', sourceReference: 'integration fixture', provenanceClass: 'AUTHORIZED', status: 'RESOLVED' } });
 
     await prisma.user.createMany({ data: [
       { id: ids.buyer, email: `buyer-${run}@example.test`, name: 'Lifecycle buyer', role: 'GM', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, departmentId, roleId: hotelRole.id },

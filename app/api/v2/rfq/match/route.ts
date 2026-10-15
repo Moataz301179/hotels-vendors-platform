@@ -5,6 +5,7 @@ import { getActor } from "@/lib/v2-auth";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { managedHotelTenant, managedHotelTenants } from "@/lib/admin/managed-hotel-tenants";
+import { hasResolvedProductEvidence } from "@/lib/catalog/resolved-product-evidence";
 
 const matchInput = z.object({ rfqId: z.string().min(1), productId: z.string().min(1), tenantId: z.string().min(1) });
 
@@ -58,9 +59,10 @@ export async function POST(request: Request) {
   if (!requirement) return NextResponse.json({ error: "QUEUED_REQUIREMENT_NOT_FOUND" }, { status: 404 });
   const product = await prisma.product.findFirst({
     where: { id: parsed.data.productId, status: "ACTIVE", deletedAt: null, source: { not: "FIXTURE" }, supplier: { status: "ACTIVE", isVerified: true, deletedAt: null } },
-    select: { id: true, name: true, sku: true, supplierId: true, supplier: { select: { tenantId: true } } },
+    select: { id: true, name: true, sku: true, sourceKey: true, supplierId: true, supplier: { select: { tenantId: true } } },
   });
   if (!product) return NextResponse.json({ error: "VERIFIED_ACTIVE_PRODUCT_REQUIRED" }, { status: 409 });
+  if (!await hasResolvedProductEvidence(prisma, product)) return NextResponse.json({ error: "RESOLVED_PRODUCT_EVIDENCE_REQUIRED" }, { status: 409 });
   const matched = await prisma.$transaction(async (tx) => {
     const update = await tx.rfqRequest.updateMany({
       where: { id: requirement.id, tenantId: targetTenant.id, productId: null, supplierId: null, matchingStatus: "QUEUED", deletedAt: null },
