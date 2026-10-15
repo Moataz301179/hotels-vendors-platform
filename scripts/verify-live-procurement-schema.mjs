@@ -17,7 +17,7 @@ const requiredSchema = {
   Hotel: ["id", "tenantId", "status", "taxId", "deletedAt"],
   Supplier: ["id", "tenantId", "status", "isVerified", "taxId", "deletedAt"],
   Product: ["id", "tenantId", "supplierId", "status", "sku", "images", "deletedAt"],
-  RfqRequest: ["id", "buyerId", "productId", "supplierId", "requestedQty", "status", "tenantId", "deletedAt"],
+  RfqRequest: ["id", "buyerId", "productId", "supplierId", "itemName", "unitOfMeasure", "deliveryLocation", "packDescription", "matchingStatus", "requestedQty", "status", "tenantId", "deletedAt"],
   RfqSupplierAccess: ["id", "rfqId", "supplierId", "hotelTenantId", "supplierTenantId", "revokedAt"],
   ProcurementQuote: ["id", "rfqId", "tenantId", "supplierId", "unitPrice", "quantity", "deliveryFee", "taxAmount", "status", "deletedAt"],
   Order: ["id", "orderNumber", "tenantId", "hotelId", "supplierId", "status", "paymentGuaranteed", "approvalPolicySnapshot", "estimatedDelivery", "deletedAt"],

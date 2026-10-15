@@ -3682,9 +3682,17 @@ model ReconciliationLineItem {
 model RfqRequest {
   id                 String                @id @default(cuid())
   buyerId            String
-  productId          String
+  productId          String?
   contractBaselineId String?
-  supplierId         String
+  supplierId         String?
+  catalogItemId      String?
+  itemName           String?
+  unitOfMeasure      String?
+  deliveryLocation   String?
+  matchingStatus     String                @default("QUEUED")
+  baselineId         String?
+  normalizedItemKey  String?
+  packDescription    String?
   requestedQty       Int
   targetPrice        Decimal?              @db.Decimal(12, 2)
   deliveryTimeline   String?
@@ -3707,6 +3715,8 @@ model RfqRequest {
   @@index([supplierId])
   @@index([tenantId])
   @@index([tenantId, contractBaselineId])
+  @@index([tenantId, catalogItemId])
+  @@index([tenantId, buyerId, status])
 }
 
 /// Explicit, tenant-bound grant for a supplier-side RFQ response.

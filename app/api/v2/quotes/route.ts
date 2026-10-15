@@ -28,11 +28,11 @@ export async function GET(){
   :null;
  const where=grants?{supplierId:user.supplierId!,rfqId:{in:grants.map(grant=>grant.rfqId)},deletedAt:null}:{tenantId:user.tenantId,deletedAt:null};
  const quotes=await prisma.procurementQuote.findMany({where,include:{rfq:{select:{id:true,productId:true,requestedQty:true,status:true,tenantId:true}},supplier:{select:{id:true,name:true,isVerified:true}}},orderBy:{submittedAt:"desc"},take:100});
- const productIds=[...new Set(quotes.map(quote=>quote.rfq.productId))];
+ const productIds=[...new Set(quotes.flatMap(quote=>quote.rfq.productId?[quote.rfq.productId]:[]))];
  const supplierIds=[...new Set(quotes.map(quote=>quote.supplierId))];
  const products=productIds.length?await prisma.product.findMany({where:{id:{in:productIds},supplierId:{in:supplierIds},deletedAt:null},select:{id:true,name:true,sku:true,unitOfMeasure:true}}):[];
  const productById=new Map(products.map(product=>[product.id,product]));
- const contextualized=quotes.map(quote=>({...quote,rfq:{...quote.rfq,product:productById.get(quote.rfq.productId)??null}}));
+ const contextualized=quotes.map(quote=>({...quote,rfq:{...quote.rfq,product:productById.get(quote.rfq.productId??'')??null}}));
  if(user.platformRole==='SUPPLIER')return NextResponse.json({quotes:contextualized});
  return NextResponse.json({quotes:contextualized.map((quote)=>({...quote,cost:costBreakdown(quote)}))});
 }
@@ -50,6 +50,7 @@ export async function POST(req:Request){
  if(!rfq)return NextResponse.json({error:"RFQ is not assigned to your supplier account"},{status:404});
  if(rfq.status!=="PENDING")return NextResponse.json({error:"RFQ is no longer accepting a new fixed response"},{status:409});
  if(quantity!==rfq.requestedQty)return NextResponse.json({error:"QUOTE_QUANTITY_MISMATCH"},{status:409});
+ if(!rfq.productId)return NextResponse.json({error:"This unlisted requirement must be matched to a verified product before it can receive a commercial response"},{status:409});
  const product=await prisma.product.findFirst({where:{id:rfq.productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null},select:{id:true}});
  if(!product)return NextResponse.json({error:"The RFQ product is no longer active"},{status:409});
  try{const quote=await prisma.$transaction(async tx=>{
