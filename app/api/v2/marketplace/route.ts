@@ -13,8 +13,11 @@ export async function GET(req: Request) {
       status: "ACTIVE", deletedAt: null, source:{not:"FIXTURE"},
       ...(q ? { OR: [{ name:{contains:q,mode:"insensitive"} }, { sku:{contains:q,mode:"insensitive"} }] } : {})
     },
-    select: { id:true,uuid:true,sku:true,name:true,description:true,category:true,unitOfMeasure:true,unitPrice:true,basePrice:true,stockQuantity:true,leadTimeDays:true,supplier:{select:{id:true,name:true,isVerified:true,tenantId:true}} },
+    select: { id:true,uuid:true,sku:true,name:true,description:true,category:true,unitOfMeasure:true,unitPrice:true,basePrice:true,stockQuantity:true,leadTimeDays:true,images:true,supplier:{select:{id:true,name:true,isVerified:true,tenantId:true}} },
     orderBy:{createdAt:"desc"}, take:100
   });
-  return NextResponse.json({products});
+  return NextResponse.json({products:products.map(({images,...product})=>({
+    ...product,
+    images: (() => { try { const parsed=JSON.parse(images??'[]'); return Array.isArray(parsed) ? parsed.filter((image): image is string => typeof image==='string' && /^https?:\/\//i.test(image)) : []; } catch { return []; } })()
+  }))});
 }
