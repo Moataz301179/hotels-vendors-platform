@@ -99,6 +99,7 @@ describe('procurement lifecycle against the isolated database', () => {
   afterAll(async () => {
     await prisma.rfqSupplierAccess.deleteMany({ where: { hotelTenantId: ids.hotelTenant } });
     await prisma.rfqRequest.deleteMany({ where: { tenantId: ids.hotelTenant } });
+    await prisma.orderApproval.deleteMany({ where: { order: { tenantId: ids.hotelTenant } } });
     await prisma.tenant.deleteMany({ where: { id: { in: [ids.platformTenant, ids.hotelTenant, ids.supplierTenant] } } });
     await prisma.$disconnect();
   });
