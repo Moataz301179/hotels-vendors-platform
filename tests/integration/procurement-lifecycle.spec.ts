@@ -31,6 +31,7 @@ const ids = {
 
 let supplierId = '';
 let productId = '';
+let departmentId = '';
 
 const request = (url: string, body: unknown, method = 'POST') => new Request(url, {
   method,
@@ -76,19 +77,22 @@ describe('procurement lifecycle against the isolated database', () => {
     });
 
     const hotel = await prisma.hotel.create({ data: { tenantId: ids.hotelTenant, name: `Hotel ${run}`, taxId: `HT${run.slice(0, 19)}`, city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', riskTier: 'LOW' } });
+    const department = await prisma.department.create({ data: { tenantId: ids.hotelTenant, name: 'Lifecycle procurement', code: `IT-${run.slice(0, 12)}` } });
+    departmentId = department.id;
     const supplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Supplier ${run}`, taxId: `ST${run.slice(0, 19)}`, email: `supplier-${run}@example.test`, website: 'https://supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
     supplierId = supplier.id;
     const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Verified lifecycle product', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
     productId = product.id;
 
     await prisma.user.createMany({ data: [
-      { id: ids.buyer, email: `buyer-${run}@example.test`, name: 'Lifecycle buyer', role: 'GM', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, roleId: hotelRole.id },
+      { id: ids.buyer, email: `buyer-${run}@example.test`, name: 'Lifecycle buyer', role: 'GM', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, departmentId, roleId: hotelRole.id },
       { id: ids.approver, email: `approver-${run}@example.test`, name: 'Lifecycle approver', role: 'GM', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, roleId: hotelRole.id },
       { id: ids.receiver, email: `receiver-${run}@example.test`, name: 'Lifecycle receiver', role: 'RECEIVING_CLERK', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, roleId: hotelRole.id },
       { id: ids.supplierUser, email: `supplier-user-${run}@example.test`, name: 'Lifecycle supplier', role: 'CLERK', platformRole: 'SUPPLIER', tenantId: ids.supplierTenant, supplierId, roleId: supplierRole.id },
       { id: ids.admin, email: `admin-${run}@example.test`, name: 'Lifecycle admin', role: 'OWNER', platformRole: 'ADMIN', tenantId: ids.platformTenant, roleId: adminRole.id },
     ] });
 
+    await prisma.procurementApprovalPolicy.create({ data: { tenantId: ids.hotelTenant, departmentId, primaryApproverId: ids.approver, createdById: ids.admin } });
     await prisma.authorityRule.create({ data: { tenantId: ids.hotelTenant, role: 'GM', name: `Lifecycle approval ${run}`, action: 'APPROVE', minValue: 0, maxValue: 10_000_000, priority: 100, isActive: true } });
   });
 
@@ -114,9 +118,16 @@ describe('procurement lifecycle against the isolated database', () => {
     const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id }));
     expect(orderResponse.status).toBe(201);
     const { order } = await orderResponse.json() as { order: { id: string } };
+    const storedApprovalPolicy = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { departmentId: true, procurementApprovalPolicyId: true, approvalPolicySnapshot: true } });
+    expect(storedApprovalPolicy.departmentId).toBe(departmentId);
+    expect(storedApprovalPolicy.procurementApprovalPolicyId).not.toBeNull();
+    expect(storedApprovalPolicy.approvalPolicySnapshot).toMatchObject({ requiredApproverIds: [ids.approver] });
 
     asActor({ id: ids.admin, tenantId: ids.platformTenant, platformRole: 'ADMIN', role: 'OWNER' });
     expect((await recordGuarantee(request('https://hotelsvendors.test/api/v2/orders/guarantee', { orderId: order.id, tenantId: ids.hotelTenant, method: 'DIRECT', etaValidated: false }))).status).toBe(201);
+
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+    expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'APPROVED' }, 'PATCH'))).status).toBe(403);
 
     asActor({ id: ids.approver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM' });
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'APPROVED' }, 'PATCH'))).status).toBe(200);
