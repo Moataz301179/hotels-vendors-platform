@@ -220,3 +220,14 @@ input,select,textarea{border:1px solid #cbd2d3;border-radius:var(--radius-contro
 .hv-auth-story .hv-brand-lockup>img{filter:none}
 .hv-site-footer nav a{color:#fff}
 .nav .hv-brand-lockup>img,.app-top .hv-brand-lockup>img,.hv-site-footer .hv-brand-lockup>img{filter:brightness(0) invert(1)}
+
+/* Public content stays on light platinum surfaces; charcoal belongs to the site chrome. */
+.public-home-module__DFzTBW__engine{background:var(--paper-200);color:var(--ink)}
+.public-home-module__DFzTBW__engine .public-home-module__DFzTBW__sectionHeading>p,.public-home-module__DFzTBW__engine p{color:var(--muted)}
+.public-home-module__DFzTBW__engine ol{border-color:var(--line)}
+.public-home-module__DFzTBW__engine li{border-color:var(--line)}
+.public-home-module__DFzTBW__engine li:nth-child(3n+2),.public-home-module__DFzTBW__engine li:nth-child(3n+3){border-color:var(--line)}
+.public-home-module__DFzTBW__engine li>span{color:#426f91}
+.public-home-module__DFzTBW__mobilePreview{background:var(--paper-0);color:var(--ink);box-shadow:inset 0 0 0 10px #dfe5e7}
+.public-home-module__DFzTBW__mobilePreview>span{color:#426f91}
+.public-home-module__DFzTBW__mobilePreview small{color:var(--muted)}
