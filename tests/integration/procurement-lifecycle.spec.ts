@@ -6,17 +6,8 @@ if (process.env.HV_RUN_DB_INTEGRATION !== '1') {
 }
 
 const session = vi.hoisted(() => ({ actor: null as Record<string, unknown> | null }));
-const auth = vi.hoisted(() => ({ requirePermission: vi.fn(), requireFinancialAccess: vi.fn() }));
 
 vi.mock('@/lib/v2-auth', () => ({ getActor: vi.fn(() => session.actor) }));
-vi.mock('@/lib/auth/rbac', () => ({
-  PermissionDeniedError: class PermissionDeniedError extends Error {},
-  requirePermission: auth.requirePermission,
-}));
-vi.mock('@/lib/auth/financial-access', () => ({
-  FinancialAccessDeniedError: class FinancialAccessDeniedError extends Error {},
-  requireFinancialAccess: auth.requireFinancialAccess,
-}));
 
 import { prisma } from '@/lib/prisma';
 import { POST as createRfq } from '@/app/api/v2/rfq/route';
@@ -53,9 +44,6 @@ function asActor(actor: Record<string, unknown>) {
 
 describe('procurement lifecycle against the isolated database', () => {
   beforeAll(async () => {
-    auth.requirePermission.mockResolvedValue(undefined);
-    auth.requireFinancialAccess.mockResolvedValue(undefined);
-
     await prisma.tenant.createMany({ data: [
       { id: ids.platformTenant, name: `Platform ${run}`, slug: `it-platform-${run}`, type: 'PLATFORM', status: 'ACTIVE', taxId: `P${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
       { id: ids.hotelTenant, name: `Hotel ${run}`, slug: `it-hotel-${run}`, type: 'HOTEL_GROUP', status: 'ACTIVE', taxId: `H${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
@@ -67,6 +55,25 @@ describe('procurement lifecycle against the isolated database', () => {
       prisma.role.create({ data: { name: `it-supplier-role-${run}`, tenantId: ids.supplierTenant } }),
       prisma.role.create({ data: { name: `it-admin-role-${run}`, tenantId: ids.platformTenant } }),
     ]);
+
+    const permissions = await Promise.all([
+      prisma.permission.upsert({ where: { code: 'order:create' }, update: {}, create: { code: 'order:create', name: 'Create procurement requests' } }),
+      prisma.permission.upsert({ where: { code: 'order:approve' }, update: {}, create: { code: 'order:approve', name: 'Approve procurement orders' } }),
+      prisma.permission.upsert({ where: { code: 'order:confirm' }, update: {}, create: { code: 'order:confirm', name: 'Confirm procurement orders' } }),
+      prisma.permission.upsert({ where: { code: 'order:update' }, update: {}, create: { code: 'order:update', name: 'Update procurement orders' } }),
+      prisma.permission.upsert({ where: { code: 'quote:submit' }, update: {}, create: { code: 'quote:submit', name: 'Submit supplier quotes' } }),
+    ]);
+    const byCode = new Map(permissions.map((permission) => [permission.code, permission.id]));
+    await prisma.rolePermission.createMany({
+      data: [
+        { roleId: hotelRole.id, permissionId: byCode.get('order:create')! },
+        { roleId: hotelRole.id, permissionId: byCode.get('order:approve')! },
+        { roleId: hotelRole.id, permissionId: byCode.get('order:update')! },
+        { roleId: supplierRole.id, permissionId: byCode.get('quote:submit')! },
+        { roleId: supplierRole.id, permissionId: byCode.get('order:confirm')! },
+        { roleId: supplierRole.id, permissionId: byCode.get('order:update')! },
+      ],
+    });
 
     const hotel = await prisma.hotel.create({ data: { tenantId: ids.hotelTenant, name: `Hotel ${run}`, taxId: `HT${run.slice(0, 19)}`, city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', riskTier: 'LOW' } });
     const supplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Supplier ${run}`, taxId: `ST${run.slice(0, 19)}`, email: `supplier-${run}@example.test`, website: 'https://supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
