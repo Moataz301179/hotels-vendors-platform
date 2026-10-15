@@ -11,6 +11,7 @@ vi.mock('@/lib/v2-auth', () => ({ getActor: vi.fn(() => session.actor) }));
 
 import { prisma } from '@/lib/prisma';
 import { POST as createRfq } from '@/app/api/v2/rfq/route';
+import { POST as matchRequirement } from '@/app/api/v2/rfq/match/route';
 import { POST as submitQuote } from '@/app/api/v2/quotes/route';
 import { POST as acceptQuote } from '@/app/api/v2/quotes/accept/route';
 import { POST as recordGuarantee } from '@/app/api/v2/orders/guarantee/route';
@@ -157,5 +158,43 @@ describe('procurement lifecycle against the isolated database', () => {
     expect(storedOrder.items[0]?.receivedQuantity).toBe(4);
     expect(receipts).toHaveLength(1);
     expect(auditRecords.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('moves an unlisted hotel requirement through Product Intelligence matching before supplier disclosure', async () => {
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+    const queuedResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { itemName: 'Hotel-grade bath towel', unitOfMeasure: 'piece', quantity: 5, deliveryLocation: 'Cairo receiving dock' }));
+    expect(queuedResponse.status).toBe(201);
+    const { rfq } = await queuedResponse.json() as { rfq: { id: string } };
+    const queued = await prisma.rfqRequest.findUniqueOrThrow({ where: { id: rfq.id }, select: { productId: true, supplierId: true, matchingStatus: true } });
+    expect(queued).toEqual({ productId: null, supplierId: null, matchingStatus: 'QUEUED' });
+
+    asActor({ id: ids.admin, tenantId: ids.platformTenant, platformRole: 'ADMIN', role: 'OWNER' });
+    const matchResponse = await matchRequirement(request('https://hotelsvendors.test/api/v2/rfq/match', { tenantId: ids.hotelTenant, rfqId: rfq.id, productId }));
+    expect(matchResponse.status).toBe(200);
+    const matched = await prisma.rfqRequest.findUniqueOrThrow({ where: { id: rfq.id }, select: { productId: true, supplierId: true, matchingStatus: true } });
+    expect(matched).toEqual({ productId, supplierId, matchingStatus: 'MATCHED' });
+    await expect(prisma.rfqSupplierAccess.findFirst({ where: { rfqId: rfq.id, supplierId, hotelTenantId: ids.hotelTenant, supplierTenantId: ids.supplierTenant, revokedAt: null } })).resolves.not.toBeNull();
+
+    asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
+    const quoteResponse = await submitQuote(request('https://hotelsvendors.test/api/v2/quotes', { rfqId: rfq.id, unitPrice: 110, quantity: 5, deliveryFee: 25, taxAmount: 18, leadTimeDays: 3 }));
+    expect(quoteResponse.status).toBe(201);
+    const { quote } = await quoteResponse.json() as { quote: { id: string } };
+
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+    const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id }));
+    expect(orderResponse.status).toBe(201);
+    const { order } = await orderResponse.json() as { order: { id: string } };
+
+    asActor({ id: ids.admin, tenantId: ids.platformTenant, platformRole: 'ADMIN', role: 'OWNER' });
+    expect((await recordGuarantee(request('https://hotelsvendors.test/api/v2/orders/guarantee', { orderId: order.id, tenantId: ids.hotelTenant, method: 'DIRECT', etaValidated: false }))).status).toBe(201);
+    asActor({ id: ids.approver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM' });
+    expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'APPROVED' }, 'PATCH'))).status).toBe(200);
+    asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
+    expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'CONFIRMED' }, 'PATCH'))).status).toBe(200);
+    expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'IN_TRANSIT', estimatedDelivery: new Date(Date.now() + 86_400_000).toISOString() }, 'PATCH'))).status).toBe(200);
+    const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
+    asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
+    expect((await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 5, acceptedQuantity: 5, conditionNotes: 'Matched requirement received' }] }))).status).toBe(201);
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { status: true, paymentGuaranteed: true } })).resolves.toEqual({ status: 'DELIVERED', paymentGuaranteed: true });
   });
 });
