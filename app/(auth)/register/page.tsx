@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { ArrowRight, Building2, Handshake, Landmark, Truck } from 'lucide-react';
-import { Nav } from '@/components/v2/nav';
+import { ArrowRight, Building2, Handshake } from 'lucide-react';
+import { SiteNav } from '@/components/marketing/site-nav';
 
 const workspaces = [
   {
@@ -17,26 +17,12 @@ const workspaces = [
     action: 'Start supplier registration',
     icon: Handshake,
   },
-  {
-    title: 'Carriers',
-    description: 'Access transport assignments and share verified delivery milestones.',
-    href: '/carriers/portal',
-    action: 'Open carrier portal',
-    icon: Truck,
-  },
-  {
-    title: 'Funders',
-    description: 'Review shared operational records through a secure partner workspace.',
-    href: '/funders/portal',
-    action: 'Open funder portal',
-    icon: Landmark,
-  },
 ];
 
 export default function Register() {
   return (
     <>
-      <Nav />
+      <SiteNav />
       <main className="hv-register-page">
         <section className="hv-register-intro" aria-labelledby="register-title">
           <div className="shell hv-register-intro-inner">
@@ -77,18 +63,9 @@ export default function Register() {
             <div className="hv-register-layer hv-register-partner-layer" aria-labelledby="network-roles-title">
               <div className="hv-register-layer-heading">
                 <span className="hv-register-layer-index">02</span>
-                <div><h3 id="network-roles-title">Network partner portals</h3><p>For invited carriers and funders supporting verified procurement activity.</p></div>
+                <div><h3 id="network-roles-title">Provisioned partner access</h3><p>Carriers and funders do not use public registration. Their organizations are provisioned after the relevant commercial and access review.</p></div>
               </div>
-              <div className="hv-register-card-grid">
-                {workspaces.slice(2).map(({ title, description, href, action, icon: Icon }) => (
-                  <Link className="card entry-card hv-register-card hv-register-partner-card" href={href} key={title}>
-                    <span className="hv-register-icon"><Icon size={21} aria-hidden="true" /></span>
-                    <h3>{title}</h3>
-                    <p>{description}</p>
-                    <span className="hv-register-action">{action}<ArrowRight size={16} aria-hidden="true" /></span>
-                  </Link>
-                ))}
-              </div>
+              <p className="hv-register-copy">If your organization has been invited as a carrier or funder, use the partner route or contact HotelsVendors to verify access.</p>
             </div>
           </div>
         </section>
