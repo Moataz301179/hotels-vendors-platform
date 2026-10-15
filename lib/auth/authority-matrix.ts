@@ -612,34 +612,55 @@ export interface PaymentGuaranteeInput {
   waivedReason?: string;
 }
 
+export class PaymentGuaranteeTransitionError extends Error {
+  constructor() {
+    super("ORDER_NOT_PENDING_APPROVAL");
+    this.name = "PaymentGuaranteeTransitionError";
+  }
+}
+
 /**
  * Set the PaymentGuaranteed flag on an order.
  */
 export async function setPaymentGuarantee(
   input: PaymentGuaranteeInput
 ): Promise<void> {
-  await prisma.order.update({
-    where: { id: input.orderId },
-    data: {
-      paymentGuaranteed: true,
-      paymentGuaranteeMethod: input.method,
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    // The route performs a user-facing preflight, but this conditional write
+    // is the authority boundary: it prevents a concurrent status transition
+    // from receiving a guarantee after the approval stage has closed.
+    const changed = await tx.order.updateMany({
+      where: {
+        id: input.orderId,
+        tenantId: input.tenantId,
+        status: "PENDING_APPROVAL",
+        paymentGuaranteed: false,
+        deletedAt: null,
+      },
+      data: {
+        paymentGuaranteed: true,
+        paymentGuaranteeMethod: input.method,
+        paymentGuaranteeSetAt: input.verifiedAt,
+      },
+    });
+    if (changed.count !== 1) throw new PaymentGuaranteeTransitionError();
 
-  // Audit log (tamper-proof chain)
-  const { appendAuditEntry } = await import("@/lib/audit/tamper-proof");
-  await appendAuditEntry({
-    entityName: "ORDER",
-    entityId: input.orderId,
-    actionType: "UPDATE",
-    tenantId: input.tenantId,
-    actorId: input.verifiedBy,
-    changes: {
-      method: input.method,
-      etaValidated: input.etaValidated,
-      etaUuid: input.etaUuid,
-      factoringRequestId: input.factoringRequestId,
-    },
+    // The payment state and its tamper-evident record must commit or roll back
+    // together; an unaudited financial-control transition is not acceptable.
+    const { appendAuditEntry } = await import("@/lib/audit/tamper-proof");
+    await appendAuditEntry({
+      entityName: "ORDER",
+      entityId: input.orderId,
+      actionType: "UPDATE",
+      tenantId: input.tenantId,
+      actorId: input.verifiedBy,
+      changes: {
+        method: input.method,
+        etaValidated: input.etaValidated,
+        etaUuid: input.etaUuid,
+        factoringRequestId: input.factoringRequestId,
+      },
+    }, tx);
   });
 }
 
