@@ -13,6 +13,7 @@ describe("production health readiness", () => {
     process.env.NODE_ENV = "test";
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_live_test";
     process.env.CLERK_SECRET_KEY = "sk_live_test";
+    delete process.env.HV_RELEASE_SMOKE;
   });
 
   it("does not report ready until the configured database answers", async () => {
@@ -52,5 +53,18 @@ describe("production health readiness", () => {
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({ ok: false, authorization: "unavailable" });
     expect(m.query).not.toHaveBeenCalled();
+  });
+
+  it("allows configured CI credentials only for the packaged release smoke marker", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.HV_RELEASE_SMOKE = "1";
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_smoke";
+    process.env.CLERK_SECRET_KEY = "sk_test_smoke";
+    m.query.mockResolvedValue([{ user: "User", product: "Product", rfq: "RfqRequest", quote: "ProcurementQuote", order: "Order", goodsReceipt: "GoodsReceiptNote", evidence: "EvidenceRecord", audit: "AuditLog" }]);
+
+    const response = await GET();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, authorization: "configured" });
   });
 });

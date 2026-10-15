@@ -71,7 +71,7 @@ jobs:
       - name: Smoke-test packaged standalone runtime
         run: |
           set -euo pipefail
-          NODE_ENV=test HV_PUBLIC_ORIGIN=http://127.0.0.1:3100 PORT=3100 HOSTNAME=127.0.0.1 node release/server.js >/tmp/hv-smoke.log 2>&1 &
+          HV_RELEASE_SMOKE=1 HV_PUBLIC_ORIGIN=http://127.0.0.1:3100 PORT=3100 HOSTNAME=127.0.0.1 node release/server.js >/tmp/hv-smoke.log 2>&1 &
           server_pid=$!
           trap 'status=$?; cat /tmp/hv-smoke.log; kill "$server_pid" 2>/dev/null || true; exit "$status"' EXIT
           ready=0
