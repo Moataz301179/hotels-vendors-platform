@@ -143,6 +143,7 @@ jobs:
           const health = JSON.parse(responseBody);
           if (health.ok !== true) throw new Error("Health check did not report ok");
           if (health.database !== "ready") throw new Error("Production database is not ready");
+          if (health.authorization !== "configured") throw new Error("Production authorization is not configured");
           if (health.sourceCommit !== expectedSha) throw new Error("Running source commit does not match this release");
           if (health.releaseId !== `github-${expectedSha}`) throw new Error("Running release identity does not match this release");
           VERIFY_HEALTH

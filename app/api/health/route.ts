@@ -6,6 +6,23 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+  const authorizationConfigured = process.env.NODE_ENV === "production"
+    ? clerkPublishableKey?.startsWith("pk_live_") && clerkSecretKey?.startsWith("sk_live_")
+    : Boolean(clerkPublishableKey && clerkSecretKey);
+  if (!authorizationConfigured) {
+    return NextResponse.json({
+      ok: false,
+      service: "hotelsvendors",
+      version: "v2",
+      releaseId: process.env.HV_RELEASE_ID ?? null,
+      sourceCommit: process.env.HV_SOURCE_SHA ?? null,
+      authorization: "unavailable",
+      time: new Date().toISOString(),
+    }, { status: 503 });
+  }
+
   try {
     const relations = await prisma.$queryRaw<Array<Record<string, string | null>>>`
       SELECT
@@ -29,6 +46,7 @@ export async function GET() {
       releaseId: process.env.HV_RELEASE_ID ?? null,
       sourceCommit: process.env.HV_SOURCE_SHA ?? null,
       database: "unavailable",
+      authorization: "configured",
       time: new Date().toISOString(),
     }, { status: 503 });
   }
@@ -40,6 +58,7 @@ export async function GET() {
     releaseId: process.env.HV_RELEASE_ID ?? null,
     sourceCommit: process.env.HV_SOURCE_SHA ?? null,
     database: "ready",
+    authorization: "configured",
     time: new Date().toISOString(),
   });
 }

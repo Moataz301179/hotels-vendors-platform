@@ -14,6 +14,7 @@ describe("production release gate", () => {
     expect(workflow).toContain('sourceCommit !== expectedSha');
     expect(workflow).toContain('releaseId !== `github-${expectedSha}`');
     expect(workflow).toContain('health.ok !== true');
+    expect(workflow).toContain('health.authorization !== "configured"');
   });
 
   it("builds and runs the release with the protected production Clerk credentials", () => {
