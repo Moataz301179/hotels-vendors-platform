@@ -19,23 +19,23 @@ export function SiteNav() {
   const menuId = useId();
   const button = useRef<HTMLButtonElement>(null);
   const platform = [
-    { href: "/platform", label: "How procurement connects" },
-    { href: "/marketplace", label: "Open supplier catalogue" },
-    { href: "/walkthrough", label: "See the product walkthrough" },
+    { href: "/platform", label: "Product overview" },
+    { href: "/walkthrough", label: "Procurement workflow" },
+    { href: "/marketplace", label: "Supplier catalogue" },
   ];
   const audiences = [
-    { href: "/hotels/join", label: "For hotels" },
-    { href: "/suppliers/join", label: "For suppliers" },
-    { href: "/contact", label: "Talk to sourcing" },
+    { href: "/hotels/join", label: "Hotels" },
+    { href: "/suppliers/join", label: "Suppliers" },
+    { href: "/contact", label: "Partner access" },
   ];
   function closeMenu() { setOpen(false); }
   return <nav className={styles.nav} aria-label="Main navigation" onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
     <div className={styles.inner}>
       <Link href="/" className={styles.brand} aria-label="HotelsVendors home"><Brand /></Link>
-      <div className={styles.desktop}><PublicDropdown title="How it works" links={platform}/><PublicDropdown title="Choose your workspace" links={audiences}/><Link href="/getting-started">Before you join</Link></div>
-      <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join network</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
+      <div className={styles.desktop}><PublicDropdown title="Platform" links={platform}/><PublicDropdown title="Network" links={audiences}/><Link href="/getting-started">Getting started</Link></div>
+      <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join HotelsVendors</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>
-    {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/getting-started",label:"Before you join"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
+    {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/getting-started",label:"Getting started"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
   </nav>;
 }
 
