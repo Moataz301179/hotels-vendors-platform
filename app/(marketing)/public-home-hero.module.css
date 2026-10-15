@@ -6,10 +6,11 @@
 }
 
 .hero h1 {
-  font-size: clamp(45px, 5.3vw, 72px) !important;
-  font-weight: 750;
-  letter-spacing: -.055em !important;
-  line-height: 1.05;
+  font-size: clamp(43px, 4.85vw, 68px) !important;
+  font-weight: 700;
+  letter-spacing: -.032em !important;
+  line-height: 1.08;
+  max-width: 13ch;
 }
 
 .heroVisual {
