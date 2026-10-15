@@ -17,7 +17,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: {
 import { GET, PATCH } from '@/app/api/v2/admin/catalog-reviews/route';
 
 const admin = { id: 'admin-1', tenantId: 'platform', platformRole: 'ADMIN' };
-const pendingProduct = { id: 'product-1', tenantId: 'supplier-tenant', status: 'INACTIVE', sourceKey: 'https://supplier.example/catalog/towels', supplier: { isVerified: true, status: 'ACTIVE' } };
+const pendingProduct = { id: 'product-1', tenantId: 'supplier-tenant', status: 'INACTIVE', sourceKey: 'https://supplier.example/catalog/towels', images: JSON.stringify(['https://supplier.example/media/towels.jpg']), supplier: { isVerified: true, status: 'ACTIVE', website: 'https://supplier.example' } };
 const request = (body: object) => new Request('https://hotelsvendors.com/api/v2/admin/catalog-reviews', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
 
 describe('catalog publication review', () => {

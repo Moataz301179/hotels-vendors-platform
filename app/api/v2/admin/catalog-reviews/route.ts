@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getActor } from '@/lib/v2-auth';
 import { appendAuditEntry } from '@/lib/audit/tamper-proof';
+import { isSupplierOwnedProductMedia, productImage } from '@/lib/catalog/owned-product-media';
 
 const decision = z.object({
   productId: z.string().min(1),
@@ -39,12 +40,13 @@ export async function PATCH(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'PRODUCT_ID_DECISION_AND_REVIEW_NOTE_REQUIRED' }, { status: 400 });
   const product = await prisma.product.findFirst({
     where: { id: parsed.data.productId, source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', status: 'INACTIVE', deletedAt: null },
-    select: { id: true, tenantId: true, status: true, sourceKey: true, supplier: { select: { isVerified: true, status: true } } },
+    select: { id: true, tenantId: true, status: true, sourceKey: true, images: true, supplier: { select: { isVerified: true, status: true, website: true } } },
   });
   if (!product) return NextResponse.json({ error: 'PENDING_CATALOG_ITEM_NOT_FOUND' }, { status: 404 });
   if (!product.supplier.isVerified || product.supplier.status !== 'ACTIVE') return NextResponse.json({ error: 'SUPPLIER_NOT_ELIGIBLE_FOR_PUBLICATION' }, { status: 409 });
   const evidence = await prisma.evidenceRecord.findFirst({ where: { entityId: product.id, entityName: 'PRODUCT', status: 'PENDING', deletedAt: null }, select: { id: true, sourceUrl: true } });
-  if (!evidence || !product.sourceKey || evidence.sourceUrl !== product.sourceKey) return NextResponse.json({ error: 'PRODUCT_EVIDENCE_NOT_REVIEWABLE' }, { status: 409 });
+  const imageUrl = productImage(product.images);
+  if (!evidence || !product.sourceKey || evidence.sourceUrl !== product.sourceKey || !imageUrl || !isSupplierOwnedProductMedia(imageUrl, product.sourceKey, product.supplier.website)) return NextResponse.json({ error: 'PRODUCT_EVIDENCE_NOT_REVIEWABLE' }, { status: 409 });
 
   const status = parsed.data.decision === 'APPROVE' ? 'ACTIVE' : 'INACTIVE';
   const evidenceStatus = parsed.data.decision === 'APPROVE' ? 'RESOLVED' : 'REJECTED';
