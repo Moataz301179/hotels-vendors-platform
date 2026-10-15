@@ -11,11 +11,13 @@ const m = vi.hoisted(() => ({
   permission: vi.fn(),
   transaction: vi.fn(),
   products: vi.fn(),
+  hotelTenant: vi.fn(),
 }));
 
 vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
 vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
 vi.mock("@/lib/auth/rbac", () => ({ requirePermission: m.permission, PermissionDeniedError: class PermissionDeniedError extends Error {} }));
+vi.mock("@/lib/admin/managed-hotel-tenants", () => ({ managedHotelTenant: m.hotelTenant }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   department: { findMany: m.departmentFindMany, findFirst: m.departmentFindFirst, create: m.departmentCreate },
   departmentCategoryAccess: { findMany: m.accessFindMany },
@@ -35,6 +37,7 @@ describe("governance routes", () => {
     vi.resetAllMocks();
     m.actor.mockResolvedValue(admin);
     m.permission.mockResolvedValue(undefined);
+    m.hotelTenant.mockResolvedValue({ id: "hotel-tenant" });
     m.audit.mockResolvedValue(undefined);
     m.transaction.mockImplementation((fn: Function) => fn({ department: { create: m.departmentCreate }, departmentCategoryAccess: { createMany: m.accessCreateMany } }));
     m.departmentFindMany.mockResolvedValue([]);
@@ -45,15 +48,15 @@ describe("governance routes", () => {
   });
 
   it("creates tenant-bound departments and audits the change", async () => {
-    const response = await createDepartment(request({ name: "Food and Beverage", code: "FNB" }));
+    const response = await createDepartment(request({ tenantId: "hotel-tenant", name: "Food and Beverage", code: "FNB" }));
     expect(response.status).toBe(201);
-    expect(m.departmentCreate.mock.calls[0][0].data).toMatchObject({ tenantId: "tenant-1", code: "FNB" });
-    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: "DEPARTMENT", tenantId: "tenant-1" }), expect.anything());
+    expect(m.departmentCreate.mock.calls[0][0].data).toMatchObject({ tenantId: "hotel-tenant", code: "FNB" });
+    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: "DEPARTMENT", tenantId: "hotel-tenant" }), expect.anything());
   });
 
   it("rejects non-admin department changes", async () => {
     m.actor.mockResolvedValue({ ...admin, platformRole: "HOTEL" });
-    expect((await createDepartment(request({ name: "F&B", code: "FNB" }))).status).toBe(403);
+    expect((await createDepartment(request({ tenantId: "hotel-tenant", name: "F&B", code: "FNB" }))).status).toBe(403);
     expect(m.departmentCreate).not.toHaveBeenCalled();
   });
 
