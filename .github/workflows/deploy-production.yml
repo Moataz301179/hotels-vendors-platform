@@ -35,6 +35,8 @@ jobs:
       - run: npx prisma generate
       - name: Initialize isolated deployment-gate database schema
         run: npx prisma db push --skip-generate
+      - name: Verify procurement schema gate against the isolated database
+        run: node scripts/verify-live-procurement-schema.mjs
       - run: npm test
       - name: Prove procurement lifecycle against the isolated database
         run: npm run test:integration
@@ -54,6 +56,7 @@ jobs:
           tar -C .next/standalone -cf hv-release.tar .
           tar -C .next --transform='s,^static,.next/static,' -rf hv-release.tar static
           tar -C . -rf hv-release.tar public
+          tar -C . -rf hv-release.tar scripts/verify-live-procurement-schema.mjs
           tar -C . -rf hv-release.tar deploy/pm2/start-protected.sh
           gzip hv-release.tar
           mv hv-release.tar.gz hv-release.tgz
@@ -124,6 +127,10 @@ jobs:
           set +a
           case "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" in pk_live_*) ;; *) echo "Refusing to deploy without a live Clerk publishable key" >&2; exit 1;; esac
           case "$CLERK_SECRET_KEY" in sk_live_*) ;; *) echo "Refusing to deploy without a live Clerk secret key" >&2; exit 1;; esac
+          (
+            cd "$RELEASE"
+            node scripts/verify-live-procurement-schema.mjs
+          )
           (
             cd "$RELEASE"
             HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env" HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3010 HOSTNAME=127.0.0.1 NODE_ENV=production bash deploy/pm2/start-protected.sh > preflight.log 2>&1 &
