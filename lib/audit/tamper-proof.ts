@@ -238,14 +238,24 @@ export async function exportAuditLog(params: {
   };
 }
 
-/** Verify this tenant's record hashes without reading or returning another tenant's records.
- * This checks record integrity, not completeness of the global chain or external anchoring.
+/**
+ * Verify the global hash sequence while returning only an organization's result.
+ *
+ * An audit entry's previousHash refers to the preceding entry in the global
+ * append-only sequence, not the preceding entry for the same tenant. Reading
+ * only one tenant's rows therefore makes a legitimate interleaved sequence
+ * appear invalid. This routine keeps other organizations' rows internal and
+ * reports no cross-tenant details to the caller.
  */
 export async function verifyTenantAuditRecords(tenantId: string): Promise<{valid:boolean;totalEntries:number}> {
- const entries=await prisma.auditLog.findMany({where:{tenantId},orderBy:{createdAt:'asc'}});
+ const entries=await prisma.auditLog.findMany({orderBy:{createdAt:'asc'},select:{id:true,tenantId:true,entityName:true,entityId:true,actionType:true,actorId:true,actorRole:true,changes:true,ipAddress:true,userAgent:true,createdAt:true,previousHash:true,hash:true}});
+ let previousHash='genesis';
+ let totalEntries=0;
  for(const entry of entries){
-  const expected=computeEntryHash({id:entry.id,entityName:entry.entityName,entityId:entry.entityId,actionType:entry.actionType,actorId:entry.actorId,actorRole:entry.actorRole,changes:entry.changes?stableStringify(entry.changes):null,ipAddress:entry.ipAddress,userAgent:entry.userAgent,createdAt:entry.createdAt,previousHash:entry.previousHash??'genesis'});
-  if(entry.hash!==expected)return {valid:false,totalEntries:entries.length};
+  const expected=computeEntryHash({id:entry.id,entityName:entry.entityName,entityId:entry.entityId,actionType:entry.actionType,actorId:entry.actorId,actorRole:entry.actorRole,changes:entry.changes?stableStringify(entry.changes):null,ipAddress:entry.ipAddress,userAgent:entry.userAgent,createdAt:entry.createdAt,previousHash});
+  if(entry.tenantId===tenantId)totalEntries++;
+  if(entry.hash!==expected)return {valid:false,totalEntries};
+  previousHash=entry.hash??'';
  }
- return {valid:true,totalEntries:entries.length};
+ return {valid:true,totalEntries};
 }
