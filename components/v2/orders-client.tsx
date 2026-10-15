@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useCallback,useEffect,useState} from 'react';
 import {requestJson} from '@/lib/v2-http';
 
 type Item={id:string;quantity:number;receivedQuantity:number|null;product:{name:string;sku:string}};
@@ -12,11 +12,11 @@ const label:Record<string,string>={APPROVED:"Approve",REJECTED:"Reject",CONFIRME
 
 export function OrdersClient(){
  const [rows,setRows]=useState<Order[]|null>(null),[hotelTenants,setHotelTenants]=useState<HotelTenant[]>([]),[hotelTenantId,setHotelTenantId]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[receiving,setReceiving]=useState<Order|null>(null),[lines,setLines]=useState<ReceiptLine[]>([]);
- async function fetchOrders(tenantId=hotelTenantId){return requestJson<OrdersResponse>(`/api/v2/orders${tenantId?`?tenantId=${encodeURIComponent(tenantId)}`:''}`)}
- function applyOrders(data:OrdersResponse){setRows(data.orders);setHotelTenants(data.tenants??[]);if(!hotelTenantId&&data.tenants?.[0])setHotelTenantId(data.tenants[0].id)}
- async function refresh(){applyOrders(await fetchOrders())}
- useEffect(()=>{let cancelled=false;fetchOrders('').then(x=>{if(!cancelled)applyOrders(x)}).catch(e=>{if(!cancelled)setError(e.message)});return()=>{cancelled=true}},[]);
- useEffect(()=>{if(!hotelTenantId)return;let cancelled=false;fetchOrders(hotelTenantId).then(x=>{if(!cancelled)applyOrders(x)}).catch(e=>{if(!cancelled)setError(e.message)});return()=>{cancelled=true}},[hotelTenantId]);
+ const fetchOrders=useCallback(async (tenantId='')=>requestJson<OrdersResponse>(`/api/v2/orders${tenantId?`?tenantId=${encodeURIComponent(tenantId)}`:''}`),[]);
+ const applyOrders=useCallback((data:OrdersResponse)=>{setRows(data.orders);setHotelTenants(data.tenants??[]);setHotelTenantId(current=>current||data.tenants?.[0]?.id||'')},[]);
+ const refresh=useCallback(async()=>applyOrders(await fetchOrders(hotelTenantId)),[applyOrders,fetchOrders,hotelTenantId]);
+ useEffect(()=>{let cancelled=false;fetchOrders('').then(x=>{if(!cancelled)applyOrders(x)}).catch(e=>{if(!cancelled)setError(e.message)});return()=>{cancelled=true}},[applyOrders,fetchOrders]);
+ useEffect(()=>{if(!hotelTenantId)return;let cancelled=false;fetchOrders(hotelTenantId).then(x=>{if(!cancelled)applyOrders(x)}).catch(e=>{if(!cancelled)setError(e.message)});return()=>{cancelled=true}},[applyOrders,fetchOrders,hotelTenantId]);
  async function advance(order:Order,status:string){setBusy(true);try{await requestJson('/api/v2/orders',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id:order.id,status})});await refresh();setError('')}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function guarantee(order:Order){setBusy(true);try{await requestJson('/api/v2/orders/guarantee',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order.id,tenantId:hotelTenantId,method:'DIRECT',etaValidated:false})});setNotice(`Payment guarantee recorded for ${order.orderNumber}.`);setError('');await refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  function beginReceipt(order:Order){setReceiving(order);setNotice('');setLines(order.items.map(item=>({orderItemId:item.id,receivedQuantity:0,acceptedQuantity:0,rejectionReason:'',conditionNotes:''})))}
