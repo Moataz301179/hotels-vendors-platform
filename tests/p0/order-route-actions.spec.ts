@@ -29,4 +29,19 @@ describe("order action boundary", () => {
     expect(await response.json()).toEqual({ error: "GRN_RECEIPT_REQUIRED" });
     expect(m.transaction).not.toHaveBeenCalled();
   });
+
+  it("requires a future supplier delivery commitment before dispatch", async () => {
+    m.actor.mockResolvedValue({ id: "supplier-user", tenantId: "supplier-tenant", supplierId: "supplier-a", platformRole: "SUPPLIER", role: "CLERK" });
+    m.order.mockResolvedValue({ id: "order-a", tenantId: "hotel-a", supplierId: "supplier-a", status: "CONFIRMED", paymentGuaranteed: true, approvalPolicySnapshot: null, approvals: [] });
+
+    const response = await PATCH(new Request("https://hotelsvendors.com/api/v2/orders", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id: "order-a", status: "IN_TRANSIT" }),
+    }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "A future delivery commitment is required before dispatch." });
+    expect(m.transaction).not.toHaveBeenCalled();
+  });
 });

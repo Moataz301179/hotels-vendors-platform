@@ -40,6 +40,8 @@ export async function POST(req:Request){
 export async function PATCH(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});
  const b=await req.json().catch(()=>null);if(typeof b?.id!=='string'||typeof b?.status!=='string')return NextResponse.json({error:'Order ID and status are required'},{status:400});
+ const estimatedDelivery=b.status==='IN_TRANSIT'&&typeof b.estimatedDelivery==='string'?new Date(b.estimatedDelivery):null;
+ if(b.status==='IN_TRANSIT'&&(!estimatedDelivery||!Number.isFinite(estimatedDelivery.getTime())||estimatedDelivery<=new Date()))return NextResponse.json({error:'A future delivery commitment is required before dispatch.'},{status:400});
  const order=await prisma.order.findFirst({where:{id:b.id,deletedAt:null,...(user.platformRole==='SUPPLIER'?{supplierId:user.supplierId||'__unassigned__'}:{tenantId:user.tenantId})},include:{approvals:{where:{deletedAt:null},select:{approverId:true,action:true}}}});
  if(!order)return NextResponse.json({error:'Order not found'},{status:404});
  if(!orderActions(user,order).includes(b.status))return NextResponse.json({error:'Your role cannot perform this order action'},{status:403});
@@ -66,8 +68,8 @@ export async function PATCH(req:Request){
   if(!authority.allowed)return NextResponse.json({error:authority.reason},{status:409});
  }
  const result=await prisma.$transaction(async tx=>{
-  const changed=await tx.order.updateMany({where:{id:order.id,status:order.status,deletedAt:null},data:{status:b.status}});
-  if(changed.count===1)await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'STATUS_CHANGED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{from:order.status,to:b.status}},tx);
+  const changed=await tx.order.updateMany({where:{id:order.id,status:order.status,deletedAt:null},data:{status:b.status,...(estimatedDelivery?{estimatedDelivery}:{})}});
+  if(changed.count===1)await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'STATUS_CHANGED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{from:order.status,to:b.status,...(estimatedDelivery?{estimatedDelivery:estimatedDelivery.toISOString()}:{}),}},tx);
   return changed;
  });
  if(result.count!==1)return NextResponse.json({error:'The order changed. Refresh before acting.'},{status:409});
