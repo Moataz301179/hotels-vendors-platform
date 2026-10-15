@@ -34,6 +34,15 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
       - run: npm test
+      - name: Lint financial-control and audit paths
+        run: >-
+          npx eslint
+          app/api/v2/grn/route.ts
+          app/api/v2/orders/route.ts
+          app/api/v2/orders/guarantee/route.ts
+          lib/audit/tamper-proof.ts
+          lib/logistics/grn-acceptance.ts
+          lib/v2-order-actions.ts
       - run: npm run build
       - name: Package standalone release
         run: |
