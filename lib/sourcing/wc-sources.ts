@@ -37,6 +37,16 @@ export interface WpRestProduct {
   categories?: { id: number; name?: string; slug?: string }[];
   _embedded?: {
     "wp:term"?: Array<Array<{ name?: string; slug?: string }>>;
+    /**
+     * WordPress returns this when the catalogue request includes `_embed=1`.
+     * We only retain media served from the same supplier domain so a listing
+     * cannot silently acquire an unrelated image from an arbitrary host.
+     */
+    "wp:featuredmedia"?: Array<{
+      source_url?: string;
+      mime_type?: string;
+      alt_text?: string;
+    }>;
   };
   [key: string]: unknown;
 }
@@ -188,6 +198,21 @@ function collectTerms(p: WpRestProduct): string {
   return parts.join(" ");
 }
 
+function supplierOwnedImages(raw: WpRestProduct, source: WcSource): string[] | undefined {
+  const supplierHost = new URL(source.baseUrl).hostname.toLowerCase();
+  const images = (raw._embedded?.["wp:featuredmedia"] ?? []).flatMap((media) => {
+    if (!media.source_url || !media.mime_type?.startsWith("image/")) return [];
+    try {
+      const image = new URL(media.source_url);
+      if (image.protocol !== "https:" || image.hostname.toLowerCase() !== supplierHost) return [];
+      return [image.toString()];
+    } catch {
+      return [];
+    }
+  });
+  return images.length ? [...new Set(images)] : undefined;
+}
+
 /**
  * Normalize a single public WP REST product row into a typed ProductCandidate.
  * Handles title.rendered / content.rendered (HTML → plain text), link as external page,
@@ -223,7 +248,7 @@ export function toProductCandidate(
     currency: "EGP",
     stockQuantity,
     supplierName: source.name,
-    images: undefined,
+    images: supplierOwnedImages(raw, source),
     attributes: {
       priceAvailable,
       priceCurrency: priceAvailable ? "EGP" : undefined,
@@ -250,6 +275,9 @@ export async function fetchCatalog(
   const url = new URL(source.catalogApiUrl);
   url.searchParams.set("page", String(page));
   url.searchParams.set("per_page", String(perPage));
+  // WordPress exposes product media through the embedded featured-media object.
+  // Without this flag, importing a catalogue silently discards source-owned images.
+  url.searchParams.set("_embed", "1");
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 25000);

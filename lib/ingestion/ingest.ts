@@ -8,7 +8,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { getProductImage } from "@/lib/marketplace/product-images";
+import { ProductCategory } from "@prisma/client";
 
 /* ── 1. Scraper Engine interface ─────────────────────────────────────────── */
 export interface ScraperSource {
@@ -107,7 +107,8 @@ export interface EnrichedProduct {
   description: string;
   unit: string;
   unitPrice: number;
-  imageURL: string;
+  /** Present only when the source supplied a secure product-specific image. */
+  imageURL?: string;
   sku: string;
   supplierName: string;
 }
@@ -120,10 +121,9 @@ export function enrichProduct(raw: EnrichmentInput, supplierTenantId: string): E
   const unitPrice = parseEGP(raw.priceEGP);
   const sku = raw.sku || `HV-${category}-${Math.abs(hash(title)).toString(36).toUpperCase().slice(0, 8)}`;
 
-  // Image: use scraped one if valid http, else category-accurate resolver fallback
-  const imgURL = raw.imageURL && /^https?:/.test(raw.imageURL)
-    ? raw.imageURL
-    : (() => { const r = getProductImage({ name: title, category }); return r.type === "url" ? r.src : ""; })();
+  // Product media is evidence, not visual decoration. A generic category photo
+  // can misrepresent the SKU, so missing or non-secure supplier media remains absent.
+  const imgURL = raw.imageURL && /^https:\/\//i.test(raw.imageURL) ? raw.imageURL : undefined;
 
   const description = `${title} — ${category} hospitality supply item, ${unit} unit.`;
 
@@ -141,13 +141,13 @@ export async function upsertCatalog(products: EnrichedProduct[], supplierTenantI
       if (existing) {
         await prisma.product.update({
           where: { id: existing.id },
-          data: { name: p.title, description: p.description, category: p.category as any, unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined },
+          data: { name: p.title, description: p.description, category: p.category as ProductCategory, unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined },
         });
         updated++;
       } else {
         await prisma.product.create({
           data: {
-            sku: p.sku, name: p.title, description: p.description, category: p.category as any,
+            sku: p.sku, name: p.title, description: p.description, category: p.category as ProductCategory,
             unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined,
             stockQuantity: 100,
             tenantId: supplierTenantId, supplierId,
