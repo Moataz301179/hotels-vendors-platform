@@ -95,6 +95,14 @@ describe('supplier quote submission boundary', () => {
     expect(m.grant.mock.calls[0][0].where).toMatchObject({ rfqId: 'rfq-a', supplierId: 'supplier-a', supplierTenantId: 'supplier-tenant' });
     expect(m.rfq.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a' });
     expect(m.updateMany.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a', status: 'PENDING' });
+    expect(m.quoteCreate.mock.calls[0][0].data).toMatchObject({ deliveryFee: 10, taxAmount: 5 });
+  });
+
+  it('does not create a commercially incomplete quote when delivery or tax is not stated', async () => {
+    const response = await submitQuote(request({ rfqId: 'rfq-a', unitPrice: 125, quantity: 2, deliveryFee: 10 }));
+    expect(response.status).toBe(400);
+    expect(m.grant).not.toHaveBeenCalled();
+    expect(m.quoteCreate).not.toHaveBeenCalled();
   });
 
   it('rejects a supplier response whose quantity does not match the assigned RFQ', async () => {

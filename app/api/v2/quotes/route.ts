@@ -7,7 +7,7 @@ import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
 import { z } from "zod";
 
-const quoteInput=z.object({rfqId:z.string().min(1),unitPrice:z.number().finite().positive().max(10_000_000),quantity:z.number().int().positive().max(1_000_000),deliveryFee:z.number().finite().min(0).max(1_000_000).optional(),taxAmount:z.number().finite().min(0).max(1_000_000).optional(),leadTimeDays:z.number().int().positive().max(365).optional(),validUntil:z.coerce.date().optional(),notes:z.string().trim().max(2000).optional()});
+const quoteInput=z.object({rfqId:z.string().min(1),unitPrice:z.number().finite().positive().max(10_000_000),quantity:z.number().int().positive().max(1_000_000),deliveryFee:z.number().finite().min(0).max(1_000_000),taxAmount:z.number().finite().min(0).max(1_000_000),leadTimeDays:z.number().int().positive().max(365).optional(),validUntil:z.coerce.date().optional(),notes:z.string().trim().max(2000).optional()});
 
 async function requireProcurementPermission(user:{id:string;tenantId:string;platformRole:string},code:string,errorCode:string){
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},code);return null;}
@@ -50,7 +50,7 @@ export async function POST(req:Request){
  try{const quote=await prisma.$transaction(async tx=>{
   const claimed=await tx.rfqRequest.updateMany({where:{id:rfq.id,tenantId:grant.hotelTenantId,supplierId:supplier.id,status:'PENDING',deletedAt:null},data:{status:"QUOTED"}});
   if(claimed.count!==1)throw new Error('RFQ_ALREADY_QUOTED');
-  const created=await tx.procurementQuote.create({data:{rfqId,tenantId:rfq.tenantId,supplierId:supplier.id,buyerId:rfq.buyerId,unitPrice,quantity,currency:"EGP",leadTimeDays:b?.leadTimeDays?Number(b.leadTimeDays):undefined,deliveryFee:b?.deliveryFee===undefined?undefined:Number(b.deliveryFee),taxAmount:b?.taxAmount===undefined?undefined:Number(b.taxAmount),validUntil:b?.validUntil?new Date(b.validUntil):undefined,notes:b?.notes||undefined}});
+  const created=await tx.procurementQuote.create({data:{rfqId,tenantId:rfq.tenantId,supplierId:supplier.id,buyerId:rfq.buyerId,unitPrice,quantity,currency:"EGP",leadTimeDays:b?.leadTimeDays?Number(b.leadTimeDays):undefined,deliveryFee:Number(b.deliveryFee),taxAmount:Number(b.taxAmount),validUntil:b?.validUntil?new Date(b.validUntil):undefined,notes:b?.notes||undefined}});
   await appendAuditEntry({entityName:"PROCUREMENT_QUOTE",entityId:created.id,actionType:"SUBMITTED",tenantId:rfq.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{rfqId,unitPrice,quantity,supplierId:user.supplierId}},tx);
   return created;
  });
