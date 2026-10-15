@@ -10,6 +10,7 @@ const m = vi.hoisted(() => ({
   quotes: vi.fn(),
   rfq: vi.fn(),
   product: vi.fn(),
+  products: vi.fn(),
   quoteCreate: vi.fn(),
   updateMany: vi.fn(),
   audit: vi.fn(),
@@ -27,7 +28,7 @@ vi.mock('@/lib/prisma', () => ({
     supplier: { findFirst: m.supplier },
     rfqSupplierAccess: { findFirst: m.grant, findMany: m.grants },
     rfqRequest: { findFirst: m.rfq },
-    product: { findFirst: m.product },
+    product: { findFirst: m.product, findMany: m.products },
     procurementQuote: { findMany: m.quotes },
     $transaction: m.transaction,
   },
@@ -51,6 +52,7 @@ describe('supplier quote submission boundary', () => {
     m.quotes.mockResolvedValue([]);
     m.rfq.mockResolvedValue({ id: 'rfq-a', productId: 'product-a', supplierId: 'supplier-a', buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING' });
     m.product.mockResolvedValue({ id: 'product-a' });
+    m.products.mockResolvedValue([]);
     m.quoteCreate.mockResolvedValue({ id: 'quote-a', ...quote });
     m.updateMany.mockResolvedValue({ count: 1 });
     m.audit.mockResolvedValue('audit-a');
@@ -138,6 +140,29 @@ describe('supplier quote submission boundary', () => {
     expect(response.status).toBe(200);
     expect(m.grants.mock.calls[0][0].where).toMatchObject({ supplierId: 'supplier-a', supplierTenantId: 'supplier-tenant', revokedAt: null });
     expect(m.quotes.mock.calls[0][0].where).toMatchObject({ supplierId: 'supplier-a', rfqId: { in: ['rfq-a'] } });
+  });
+
+  it('gives the buying hotel the verified supplier and requested product context for a tenant-scoped quote', async () => {
+    m.actor.mockResolvedValue({ id: 'buyer-a', tenantId: 'hotel-tenant', platformRole: 'HOTEL' });
+    m.quotes.mockResolvedValue([{
+      id: 'quote-a', unitPrice: 125, quantity: 2, deliveryFee: 10, taxAmount: 5, currency: 'EGP',
+      supplier: { id: 'supplier-a', name: 'Verified Supplier', isVerified: true },
+      rfq: { id: 'rfq-a', productId: 'product-a', requestedQty: 2, status: 'QUOTED', tenantId: 'hotel-tenant', product: { id: 'product-a', name: 'Bath towel', sku: 'TOWEL-01', unitOfMeasure: 'piece' } },
+    }]);
+    m.products.mockResolvedValue([{ id: 'product-a', name: 'Bath towel', sku: 'TOWEL-01', unitOfMeasure: 'piece' }]);
+
+    const response = await listQuotes();
+    expect(response.status).toBe(200);
+    expect(m.quotes.mock.calls[0][0].where).toMatchObject({ tenantId: 'hotel-tenant', deletedAt: null });
+    expect(m.quotes.mock.calls[0][0].include).toMatchObject({
+      supplier: { select: { id: true, name: true, isVerified: true } },
+      rfq: { select: { id: true, productId: true, requestedQty: true, status: true, tenantId: true } },
+    });
+    expect((await response.json()).quotes[0]).toMatchObject({
+      supplier: { id: 'supplier-a', name: 'Verified Supplier', isVerified: true },
+      rfq: { product: { name: 'Bath towel', sku: 'TOWEL-01' } },
+      cost: { productCost: 250, deliveryCost: 10, taxCost: 5, totalCost: 265 },
+    });
   });
 
   it('returns a conflict and creates no quote when another response claimed the RFQ first', async () => {

@@ -28,8 +28,13 @@ export async function GET(){
   :null;
  const where=grants?{supplierId:user.supplierId!,rfqId:{in:grants.map(grant=>grant.rfqId)},deletedAt:null}:{tenantId:user.tenantId,deletedAt:null};
  const quotes=await prisma.procurementQuote.findMany({where,include:{rfq:{select:{id:true,productId:true,requestedQty:true,status:true,tenantId:true}},supplier:{select:{id:true,name:true,isVerified:true}}},orderBy:{submittedAt:"desc"},take:100});
- if(user.platformRole==='SUPPLIER')return NextResponse.json({quotes});
- return NextResponse.json({quotes:quotes.map(({supplier,...quote})=>{void supplier;return {...quote,cost:costBreakdown(quote)}})});
+ const productIds=[...new Set(quotes.map(quote=>quote.rfq.productId))];
+ const supplierIds=[...new Set(quotes.map(quote=>quote.supplierId))];
+ const products=productIds.length?await prisma.product.findMany({where:{id:{in:productIds},supplierId:{in:supplierIds},deletedAt:null},select:{id:true,name:true,sku:true,unitOfMeasure:true}}):[];
+ const productById=new Map(products.map(product=>[product.id,product]));
+ const contextualized=quotes.map(quote=>({...quote,rfq:{...quote.rfq,product:productById.get(quote.rfq.productId)??null}}));
+ if(user.platformRole==='SUPPLIER')return NextResponse.json({quotes:contextualized});
+ return NextResponse.json({quotes:contextualized.map((quote)=>({...quote,cost:costBreakdown(quote)}))});
 }
 export async function POST(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
