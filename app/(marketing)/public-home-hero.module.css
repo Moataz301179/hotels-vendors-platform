@@ -6,11 +6,12 @@
 }
 
 .hero h1 {
-  font-size: clamp(43px, 4.85vw, 68px) !important;
-  font-weight: 700;
-  letter-spacing: -.032em !important;
-  line-height: 1.08;
-  max-width: 13ch;
+  font-size: clamp(46px, 5.2vw, 74px) !important;
+  font-weight: 800;
+  letter-spacing: -.052em !important;
+  line-height: .98;
+  max-width: 12.5ch;
+  text-wrap: balance;
 }
 
 .heroVisual {
@@ -26,6 +27,6 @@
 }
 
 @media (max-width: 650px) {
-  .hero h1 { font-size: clamp(39px, 11vw, 55px) !important; }
+  .hero h1 { font-size: clamp(42px, 11vw, 58px) !important; }
   .heroVisual { aspect-ratio: 16 / 10; }
 }
