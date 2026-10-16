@@ -17,7 +17,7 @@ export function HovinReceivingPreview() {
 
   return <section className={styles.preview} aria-label="HOVIN receiving workflow">
     <div className={styles.stage}>
-      <Image className={styles.photo} src="/hovin-delivery-verification.jpg" alt="Hotel receiving manager verifying a hospitality delivery at the service entrance" fill sizes="(max-width: 950px) calc(100vw - 34px), 58vw" />
+      <Image className={styles.photo} src="/hovin-delivery-verification.png" alt="Hotel receiving manager verifying a hospitality delivery at the service entrance" fill sizes="(max-width: 950px) calc(100vw - 34px), 58vw" />
       <div className={styles.veil} aria-hidden="true" />
       <header className={styles.stageHeader}><span>HOVIN / FIELD RECEIVING</span><span>Illustrative field moment</span></header>
       <div className={styles.record}>
