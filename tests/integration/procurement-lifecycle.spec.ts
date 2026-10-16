@@ -106,6 +106,22 @@ describe('procurement lifecycle against the isolated database', () => {
     await prisma.$disconnect();
   });
 
+  it('blocks hotel sourcing until tax verification is complete', async () => {
+    const beforeCount = await prisma.rfqRequest.count({ where: { tenantId: ids.hotelTenant } });
+    await prisma.tenant.update({ where: { id: ids.hotelTenant }, data: { verificationStatus: 'PENDING' } });
+
+    try {
+      asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+      const response = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId, quantity: 1 }));
+
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toEqual({ error: 'TAX_ID_VERIFICATION_REQUIRED' });
+      await expect(prisma.rfqRequest.count({ where: { tenantId: ids.hotelTenant } })).resolves.toBe(beforeCount);
+    } finally {
+      await prisma.tenant.update({ where: { id: ids.hotelTenant }, data: { verificationStatus: 'VERIFIED' } });
+    }
+  });
+
   it('persists request, quote, order, payment gate, approval, dispatch, and receipt', async () => {
     asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
     const rfqResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId, quantity: 4 }));
