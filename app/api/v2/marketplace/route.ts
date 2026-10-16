@@ -3,6 +3,23 @@ import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { resolvedProductEvidenceIds } from "@/lib/catalog/resolved-product-evidence";
 
+function publicImageUrls(images: string | null) {
+  try {
+    const parsed: unknown = JSON.parse(images ?? '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((image) => {
+      const url = typeof image === 'string'
+        ? image
+        : image && typeof image === 'object' && 'url' in image && typeof image.url === 'string'
+          ? image.url
+          : null;
+      return url && /^https?:\/\//i.test(url) ? [url] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(req: Request) {
   const user = await getActor();
   if (!user) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
@@ -20,6 +37,6 @@ export async function GET(req: Request) {
   const eligibleProductIds = await resolvedProductEvidenceIds(prisma, products);
   return NextResponse.json({products:products.filter(product => eligibleProductIds.has(product.id)).map(({images,sourceKey,...product})=>({
     ...product,
-    images: (() => { try { const parsed=JSON.parse(images??'[]'); return Array.isArray(parsed) ? parsed.filter((image): image is string => typeof image==='string' && /^https?:\/\//i.test(image)) : []; } catch { return []; } })()
+    images: publicImageUrls(images)
   }))});
 }
