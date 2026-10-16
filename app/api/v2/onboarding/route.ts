@@ -30,25 +30,30 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Enter valid organization details and a tax ID where required' }, { status: 400 });
   const b = parsed.data;
   if (!b.name || !b.city || !b.governorate || (u.platformRole !== 'SHIPPING' && !b.taxId)) return NextResponse.json({ error: 'name, city and governorate are required; taxId is required for this actor type' }, { status: 400 });
-  if (u.platformRole === 'HOTEL' || u.platformRole === 'SUPPLIER' || u.platformRole === 'FACTORING') {
-    await prisma.tenant.update({ where: { id: u.tenantId }, data: { name: b.name, legalName: b.name, taxId: b.taxId, verificationStatus: 'PENDING', verifiedAt: null, verifiedBy: null } });
-  }
-  let resource: { id: string } | null = null;
   if (u.platformRole === 'HOTEL' && await prisma.hotel.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your hotel profile is already connected. Refresh the page.' }, { status: 409 });
   if (u.platformRole === 'SUPPLIER' && await prisma.supplier.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your supplier profile is already connected. Refresh the page.' }, { status: 409 });
-  if (u.platformRole === 'HOTEL') {
-    const hotel = await prisma.hotel.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email } });
-    await prisma.user.update({ where: { id: u.id }, data: { hotelId: hotel.id } });
-    resource = hotel;
-  }
-  else if (u.platformRole === 'SUPPLIER') {
-    const supplier = await prisma.supplier.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email, status: 'ACTIVE', isVerified: false } });
-    await prisma.user.update({ where: { id: u.id }, data: { supplierId: supplier.id } });
-    resource = supplier;
-  } else if (u.platformRole === 'SHIPPING') resource = await prisma.carrierProfile.create({ data: { userId: u.id, tenantId: u.tenantId, city: b.city, governorate: b.governorate, address: b.address || undefined, taxId: b.taxId || undefined, vehicleCount: 1, zones: [], vehicleTypes: [], status: 'PENDING_VERIFICATION' } });
-  else if (u.platformRole === 'FACTORING') resource = await prisma.factoringCompany.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, contactEmail: u.email, contactPhone: b.phone || undefined } });
-  else return NextResponse.json({ error: 'Unsupported onboarding actor' }, { status: 400 });
-  const progress = await prisma.onboardingProgress.upsert({ where: { userId: u.id }, create: { userId: u.id, tenantId: u.tenantId, platformRole: u.platformRole, overallStatus: 'COMPLETED', completedAt: new Date() }, update: { overallStatus: 'COMPLETED', completedAt: new Date() } });
-  await appendAuditEntry({ entityName: 'ONBOARDING', entityId: resource.id, actionType: 'COMPLETED', tenantId: u.tenantId, actorId: u.id, actorRole: u.platformRole, changes: { actorType: u.platformRole, pendingVerification: u.status === 'PENDING_VERIFICATION' } });
-  return NextResponse.json({ resource, progress, pendingVerification: u.status === 'PENDING_VERIFICATION' }, { status: 201 });
+  if (!['HOTEL', 'SUPPLIER', 'SHIPPING', 'FACTORING'].includes(u.platformRole)) return NextResponse.json({ error: 'Unsupported onboarding actor' }, { status: 400 });
+  const result = await prisma.$transaction(async tx => {
+    if (u.platformRole === 'HOTEL' || u.platformRole === 'SUPPLIER' || u.platformRole === 'FACTORING') {
+      await tx.tenant.update({ where: { id: u.tenantId }, data: { name: b.name, legalName: b.name, taxId: b.taxId, verificationStatus: 'PENDING', verifiedAt: null, verifiedBy: null } });
+    }
+    let resource: { id: string };
+    if (u.platformRole === 'HOTEL') {
+      const hotel = await tx.hotel.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email } });
+      await tx.user.update({ where: { id: u.id }, data: { hotelId: hotel.id } });
+      resource = hotel;
+    } else if (u.platformRole === 'SUPPLIER') {
+      const supplier = await tx.supplier.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email, status: 'ACTIVE', isVerified: false } });
+      await tx.user.update({ where: { id: u.id }, data: { supplierId: supplier.id } });
+      resource = supplier;
+    } else if (u.platformRole === 'SHIPPING') {
+      resource = await tx.carrierProfile.create({ data: { userId: u.id, tenantId: u.tenantId, city: b.city, governorate: b.governorate, address: b.address || undefined, taxId: b.taxId || undefined, vehicleCount: 1, zones: [], vehicleTypes: [], status: 'PENDING_VERIFICATION' } });
+    } else {
+      resource = await tx.factoringCompany.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, contactEmail: u.email, contactPhone: b.phone || undefined } });
+    }
+    const progress = await tx.onboardingProgress.upsert({ where: { userId: u.id }, create: { userId: u.id, tenantId: u.tenantId, platformRole: u.platformRole, overallStatus: 'COMPLETED', completedAt: new Date() }, update: { overallStatus: 'COMPLETED', completedAt: new Date() } });
+    await appendAuditEntry({ entityName: 'ONBOARDING', entityId: resource.id, actionType: 'COMPLETED', tenantId: u.tenantId, actorId: u.id, actorRole: u.platformRole, changes: { actorType: u.platformRole, pendingVerification: u.status === 'PENDING_VERIFICATION' } }, tx);
+    return { resource, progress };
+  });
+  return NextResponse.json({ ...result, pendingVerification: u.status === 'PENDING_VERIFICATION' }, { status: 201 });
 }

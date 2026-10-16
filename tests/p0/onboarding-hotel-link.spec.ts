@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   userUpdate: vi.fn(),
   progressUpsert: vi.fn(),
   audit: vi.fn(),
+  transaction: vi.fn(),
 }));
 
 vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
@@ -17,6 +18,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
   hotel: { findFirst: m.hotelFind, create: m.hotelCreate },
   user: { update: m.userUpdate },
   onboardingProgress: { upsert: m.progressUpsert },
+  $transaction: m.transaction,
 } }));
 
 import { POST } from "@/app/api/v2/onboarding/route";
@@ -28,6 +30,12 @@ describe("hotel onboarding", () => {
     m.hotelFind.mockResolvedValue(null);
     m.hotelCreate.mockResolvedValue({ id: "hotel-record" });
     m.progressUpsert.mockResolvedValue({ id: "progress-record" });
+    m.transaction.mockImplementation((callback) => callback({
+      tenant: { update: m.tenantUpdate },
+      hotel: { create: m.hotelCreate },
+      user: { update: m.userUpdate },
+      onboardingProgress: { upsert: m.progressUpsert },
+    }));
   });
 
   it("links the onboarding member to the hotel record it creates", async () => {
@@ -40,6 +48,6 @@ describe("hotel onboarding", () => {
     expect(response.status).toBe(201);
     expect(m.hotelCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ tenantId: "hotel-tenant", taxId: "EG-123" }) }));
     expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "hotel-user" }, data: { hotelId: "hotel-record" } });
-    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: "ONBOARDING", entityId: "hotel-record", tenantId: "hotel-tenant" }));
+    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: "ONBOARDING", entityId: "hotel-record", tenantId: "hotel-tenant" }), expect.anything());
   });
 });
