@@ -270,6 +270,7 @@ describe('procurement lifecycle against the isolated database', () => {
     expect(storedOrder.items[0]?.receivedQuantity).toBe(4);
     expect(receipts).toHaveLength(1);
     await expect(prisma.evidenceRecord.findMany({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', sourceUrl: 'https://supplier.example.test/receipts/lifecycle.jpg' } })).resolves.toHaveLength(1);
+    await expect(prisma.auditLog.findFirst({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', actionType: 'CREATED' }, select: { changes: true } })).resolves.toMatchObject({ changes: expect.objectContaining({ orderId: order.id, evidenceRecordIds: expect.any(Array) }) });
     expect(auditRecords.length).toBeGreaterThanOrEqual(5);
   });
 

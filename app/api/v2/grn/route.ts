@@ -121,6 +121,21 @@ export async function POST(req: Request) {
       });
       if (changed.count !== 1) throw new Error("ORDER_CHANGED");
       await appendAuditEntry({
+        entityName: "GOODS_RECEIPT_NOTE",
+        entityId: grn.id,
+        actionType: "CREATED",
+        tenantId: order.tenantId,
+        actorId: actor.id,
+        actorRole: actor.platformRole,
+        changes: {
+          orderId: order.id,
+          grnNumber: grn.grnNumber,
+          grnStatus: grn.status,
+          lineItemCount: grn.lineItems.length,
+          evidenceRecordIds: evidence.map((record) => record.id),
+        },
+      }, tx);
+      await appendAuditEntry({
         entityName: "ORDER",
         entityId: order.id,
         actionType: "STATUS_CHANGED",
