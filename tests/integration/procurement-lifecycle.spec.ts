@@ -129,6 +129,25 @@ describe('procurement lifecycle against the isolated database', () => {
     }
   });
 
+  it('blocks supplier commercial responses until tax verification is complete', async () => {
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+    const rfqResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId, quantity: 2 }));
+    expect(rfqResponse.status).toBe(201);
+    const { rfq } = await rfqResponse.json() as { rfq: { id: string } };
+    await prisma.tenant.update({ where: { id: ids.supplierTenant }, data: { verificationStatus: 'PENDING' } });
+
+    try {
+      asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
+      const response = await submitQuote(request('https://hotelsvendors.test/api/v2/quotes', { rfqId: rfq.id, unitPrice: 100, quantity: 2, deliveryFee: 10, taxAmount: 14, leadTimeDays: 2 }));
+
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toEqual({ error: 'TAX_ID_VERIFICATION_REQUIRED' });
+      await expect(prisma.rfqRequest.findUniqueOrThrow({ where: { id: rfq.id }, select: { status: true } })).resolves.toEqual({ status: 'PENDING' });
+    } finally {
+      await prisma.tenant.update({ where: { id: ids.supplierTenant }, data: { verificationStatus: 'VERIFIED' } });
+    }
+  });
+
   it('persists request, quote, order, payment gate, approval, dispatch, and receipt', async () => {
     asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
     const rfqResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId, quantity: 4 }));
