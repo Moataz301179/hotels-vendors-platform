@@ -18,6 +18,8 @@ import { POST as recordGuarantee } from '@/app/api/v2/orders/guarantee/route';
 import { PATCH as transitionOrder } from '@/app/api/v2/orders/route';
 import { POST as receiveOrder } from '@/app/api/v2/grn/route';
 import { GET as listMarketplace } from '@/app/api/v2/marketplace/route';
+import { POST as submitCatalogItem } from '@/app/api/v2/catalog/route';
+import { PATCH as reviewCatalogItem } from '@/app/api/v2/admin/catalog-reviews/route';
 
 const run = randomUUID().replaceAll('-', '');
 const ids = {
@@ -172,6 +174,42 @@ describe('procurement lifecycle against the isolated database', () => {
     const { products } = await response.json() as { products: Array<{ id: string; images: string[] }> };
     expect(products).toContainEqual(expect.objectContaining({ id: productId, images: ['https://supplier.example.test/images/lifecycle.jpg'] }));
     expect(products).not.toContainEqual(expect.objectContaining({ id: unresolved.id }));
+  });
+
+  it('moves a supplier-owned product from submission through review into a hotel RFQ', async () => {
+    asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
+    const submittedResponse = await submitCatalogItem(request('https://hotelsvendors.test/api/v2/catalog', {
+      name: 'Reviewed lifecycle towel',
+      sku: `REVIEWED-${run}`,
+      category: 'GUEST_SUPPLIES',
+      unitOfMeasure: 'piece',
+      unitPrice: null,
+      stockQuantity: 24,
+      imageUrl: 'https://supplier.example.test/images/reviewed-towel.jpg',
+      imageSourceUrl: 'https://supplier.example.test/products/reviewed-towel',
+    }));
+    expect(submittedResponse.status).toBe(201);
+    const { product } = await submittedResponse.json() as { product: { id: string } };
+
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+    const beforeReview = await listMarketplace(new Request('https://hotelsvendors.test/api/v2/marketplace'));
+    expect((await beforeReview.json() as { products: Array<{ id: string }> }).products).not.toContainEqual(expect.objectContaining({ id: product.id }));
+
+    asActor({ id: ids.admin, tenantId: ids.platformTenant, platformRole: 'ADMIN', role: 'OWNER' });
+    const reviewResponse = await reviewCatalogItem(request('https://hotelsvendors.test/api/v2/admin/catalog-reviews', {
+      productId: product.id,
+      decision: 'APPROVE',
+      reviewNote: 'Verified supplier-owned towel media and product source page.',
+    }, 'PATCH'));
+    expect(reviewResponse.status).toBe(200);
+
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+    const afterReview = await listMarketplace(new Request('https://hotelsvendors.test/api/v2/marketplace'));
+    const { products } = await afterReview.json() as { products: Array<{ id: string; images: string[] }> };
+    expect(products).toContainEqual(expect.objectContaining({ id: product.id, images: ['https://supplier.example.test/images/reviewed-towel.jpg'] }));
+
+    const rfqResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId: product.id, quantity: 3 }));
+    expect(rfqResponse.status).toBe(201);
   });
 
   it('persists request, quote, order, payment gate, approval, dispatch, and receipt', async () => {
