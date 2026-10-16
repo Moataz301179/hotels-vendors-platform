@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 
 const m = vi.hoisted(() => ({
   actor: vi.fn(),
@@ -49,5 +50,17 @@ describe("hotel onboarding", () => {
     expect(m.hotelCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ tenantId: "hotel-tenant", taxId: "EG-123" }) }));
     expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "hotel-user" }, data: { hotelId: "hotel-record" } });
     expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: "ONBOARDING", entityId: "hotel-record", tenantId: "hotel-tenant" }), expect.anything());
+  });
+
+  it("returns a controlled conflict when the tax ID or contact identity is already registered", async () => {
+    m.transaction.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("duplicate", { code: "P2002", clientVersion: "test" }));
+    const response = await POST(new Request("https://hotelsvendors.test/api/v2/onboarding", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Example Hotel", taxId: "EG-123", city: "Cairo", governorate: "Cairo" }),
+    }));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "An organization with this tax ID or contact identity already exists." });
   });
 });

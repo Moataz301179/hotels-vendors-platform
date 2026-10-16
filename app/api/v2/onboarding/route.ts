@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getActor } from '@/lib/v2-auth';
 import { appendAuditEntry } from '@/lib/audit/tamper-proof';
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
   if (u.platformRole === 'HOTEL' && await prisma.hotel.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your hotel profile is already connected. Refresh the page.' }, { status: 409 });
   if (u.platformRole === 'SUPPLIER' && await prisma.supplier.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your supplier profile is already connected. Refresh the page.' }, { status: 409 });
   if (!['HOTEL', 'SUPPLIER', 'SHIPPING', 'FACTORING'].includes(u.platformRole)) return NextResponse.json({ error: 'Unsupported onboarding actor' }, { status: 400 });
+  try {
   const result = await prisma.$transaction(async tx => {
     if (u.platformRole === 'HOTEL' || u.platformRole === 'SUPPLIER' || u.platformRole === 'FACTORING') {
       await tx.tenant.update({ where: { id: u.tenantId }, data: { name: b.name, legalName: b.name, taxId: b.taxId, verificationStatus: 'PENDING', verifiedAt: null, verifiedBy: null } });
@@ -56,4 +58,10 @@ export async function POST(req: Request) {
     return { resource, progress };
   });
   return NextResponse.json({ ...result, pendingVerification: u.status === 'PENDING_VERIFICATION' }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return NextResponse.json({ error: 'An organization with this tax ID or contact identity already exists.' }, { status: 409 });
+    }
+    throw error;
+  }
 }
