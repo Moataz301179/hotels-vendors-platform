@@ -18,7 +18,7 @@ import { POST as recordGuarantee } from '@/app/api/v2/orders/guarantee/route';
 import { PATCH as transitionOrder } from '@/app/api/v2/orders/route';
 import { POST as receiveOrder } from '@/app/api/v2/grn/route';
 import { GET as listMarketplace } from '@/app/api/v2/marketplace/route';
-import { POST as submitCatalogItem } from '@/app/api/v2/catalog/route';
+import { GET as listRoleCatalog, POST as submitCatalogItem } from '@/app/api/v2/catalog/route';
 import { PATCH as reviewCatalogItem } from '@/app/api/v2/admin/catalog-reviews/route';
 
 const run = randomUUID().replaceAll('-', '');
@@ -83,6 +83,7 @@ describe('procurement lifecycle against the isolated database', () => {
     const hotel = await prisma.hotel.create({ data: { tenantId: ids.hotelTenant, name: `Hotel ${run}`, taxId: `HT${run.slice(0, 19)}`, city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', riskTier: 'LOW' } });
     const department = await prisma.department.create({ data: { tenantId: ids.hotelTenant, name: 'Lifecycle procurement', code: `IT-${run.slice(0, 12)}` } });
     departmentId = department.id;
+    await prisma.departmentCategoryAccess.create({ data: { departmentId, category: 'GUEST_SUPPLIES' } });
     const supplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Supplier ${run}`, taxId: `ST${run.slice(0, 19)}`, email: `supplier-${run}@example.test`, website: 'https://supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
     supplierId = supplier.id;
     const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Verified lifecycle product', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
@@ -174,6 +175,11 @@ describe('procurement lifecycle against the isolated database', () => {
     const { products } = await response.json() as { products: Array<{ id: string; images: string[] }> };
     expect(products).toContainEqual(expect.objectContaining({ id: productId, images: ['https://supplier.example.test/images/lifecycle.jpg'] }));
     expect(products).not.toContainEqual(expect.objectContaining({ id: unresolved.id }));
+
+    const roleCatalog = await listRoleCatalog();
+    const { products: roleProducts } = await roleCatalog.json() as { products: Array<{ id: string }> };
+    expect(roleProducts).toContainEqual(expect.objectContaining({ id: productId }));
+    expect(roleProducts).not.toContainEqual(expect.objectContaining({ id: unresolved.id }));
   });
 
   it('moves a supplier-owned product from submission through review into a hotel RFQ', async () => {
