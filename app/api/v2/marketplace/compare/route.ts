@@ -5,6 +5,7 @@ import { getActor } from "@/lib/v2-auth";
 import { prisma } from "@/lib/prisma";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { compareMarketOffers } from "@/lib/sourcing/scrapegraph-discovery";
+import { resolvedProductEvidenceIds } from "@/lib/catalog/resolved-product-evidence";
 
 const requestSchema = z.object({ query: z.string().trim().min(2).max(160), quantity: z.number().int().min(1).max(100000) });
 
@@ -17,7 +18,19 @@ export async function POST(req: Request) {
   try {
     const comparison = await compareMarketOffers(parsed.data);
     const evidence = await prisma.evidenceRecord.create({ data: { tenantId: actor.tenantId, sourceReference: `scrapegraph:market-compare:${comparison.observedAt}`, extractedFact: JSON.stringify(comparison), rawEvidenceHash: createHash("sha256").update(JSON.stringify(comparison)).digest("hex"), entityName: "MarketComparison", provenanceClass: "OBSERVED", confidenceScore: comparison.offers.length ? 0.6 : 0.3, status: "EXTRACTED" } });
-    const internal = await prisma.product.findFirst({ where: { tenantId: actor.tenantId, deletedAt: null, status: "ACTIVE", name: { contains: parsed.data.query, mode: "insensitive" } }, select: { id: true, supplierId: true, unitPrice: true, name: true } });
+    const verifiedCandidates = await prisma.product.findMany({
+      where: {
+        deletedAt: null,
+        status: "ACTIVE",
+        source: { not: "FIXTURE" },
+        name: { contains: parsed.data.query, mode: "insensitive" },
+        supplier: { status: "ACTIVE", isVerified: true, deletedAt: null },
+      },
+      select: { id: true, supplierId: true, unitPrice: true, name: true, sourceKey: true },
+      take: 25,
+    });
+    const verifiedIds = await resolvedProductEvidenceIds(prisma, verifiedCandidates);
+    const internal = verifiedCandidates.find((product) => verifiedIds.has(product.id)) ?? null;
     const priced = comparison.offers.map((offer) => offer.unitPrice).filter((price): price is number => typeof price === "number" && price > 0);
     let opportunity: { id: string; title: string } | null = null;
     if (internal && internal.unitPrice && priced.length) {
