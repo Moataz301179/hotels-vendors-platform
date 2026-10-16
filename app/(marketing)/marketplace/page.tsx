@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, PackageCheck, RefreshCw, SearchCheck } from '
 import { prisma } from '@/lib/prisma';
 import { publicPageMetadata } from '@/lib/seo';
 import { resolvedProductEvidenceIds } from '@/lib/catalog/resolved-product-evidence';
+import { firstPublicProductImageUrl } from '@/lib/catalog/public-product-images';
 
 export const metadata = publicPageMetadata(
   'Hospitality Supplier Sourcing',
@@ -13,14 +14,6 @@ export const metadata = publicPageMetadata(
 // Public listings must reflect verified live records at request time, not build-time database access.
 export const dynamic = 'force-dynamic';
 
-function publishedImage(images: string | null) {
-  try {
-    const value = JSON.parse(images ?? '[]');
-    if (!Array.isArray(value)) return null;
-    return value.find((url): url is string => typeof url === 'string' && /^https:\/\//i.test(url)) ?? null;
-  } catch { return null; }
-}
-
 export default async function MarketplacePage() {
   const products = await prisma.product.findMany({
     where: { status: 'ACTIVE', deletedAt: null, source:{not:'FIXTURE'}, supplier: { status: 'ACTIVE', isVerified: true, deletedAt:null } },
@@ -28,7 +21,7 @@ export default async function MarketplacePage() {
     take: 100,
   }).catch(() => null);
   const evidenceIds = products ? await resolvedProductEvidenceIds(prisma, products).catch(() => null) : null;
-  const publishedProducts = products && evidenceIds ? products.filter(product => evidenceIds.has(product.id)).map(product => ({ ...product, image: publishedImage(product.images) })).filter(product => product.image) : null;
+  const publishedProducts = products && evidenceIds ? products.filter(product => evidenceIds.has(product.id)).map(product => ({ ...product, image: firstPublicProductImageUrl(product.images) })).filter(product => product.image) : null;
 
   return <main className="hv-public-page hv-marketplace">
     <section className="hv-marketplace-hero"><div className="shell"><h1>Verified hospitality supply.<br/><em>Evidence before engagement.</em></h1><p>Discover published supplier listings with source evidence. RFQs, purchasing decisions and organization-specific records remain inside authenticated workspaces.</p><div className="hv-marketplace-guard"><SearchCheck size={17}/><span>Only active supplier listings with resolved source evidence are shown publicly.</span></div></div></section>

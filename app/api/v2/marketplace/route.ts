@@ -2,23 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { resolvedProductEvidenceIds } from "@/lib/catalog/resolved-product-evidence";
-
-function publicImageUrls(images: string | null) {
-  try {
-    const parsed: unknown = JSON.parse(images ?? '[]');
-    if (!Array.isArray(parsed)) return [];
-    return parsed.flatMap((image) => {
-      const url = typeof image === 'string'
-        ? image
-        : image && typeof image === 'object' && 'url' in image && typeof image.url === 'string'
-          ? image.url
-          : null;
-      return url && /^https?:\/\//i.test(url) ? [url] : [];
-    });
-  } catch {
-    return [];
-  }
-}
+import { publicProductImageUrls } from "@/lib/catalog/public-product-images";
 
 export async function GET(req: Request) {
   const user = await getActor();
@@ -37,6 +21,6 @@ export async function GET(req: Request) {
   const eligibleProductIds = await resolvedProductEvidenceIds(prisma, products);
   return NextResponse.json({products:products.filter(product => eligibleProductIds.has(product.id)).map(({images,sourceKey,...product})=>({
     ...product,
-    images: publicImageUrls(images)
+    images: publicProductImageUrls(images)
   }))});
 }
