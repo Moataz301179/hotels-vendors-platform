@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SupplierOnboardingBot } from "@/components/ai-assistant/supplier-onboarding-chatbot";
 
 export const metadata: Metadata = {
-  title: "HotelsVendors — Hotel Procurement in Egypt",
+  title: "HOTELSVENDORS — Hotel Procurement in Egypt",
   description:
     "Hotel procurement in Egypt: connect a requirement to supplier terms, purchase approval and receiving evidence in a protected organization workspace.",
   keywords: [
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "سلسلة التوريد الفندقية",
   ],
   openGraph: {
-    title: "HotelsVendors — Hotel Procurement in Egypt",
+    title: "HOTELSVENDORS — Hotel Procurement in Egypt",
     description:
       "Connect hotel purchasing with suppliers, compare commercial terms and follow the purchase through delivery.",
     type: "website",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "HotelsVendors — Hotel Procurement in Egypt",
+    title: "HOTELSVENDORS — Hotel Procurement in Egypt",
     description:
       "Evidence-backed procurement signals, savings opportunities and commercial connections across the hospitality network.",
   },
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "HotelsVendors",
+  "name": "HOTELSVENDORS",
   "legalName": "Restaurants for E-Marketing",
   "taxID": "704226146",
   "identifier": {

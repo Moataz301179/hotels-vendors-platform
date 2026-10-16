@@ -14,7 +14,7 @@ export function Nav() {
   return (
     <header className="nav">
       <div className="shell nav-inner">
-        <Link href="/" className="brand" aria-label="HotelsVendors home" onClick={closeMenu}>
+        <Link href="/" className="brand" aria-label="HOTELSVENDORS home" onClick={closeMenu}>
           <Brand />
         </Link>
         <nav id="hv-main-navigation" className={`nav-links${menuOpen ? " nav-links-open" : ""}`} aria-label="Main navigation">

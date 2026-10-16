@@ -13,7 +13,7 @@ import {
 import { usePrefs } from "@/i18n/provider";
 
 /* ---------------------------------------------------------------
-   The HotelsVendors brand film.
+   The HOTELSVENDORS brand film.
    Four chapters that walk the network's value chain — guest
    operations → F&B supply → housekeeping → warehouse & fulfilment.
    Stock footage, muted, crossfaded, streaming (range requests) so

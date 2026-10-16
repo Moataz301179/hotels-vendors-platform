@@ -24,7 +24,7 @@ export default function PublicHeader({ solid }: { solid?: boolean }) {
         <Link href="/" className="flex items-center gap-2.5">
           <Logo className={`h-8 w-8 ${solid ? "text-ink-950 dark:text-white" : "text-white"}`} />
           <div className="leading-none">
-            <div className="text-[15px] font-bold tracking-tight">HotelsVendors</div>
+            <div className="text-[15px] font-bold tracking-tight">HOTELSVENDORS</div>
             <div className={`mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] sm:block ${solid ? "text-ink-500" : "text-ink-400"}`}>
               {t("brand.tag")}
             </div>

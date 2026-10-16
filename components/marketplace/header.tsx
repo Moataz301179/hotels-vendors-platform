@@ -3,7 +3,7 @@ import { Search, Menu } from "lucide-react";
 import { HV_THEME } from "@/components/theme/tokens";
 
 /**
- * HotelsVendors Institutional Header
+ * HOTELSVENDORS Institutional Header
  * Mirrors ICE.com's dark institutional header:
  * - Solid #0A0A0A background (owner-locked)
  * - Top utility bar with trust badges (ETA compliant, 48h payout, 1.5% fees)
@@ -68,7 +68,7 @@ export function InstitutionalHeader({ showTrustBar = true }: InstitutionalHeader
                 fontWeight: 400,
               }}
             >
-              HotelsVendors
+              HOTELSVENDORS
             </span>
           </Link>
 

@@ -212,7 +212,7 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
               </button>
             </div>
             <p className="text-[9px] text-white/15 text-center mt-2 pb-0.5">
-              Powered by HotelsVendors Intelligence Engine (Ollama llama3.2)
+              Powered by HOTELSVENDORS Intelligence Engine (Ollama llama3.2)
             </p>
           </div>
         </div>

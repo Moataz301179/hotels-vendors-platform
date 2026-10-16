@@ -10,7 +10,7 @@ const config = {
   subtitle: "Hotel Procurement",
   tooltip: "Talk to our AI Agent",
   initialMessage:
-    "Hi! I'm the HotelsVendors AI assistant for hotels. Ask me anything about procurement, supplier discovery, credit terms, ETA compliance, or platform onboarding.",
+    "Hi! I'm the HOTELSVENDORS AI assistant for hotels. Ask me anything about procurement, supplier discovery, credit terms, ETA compliance, or platform onboarding.",
 };
 
 export function HotelOnboardingBot() {

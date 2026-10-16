@@ -1,5 +1,5 @@
 /**
- * Renders the full JSON-LD structured-data set for HotelsVendors.
+ * Renders the full JSON-LD structured-data set for HOTELSVENDORS.
  * Declares Organization, SoftwareApplication (web + HOVIN mobile), and WebSite.
  * NO-FAKE-DATA: no ratings/reviews/counts are emitted.
  */

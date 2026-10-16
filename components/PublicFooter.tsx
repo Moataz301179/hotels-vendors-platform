@@ -14,7 +14,7 @@ export default function PublicFooter() {
           {/* Company */}
           <div>
             <h3 className="text-sm font-bold tracking-wide text-ink-900 dark:text-white">
-              HotelsVendors
+              HOTELSVENDORS
             </h3>
             <p className="mt-2 text-[13px] leading-relaxed text-ink-500 dark:text-ink-400">
               {t("home.sub")?.slice(0, 120)}...

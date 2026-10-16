@@ -10,7 +10,7 @@ const config = {
   subtitle: "Factoring & Finance",
   tooltip: "Talk to our AI Agent",
   initialMessage:
-    "Hi! I'm the HotelsVendors AI assistant for factoring companies. Ask me anything about invoice financing, risk scoring, KYC workflows, or partner onboarding.",
+    "Hi! I'm the HOTELSVENDORS AI assistant for factoring companies. Ask me anything about invoice financing, risk scoring, KYC workflows, or partner onboarding.",
 };
 
 export function FactoringOnboardingBot() {

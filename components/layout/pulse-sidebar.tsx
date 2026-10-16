@@ -341,7 +341,7 @@ export function PulseSidebar({ role, collapsed, onToggle, isMobile }: PulseSideb
         <Link href="/" className="flex items-center gap-2.5 group">
           <BrandLogo variant="dark" size="md" showText={false} />
           <span className="text-sm font-semibold text-white uppercase" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-            Hotels Vendors
+            HOTELSVENDORS
           </span>
         </Link>
         <button

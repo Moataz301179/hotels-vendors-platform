@@ -31,7 +31,7 @@ export function BrandLogo({
     <div className={cn("inline-flex flex-col items-center shrink-0", className)}>
       <Image
         src={logoSrc}
-        alt="HotelsVendors"
+        alt="HOTELSVENDORS"
         width={dims.icon}
         height={dims.icon}
         className="object-contain shrink-0"
@@ -49,7 +49,7 @@ export function BrandLogo({
               fontFamily: "var(--font-display), system-ui, sans-serif",
             }}
           >
-            Hotels Vendors
+            HOTELSVENDORS
           </span>
           {showTagline && (
             <span

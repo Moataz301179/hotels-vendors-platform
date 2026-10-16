@@ -140,9 +140,9 @@ export function AudienceRouter() {
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
-              {active === "hotel" ? "HotelsVendors Web · Hotel"
+              {active === "hotel" ? "HOTELSVENDORS Web · Hotel"
                 : active === "supplier" ? "HOVIN App · Supplier"
-                : active === "funder" ? "HotelsVendors Web · Funder"
+                : active === "funder" ? "HOTELSVENDORS Web · Funder"
                 : "HOVIN App · Carrier"}
             </div>
             <div className="space-y-2 text-sm text-slate-700">

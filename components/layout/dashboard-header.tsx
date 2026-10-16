@@ -56,7 +56,7 @@ export function DashboardHeader({ role, user, onMenuClick, onCmdOpen }: Dashboar
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
           <BrandLogo variant="light" size="md" showText={false} />
           <span className="text-sm font-semibold text-white uppercase hidden lg:block whitespace-nowrap" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-            Hotels Vendors
+            HOTELSVENDORS
           </span>
         </Link>
         <div className="hidden md:flex items-center gap-3">

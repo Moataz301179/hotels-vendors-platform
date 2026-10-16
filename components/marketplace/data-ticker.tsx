@@ -1,7 +1,7 @@
 import { HV_THEME } from "@/components/theme/tokens";
 
 /**
- * HotelsVendors Live Data Ticker
+ * HOTELSVENDORS Live Data Ticker
  * Mirrors ICE.com's commodity data ticker:
  * - Dark background (#0A0A0A)
  * - Horizontal scrolling live data

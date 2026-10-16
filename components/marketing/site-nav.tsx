@@ -31,9 +31,9 @@ export function SiteNav() {
   function closeMenu() { setOpen(false); }
   return <nav className={styles.nav} aria-label="Main navigation" onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
     <div className={styles.inner}>
-      <Link href="/" className={styles.brand} aria-label="HotelsVendors home"><Brand /></Link>
+      <Link href="/" className={styles.brand} aria-label="HOTELSVENDORS home"><Brand /></Link>
       <div className={styles.desktop}><PublicDropdown title="Platform" links={platform}/><PublicDropdown title="Network" links={audiences}/><Link href="/getting-started">Getting started</Link></div>
-      <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join HotelsVendors</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
+      <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join HOTELSVENDORS</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>
     {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/getting-started",label:"Getting started"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
   </nav>;

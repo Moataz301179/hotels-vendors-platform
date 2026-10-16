@@ -99,7 +99,7 @@ export function InvoSidebar({ collapsed, onToggle, isMobile }: InvoSidebarProps)
           <Link
             href="/"
             className="flex items-center justify-center w-10 h-10 rounded-lg text-white/20 hover:text-white/50 hover:bg-white/[0.04] transition-all"
-            title="Back to HotelsVendors"
+            title="Back to HOTELSVENDORS"
           >
             <ArrowRight size={18} className="rotate-180" />
           </Link>
@@ -170,7 +170,7 @@ export function InvoSidebar({ collapsed, onToggle, isMobile }: InvoSidebarProps)
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-foreground-tertiary hover:text-foreground-secondary hover:bg-white/[0.03] transition-all w-full"
         >
           <ArrowRight size={17} className="rotate-180" />
-          <span>HotelsVendors</span>
+          <span>HOTELSVENDORS</span>
         </Link>
       </div>
     </div>

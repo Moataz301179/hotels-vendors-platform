@@ -10,7 +10,7 @@ const config = {
   subtitle: "Shipping & Logistics",
   tooltip: "Talk to our AI Agent",
   initialMessage:
-    "Hi! I'm the HotelsVendors AI assistant for logistics. Ask me anything about fleet onboarding, delivery workflows, route optimization, or platform features.",
+    "Hi! I'm the HOTELSVENDORS AI assistant for logistics. Ask me anything about fleet onboarding, delivery workflows, route optimization, or platform features.",
 };
 
 export function ShippingOnboardingBot() {

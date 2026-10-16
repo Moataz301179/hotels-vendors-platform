@@ -101,7 +101,7 @@ export function CommandCenter() {
               <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-8 h-8 rounded bg-[#314B43] flex items-center justify-center"><Cpu size={15} className="text-white" /></span>
-                  <span className="text-sm font-bold text-slate-900">HotelsVendors Web OS</span>
+                  <span className="text-sm font-bold text-slate-900">HOTELSVENDORS Web OS</span>
                 </div>
                 <ul className="space-y-2 text-xs text-slate-600">
                   <li className="flex items-center gap-2"><BadgeCheck size={13} className="text-emerald-600" /> Multi-property procurement & approval matrix</li>

@@ -1,5 +1,5 @@
 /**
- * HotelsVendors Design Tokens — ICE.com-inspired institutional dark theme
+ * HOTELSVENDORS Design Tokens — ICE.com-inspired institutional dark theme
  * Owner-locked palette: #0A0A0A charcoal bg + #FF3D00 accent
  * Mirrors ICE.com's institutional finance aesthetic: dark, high-contrast, data-dense
  *

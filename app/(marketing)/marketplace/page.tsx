@@ -6,7 +6,7 @@ import { resolvedProductEvidenceIds } from '@/lib/catalog/resolved-product-evide
 
 export const metadata = publicPageMetadata(
   'Hospitality Supplier Sourcing',
-  'Discover active, verified hospitality supplier listings and connect with relevant sourcing opportunities through the HotelsVendors procurement network.',
+  'Discover active, verified hospitality supplier listings and connect with relevant sourcing opportunities through the HOTELSVENDORS procurement network.',
   '/marketplace',
 );
 

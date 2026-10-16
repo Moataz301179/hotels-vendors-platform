@@ -12,7 +12,7 @@ export function InvoFooter() {
                 <Zap className="w-4 h-4 text-surface" />
               </div>
               <span className="text-[16px] font-medium text-white">INVO</span>
-              <span className="text-[11px] text-white/30">by HotelsVendors</span>
+              <span className="text-[11px] text-white/30">by HOTELSVENDORS</span>
             </div>
             <p className="text-[14px] text-white/40 max-w-sm leading-relaxed">
               The financial layer for suppliers on Egypt's largest hospitality
@@ -32,7 +32,7 @@ export function InvoFooter() {
           <div>
             <h4 className="text-[12px] font-medium uppercase tracking-wider text-white/25 mb-4">Company</h4>
             <ul className="space-y-3">
-              <li><Link href="/" className="text-[14px] text-white/40 hover:text-white transition-colors">HotelsVendors</Link></li>
+              <li><Link href="/" className="text-[14px] text-white/40 hover:text-white transition-colors">HOTELSVENDORS</Link></li>
               <li><Link href="/register" className="text-[14px] text-white/40 hover:text-white transition-colors">Subscribe</Link></li>
               <li><Link href="/login" className="text-[14px] text-white/40 hover:text-white transition-colors">Sign In</Link></li>
             </ul>
@@ -41,7 +41,7 @@ export function InvoFooter() {
 
         <div className="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[13px] text-white/30">
-            © {new Date().getFullYear()} INVO by HotelsVendors. All rights reserved.
+            © {new Date().getFullYear()} INVO by HOTELSVENDORS. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/" className="text-[13px] text-white/30 hover:text-white/60">Privacy</Link>

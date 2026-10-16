@@ -56,7 +56,7 @@ const GROUPS: NavGroup[] = [
     label: "About",
     children: [
       { href: "/about", icon: Store, label: "About", desc: "Who we are & the platform story" },
-      { href: "/contact", icon: Store, label: "Contact", desc: "Talk to the HotelsVendors team" },
+      { href: "/contact", icon: Store, label: "Contact", desc: "Talk to the HOTELSVENDORS team" },
     ],
   },
 ];
@@ -118,7 +118,7 @@ export function PrimaryNav() {
       {/* ▸ Tier 2 — relaxed main nav bar (white) */}
       <div className="max-w-7xl mx-auto flex items-center justify-between px-5 lg:px-8 py-4">
         <Link href="/" className="flex items-center shrink-0">
-          <Image src="/logo-nav-black.svg" alt="HotelsVendors" width={150} height={34} className="h-8 w-auto" priority />
+          <Image src="/logo-nav-black.svg" alt="HOTELSVENDORS" width={150} height={34} className="h-8 w-auto" priority />
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8">

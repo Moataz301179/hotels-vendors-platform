@@ -94,7 +94,7 @@ export function OlivEligibilityTracker({ tone = "light" }: { tone?: "light" | "d
           </h2>
           <p className={`text-sm mt-2 max-w-2xl ${dark ? "text-white/50" : "text-slate-600"}`}>
             Real Egyptian suppliers with a TRN and estimated annual revenue ≥ EGP 10M are
-            flagged as eligible for an Oliv credit line — independent of HotelsVendors signup.
+            flagged as eligible for an Oliv credit line — independent of HOTELSVENDORS signup.
           </p>
         </div>
         <button

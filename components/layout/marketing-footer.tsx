@@ -14,7 +14,7 @@ export function MarketingFooter() {
             <div className="flex items-center gap-2.5 mb-4">
               <BrandLogo variant="dark" size="sm" showText={false} />
               <span className="text-[14px] font-semibold text-white uppercase" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-                Hotels Vendors
+                HOTELSVENDORS
               </span>
             </div>
             <p className="text-[12px] text-foreground-muted leading-relaxed max-w-xs">
@@ -95,7 +95,7 @@ export function MarketingFooter() {
             <Lock className="w-4 h-4 flex-shrink-0 mt-0.5 text-success" />
             <div>
               <p className="text-[11px] text-foreground-muted leading-relaxed">
-                <strong className="text-foreground-tertiary">Data Isolation & Privacy Commitment:</strong> HotelsVendors processes enterprise financial data exclusively as a technical data orchestrator under explicit data processing agreements. All corporate transaction data, invoice payloads, and ETA submission records are handled with AES-256-GCM encryption at rest and TLS 1.3 in transit. Data is logically isolated per tenant with zero cross-contenant exposure. Session cookies are strictly necessary for platform operation and do not track user behavior for advertising purposes. Full compliance with Egyptian data protection regulations. For data processing inquiries, contact the Data Controller at <span className="text-foreground-secondary">privacy@hotelsvendors.com</span>.
+                <strong className="text-foreground-tertiary">Data Isolation & Privacy Commitment:</strong> HOTELSVENDORS processes enterprise financial data exclusively as a technical data orchestrator under explicit data processing agreements. All corporate transaction data, invoice payloads, and ETA submission records are handled with AES-256-GCM encryption at rest and TLS 1.3 in transit. Data is logically isolated per tenant with zero cross-contenant exposure. Session cookies are strictly necessary for platform operation and do not track user behavior for advertising purposes. Full compliance with Egyptian data protection regulations. For data processing inquiries, contact the Data Controller at <span className="text-foreground-secondary">privacy@hotelsvendors.com</span>.
               </p>
               <div className="flex items-center gap-3 mt-3">
                 <button
@@ -120,7 +120,7 @@ export function MarketingFooter() {
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[12px] text-foreground-muted">
-            &copy; {new Date().getFullYear()} HotelsVendors. All rights reserved.
+            &copy; {new Date().getFullYear()} HOTELSVENDORS. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-[12px] text-foreground-muted">
             <span className="flex items-center gap-1.5">

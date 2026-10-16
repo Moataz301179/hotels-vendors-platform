@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send, Bot, Loader2, Sparkles } from "lucide-react";
 
 const SUPPORT_PROMPT =
-  "You are the HotelsVendors customer support assistant. Help with: technical issues, " +
+  "You are the HOTELSVENDORS customer support assistant. Help with: technical issues, " +
   "billing/payments, order status, supplier problems, factoring/Oliv financing, ETA compliance, " +
   "and complaints. Be empathetic and concise. Never invent account/order numbers or promise " +
   "specific resolutions or timelines you can't verify — say the team has been notified and " +

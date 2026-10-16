@@ -202,7 +202,7 @@ export default function AppShell({
           <Link href={homeFor(user.role)} className="flex items-center gap-2.5">
             <Logo className="h-8 w-8 text-white" />
             <div className="leading-none">
-              <div className="text-[15px] font-bold tracking-tight">HotelsVendors</div>
+              <div className="text-[15px] font-bold tracking-tight">HOTELSVENDORS</div>
               <div className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] text-ink-400 sm:block">
                 {t("brand.tag")}
               </div>
@@ -278,7 +278,7 @@ export default function AppShell({
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Logo className="h-7 w-7 text-white" />
-                <span className="font-bold tracking-tight">HotelsVendors</span>
+                <span className="font-bold tracking-tight">HOTELSVENDORS</span>
               </div>
               <button onClick={() => setOpen(false)} className="rounded p-2 text-ink-300 hover:bg-white/10" aria-label={t("nav.close")}>
                 <IcX className="text-lg" />
@@ -320,7 +320,7 @@ export default function AppShell({
 
       <footer className="sf-page border-t border-line py-6 dark:border-linedark">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 text-xs text-ink-400 sm:px-6">
-          <span>HotelsVendors — {t("home.footK")}</span>
+          <span>HOTELSVENDORS — {t("home.footK")}</span>
           <span>{t("home.rights")}</span>
         </div>
       </footer>

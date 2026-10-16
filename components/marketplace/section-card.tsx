@@ -5,7 +5,7 @@ import Image from "next/image";
 /**
  * SectionCard — mirrors ICE.com's hub sections (Exchanges, Fixed Income, Mortgage, Energy)
  * Pattern: title + description + Learn more link + image grid (1 main + 2 thumb)
- * Adapted: HotelsVendors business units (Procurement, Supplier Network, Logistics, Factoring)
+ * Adapted: HOTELSVENDORS business units (Procurement, Supplier Network, Logistics, Factoring)
  */
 export interface SectionCardData {
   id: string;
@@ -126,7 +126,7 @@ export function SectionCard({ section, theme = "dark" }: SectionCardProps) {
 
 /**
  * Sample section data — mirrors ICE's 4 business unit sections
- * HotelsVendors: Procurement OS | Supplier Network | Shared Logistics | Credit Facility
+ * HOTELSVENDORS: Procurement OS | Supplier Network | Shared Logistics | Credit Facility
  */
 export const HV_SECTIONS: SectionCardData[] = [
   {
@@ -134,7 +134,7 @@ export const HV_SECTIONS: SectionCardData[] = [
     title: "Procurement Orchestration",
     subtitle: "Automate your purchasing workflow",
     description:
-      "Connect to your PMS/ERP in 6 steps. HotelsVendors orchestrates procurement from PO to payment with full ETA compliance and dual-authorization approval chains.",
+      "Connect to your PMS/ERP in 6 steps. HOTELSVENDORS orchestrates procurement from PO to payment with full ETA compliance and dual-authorization approval chains.",
     learnHref: "/solutions/procurement",
     images: {
       main: "https://images.unsplash.com/photo-1454165804682-f11d4c2d3b1a?w=800&h=600&fit=crop",

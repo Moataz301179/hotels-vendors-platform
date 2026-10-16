@@ -51,7 +51,7 @@ export function CreditCalculator() {
         <MetricCard label="Credit Spread" value={format(results.spread)} sub={pct(results.spreadPct)} color="emerald" />
         <MetricCard label="Factoring Cost" value={format(results.factoringCost)} sub={`${factoringFee}%`} color="amber" />
         <MetricCard label="Platform Fee" value={format(results.platformCost)} sub={`${platformFee}%`} color="blue" />
-        <MetricCard label="Hotels Vendors Net" value={format(results.netProfit)} sub={pct(results.netMargin)} color="purple" />
+        <MetricCard label="HOTELSVENDORS Net" value={format(results.netProfit)} sub={pct(results.netMargin)} color="purple" />
       </div>
 
       <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
@@ -59,7 +59,7 @@ export function CreditCalculator() {
         <div className="space-y-3">
           <FlowRow label="Supplier receives (cash now)" amount={format(results.supplierGets)} color="text-white" icon={<Wallet className="w-4 h-4" />} />
           <FlowRow label="Factoring company earns" amount={format(results.factoringCost)} color="text-amber-400" icon={<TrendingUp className="w-4 h-4" />} />
-          <FlowRow label="Hotels Vendors keeps" amount={format(results.netProfit)} color="text-purple-400" icon={<Building2 className="w-4 h-4" />} bold />
+          <FlowRow label="HOTELSVENDORS keeps" amount={format(results.netProfit)} color="text-purple-400" icon={<Building2 className="w-4 h-4" />} bold />
         </div>
       </div>
     </div>

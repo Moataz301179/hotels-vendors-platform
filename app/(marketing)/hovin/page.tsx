@@ -18,7 +18,7 @@ export default function HovinDownloadPage() {
             <p className="eyebrow">HOVIN · mobile workspace</p>
             <h1>Procurement work that travels with the property.</h1>
             <p className="mobile-release-lead">Use HOVIN for receiving evidence, order follow-up and field approvals. This page is the single QR destination while store listings are being prepared.</p>
-            <div className="mobile-release-actions"><Link href="/login" className="btn btn-blue">Use the web workspace</Link><Link href="/" className="btn btn-ghost">Back to HotelsVendors</Link></div>
+            <div className="mobile-release-actions"><Link href="/login" className="btn btn-blue">Use the web workspace</Link><Link href="/" className="btn btn-ghost">Back to HOTELSVENDORS</Link></div>
           </div>
           <div className="mobile-release-qr"><DownloadQR value="https://www.hotelsvendors.com/hovin" size={196} label="Scan from another device"/><span className="mobile-release-status">Release links are shown only when configured and verified.</span></div>
         </div>

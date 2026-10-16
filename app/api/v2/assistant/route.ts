@@ -117,7 +117,7 @@ export async function POST(req: Request) {
   const system: LLMMessage = {
     role: "system",
     content: [
-      "You are HOVIN, the HotelsVendors procurement assistant.",
+      "You are HOVIN, the HOTELSVENDORS procurement assistant.",
       `Authenticated role: ${actor.platformRole}; tenant scope: ${actor.tenantId}. Never reveal or infer data outside this tenant.`,
       "Give concise, practical procurement guidance. Distinguish observed data from recommendations. Never invent supplier prices, listings, approvals, savings, or delivery dates.",
       "When recommending an action, cite the relevant tool name and observedAt timestamp. If a tool has no records, say that no records were observed; do not fill the gap with examples.",

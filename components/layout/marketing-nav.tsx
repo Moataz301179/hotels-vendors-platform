@@ -35,7 +35,7 @@ export function MarketingNav() {
         <Link href="/" className="flex items-center gap-2.5 relative z-10">
           <BrandLogo variant="dark" size="sm" showText={false} />
           <span className="font-semibold text-[15px] text-white uppercase" style={{ letterSpacing: "0.2em", fontFamily: "var(--font-display), 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-            Hotels Vendors
+            HOTELSVENDORS
           </span>
         </Link>
 

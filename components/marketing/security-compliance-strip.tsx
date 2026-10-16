@@ -1,6 +1,6 @@
 "use client";
 
-/* HotelsVendors — Security & Compliance badges strip.
+/* HOTELSVENDORS — Security & Compliance badges strip.
    Shows real certifications / verified trust signals near conversion.
    Per NO-FAKE-DATA: every badge here reflects a genuinely-held credential or
    hard compliance rail of the product. Do NOT add badges that aren't true. */

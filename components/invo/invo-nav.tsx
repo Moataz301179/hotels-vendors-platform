@@ -37,7 +37,7 @@ export function InvoNav() {
             INVO
           </span>
           <span className="hidden sm:inline text-[11px] font-medium text-white/30 px-1.5 py-0.5 rounded border border-white/10 tracking-wider">
-            by HotelsVendors
+            by HOTELSVENDORS
           </span>
         </Link>
 

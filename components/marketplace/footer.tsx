@@ -4,7 +4,7 @@ import { InstitutionalHeader } from "@/components/marketplace/header";
 import { DataTicker, SAMPLE_TICKER_ITEMS } from "@/components/marketplace/data-ticker";
 
 /**
- * HotelsVendors Footer
+ * HOTELSVENDORS Footer
  * Mirrors ICE.com's institutional footer:
  * - Dark charcoal background (#0A0A0A)
  * - Multi-column link grid (Products, Suppliers, Support, About, Legal)
@@ -89,7 +89,7 @@ export function InstitutionalFooter() {
         >
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p style={{ fontWeight: 400 }}>
-              © {new Date().getFullYear()} HotelsVendors. All rights reserved.
+              © {new Date().getFullYear()} HOTELSVENDORS. All rights reserved.
               ETA E-Invoicing Registration #: HV-ETA-2026-00847
             </p>
             <div className="flex items-center gap-4">

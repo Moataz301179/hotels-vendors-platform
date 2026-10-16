@@ -27,7 +27,7 @@ export default function Register() {
         <section className="hv-register-intro" aria-labelledby="register-title">
           <div className="shell hv-register-intro-inner">
             <div className="hv-register-copy">
-              <span className="hv-register-eyebrow">HotelsVendors Procurement Network</span>
+              <span className="hv-register-eyebrow">HOTELSVENDORS Procurement Network</span>
               <h1 id="register-title">A better way to work across hospitality supply.</h1>
               <p>Choose your organization’s workspace to connect with verified demand, fulfill procurement, and coordinate the next step.</p>
             </div>
@@ -65,7 +65,7 @@ export default function Register() {
                 <span className="hv-register-layer-index">02</span>
                 <div><h3 id="network-roles-title">Provisioned partner access</h3><p>Carriers and funders do not use public registration. Their organizations are provisioned after the relevant commercial and access review.</p></div>
               </div>
-              <p className="hv-register-copy">If your organization has been invited as a carrier or funder, use the partner route or contact HotelsVendors to verify access.</p>
+              <p className="hv-register-copy">If your organization has been invited as a carrier or funder, use the partner route or contact HOTELSVENDORS to verify access.</p>
             </div>
           </div>
         </section>
