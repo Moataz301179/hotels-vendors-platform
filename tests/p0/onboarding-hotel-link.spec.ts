@@ -1,0 +1,45 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const m = vi.hoisted(() => ({
+  actor: vi.fn(),
+  tenantUpdate: vi.fn(),
+  hotelFind: vi.fn(),
+  hotelCreate: vi.fn(),
+  userUpdate: vi.fn(),
+  progressUpsert: vi.fn(),
+  audit: vi.fn(),
+}));
+
+vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
+vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
+vi.mock("@/lib/prisma", () => ({ prisma: {
+  tenant: { update: m.tenantUpdate },
+  hotel: { findFirst: m.hotelFind, create: m.hotelCreate },
+  user: { update: m.userUpdate },
+  onboardingProgress: { upsert: m.progressUpsert },
+} }));
+
+import { POST } from "@/app/api/v2/onboarding/route";
+
+describe("hotel onboarding", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    m.actor.mockResolvedValue({ id: "hotel-user", tenantId: "hotel-tenant", platformRole: "HOTEL", email: "buyer@example.test", status: "PENDING_VERIFICATION" });
+    m.hotelFind.mockResolvedValue(null);
+    m.hotelCreate.mockResolvedValue({ id: "hotel-record" });
+    m.progressUpsert.mockResolvedValue({ id: "progress-record" });
+  });
+
+  it("links the onboarding member to the hotel record it creates", async () => {
+    const response = await POST(new Request("https://hotelsvendors.test/api/v2/onboarding", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Example Hotel", taxId: "EG-123", city: "Cairo", governorate: "Cairo" }),
+    }));
+
+    expect(response.status).toBe(201);
+    expect(m.hotelCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ tenantId: "hotel-tenant", taxId: "EG-123" }) }));
+    expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "hotel-user" }, data: { hotelId: "hotel-record" } });
+    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: "ONBOARDING", entityId: "hotel-record", tenantId: "hotel-tenant" }));
+  });
+});

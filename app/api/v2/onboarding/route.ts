@@ -36,7 +36,11 @@ export async function POST(req: Request) {
   let resource: { id: string } | null = null;
   if (u.platformRole === 'HOTEL' && await prisma.hotel.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your hotel profile is already connected. Refresh the page.' }, { status: 409 });
   if (u.platformRole === 'SUPPLIER' && await prisma.supplier.findFirst({ where: { tenantId: u.tenantId, deletedAt: null }, select: { id: true } })) return NextResponse.json({ error: 'Your supplier profile is already connected. Refresh the page.' }, { status: 409 });
-  if (u.platformRole === 'HOTEL') resource = await prisma.hotel.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email } });
+  if (u.platformRole === 'HOTEL') {
+    const hotel = await prisma.hotel.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email } });
+    await prisma.user.update({ where: { id: u.id }, data: { hotelId: hotel.id } });
+    resource = hotel;
+  }
   else if (u.platformRole === 'SUPPLIER') {
     const supplier = await prisma.supplier.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, address: b.address || undefined, city: b.city, governorate: b.governorate, phone: b.phone || undefined, email: u.email, status: 'ACTIVE', isVerified: false } });
     await prisma.user.update({ where: { id: u.id }, data: { supplierId: supplier.id } });
