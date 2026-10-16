@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
@@ -7,6 +7,22 @@ import { validateReceipt, type ReceiptLineInput } from "@/lib/logistics/grn-acce
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 
 const receivingRoles = ["OWNER", "REGIONAL_GM", "GM", "FINANCIAL_CONTROLLER", "RECEIVING_CLERK"];
+
+function receiptEvidenceUrls(value: unknown) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 8) return null;
+  const urls = [...new Set(value)];
+  if (!urls.every((url) => {
+    if (typeof url !== "string" || url.length > 2000) return false;
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" && !parsed.username && !parsed.password;
+    } catch {
+      return false;
+    }
+  })) return null;
+  return urls as string[];
+}
 
 export async function POST(req: Request) {
   const actor = await getActor();
@@ -24,6 +40,8 @@ export async function POST(req: Request) {
   if (typeof body?.orderId !== "string" || !Array.isArray(body?.lines)) {
     return NextResponse.json({ error: "Order ID and receipt lines are required." }, { status: 400 });
   }
+  const evidenceUrls = receiptEvidenceUrls(body.evidenceUrls);
+  if (!evidenceUrls) return NextResponse.json({ error: "Receipt evidence must contain up to eight secure HTTPS URLs." }, { status: 400 });
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -79,6 +97,19 @@ export async function POST(req: Request) {
         },
         include: { lineItems: true },
       });
+      const evidence = await Promise.all(evidenceUrls.map((sourceUrl) => tx.evidenceRecord.create({
+        data: {
+          tenantId: order.tenantId,
+          entityId: grn.id,
+          entityName: "GOODS_RECEIPT_NOTE",
+          sourceUrl,
+          sourceReference: "receipt-evidence",
+          rawEvidenceHash: createHash("sha256").update(JSON.stringify({ grnId: grn.id, sourceUrl })).digest("hex"),
+          extractedFact: JSON.stringify({ grnNumber: grn.grnNumber, kind: "RECEIPT_EVIDENCE" }),
+          provenanceClass: "USER_PROVIDED",
+          status: "EXTRACTED",
+        },
+      })));
 
       for (const line of checked.lines) {
         const cumulativeAccepted = (prior[line.orderItemId] || 0) + line.acceptedQuantity;
@@ -96,7 +127,7 @@ export async function POST(req: Request) {
         tenantId: order.tenantId,
         actorId: actor.id,
         actorRole: actor.platformRole,
-        changes: { from: order.status, to: checked.orderStatus, grnId: grn.id, grnNumber: grn.grnNumber, grnStatus: grn.status },
+        changes: { from: order.status, to: checked.orderStatus, grnId: grn.id, grnNumber: grn.grnNumber, grnStatus: grn.status, evidenceRecordIds: evidence.map((record) => record.id) },
       }, tx);
       return { grn, orderStatus: checked.orderStatus };
     });

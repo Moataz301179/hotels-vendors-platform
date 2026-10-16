@@ -111,7 +111,7 @@ describe('procurement lifecycle against the isolated database', () => {
     await prisma.order.deleteMany({ where: { tenantId: ids.hotelTenant } });
     await prisma.procurementQuote.deleteMany({ where: { rfq: { tenantId: ids.hotelTenant } } });
     await prisma.rfqRequest.deleteMany({ where: { tenantId: ids.hotelTenant } });
-    await prisma.evidenceRecord.deleteMany({ where: { tenantId: ids.supplierTenant } });
+    await prisma.evidenceRecord.deleteMany({ where: { tenantId: { in: [ids.hotelTenant, ids.supplierTenant] } } });
     await prisma.product.deleteMany({ where: { tenantId: ids.supplierTenant } });
     await prisma.tenant.deleteMany({ where: { id: { in: [ids.platformTenant, ids.hotelTenant, ids.supplierTenant] } } });
     await prisma.$disconnect();
@@ -253,7 +253,7 @@ describe('procurement lifecycle against the isolated database', () => {
 
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
-    const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }] }));
+    const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] }));
     expect(receiptResponse.status).toBe(201);
 
     const [storedOrder, storedRfq, storedQuote, receipts, auditRecords] = await Promise.all([
@@ -269,6 +269,7 @@ describe('procurement lifecycle against the isolated database', () => {
     expect(storedOrder.paymentGuaranteed).toBe(true);
     expect(storedOrder.items[0]?.receivedQuantity).toBe(4);
     expect(receipts).toHaveLength(1);
+    await expect(prisma.evidenceRecord.findMany({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', sourceUrl: 'https://supplier.example.test/receipts/lifecycle.jpg' } })).resolves.toHaveLength(1);
     expect(auditRecords.length).toBeGreaterThanOrEqual(5);
   });
 
