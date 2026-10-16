@@ -17,6 +17,7 @@ import { POST as acceptQuote } from '@/app/api/v2/quotes/accept/route';
 import { POST as recordGuarantee } from '@/app/api/v2/orders/guarantee/route';
 import { PATCH as transitionOrder } from '@/app/api/v2/orders/route';
 import { POST as receiveOrder } from '@/app/api/v2/grn/route';
+import { GET as listMarketplace } from '@/app/api/v2/marketplace/route';
 
 const run = randomUUID().replaceAll('-', '');
 const ids = {
@@ -146,6 +147,31 @@ describe('procurement lifecycle against the isolated database', () => {
     } finally {
       await prisma.tenant.update({ where: { id: ids.supplierTenant }, data: { verificationStatus: 'VERIFIED' } });
     }
+  });
+
+  it('shows hotels only supplier products with resolved source evidence and owned media', async () => {
+    const unresolved = await prisma.product.create({
+      data: {
+        tenantId: ids.supplierTenant,
+        supplierId,
+        sku: `UNRESOLVED-${run}`,
+        name: 'Unreviewed lifecycle product',
+        category: 'GUEST_SUPPLIES',
+        status: 'ACTIVE',
+        source: 'MANUAL',
+        sourceProvider: 'SUPPLIER_SUBMISSION',
+        sourceKey: 'https://supplier.example.test/products/unreviewed',
+        images: JSON.stringify(['https://supplier.example.test/images/unreviewed.jpg']),
+      },
+    });
+    asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
+
+    const response = await listMarketplace(new Request('https://hotelsvendors.test/api/v2/marketplace'));
+
+    expect(response.status).toBe(200);
+    const { products } = await response.json() as { products: Array<{ id: string; images: string[] }> };
+    expect(products).toContainEqual(expect.objectContaining({ id: productId, images: ['https://supplier.example.test/images/lifecycle.jpg'] }));
+    expect(products).not.toContainEqual(expect.objectContaining({ id: unresolved.id }));
   });
 
   it('persists request, quote, order, payment gate, approval, dispatch, and receipt', async () => {
