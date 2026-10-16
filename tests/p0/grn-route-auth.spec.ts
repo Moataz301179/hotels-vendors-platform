@@ -10,10 +10,10 @@ vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: vi.fn() }));
 
 import { POST } from "@/app/api/v2/grn/route";
 
-const receiptRequest = () => new Request("https://hotelsvendors.com/api/v2/grn", {
+const receiptRequest = (overrides: Record<string, unknown> = {}) => new Request("https://hotelsvendors.com/api/v2/grn", {
   method: "POST",
   headers: { "content-type": "application/json" },
-  body: JSON.stringify({ orderId: "order-a", lines: [] }),
+  body: JSON.stringify({ orderId: "order-a", lines: [], ...overrides }),
 });
 
 describe("goods receipt authorization", () => {
@@ -28,6 +28,13 @@ describe("goods receipt authorization", () => {
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ error: "RECEIPT_PERMISSION_REQUIRED" });
     expect(m.permission).toHaveBeenCalledWith({ userId: "receiver-a", tenantId: "hotel-a", platformRole: "HOTEL" }, "order:update");
+    expect(m.transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-secure receipt evidence before a receipt transaction starts", async () => {
+    const response = await POST(receiptRequest({ evidenceUrls: ["http://untrusted.example/receipt.jpg"] }));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Receipt evidence must contain up to eight secure HTTPS URLs." });
     expect(m.transaction).not.toHaveBeenCalled();
   });
 });
