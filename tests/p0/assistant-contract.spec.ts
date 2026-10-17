@@ -61,12 +61,14 @@ describe("AI procurement assistant contract", () => {
     m.llm.mockResolvedValue({ content: "Observed 76 verified products.", provider: "ollama", model: "llama3.2:3b", tokensUsed: 8, latencyMs: 10 });
   });
 
-  it("requires a Clerk-backed actor before executing tenant tools", async () => {
+  it("returns public guidance without executing tenant tools for an anonymous visitor", async () => {
     m.actor.mockResolvedValue(null);
-    const response = await POST(request({ question: "What can I buy?" }));
-    expect(response.status).toBe(401);
+    const response = await POST(request({ question: "Can you help with procurement?" }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ scope: "public-guidance", toolsUsed: [] });
     expect(m.productCount).not.toHaveBeenCalled();
     expect(m.llm).not.toHaveBeenCalled();
+    expect(m.conversationCreate).not.toHaveBeenCalled();
   });
 
   it("returns every grounded tool and its source evidence", async () => {

@@ -35,6 +35,20 @@ function observedTool(name: string, result: Record<string, unknown>, scope: stri
   };
 }
 
+function publicGuidance(question: string) {
+  const normalized = question.toLowerCase();
+  if (/supplier|vendor|catalog/.test(normalized)) {
+    return "Yes. Suppliers can join HOTELSVENDORS, complete their organization and tax verification, submit supplier-owned product media and source evidence, then respond to assigned RFQs after review. Sign in for supplier onboarding and your organization workspace.";
+  }
+  if (/finance|fund|payment|settlement|invoice/.test(normalized)) {
+    return "HOTELSVENDORS keeps purchase, approval and receipt records connected. Funding partners are provisioned separately and make their own underwriting and disbursement decisions. Sign in to view only the financial records your organization is authorized to access.";
+  }
+  if (/logistics|delivery|eta|receiv|carrier/.test(normalized)) {
+    return "HotelsVendors connects a committed delivery time, receiving quantity checks and receipt evidence to the purchase order. Carrier access is provisioned separately. Sign in to work with organization-scoped delivery records.";
+  }
+  return "Yes. HOTELSVENDORS helps hotel teams record requirements, obtain comparable supplier responses, route approvals, follow delivery ETA and retain receipt evidence. Sign in to use the secure assistant with your organization’s authorized procurement records.";
+}
+
 /**
  * The assistant is deliberately read-only. These are server-side tools rather
  * than client-provided facts, and every query is scoped to the authenticated
@@ -105,13 +119,15 @@ async function collectProcurementTools(tenantId: string): Promise<ToolSnapshot[]
 }
 
 export async function POST(req: Request) {
-  const actor = await getActor();
-  if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-
   const parsed = requestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "question and valid chat messages are required" }, { status: 400 });
 
   const { question, messages, conversationId, role } = parsed.data;
+  const actor = await getActor();
+  if (!actor) {
+    const content = publicGuidance(question);
+    return NextResponse.json({ text: content, content, scope: "public-guidance", toolsUsed: [] }, { headers: { "Cache-Control": "public, max-age=300" } });
+  }
   const tools = await collectProcurementTools(actor.tenantId);
   const toolContext = tools.map(tool => `${tool.name} [source=${tool.evidence.source}; scope=${tool.evidence.scope}; observedAt=${tool.evidence.observedAt}]: ${JSON.stringify(tool.result)}`).join("\n");
   const system: LLMMessage = {
