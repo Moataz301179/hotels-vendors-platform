@@ -1,3 +1,10 @@
+import { connectionUnavailable } from "../connection-contract";
+
+/**
+ * OPERA Cloud is the first hospitality-system adapter. Until the organization
+ * supplies an approved OHIP connection and its health check succeeds, every
+ * operation fails closed rather than returning invented hotel activity.
+ */
 export class OperaConnector {
   private config: { ohipUrl: string; apiKey: string; propertyId: string };
 
@@ -6,53 +13,35 @@ export class OperaConnector {
   }
 
   async getOccupancy(propertyId: string, date: string) {
-    return {
-      propertyId,
-      date,
-      totalRooms: 320,
-      occupiedRooms: Math.floor(Math.random() * 100) + 220,
-      occupancyRate: Math.round((Math.random() * 30 + 70) * 10) / 10,
-    };
+    void propertyId;
+    void date;
+    return connectionUnavailable("ORACLE_OPERA_CLOUD", "occupancy retrieval");
   }
 
   async getMinibarConsumption(propertyId: string, date: string) {
-    return {
-      propertyId,
-      date,
-      items: [
-        { productId: 'p7', quantity: Math.floor(Math.random() * 50) + 20, revenue: 0 },
-        { productId: 'p13', quantity: Math.floor(Math.random() * 30) + 10, revenue: 0 },
-      ],
-    };
+    void propertyId;
+    void date;
+    return connectionUnavailable("ORACLE_OPERA_CLOUD", "minibar consumption retrieval");
   }
 
   async getDepartmentDemand(propertyId: string, departmentId: string) {
-    return {
-      propertyId,
-      departmentId,
-      period: '2026-09',
-      items: [
-        { productId: 'p8', estimatedQuantity: Math.floor(Math.random() * 100) + 50 },
-        { productId: 'p9', estimatedQuantity: Math.floor(Math.random() * 50) + 25 },
-      ],
-    };
+    void propertyId;
+    void departmentId;
+    return connectionUnavailable("ORACLE_OPERA_CLOUD", "department demand retrieval");
   }
 
   async createPurchaseRequisition(pr: unknown) {
-    return { prId: `PR-${Date.now()}`, status: 'created' };
+    void pr;
+    return connectionUnavailable("ORACLE_OPERA_CLOUD", "purchase requisition creation");
   }
 
   async postReceivingConfirmation(receivingId: string) {
-    return { receivingId, status: 'confirmed' };
+    void receivingId;
+    return connectionUnavailable("ORACLE_OPERA_CLOUD", "receiving confirmation");
   }
 
   async getPropertyInventory(propertyId: string) {
-    return {
-      propertyId,
-      items: [
-        { productId: 'p1', currentStock: 120 },
-        { productId: 'p8', currentStock: 45 },
-      ],
-    };
+    void propertyId;
+    return connectionUnavailable("ORACLE_OPERA_CLOUD", "property inventory retrieval");
   }
 }

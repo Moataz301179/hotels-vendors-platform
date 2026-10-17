@@ -1,3 +1,9 @@
+import { connectionUnavailable } from "../connection-contract";
+
+/**
+ * SAP is the financial/procurement follow-on adapter. It deliberately has no
+ * simulated OAuth token, budget, master data, or invoice-match result.
+ */
 export class SAPConnector {
   private config: { baseUrl: string; clientId: string; clientSecret: string; companyId: string };
   private token?: string;
@@ -7,60 +13,39 @@ export class SAPConnector {
   }
 
   async authenticate(): Promise<string> {
-    // Simulate OAuth 2.0 flow
-    this.token = `sap_token_${Date.now()}`;
-    return this.token;
+    return connectionUnavailable("SAP", "authentication");
   }
 
   async getBudget(hotelId: string, departmentId: string, period: string) {
-    await this.authenticate();
-    return {
-      hotelId,
-      departmentId,
-      period,
-      totalBudget: 500000,
-      usedBudget: 125000,
-      availableBudget: 375000,
-    };
+    void hotelId;
+    void departmentId;
+    void period;
+    return connectionUnavailable("SAP", "budget retrieval");
   }
 
   async syncInventory(items: unknown[]) {
-    await this.authenticate();
-    return { synced: items.length, status: 'success' };
+    void items;
+    return connectionUnavailable("SAP", "inventory synchronization");
   }
 
   async createPurchaseOrder(po: unknown) {
-    await this.authenticate();
-    return { poId: `SAP-PO-${Date.now()}`, status: 'created' };
+    void po;
+    return connectionUnavailable("SAP", "purchase-order creation");
   }
 
   async getVendorPriceBook(supplierId: string) {
-    await this.authenticate();
-    return {
-      supplierId,
-      items: [
-        { productId: 'p1', contractedPrice: 350, moq: 10 },
-        { productId: 'p2', contractedPrice: 680, moq: 5 },
-      ],
-    };
+    void supplierId;
+    return connectionUnavailable("SAP", "vendor price-book retrieval");
   }
 
   async matchInvoice(poId: string, receivingId: string, invoiceId: string) {
-    await this.authenticate();
-    return { poId, receivingId, invoiceId, status: 'matched' };
+    void poId;
+    void receivingId;
+    void invoiceId;
+    return connectionUnavailable("SAP", "invoice matching");
   }
 
   async getMasterData() {
-    await this.authenticate();
-    return {
-      vendors: [
-        { code: 'V001', name: 'Misr F&B Distribution', status: 'approved' },
-        { code: 'V002', name: 'Nile Housekeeping Supply Co.', status: 'approved' },
-      ],
-      costCenters: [
-        { id: 'CC001', name: 'Housekeeping', department: 'HK' },
-        { id: 'CC002', name: 'F&B Kitchen', department: 'FB' },
-      ],
-    };
+    return connectionUnavailable("SAP", "master-data retrieval");
   }
 }
