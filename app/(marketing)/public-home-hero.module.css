@@ -19,7 +19,7 @@
   aspect-ratio: 16 / 9;
 }
 
-.heroVisual :global(img) { object-position: center; }
+.heroVisual :global(img) { object-position: 66% center; }
 
 @media (max-width: 950px) {
   .heroShell { grid-template-columns: 1fr !important; }
