@@ -14,7 +14,7 @@ import {
 } from "@/lib/parsers/excel-parser";
 import { generateSku, generateSkusBatch, SkuGenerationInput } from "./sku-generator";
 import { generateDescriptions, generateDescriptionsBatch, DescriptionInput, DescriptionOutput } from "./description-writer";
-import { generatePricing, generatePricingBatch, PricingInput, PricingOutput, TierPrice, PromoSuggestion } from "./pricing-advisor";
+import { TierPrice, PromoSuggestion } from "./pricing-advisor";
 
 export interface EnrichedRow {
   rowIndex: number;
@@ -170,34 +170,6 @@ function buildSpecsString(mapped: Record<TargetField, unknown>): string {
 }
 
 /**
- * Build pricing input from mapped row
- */
-function buildPricingInput(mapped: Record<TargetField, unknown>, category: string): PricingInput {
-  const unitPrice = typeof mapped.unitPrice === "number" ? mapped.unitPrice : undefined;
-  const stock = typeof mapped.stockQuantity === "number" ? mapped.stockQuantity : undefined;
-
-  // Determine seasonality from category + current month
-  const month = new Date().getMonth(); // 0-11
-  const isHighSeason = month >= 9 || month <= 3; // Oct-Apr
-  const seasonality = isHighSeason ? "high" : "low";
-
-  return {
-    productName: String(mapped.name || ""),
-    category,
-    subcategory: mapped.subcategory ? String(mapped.subcategory) : undefined,
-    suggestedRetail: unitPrice,
-    costPrice: unitPrice ? Math.round(unitPrice / 1.3) : undefined, // Estimate 30% margin
-    volumeTiers: [
-      { minQty: 1, maxQty: 10 },
-      { minQty: 11, maxQty: 50 },
-      { minQty: 51 },
-    ],
-    seasonality,
-    brandTier: unitPrice && unitPrice > 500 ? "premium" : unitPrice && unitPrice > 100 ? "standard" : "economy",
-  };
-}
-
-/**
  * Step 1: Parse uploaded file and return column mapping preview
  */
 export async function parseAndMapColumns(
@@ -323,28 +295,28 @@ async function enrichSingleRow(row: ParsedRow, supplierId: string): Promise<Enri
   let aiConfidence = 1.0;
   let sku: string | undefined;
   let descriptions: DescriptionOutput | undefined;
-  let pricing: PricingOutput | undefined;
 
   // Only run AI if no blocking errors
   if (errors.length === 0) {
     try {
-      // Run all three agents in parallel
-      const [skuResult, descResult, priceResult] = await Promise.all([
+      // AI may normalize identity and descriptive metadata, but supplier-owned
+      // commercial data is never inferred from an assumed margin, seasonality,
+      // or a generated market price. Prices and quantity tiers arrive only from
+      // the supplier submission and remain review-gated before publication.
+      const [skuResult, descResult] = await Promise.all([
         generateSku(buildSkuInput(mapped, supplierPrefixFromId(supplierId))),
         generateDescriptions(buildDescriptionInput(mapped)),
-        generatePricing(buildPricingInput(mapped, categoryNormalized)),
       ]);
 
       sku = skuResult.sku;
       descriptions = descResult;
-      pricing = priceResult;
 
       // Average confidence
-      aiConfidence = (skuResult.confidence + descResult.confidence + priceResult.confidence) / 3;
+      aiConfidence = (skuResult.confidence + descResult.confidence) / 2;
 
       if (skuResult.confidence < 0.5) warnings.push("SKU generation low confidence");
       if (descResult.confidence < 0.5) warnings.push("Description generation low confidence");
-      if (priceResult.confidence < 0.5) warnings.push("Pricing advice low confidence");
+      warnings.push("Pricing and quantity tiers remain supplier-supplied and require commercial review before publication");
     } catch (err) {
       warnings.push("AI enrichment partially failed; using fallbacks");
       aiConfidence = 0.3;
@@ -364,8 +336,8 @@ async function enrichSingleRow(row: ParsedRow, supplierId: string): Promise<Enri
     shortDescriptionAr: descriptions?.shortDescriptionAr,
     seoKeywordsEn: descriptions?.seoKeywordsEn,
     seoKeywordsAr: descriptions?.seoKeywordsAr,
-    tierPrices: pricing?.tierPrices,
-    promoSuggestions: pricing?.promoSuggestions,
+    tierPrices: undefined,
+    promoSuggestions: undefined,
     categoryNormalized,
     aiConfidence,
     errors,

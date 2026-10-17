@@ -10,6 +10,8 @@ import { Client } from "pg";
 const stagingUrl = process.env.STAGING_DATABASE_URL;
 const productionUrl = process.env.DATABASE_URL;
 if (!stagingUrl || !productionUrl) throw new Error("STAGING_DATABASE_URL and DATABASE_URL are required");
+const approvedMinimum = Number.parseInt(process.env.CATALOG_MINIMUM_APPROVED_PRODUCTS || "5000", 10);
+if (!Number.isSafeInteger(approvedMinimum) || approvedMinimum < 1) throw new Error("CATALOG_MINIMUM_APPROVED_PRODUCTS must be a positive integer");
 
 const outDir = path.resolve(process.env.CATALOG_EVIDENCE_DIR || "artifacts/catalog-promotion-20261013");
 const quote = (s: string) => `"${s.replaceAll('"', '""')}"`;
@@ -32,7 +34,9 @@ async function main() {
     if (!sourceTenant) throw new Error("staging platform tenant not found");
     const suppliers = (await staging.query(`select * from "Supplier" where "tenantId"=$1 and status='ACTIVE' and "isVerified"=true and "deletedAt" is null order by id`, [sourceTenant.id])).rows;
     const products = (await staging.query(`select * from "Product" where "tenantId"=$1 and status='ACTIVE' and "source"<>'FIXTURE' and "deletedAt" is null order by sku`, [sourceTenant.id])).rows;
-    if (products.length !== 76) throw new Error(`staging verified product count is ${products.length}, expected 76`);
+    if (products.length < approvedMinimum) throw new Error(`staging verified product count is ${products.length}, below approved minimum ${approvedMinimum}`);
+    const incompleteProvenance = products.filter((product) => !product.sourceKey || !product.sourceProvider);
+    if (incompleteProvenance.length) throw new Error(`staging contains ${incompleteProvenance.length} product records without source provenance`);
     if (!suppliers.length) throw new Error("staging has no verified active suppliers");
     const prodCounts = await production.query(`select (select count(*) from "Product" where status='ACTIVE' and "source"<>'FIXTURE' and "deletedAt" is null)::int as products, (select count(*) from "Supplier" where status='ACTIVE' and "isVerified"=true and "deletedAt" is null)::int as suppliers`);
     if (prodCounts.rows[0].products !== 0 || prodCounts.rows[0].suppliers !== 0) throw new Error(`production already has eligible catalog rows: ${JSON.stringify(prodCounts.rows[0])}`);
@@ -75,8 +79,8 @@ async function main() {
     await production.query("commit");
     const rollback = ["begin;", ...insertedProductIds.map((id) => `delete from "Product" where id=${JSON.stringify(id)};`), ...insertedSupplierIds.map((id) => `delete from "Supplier" where id=${JSON.stringify(id)};`), ...(createdTenant ? [`delete from "Tenant" where id=${JSON.stringify(targetTenant.id)};`] : []), "commit;", ""].join("\n");
     await fs.writeFile(path.join(outDir, "rollback.sql"), rollback);
-    await fs.writeFile(path.join(outDir, "promotion-summary.json"), JSON.stringify({ completedAt: new Date().toISOString(), sourceTenantId: sourceTenant.id, targetTenantId: targetTenant.id, suppliers: suppliers.length, products: products.length, insertedSuppliers: insertedSupplierIds.length, insertedProducts: insertedProductIds.length, createdTenant }, null, 2));
-    console.log(JSON.stringify({ sourceTenantId: sourceTenant.id, targetTenantId: targetTenant.id, suppliers: suppliers.length, products: products.length, insertedSuppliers: insertedSupplierIds.length, insertedProducts: insertedProductIds.length, evidenceDir: outDir }));
+    await fs.writeFile(path.join(outDir, "promotion-summary.json"), JSON.stringify({ completedAt: new Date().toISOString(), approvedMinimum, sourceTenantId: sourceTenant.id, targetTenantId: targetTenant.id, suppliers: suppliers.length, products: products.length, insertedSuppliers: insertedSupplierIds.length, insertedProducts: insertedProductIds.length, createdTenant }, null, 2));
+    console.log(JSON.stringify({ approvedMinimum, sourceTenantId: sourceTenant.id, targetTenantId: targetTenant.id, suppliers: suppliers.length, products: products.length, insertedSuppliers: insertedSupplierIds.length, insertedProducts: insertedProductIds.length, evidenceDir: outDir }));
   } finally { await staging.end(); await production.end(); }
 }
 main().catch(async (error) => { console.error(error instanceof Error ? error.message : error); process.exit(1); });
