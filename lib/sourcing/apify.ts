@@ -10,6 +10,7 @@
  * Safe no-op when token absent — never crashes the app.
  */
 
+import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import type { ExtractedProduct } from "@/lib/sourcing/scraper";
 
@@ -43,8 +44,21 @@ export interface DiscoveredSupplier {
   email?: string;
   website?: string;
   catalogLinks?: string[];
+  /** The public page that supports this observation. It is required before persistence. */
+  sourceUrl?: string;
   source: "APIFY_DISCOVERY";
 }
+
+export type SupplierResearchIntake = {
+  name: string;
+  candidateType: "SUPPLIER";
+  website?: string;
+  sourceUrl: string;
+  categories: string[];
+  status: "RESEARCH_CANDIDATE";
+  sourceHash: string;
+  verificationNote: string;
+};
 
 export interface DiscoveredCatalogItem {
   supplierBusinessName: string;
@@ -103,32 +117,82 @@ function mapToDiscovered(raw: unknown): DiscoveredSupplier | null {
     email: r.email ? String(r.email) : undefined,
     website: r.website ? String(r.website) : undefined,
     catalogLinks: Array.isArray(r.catalogLinks) ? r.catalogLinks.map(String) : undefined,
+    sourceUrl: firstHttpUrl(r.googleMapsUrl, r.url, r.webUrl, r.website),
     source: "APIFY_DISCOVERY",
   };
 }
 
-/* ── 3. Persist discovered suppliers as REAL source rows (marked ECOMMERCE) ── */
-export async function ingestDiscoveredSuppliers(suppliers: DiscoveredSupplier[], tenantId: string) {
-  let created = 0; let skipped = 0;
+/**
+ * Builds a research-only intake record from a cited public page. This never
+ * manufactures a supplier tax ID, email, offer, stock state, or commercial
+ * relationship. A missing public source means the discovery is not persisted.
+ */
+export function toResearchCandidate(supplier: DiscoveredSupplier): SupplierResearchIntake | null {
+  const name = supplier.businessName.trim();
+  const sourceUrl = asHttpUrl(supplier.sourceUrl);
+  if (!name || !sourceUrl) return null;
+  const website = asHttpUrl(supplier.website);
+  const category = supplier.category.trim();
+  return {
+    name,
+    candidateType: "SUPPLIER",
+    website,
+    sourceUrl,
+    categories: category ? [category] : [],
+    status: "RESEARCH_CANDIDATE",
+    sourceHash: createHash("sha256").update(`${name}\u0000${sourceUrl}`).digest("hex"),
+    verificationNote: "Public discovery observation only. Supplier identity, tax registration, commercial terms, availability, pricing, and catalog data require separate review and verification.",
+  };
+}
+
+function asHttpUrl(value: unknown): string | undefined {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function firstHttpUrl(...values: unknown[]): string | undefined {
+  return values.map(asHttpUrl).find((url): url is string => Boolean(url));
+}
+
+/* ── 3. Persist discoveries as review-only research candidates ───────────── */
+export async function ingestDiscoveredSupplierResearch(suppliers: DiscoveredSupplier[]) {
+  let accepted = 0; let skipped = 0;
   for (const s of suppliers) {
-    if (!s.businessName) { skipped++; continue; }
+    const candidate = toResearchCandidate(s);
+    if (!candidate) { skipped++; continue; }
     try {
-      const existing = await prisma.supplier.findFirst({ where: { name: s.businessName, tenantId } });
-      if (existing) { skipped++; continue; }
-      const taxId = `APIFY-${Math.abs(hash(s.businessName)).toString(36).toUpperCase()}`;
-      const email = (s.email && /@/.test(s.email)) ? s.email : `${taxId.toLowerCase()}@discovered.hotelsvendors.com`;
-      await prisma.supplier.create({
+      await prisma.supplierResearchCandidate.upsert({
+        where: { sourceHash: candidate.sourceHash },
         data: {
-          name: s.businessName, taxId, email, tenantId,
-          city: s.city || "Unknown",
-          governorate: s.city || "Unknown",
-          address: s.address, phone: s.phone, website: s.website,
+          name: candidate.name,
+          candidateType: candidate.candidateType,
+          website: candidate.website,
+          sourceUrl: candidate.sourceUrl,
+          sourceObservedAt: new Date(),
+          categories: candidate.categories,
+          status: candidate.status,
+          verificationNote: candidate.verificationNote,
+        },
+        create: {
+          ...candidate,
+          sourceObservedAt: new Date(),
         },
       });
-      created++;
+      accepted++;
     } catch { skipped++; }
   }
-  return { created, skipped, total: suppliers.length };
+  return { accepted, skipped, total: suppliers.length };
+}
+
+/** @deprecated Use ingestDiscoveredSupplierResearch. tenantId is intentionally ignored. */
+export async function ingestDiscoveredSuppliers(suppliers: DiscoveredSupplier[], _tenantId?: string) {
+  void _tenantId;
+  return ingestDiscoveredSupplierResearch(suppliers);
 }
 
 /* ── 4. Vector-ready profile stub (pgvector in mobile phase) ──────────────── */
@@ -137,10 +201,4 @@ export function buildVectorProfile(s: DiscoveredSupplier): { id: string; text: s
   return { id: s.businessName, text, metadata: { category: s.category, city: s.city || "" } };
 }
 
-/* ── helpers ─────────────────────────────────────────────────────────────── */
-function hash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
 export { ExtractedProduct };

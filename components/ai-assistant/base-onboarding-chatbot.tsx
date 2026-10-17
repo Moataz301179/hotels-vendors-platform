@@ -49,11 +49,10 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_VPS_API_URL
-          ? `${process.env.NEXT_PUBLIC_VPS_API_URL}/api/v2/assistant`
-          : "/api/v2/assistant";
-
-        const res = await fetch(apiUrl, {
+        // Public guidance must use this deployed origin. A build-time VPS URL can
+        // point to an older release and make an otherwise healthy public helper
+        // look unavailable.
+        const res = await fetch("/api/v2/assistant", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: userMsg.content, messages: [...messages, userMsg], role: "supplier" }),
@@ -97,18 +96,18 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
           aria-label="Open HOVIN procurement assistant"
         >
           <div className="relative">
-            {/* HOVIN assistant: dark-grey/ice palette, with a restrained cobalt status dot. */}
+            {/* Dark-grey shell with a distinct assistant signal, separate from action blue. */}
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg"
               style={{
                 backgroundColor: "#3d4a56",
-                border: "2px solid #9fc8ef",
-                boxShadow: "0 0 24px rgba(55,111,168,0.24)",
+                border: "2px solid #d8ccff",
+                boxShadow: "0 0 24px rgba(103,80,162,0.22)",
               }}
             >
-              <Icon size={24} className="text-white" strokeWidth={2} />
+              <Icon size={24} color="#e3dcff" strokeWidth={2} />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#9fc8ef] border-2 border-[#3d4a56] animate-pulse" />
+            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#b9a5ff] border-2 border-[#3d4a56] animate-pulse" />
             <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#3d4a56] border border-white/10 text-[11px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               {config.tooltip}
             </div>
