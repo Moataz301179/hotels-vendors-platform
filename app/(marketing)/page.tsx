@@ -1,32 +1,140 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight, BarChart3, CheckCircle2, Handshake, ScanSearch } from 'lucide-react';
-import { ProcurementFlowVisualizer } from '@/components/marketing/procurement-flow-visualizer';
-import { HovinReceivingPreview } from '@/components/marketing/hovin-receiving-preview';
-import styles from './public-home.module.css';
-import heroStyles from './public-home-hero.module.css';
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 
-const layers=[{icon:ScanSearch,title:'Market discovery',body:'Teams start with a defined requirement and source context, not a public-stock claim.'},{icon:BarChart3,title:'Comparable terms',body:'Supplier responses preserve unit price, delivery, tax and validity so buyers can compare like with like.'},{icon:Handshake,title:'Verified B2B matching',body:'Matching is scoped to active organization relationships, supplier eligibility and the authority to act.'}];
-const categories=[
- {title:'Food & beverage',body:'Ingredients, beverage programs and kitchen operating supplies.',image:'/category-food-beverage.png',alt:'Hotel kitchen receiving fresh ingredients and beverage supplies'},
- {title:'Housekeeping',body:'Cleaning chemicals, linen care and room-turnover essentials.',image:'/category-housekeeping.png',alt:'Hotel housekeeping room with linen and cleaning supplies'},
- {title:'Guest supplies',body:'In-room amenities and front-of-house replenishment.',image:'/category-guest-supplies.png',alt:'Hotel guest amenities prepared for operational use'},
- {title:'Engineering & FF&E',body:'Maintenance, replacement parts and property equipment.',image:'/category-engineering-ffe.png',alt:'Hotel engineering components and finish samples on a workbench'},
- {title:'Supplier catalogue',body:'Supplier-managed listings published only after the required review.',image:'/category-supplier-catalogue.png',alt:'Hospitality supplier arranging material and product samples'},
+import { HovinReceivingPreview } from "@/components/marketing/hovin-receiving-preview";
+import { ProcurementFlowVisualizer } from "@/components/marketing/procurement-flow-visualizer";
+import heroStyles from "./public-home-hero.module.css";
+import styles from "./public-home.module.css";
+
+const categories = [
+  { title: "Food & beverage", body: "Ingredients, beverage programs and kitchen operating supplies.", image: "/category-food-beverage.png", alt: "Hotel kitchen receiving fresh ingredients and beverage supplies" },
+  { title: "Housekeeping", body: "Cleaning chemicals, linen care and room-turnover essentials.", image: "/category-housekeeping.png", alt: "Hotel housekeeping room with linen and cleaning supplies" },
+  { title: "Guest supplies", body: "In-room amenities and front-of-house replenishment.", image: "/category-guest-supplies.png", alt: "Hotel guest amenities prepared for operational use" },
+  { title: "Engineering & FF&E", body: "Maintenance, replacement parts and property equipment.", image: "/category-engineering-ffe.png", alt: "Hotel engineering components and finish samples on a workbench" },
+  { title: "Supplier catalogue", body: "Supplier-managed listings published only after the required review.", image: "/category-supplier-catalogue.png", alt: "Hospitality supplier arranging material and product samples" },
 ];
-const flow=[['Inquiry','A hotel records item, quantity and delivery requirements.'],['Discovery','Relevant verified supply and source evidence are reviewed.'],['RFQ','The requirement is routed to eligible suppliers.'],['Comparison','Commercial terms are compared on a consistent basis.'],['Approval','The recorded authority and financial gates decide the next action.'],['Order','An accepted response becomes a controlled purchase order.'],['Delivery','The supplier records a committed delivery time before dispatch.'],['Receipt','The property records accepted and rejected quantities.'],['Settlement','External funders make their own underwriting and disbursement decisions.']];
-const outcomes=[['Lower purchase cost','Demand visibility and comparable commercial terms support stronger negotiations; results depend on the actual transaction.'],['Less manual work','Requirements, quote terms, approvals and receipts remain connected instead of being re-entered between teams.'],['Less logistics waste','A committed delivery time and receipt evidence make late or incomplete fulfillment visible to the people responsible.'],['Stronger supplier terms','Suppliers respond to defined demand with auditable, complete commercial terms.'],['Better operating control','The decision trail stays scoped to the organization, the role and the purchase order.']];
 
-export default function MarketingPage(){return <main className={styles.home}>
- <section className={`${styles.hero} ${heroStyles.hero}`}><div className={`${styles.shell} ${heroStyles.heroShell}`}><div><p className={styles.eyebrow}>Hospitality procurement network · Egypt</p><h1>Control hospitality purchasing from requirement to receipt.</h1><p className={styles.lead}>Give hotel teams, suppliers and partners one evidence-backed operating path for requirements, comparable terms, approvals, delivery and receipt records.</p><div className={styles.actions}><Link href="/hotels/signup" className={styles.primary}>Join as a hotel <ArrowRight size={17}/></Link><Link href="/suppliers/signup" className={styles.secondary}>Join as a supplier</Link><Link href="/walkthrough" className={styles.textLink}>See how it works <ArrowRight size={16}/></Link></div></div><figure className={`${styles.heroVisual} ${heroStyles.heroVisual}`}><Image src="/hv-procurement-team.webp" alt="Hospitality procurement team reviewing supplies and requirements in a hotel back-of-house area" fill sizes="(max-width: 950px) calc(100vw - 64px), 57vw" preload/><figcaption><span>Procurement where the operation happens</span><small>Hotel teams · suppliers · evidence</small></figcaption></figure></div></section>
- <section className={styles.section} aria-labelledby="layers-title"><div className={styles.shell}><Header eyebrow="Sourcing layers" title="Discovery before decision." text="HOTELSVENDORS does not present a generic catalogue as a purchasing decision. It carries the evidence needed to move from requirement to accountable action."/><div className={styles.layerGrid}>{layers.map(({icon:Icon,title,body})=><article key={title}><Icon size={24}/><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
- <section className={`${styles.section} ${styles.categories}`} aria-labelledby="categories-title"><div className={styles.shell}><Header eyebrow="Hospitality categories" title="Designed for the supplies a property actually operates." text="Category views are operating maps, not stock photography or promises of availability. A missing item can be submitted as a requirement."/><div className={styles.categoryGrid}>{categories.map(({title,body,image,alt})=><article key={title}><figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px"/></figure><h3>{title}</h3><p>{body}</p></article>)}</div><div className={styles.requirement}><div><strong>Supply unavailable?</strong><p>Submit the specification, quantity, delivery location and timing. Product Intelligence records the requirement, checks eligible sources and routes a response only when the commercial record is complete.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Submit a requirement <ArrowRight size={16}/></Link></div></div></section>
- <section className={styles.compass} aria-labelledby="compass-title"><div className={styles.shell}><div><p className={styles.eyebrow}>Market Compass · product intelligence</p><h2 id="compass-title">Evidence becomes a next action, not another dashboard.</h2><p>Market Compass brings authorized purchasing history, supplier responses and source context into a reviewable workflow. It can identify a question worth investigating; it does not invent an offer, outcome or saving.</p><Link href="/login?redirect_url=%2Fintelligence" className={styles.textLink}>Open the intelligence workspace <ArrowRight size={16}/></Link></div><ol><li><span>01</span><strong>Observe</strong><p>Collect approved operational and source evidence.</p></li><li><span>02</span><strong>Assess</strong><p>Show uncertainty, comparable terms and constraints.</p></li><li><span>03</span><strong>Route</strong><p>Assign the review to the role that owns the decision.</p></li><li><span>04</span><strong>Learn</strong><p>Link the eventual result back to the original evidence.</p></li></ol></div></section>
- <section className={styles.section} aria-labelledby="volume-title"><div className={styles.shell}><Header eyebrow="Group purchasing volume" title="See demand across properties before you negotiate." text="Group-level purchasing visibility can reveal repeated needs, consolidate compatible demand and create a clearer basis for supplier conversations. Savings are measured only where transaction evidence supports them."/><div className={styles.volumeGrid}>{[['Visibility','Review demand and purchasing activity across the hotel organization.'],['Aggregation','Identify requirements that can be timed or negotiated together.'],['Leverage','Take complete requirements and comparable terms into negotiation.'],['Control','Keep approvals, delivery and receipt evidence connected to the decision.']].map(([title,body],index)=><article key={title}><strong>{index+1}</strong><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
- <section className={`${styles.section} ${styles.engine}`} aria-labelledby="engine-title"><div className={styles.shell}><Header eyebrow="The connected engine" title="One controlled decision path, from requirement to receipt." text="Inspect the evidence, authority and record required at every handoff. This surface illustrates operating logic; it never substitutes an actual order or external decision."/><ProcurementFlowVisualizer stages={flow}/></div></section>
- <section className={styles.section} aria-labelledby="outcomes-title"><div className={styles.shell}><Header eyebrow="Why the network compounds" title="The value is in connected operational evidence." text="Hotels, suppliers, carriers and funders keep separate roles. The network improves handoffs without removing each organization’s authority."/><div className={styles.outcomeList}>{outcomes.map(([title,body])=><article key={title}><CheckCircle2 size={19}/><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
- <section className={styles.mobile} aria-labelledby="mobile-title"><div className={styles.shell}><div><p className={styles.eyebrow}>HOVIN mobile workspace</p><h2 id="mobile-title">The property-side record when receiving happens away from a desk.</h2><p>HOVIN brings receipt evidence, quantity confirmation, ETA updates and role-scoped approvals into the receiving handoff. The organization workspace keeps each confirmed action connected to its purchase order.</p><Link href="/hovin" className={styles.textLink}>Explore the mobile role <ArrowRight size={16}/></Link></div><HovinReceivingPreview /></div></section>
- <section className={styles.close}><div className={styles.shell}><div><p className={styles.eyebrow}>Start in the right place</p><h2>Join the sourcing network with the role that does the work.</h2><p>Public registration is for hotels and suppliers. Carrier and funder access is provisioned through partner onboarding.</p></div><div className={styles.closeActions}><Link href="/register" className={styles.primary}>Register an organization <ArrowRight size={17}/></Link><Link href="/getting-started" className={styles.textLink}>Before you join</Link></div></div></section>
- </main>}
+const operatingSteps = [
+  ["01", "Capture the operating need", "A property team records specification, quantity, timing and receiving context."],
+  ["02", "Compare commercial reality", "The team reviews eligible supplier responses on price, tax, delivery and validity."],
+  ["03", "Route accountable action", "Authority, approval and financial controls determine whether a purchase order can progress."],
+];
 
-function Header({eyebrow,title,text}:{eyebrow:string;title:string;text:string}){return <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>{eyebrow}</p><h2>{title}</h2></div><p>{text}</p></div>}
+const compassSteps = [
+  ["Observe", "Recorded demand, source context and receiving evidence."],
+  ["Assess", "Comparable terms, exceptions and uncertainty shown together."],
+  ["Route", "A defined owner receives the next decision."],
+];
+
+const volumeSignals = [
+  ["01", "Demand view", "See compatible purchasing requirements across a hotel organization."],
+  ["02", "Commercial basis", "Keep tax, quantity, delivery and validity attached to the response."],
+  ["03", "Negotiation context", "Bring complete requirements into supplier conversations."],
+  ["04", "Outcome evidence", "Keep approval, delivery and receipt records connected to the decision."],
+];
+
+const outcomes = [
+  ["Less re-entry", "Requirements, quotes, approvals and receipts stay connected."],
+  ["Clearer supplier terms", "Commercial responses retain the conditions needed for comparison."],
+  ["Visible exceptions", "ETA, quantity and receipt evidence identify the owner of the next action."],
+];
+
+const flow = [
+  ["Inquiry", "A hotel records item, quantity and delivery requirements."],
+  ["Discovery", "Relevant verified supply and source evidence are reviewed."],
+  ["RFQ", "The requirement is routed to eligible suppliers."],
+  ["Comparison", "Commercial terms are compared on a consistent basis."],
+  ["Approval", "The recorded authority and financial gates decide the next action."],
+  ["Order", "An accepted response becomes a controlled purchase order."],
+  ["Delivery", "The supplier records a committed delivery time before dispatch."],
+  ["Receipt", "The property records accepted and rejected quantities."],
+  ["Settlement", "External funders make their own underwriting and disbursement decisions."],
+];
+
+export default function MarketingPage() {
+  return (
+    <main className={styles.home}>
+      <section className={`${styles.hero} ${heroStyles.hero}`}>
+        <div className={`${styles.shell} ${heroStyles.heroShell}`}>
+          <div>
+            <p className={styles.eyebrow}>Hospitality procurement network · Egypt</p>
+            <h1>Control hospitality purchasing from requirement to receipt.</h1>
+            <p className={styles.lead}>Give hotel teams, suppliers and partners one evidence-backed operating path for requirements, comparable terms, approvals, delivery and receipt records.</p>
+            <div className={styles.actions}>
+              <Link href="/hotels/signup" className={styles.primary}>Join as a hotel <ArrowRight size={17} /></Link>
+              <Link href="/suppliers/signup" className={styles.secondary}>Join as a supplier</Link>
+              <Link href="/walkthrough" className={styles.textLink}>See how it works <ArrowRight size={16} /></Link>
+            </div>
+          </div>
+          <figure className={`${styles.heroVisual} ${heroStyles.heroVisual}`}>
+            <Image src="/hv-procurement-team.webp" alt="Hospitality procurement team reviewing supplies and requirements in a hotel back-of-house area" fill sizes="(max-width: 950px) calc(100vw - 64px), 57vw" preload />
+            <figcaption><span>Procurement where the operation happens</span><small>Hotel teams · suppliers · evidence</small></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="operating-title">
+        <div className={styles.shell}>
+          <Header eyebrow="The operating model" title="A purchasing decision should have context, controls and an owner." text="HOTELSVENDORS keeps the commercial process close to the hotel operation—without presenting public catalogue information as a decision." />
+          <div className={styles.operatingScene}>
+            <figure className={styles.sceneImage}>
+              <Image src="/hv-workspace-team.webp" alt="Hotel operations team using purchasing data while preparing hospitality supplies" fill sizes="(max-width: 850px) calc(100vw - 34px), 52vw" />
+              <figcaption>Operating signal · requirement, delivery context and source record</figcaption>
+            </figure>
+            <ol className={styles.operatingRail}>
+              {operatingSteps.map(([number, title, detail]) => <li key={number}><span>{number}</span><div><h3>{title}</h3><p>{detail}</p></div></li>)}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.categories}`} aria-labelledby="categories-title">
+        <div className={styles.shell}>
+          <Header eyebrow="Hospitality categories" title="Built around the supplies a property actually operates." text="Explore hospitality supply areas with category-specific imagery. A missing item becomes a controlled sourcing requirement—not an invented listing." />
+          <div className={styles.categoryGrid}>
+            {categories.map(({ title, body, image, alt }) => <article key={title}><figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure><h3>{title}</h3><p>{body}</p></article>)}
+          </div>
+          <div className={styles.requirement}><div><strong>Need something not shown?</strong><p>Record the specification, quantity, delivery location and timing. Product Intelligence reviews the requirement and routes a response only when the commercial record is complete.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Submit a requirement <ArrowRight size={16} /></Link></div>
+        </div>
+      </section>
+
+      <section className={styles.compass} aria-labelledby="compass-title">
+        <div className={styles.shell}>
+          <figure className={styles.compassImage}><Image src="/hero-clean.jpeg" alt="Hotel room representing the property context behind a procurement decision" fill sizes="(max-width: 850px) calc(100vw - 34px), 46vw" /><figcaption>Property context matters before demand becomes an order.</figcaption></figure>
+          <div className={styles.compassCopy}>
+            <p className={styles.eyebrow}>Market Compass · product intelligence</p>
+            <h2 id="compass-title">Turn a source record into the next accountable action.</h2>
+            <p>Market Compass brings authorized purchasing history, supplier responses and source context into a reviewable workflow. It identifies a question worth investigating; it does not invent an offer, outcome or saving.</p>
+            <ol>{compassSteps.map(([title, detail], index) => <li key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><p>{detail}</p></div></li>)}</ol>
+            <Link href="/login?redirect_url=%2Fintelligence" className={styles.textLink}>Open the intelligence workspace <ArrowRight size={16} /></Link>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="volume-title">
+        <div className={styles.shell}>
+          <Header eyebrow="Group purchasing context" title="Make the commercial conversation complete before you negotiate." text="Demand aggregation is useful only when its operating evidence travels with it. Savings are recorded only where later transaction evidence supports them." />
+          <div className={styles.signalRail}>{volumeSignals.map(([number, title, detail]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{detail}</p></article>)}</div>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.engine}`} aria-labelledby="engine-title"><div className={styles.shell}><Header eyebrow="The connected engine" title="One controlled decision path, from requirement to receipt." text="Inspect the evidence, authority and record required at every handoff. This surface illustrates operating logic; it never substitutes an actual order or external decision." /><ProcurementFlowVisualizer stages={flow} /></div></section>
+
+      <section className={styles.section} aria-labelledby="outcomes-title">
+        <div className={styles.shell}>
+          <Header eyebrow="What changes in the operation" title="A connected record reduces ambiguity at each handoff." text="Hotels, suppliers, carriers and funders retain separate responsibilities. The network makes the operational record visible to the people authorized to act." />
+          <div className={styles.outcomeBand}>{outcomes.map(([title, detail], index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{title}</h3><p>{detail}</p></div></article>)}</div>
+        </div>
+      </section>
+
+      <section className={styles.mobile} aria-labelledby="mobile-title"><div className={styles.shell}><div><p className={styles.eyebrow}>HOVIN mobile workspace</p><h2 id="mobile-title">The property-side record when receiving happens away from a desk.</h2><p>HOVIN brings receipt evidence, quantity confirmation, ETA updates and role-scoped approvals into the receiving handoff. The organization workspace keeps each confirmed action connected to its purchase order.</p><Link href="/hovin" className={styles.textLink}>Explore the mobile role <ArrowRight size={16} /></Link></div><HovinReceivingPreview /></div></section>
+
+      <section className={styles.close}><div className={styles.shell}><div><p className={styles.eyebrow}>Start in the right place</p><h2>Join the sourcing network with the role that does the work.</h2><p>Public registration is for hotels and suppliers. Carrier and funder access is provisioned through partner onboarding.</p></div><div className={styles.closeActions}><Link href="/register" className={styles.primary}>Register an organization <ArrowRight size={17} /></Link><Link href="/getting-started" className={styles.textLink}>Before you join</Link></div></div></section>
+    </main>
+  );
+}
+
+function Header({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
+  return <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>{eyebrow}</p><h2>{title}</h2></div><p>{text}</p></div>;
+}
