@@ -28,16 +28,16 @@ const compassSteps = [
 ];
 
 const volumeSignals = [
-  ["01", "Demand view", "See compatible purchasing requirements across a hotel organization."],
-  ["02", "Commercial basis", "Keep tax, quantity, delivery and validity attached to the response."],
-  ["03", "Negotiation context", "Bring complete requirements into supplier conversations."],
-  ["04", "Outcome evidence", "Keep approval, delivery and receipt records connected to the decision."],
+  ["01", "Demand", "Compatible requirements"],
+  ["02", "Terms", "Tax, price, ETA and validity"],
+  ["03", "Authority", "Approval and spend controls"],
+  ["04", "Receipt", "Quantity and evidence"],
 ];
 
 const outcomes = [
-  ["Less re-entry", "Requirements, quotes, approvals and receipts stay connected."],
-  ["Clearer supplier terms", "Commercial responses retain the conditions needed for comparison."],
-  ["Visible exceptions", "ETA, quantity and receipt evidence identify the owner of the next action."],
+  ["Connected record", "One trace from requirement to receipt."],
+  ["Commercial clarity", "Terms remain comparable at review."],
+  ["Actionable exceptions", "The next owner is visible when delivery changes."],
 ];
 
 const flow = [
@@ -76,7 +76,7 @@ export default function MarketingPage() {
 
       <section className={styles.section} aria-labelledby="operating-title">
         <div className={styles.shell}>
-          <Header eyebrow="The operating model" title="A purchasing decision should have context, controls and an owner." text="HOTELSVENDORS keeps the commercial process close to the hotel operation—without presenting public catalogue information as a decision." />
+          <Header eyebrow="The operating model" title="A purchasing decision should have context, controls and an owner." text="A compact operating view for the people who source, approve and receive." />
           <div className={styles.operatingScene}>
             <figure className={styles.sceneImage}>
               <Image src="/hv-workspace-team.webp" alt="Hotel operations team using purchasing data while preparing hospitality supplies" fill sizes="(max-width: 850px) calc(100vw - 34px), 52vw" />
@@ -91,7 +91,7 @@ export default function MarketingPage() {
 
       <section className={`${styles.section} ${styles.categories}`} aria-labelledby="categories-title">
         <div className={styles.shell}>
-          <Header eyebrow="Hospitality categories" title="Built around the supplies a property actually operates." text="Explore hospitality supply areas with category-specific imagery. A missing item becomes a controlled sourcing requirement—not an invented listing." />
+          <Header eyebrow="Hospitality categories" title="Built around the supplies a property actually operates." text="Start with the operating area, then turn a missing item into a controlled requirement." />
           <div className={styles.categoryGrid}>
             {categories.map(({ title, body, image, alt }) => <article key={title}><figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure><h3>{title}</h3><p>{body}</p></article>)}
           </div>
@@ -114,8 +114,11 @@ export default function MarketingPage() {
 
       <section className={styles.section} aria-labelledby="volume-title">
         <div className={styles.shell}>
-          <Header eyebrow="Group purchasing context" title="Make the commercial conversation complete before you negotiate." text="Demand aggregation is useful only when its operating evidence travels with it. Savings are recorded only where later transaction evidence supports them." />
-          <div className={styles.signalRail}>{volumeSignals.map(([number, title, detail]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{detail}</p></article>)}</div>
+          <Header eyebrow="Commercial control" title="Bring the full operating signal into the negotiation." text="A decision view that keeps demand, terms, authority and receipt evidence together." />
+          <div className={styles.signalRail} aria-label="Commercial decision signal">
+            <div className={styles.signalTrack} aria-hidden="true"><i /><i /><i /></div>
+            {volumeSignals.map(([number, title, detail]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{detail}</p></article>)}
+          </div>
         </div>
       </section>
 
@@ -123,7 +126,7 @@ export default function MarketingPage() {
 
       <section className={styles.section} aria-labelledby="outcomes-title">
         <div className={styles.shell}>
-          <Header eyebrow="What changes in the operation" title="A connected record reduces ambiguity at each handoff." text="Hotels, suppliers, carriers and funders retain separate responsibilities. The network makes the operational record visible to the people authorized to act." />
+          <Header eyebrow="The operational result" title="Less searching. Clearer commercial action." text="Every organization keeps its role; each handoff keeps its accountable record." />
           <div className={styles.outcomeBand}>{outcomes.map(([title, detail], index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{title}</h3><p>{detail}</p></div></article>)}</div>
         </div>
       </section>
