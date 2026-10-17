@@ -56,7 +56,7 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: userMsg, messages: [...messages, userMsg], role: "supplier" }),
+          body: JSON.stringify({ question: userMsg.content, messages: [...messages, userMsg], role: "supplier" }),
         });
 
         if (!res.ok) throw new Error(res.status === 401 ? "SIGN_IN_REQUIRED" : `HTTP ${res.status}`);
@@ -215,8 +215,8 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
                 <Send size={14} className={input.trim() ? "text-white" : "text-white/20"} />
               </button>
             </div>
-            <p className="text-[9px] text-white/15 text-center mt-2 pb-0.5">
-              Powered by HOTELSVENDORS Intelligence Engine (Ollama llama3.2)
+            <p className="text-[9px] text-white/30 text-center mt-2 pb-0.5">
+              Public guidance never accesses organization records.
             </p>
           </div>
         </div>
