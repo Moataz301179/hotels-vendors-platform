@@ -39,6 +39,7 @@ export async function POST(req:Request){
   await appendAuditEntry({entityName:'ORDER',entityId:created.id,actionType:'CREATED',tenantId:user.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{quoteId:quote.id,rfqId:quote.rfqId,orderNumber:created.orderNumber,costs}},tx);
   return created;
  });
- return NextResponse.json({order},{status:201});
+ const {supplierId,...buyerOrder}=order;
+ return NextResponse.json({order:buyerOrder},{status:201});
  }catch(e){if(e instanceof Error&&e.message==='ALREADY_CONVERTED')return NextResponse.json({error:'This request already has an order'},{status:409});throw e;}
 }

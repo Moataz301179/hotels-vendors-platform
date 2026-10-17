@@ -23,8 +23,12 @@ export async function GET(request:Request){
   if(!tenants.some(tenant=>tenant.id===tenantId))return NextResponse.json({error:'HOTEL_TENANT_NOT_FOUND'},{status:404});
   where={tenantId,deletedAt:null};
  }else where={tenantId:user.tenantId,deletedAt:null};
- const orders=await prisma.order.findMany({where,include:{supplier:{select:{name:true}},hotel:{select:{name:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
- return NextResponse.json({orders:orders.map(order=>({...order,etaCompliance:classifyEtaCompliance(order),allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'})),tenants});
+ const orders=await prisma.order.findMany({where,include:{supplier:{select:{name:true}},hotel:{select:{name:true}},invoices:{where:{deletedAt:null},select:{id:true,invoiceNumber:true,status:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
+ return NextResponse.json({orders:orders.map(order=>{
+  const invoiceIssued=(order.invoices?.length??0)>0;
+  const {supplierId,supplier,invoices=[],...safeOrder}=order;
+  return {...safeOrder,invoices,invoiceIssued,...(user.platformRole==='HOTEL'&&!invoiceIssued?{}:{supplier}),etaCompliance:classifyEtaCompliance(order),allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'};
+ }),tenants});
 }
 
 export async function POST(req:Request){

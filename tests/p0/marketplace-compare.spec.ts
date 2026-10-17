@@ -25,7 +25,7 @@ describe('observed market comparison', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     m.actor.mockResolvedValue({ id: 'hotel-user', tenantId: 'hotel-tenant', platformRole: 'HOTEL' });
-    m.compare.mockResolvedValue({ observedAt: '2026-10-16T00:00:00.000Z', offers: [{ sourceUrl: 'https://source.example/towel', unitPrice: 80 }] });
+    m.compare.mockResolvedValue({ observedAt: '2026-10-16T00:00:00.000Z', offers: [{ sourceUrl: 'https://source.example/towel', sourceTitle: 'Supplier catalogue', supplierName: 'Supplier that must stay private', productName: 'Bath towel', unitPrice: 80, currency: 'EGP', packSize: 'each', leadTimeDays: 2, availability: 'Available from Supplier that must stay private', evidenceExcerpt: 'Supplier that must stay private lists bath towels.' }] });
     m.evidenceCreate.mockResolvedValue({ id: 'evidence-1' });
     m.products.mockResolvedValue([{ id: 'supplier-product', supplierId: 'supplier', unitPrice: 100, name: 'Bath towel', sourceKey: 'https://supplier.example/towel' }]);
     m.resolved.mockResolvedValue(new Set(['supplier-product']));
@@ -55,5 +55,22 @@ describe('observed market comparison', () => {
 
     expect(response.status).toBe(200);
     expect(m.opportunityCreate).not.toHaveBeenCalled();
+  });
+
+  it('returns anonymous market-reference terms without leaking an observed supplier or source', async () => {
+    const response = await POST(request({ query: 'towel', quantity: 10 }));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain('Supplier that must stay private');
+    expect(JSON.stringify(body)).not.toContain('source.example');
+    expect(body.comparison.offers[0]).toEqual({
+      reference: 'Comparable offer 01',
+      productName: 'Bath towel',
+      unitPrice: 80,
+      currency: 'EGP',
+      packSize: 'each',
+      leadTimeDays: 2,
+    });
   });
 });

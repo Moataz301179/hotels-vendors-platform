@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { compareMarketOffers } from "@/lib/sourcing/scrapegraph-discovery";
 import { resolvedProductEvidenceIds } from "@/lib/catalog/resolved-product-evidence";
+import { toAnonymousMarketComparison } from "@/lib/procurement/anonymous-commercial-disclosure";
 
 const requestSchema = z.object({ query: z.string().trim().min(2).max(160), quantity: z.number().int().min(1).max(100000) });
 
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
         }
       }
     }
-    return NextResponse.json({ comparison, evidenceId: evidence.id, opportunity, caveat: "These are observed public-source offers, not verified supplier terms. Request a quote before purchase; no order or product record is created by this search." });
+    return NextResponse.json({ comparison: toAnonymousMarketComparison(comparison), evidenceId: evidence.id, opportunity, caveat: "These are anonymized market references, not verified supplier terms. Request a quote before purchase; no order or product record is created by this search." });
   } catch (error) {
     const message = error instanceof Error ? error.message : "SCRAPEGRAPH_SEARCH_FAILED";
     return NextResponse.json({ error: message, configured: message !== "SCRAPEGRAPH_NOT_CONFIGURED" }, { status: message === "SCRAPEGRAPH_NOT_CONFIGURED" ? 503 : 502 });

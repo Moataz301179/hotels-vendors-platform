@@ -6,6 +6,7 @@ import { costBreakdown } from "@/lib/procurement/pre-spend";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
 import { hasResolvedProductEvidence } from "@/lib/catalog/resolved-product-evidence";
+import { toAnonymousQuoteComparison } from "@/lib/procurement/anonymous-commercial-disclosure";
 import { z } from "zod";
 
 const quoteInput=z.object({rfqId:z.string().min(1),unitPrice:z.number().finite().positive().max(10_000_000),quantity:z.number().int().positive().max(1_000_000),deliveryFee:z.number().finite().min(0).max(1_000_000),taxAmount:z.number().finite().min(0).max(1_000_000),leadTimeDays:z.number().int().positive().max(365).optional(),validUntil:z.coerce.date().optional(),notes:z.string().trim().max(2000).optional()});
@@ -35,7 +36,7 @@ export async function GET(){
  const productById=new Map(products.map(product=>[product.id,product]));
  const contextualized=quotes.map(quote=>({...quote,rfq:{...quote.rfq,product:productById.get(quote.rfq.productId??'')??null}}));
  if(user.platformRole==='SUPPLIER')return NextResponse.json({quotes:contextualized});
- return NextResponse.json({quotes:contextualized.map((quote)=>({...quote,cost:costBreakdown(quote)}))});
+ return NextResponse.json({quotes:contextualized.map((quote,index)=>toAnonymousQuoteComparison(quote,index,costBreakdown(quote)))});
 }
 export async function POST(req:Request){
  const user=await getActor();if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});

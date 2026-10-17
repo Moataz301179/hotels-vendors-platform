@@ -144,7 +144,7 @@ describe('supplier quote submission boundary', () => {
     expect(m.quotes.mock.calls[0][0].where).toMatchObject({ supplierId: 'supplier-a', rfqId: { in: ['rfq-a'] } });
   });
 
-  it('gives the buying hotel the verified supplier and requested product context for a tenant-scoped quote', async () => {
+  it('gives the buying hotel anonymous comparable terms and product context for a tenant-scoped quote', async () => {
     m.actor.mockResolvedValue({ id: 'buyer-a', tenantId: 'hotel-tenant', platformRole: 'HOTEL' });
     m.quotes.mockResolvedValue([{
       id: 'quote-a', unitPrice: 125, quantity: 2, deliveryFee: 10, taxAmount: 5, currency: 'EGP',
@@ -160,8 +160,11 @@ describe('supplier quote submission boundary', () => {
       supplier: { select: { id: true, name: true, isVerified: true } },
       rfq: { select: { id: true, productId: true, requestedQty: true, status: true, tenantId: true } },
     });
-    expect((await response.json()).quotes[0]).toMatchObject({
-      supplier: { id: 'supplier-a', name: 'Verified Supplier', isVerified: true },
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain('Verified Supplier');
+    expect(JSON.stringify(body)).not.toContain('supplier-a');
+    expect(body.quotes[0]).toMatchObject({
+      reference: 'Comparable offer 01',
       rfq: { product: { name: 'Bath towel', sku: 'TOWEL-01' } },
       cost: { productCost: 250, deliveryCost: 10, taxCost: 5, totalCost: 265 },
     });
