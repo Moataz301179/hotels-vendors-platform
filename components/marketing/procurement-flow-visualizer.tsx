@@ -1,43 +1,120 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, ClipboardCheck, FileSearch, PackageCheck, ReceiptText, Route, Send, ShieldCheck, ShoppingCart } from "lucide-react";
+
 import styles from "./procurement-flow-visualizer.module.css";
 
-const icons = [FileSearch, ShieldCheck, Send, ClipboardCheck, CheckCircle2, ShoppingCart, Route, PackageCheck, ReceiptText];
-const owners = ["Hotel team", "Product Intelligence", "Supplier", "Authorized buyer", "Approver", "Hotel & supplier", "Carrier", "Property team", "Finance partner"];
+const owners = [
+  "Hotel team",
+  "Product Intelligence",
+  "Eligible supplier",
+  "Authorized buyer",
+  "Recorded approver",
+  "Hotel and supplier",
+  "Carrier",
+  "Property receiving",
+  "External finance partner",
+];
+
+const controls = [
+  "Requirement detail",
+  "Source and eligibility review",
+  "Comparable commercial response",
+  "Like-for-like terms",
+  "Authority and financial gate",
+  "Controlled purchase order",
+  "Committed ETA and dispatch",
+  "Quantity, condition and evidence",
+  "External underwriting decision",
+];
+
+const records = [
+  "Sourcing requirement",
+  "Evidence set",
+  "RFQ response set",
+  "Commercial comparison",
+  "Approval record",
+  "Purchase order",
+  "Shipment handoff",
+  "Goods receipt",
+  "Settlement reference",
+];
 
 export function ProcurementFlowVisualizer({ stages }: { stages: string[][] }) {
   const [selected, setSelected] = useState(0);
   const [title, description] = stages[selected] ?? stages[0];
+  const next = selected === stages.length - 1 ? "Outcome retained" : stages[selected + 1]?.[0] ?? "Outcome retained";
 
   return (
-    <div className={styles.visualizer} aria-label="Interactive procurement workflow">
-      <div className={styles.diagram}>
-        <p className={styles.legend}>Illustrative operating path</p>
-        <div className={styles.path} aria-hidden="true" />
-        <ol className={styles.nodes}>
-          {stages.map(([stage], index) => {
-            const Icon = icons[index] ?? FileSearch;
-            const isSelected = index === selected;
-            return <li key={stage}>
-              <button type="button" className={isSelected ? styles.selected : undefined} onClick={() => setSelected(index)} aria-pressed={isSelected}>
-                <span className={styles.index}>{String(index + 1).padStart(2, "0")}</span>
-                <span className={styles.icon}><Icon size={18} aria-hidden="true" /></span>
-                <strong>{stage}</strong>
-              </button>
-            </li>;
-          })}
-        </ol>
+    <section className={styles.workspace} aria-label="Interactive procurement decision path">
+      <div className={styles.workspaceHead}>
+        <span>Illustrative decision workspace</span>
+        <p>Select a handoff to inspect the evidence, control and record it creates.</p>
       </div>
-      <aside className={styles.detail} aria-live="polite">
-        <span>Stage {String(selected + 1).padStart(2, "0")}</span>
-        <h3>{title}</h3>
-        <p>{description}</p>
-        <div><small>Accountable handoff</small><strong>{owners[selected]}</strong></div>
-        <p className={styles.note}>The record remains scoped to the participating organization and authorized role.</p>
-        <ArrowRight size={18} aria-hidden="true" />
-      </aside>
-    </div>
+
+      <div className={styles.layout}>
+        <ol className={styles.rail}>
+          {stages.map(([stage], index) => (
+            <li key={stage}>
+              <button
+                type="button"
+                onClick={() => setSelected(index)}
+                aria-current={selected === index ? "step" : undefined}
+                className={selected === index ? styles.selected : undefined}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{stage}</strong>
+                <i aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ol>
+
+        <div className={styles.decision} aria-live="polite">
+          <div className={styles.decisionTop}>
+            <div>
+              <span>Stage {String(selected + 1).padStart(2, "0")}</span>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </div>
+            <div className={styles.recordTag}>
+              <small>Record created</small>
+              <strong>{records[selected]}</strong>
+            </div>
+          </div>
+
+          <div className={styles.signalGrid}>
+            <article>
+              <span>Evidence required</span>
+              <strong>
+                {selected === 0
+                  ? "Specification, quantity and delivery context"
+                  : selected === 7
+                    ? "Accepted quantity, exceptions and receipt evidence"
+                    : controls[selected]}
+              </strong>
+            </article>
+            <article>
+              <span>Accountable role</span>
+              <strong>{owners[selected]}</strong>
+            </article>
+            <article>
+              <span>Control</span>
+              <strong>{controls[selected]}</strong>
+            </article>
+          </div>
+
+          <div className={styles.handoff}>
+            <span>Next accountable handoff</span>
+            <strong>{next}</strong>
+            <i aria-hidden="true">→</i>
+          </div>
+        </div>
+      </div>
+
+      <p className={styles.disclaimer}>
+        This shows the operating logic, not a live order, supplier availability, financing decision or completed transaction.
+      </p>
+    </section>
   );
 }
