@@ -91,9 +91,8 @@ jobs:
             if [ "$status" != '200' ]; then echo "Unexpected HTTP $status for $path"; cat /tmp/hv-smoke.log; exit 1; fi
           done
           curl -fsS --max-time 10 http://127.0.0.1:3100/ -o /tmp/hv-home.html
-          grep -Fq 'Source. Approve. Receive.' /tmp/hv-home.html
-          grep -Fq 'Evidence becomes a next action, not another dashboard.' /tmp/hv-home.html
-          grep -Fq 'One path from inquiry to settlement.' /tmp/hv-home.html
+          grep -Fq 'Hospitality procurement network' /tmp/hv-home.html
+          grep -Fq 'Control hospitality purchasing from requirement to receipt.' /tmp/hv-home.html
           for path in /audit /security; do
             test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3100$path")" = '307'
           done
