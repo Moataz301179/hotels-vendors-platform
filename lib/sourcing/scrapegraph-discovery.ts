@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { ScrapeGraphAI } from "scrapegraph-js";
+import { scoreProduct } from "@/lib/storefront/commerce";
 
 export const SCRAPEGRAPH_SCHEMA_VERSION = "hv-supplier-catalog-v1";
 
@@ -40,6 +41,8 @@ export type MarketOfferObservation = {
   availability?: string;
   evidenceExcerpt: string;
 };
+
+type SearchSource = { url: string; title: string; content: string };
 
 const productSchema = {
   type: "object",
@@ -146,11 +149,11 @@ export async function compareMarketOffers(input: { query: string; quantity: numb
     numResults: 8,
     format: "markdown",
     mode: "reader",
-    prompt: "Extract only observable offers for the requested product. Do not estimate or invent price, pack size, stock, lead time, supplier, or currency. Return one offer per source and retain the source URL.",
+    prompt: "Extract only observable offers for the requested product. Do not estimate or invent price, pack size, stock, lead time, supplier, or currency. Return one offer per source. sourceUrl MUST exactly equal the result URL that supplied the product observation; omit the offer if that cannot be established.",
     schema: {
       type: "object",
       properties: {
-        offers: { type: "array", items: { type: "object", properties: { supplierName: { type: "string" }, productName: { type: "string" }, unitPrice: { type: ["number", "null"] }, currency: { type: "string" }, packSize: { type: "string" }, leadTimeDays: { type: ["number", "null"] }, availability: { type: "string" } }, required: ["productName"] } },
+        offers: { type: "array", items: { type: "object", properties: { sourceUrl: { type: "string" }, supplierName: { type: "string" }, productName: { type: "string" }, unitPrice: { type: ["number", "null"] }, currency: { type: "string" }, packSize: { type: "string" }, leadTimeDays: { type: ["number", "null"] }, availability: { type: "string" } }, required: ["productName", "sourceUrl"] } },
       },
       required: ["offers"],
     },
@@ -160,14 +163,26 @@ export async function compareMarketOffers(input: { query: string; quantity: numb
   const data = result.data as { results?: Array<{ url: string; title: string; content: string }>; json?: Record<string, unknown> | null };
   const structured = Array.isArray(data.json?.offers) ? data.json?.offers : [];
   const fallback = data.results ?? [];
-  const offers: MarketOfferObservation[] = structured.flatMap((row, index) => {
+  const offers = marketOfferObservations(input.query, structured, fallback);
+  return { query: input.query, observedAt: new Date().toISOString(), offers, elapsedMs: result.elapsedMs };
+}
+
+/**
+ * Converts an extraction result into a buyer-safe market observation. An offer
+ * is discarded unless it has an exact source URL returned by the search and a
+ * product name that actually matches the requested requirement. This avoids
+ * the dangerous shortcut of linking model rows to sources by list position.
+ */
+export function marketOfferObservations(query: string, rows: unknown[], sources: SearchSource[]): MarketOfferObservation[] {
+  const sourceByUrl = new Map(sources.map((source) => [source.url, source]));
+  return rows.flatMap((row) => {
     if (!row || typeof row !== "object") return [];
     const value = row as Record<string, unknown>;
-    const source = fallback[index] ?? fallback[0];
+    const sourceUrl = String(value.sourceUrl ?? "").trim();
+    const source = sourceByUrl.get(sourceUrl);
     const productName = String(value.productName ?? "").trim();
-    if (!productName || !source?.url) return [];
-    return [{ sourceUrl: source.url, sourceTitle: source.title, supplierName: value.supplierName ? String(value.supplierName) : undefined, productName, unitPrice: typeof value.unitPrice === "number" ? value.unitPrice : null, currency: value.currency ? String(value.currency).toUpperCase() : undefined, packSize: value.packSize ? String(value.packSize) : undefined, leadTimeDays: typeof value.leadTimeDays === "number" ? value.leadTimeDays : null, availability: value.availability ? String(value.availability) : undefined, evidenceExcerpt: source.content.slice(0, 500) } satisfies MarketOfferObservation];
+    if (!source || !productName || scoreProduct(query, { name: productName }) === 0) return [];
+    return [{ sourceUrl, sourceTitle: source.title, supplierName: value.supplierName ? String(value.supplierName) : undefined, productName, unitPrice: typeof value.unitPrice === "number" ? value.unitPrice : null, currency: value.currency ? String(value.currency).toUpperCase() : undefined, packSize: value.packSize ? String(value.packSize) : undefined, leadTimeDays: typeof value.leadTimeDays === "number" ? value.leadTimeDays : null, availability: value.availability ? String(value.availability) : undefined, evidenceExcerpt: source.content.slice(0, 500) } satisfies MarketOfferObservation];
   });
-  return { query: input.query, observedAt: new Date().toISOString(), offers, elapsedMs: result.elapsedMs };
 }
 
