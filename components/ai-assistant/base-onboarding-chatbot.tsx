@@ -17,6 +17,12 @@ export interface BotConfig {
   initialMessage: string;
 }
 
+export function assistantFailureMessage(error: unknown) {
+  return error instanceof Error && error.message === "SIGN_IN_REQUIRED"
+    ? "Sign in to use the secure procurement assistant. It can then answer using only your organization’s authorized records."
+    : "The assistant service is temporarily unavailable. Please retry in a moment.";
+}
+
 export function BaseOnboardingBot({ config }: { config: BotConfig }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -66,9 +72,7 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
           const newMsgs = [...prev];
           const last = newMsgs[newMsgs.length - 1];
           if (last?.role === "assistant" && !last.content) {
-            last.content = error instanceof Error && error.message === "SIGN_IN_REQUIRED"
-              ? "Sign in to use the tenant-scoped procurement assistant."
-              : "Connection issue detected. Please retry in a moment.";
+            last.content = assistantFailureMessage(error);
           }
           return newMsgs;
         });
