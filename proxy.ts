@@ -14,7 +14,7 @@ const PUBLIC_PATHS = new Set([
   "/marketplace", "/platform", "/solutions", "/security-overview", "/hotels/signup", "/suppliers/signup", "/carriers/portal", "/funders/portal", "/suppliers/join", "/about", "/pricing", "/solutions",
   "/contact", "/become-supplier", "/social-media", "/offline", "/help", "/flow",
   "/financing/oliv", "/oliv/referral", "/factoring-service", "/api/health", "/api/v1/products",
-  "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture", "/api/v2/assistant",
+  "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture",
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/static", "/favicon", "/logo", "/videos", "/manifest.json", "/sw.js", "/robots.txt", "/sitemap", "/api/webhooks"];
 
@@ -53,6 +53,11 @@ const authMiddleware = clerkMiddleware(async (auth, request: NextRequest) => {
   return addSecurityHeaders(NextResponse.next());
 });
 
+// The public assistant may offer fixed, non-tenant guidance when signed out,
+// while authenticated requests can use the same endpoint for scoped records.
+// Clerk must still run here so auth() in the route has request context.
+const optionalAssistantAuthMiddleware = clerkMiddleware(async () => addSecurityHeaders(NextResponse.next()));
+
 // Do not run Clerk's request authentication pipeline on public pages/assets.
 // It is unnecessary for these routes and can stall SSR when Clerk config/network
 // is unhealthy. Protected requests still pass through verified Clerk auth below;
@@ -70,6 +75,7 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
   if (pathname === "/demo" || pathname.startsWith("/demo/")) {
     return addSecurityHeaders(NextResponse.redirect(new URL("/sandbox", request.url)));
   }
+  if (pathname === "/api/v2/assistant") return optionalAssistantAuthMiddleware(request, event);
   if (isPublic(pathname)) return addSecurityHeaders(NextResponse.next());
 
   const isApiPath = pathname.startsWith("/api/") || pathname.startsWith("/trpc/");

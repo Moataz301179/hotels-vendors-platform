@@ -55,9 +55,10 @@ describe("production shell and authorization contracts", () => {
     expect(proxy).toContain("if (isApiPath) return authMiddleware(request, event);");
   });
 
-  it("keeps only the public guidance assistant endpoint outside Clerk's API gate", () => {
+  it("runs Clerk context without requiring a session for the public guidance assistant", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
-    expect(proxy).toContain('"/api/v2/assistant"');
+    expect(proxy).toContain("optionalAssistantAuthMiddleware");
+    expect(proxy).toContain('if (pathname === "/api/v2/assistant") return optionalAssistantAuthMiddleware(request, event);');
     expect(proxy).not.toContain('"/api/v2/"');
   });
 
