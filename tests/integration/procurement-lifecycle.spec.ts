@@ -5,6 +5,15 @@ if (process.env.HV_RUN_DB_INTEGRATION !== '1') {
   throw new Error('Refusing to run database integration tests without HV_RUN_DB_INTEGRATION=1.');
 }
 
+const integrationDatabaseUrl = process.env.DATABASE_URL;
+if (!integrationDatabaseUrl) {
+  throw new Error('Refusing to run database integration tests without DATABASE_URL.');
+}
+const integrationDatabaseHost = new URL(integrationDatabaseUrl).hostname;
+if (integrationDatabaseHost.endsWith('.neon.tech') && process.env.HV_INTEGRATION_ALLOW_REMOTE !== '1') {
+  throw new Error('Refusing to run database integration tests against Neon without HV_INTEGRATION_ALLOW_REMOTE=1. Use the isolated CI database or an explicit disposable branch.');
+}
+
 const session = vi.hoisted(() => ({ actor: null as Record<string, unknown> | null }));
 
 vi.mock('@/lib/v2-auth', () => ({ getActor: vi.fn(() => session.actor) }));
