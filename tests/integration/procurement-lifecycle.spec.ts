@@ -98,22 +98,13 @@ describe('procurement lifecycle against the isolated database', () => {
       { id: ids.admin, email: `admin-${run}@example.test`, name: 'Lifecycle admin', role: 'OWNER', platformRole: 'ADMIN', tenantId: ids.platformTenant, roleId: adminRole.id },
     ] });
 
-    await prisma.procurementApprovalPolicy.create({ data: { tenantId: ids.hotelTenant, departmentId, primaryApproverId: ids.approver, createdById: ids.admin } });
+    await prisma.procurementApprovalPolicy.create({ data: { tenantId: ids.hotelTenant, departmentId, primaryApproverId: ids.approver, createdById: ids.approver } });
     await prisma.authorityRule.create({ data: { tenantId: ids.hotelTenant, role: 'GM', name: `Lifecycle approval ${run}`, action: 'APPROVE', minValue: 0, maxValue: 10_000_000, priority: 100, isActive: true } });
   });
 
   afterAll(async () => {
-    await prisma.grnLineItem.deleteMany({ where: { grn: { tenantId: ids.hotelTenant } } });
-    await prisma.goodsReceiptNote.deleteMany({ where: { tenantId: ids.hotelTenant } });
-    await prisma.rfqSupplierAccess.deleteMany({ where: { hotelTenantId: ids.hotelTenant } });
-    await prisma.orderApproval.deleteMany({ where: { order: { tenantId: ids.hotelTenant } } });
-    await prisma.orderItem.deleteMany({ where: { order: { tenantId: ids.hotelTenant } } });
-    await prisma.order.deleteMany({ where: { tenantId: ids.hotelTenant } });
-    await prisma.procurementQuote.deleteMany({ where: { rfq: { tenantId: ids.hotelTenant } } });
-    await prisma.rfqRequest.deleteMany({ where: { tenantId: ids.hotelTenant } });
-    await prisma.evidenceRecord.deleteMany({ where: { tenantId: { in: [ids.hotelTenant, ids.supplierTenant] } } });
-    await prisma.product.deleteMany({ where: { tenantId: ids.supplierTenant } });
-    await prisma.tenant.deleteMany({ where: { id: { in: [ids.platformTenant, ids.hotelTenant, ids.supplierTenant] } } });
+    // The isolated database is disposable. Removing test tenants would cascade into
+    // AuditLog, whose append-only trigger deliberately rejects DELETE operations.
     await prisma.$disconnect();
   });
 

@@ -588,6 +588,100 @@ model Product {
   @@index([deletedAt], map: "Product_deleted_idx")
 }
 
+/// A traceable public-information source used to prepare directory entries.
+/// It never represents a supplier account, a live commercial offer, or
+/// permission to publish a record by itself.
+model DirectorySource {
+  id               String               @id @default(cuid())
+  sourceUrl        String               @unique
+  sourceType       String
+  permissionStatus String               @default("PERMISSION_UNKNOWN")
+  permissionNote   String?
+  observedAt       DateTime
+  lastAttemptAt    DateTime?
+  lastSuccessAt    DateTime?
+  refreshStatus    String               @default("PENDING")
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  deletedAt        DateTime?
+  candidates       DirectoryCandidate[]
+
+  @@index([refreshStatus])
+  @@index([deletedAt])
+}
+
+/// An unpublished normalized product or service observation. Candidates must
+/// pass human review before a directory profile is created.
+model DirectoryCandidate {
+  id                String            @id @default(cuid())
+  sourceId          String
+  sourceRecordKey   String?
+  sourceFingerprint String            @unique
+  normalizedName    String
+  searchText        String
+  itemType          String
+  name              String
+  nameAr            String?
+  category          String
+  subcategory       String?
+  description       String?
+  attributes        Json
+  unitOfMeasure     String?
+  purchaseUnit      String?
+  images            Json
+  searchTerms       Json
+  sourceSnapshot    Json
+  reviewStatus      String            @default("PENDING_REVIEW")
+  duplicateOfId     String?
+  reviewNote        String?
+  reviewedAt        DateTime?
+  reviewedById      String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+  source            DirectorySource   @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  profile           DirectoryProfile?
+
+  @@index([sourceId])
+  @@index([reviewStatus])
+  @@index([normalizedName, category])
+  @@index([searchText])
+  @@index([duplicateOfId])
+  @@index([deletedAt])
+}
+
+/// Supplier-neutral product and service directory used by hotel discovery.
+/// Buyer-facing routes return only these non-commercial fields.
+model DirectoryProfile {
+  id                String             @id @default(cuid())
+  candidateId       String             @unique
+  itemType          String
+  name              String
+  nameAr            String?
+  category          String
+  subcategory       String?
+  description       String?
+  attributes        Json
+  unitOfMeasure     String?
+  purchaseUnit      String?
+  images            Json
+  searchTerms       Json
+  searchText        String
+  publicationStatus String             @default("PUBLISHED")
+  publishedAt       DateTime           @default(now())
+  publishedById     String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+  candidate         DirectoryCandidate @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+
+  @@index([publicationStatus])
+  @@index([itemType, category])
+  @@index([name])
+  @@index([searchText])
+  @@index([deletedAt])
+}
+
 model ProductSeasonality {
   id         String    @id @default(cuid())
   productId  String
@@ -3374,6 +3468,9 @@ enum EntityName {
   PROCUREMENT_APPROVAL_POLICY
   RFQ
   GOODS_RECEIPT_NOTE
+  DIRECTORY_SOURCE
+  DIRECTORY_CANDIDATE
+  DIRECTORY_PROFILE
   SHIPMENT
   CARRIER_PROFILE
   PLATFORM_FEE

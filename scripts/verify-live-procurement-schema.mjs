@@ -9,7 +9,8 @@ import { Client } from "pg";
  * insufficient proof that the separately managed production database exposes
  * the columns the release will query. This script deliberately performs no
  * migration and no data write: it verifies only the relations and columns
- * used by the authenticated RFQ -> quote -> PO -> approval -> GRN path.
+ * used by the reviewed directory and authenticated RFQ -> quote -> PO ->
+ * approval -> GRN paths.
  */
 const requiredSchema = {
   Tenant: ["id", "status", "verificationStatus", "taxId", "deletedAt"],
@@ -17,6 +18,9 @@ const requiredSchema = {
   Hotel: ["id", "tenantId", "status", "taxId", "deletedAt"],
   Supplier: ["id", "tenantId", "status", "isVerified", "taxId", "deletedAt"],
   Product: ["id", "tenantId", "supplierId", "status", "sku", "images", "deletedAt"],
+  DirectorySource: ["id", "sourceUrl", "permissionStatus", "observedAt", "refreshStatus", "deletedAt"],
+  DirectoryCandidate: ["id", "sourceId", "sourceFingerprint", "searchText", "itemType", "category", "sourceSnapshot", "reviewStatus", "deletedAt"],
+  DirectoryProfile: ["id", "candidateId", "searchText", "itemType", "category", "images", "publicationStatus", "deletedAt"],
   RfqRequest: ["id", "buyerId", "productId", "supplierId", "itemName", "unitOfMeasure", "deliveryLocation", "packDescription", "matchingStatus", "requestedQty", "status", "tenantId", "deletedAt"],
   RfqSupplierAccess: ["id", "rfqId", "supplierId", "hotelTenantId", "supplierTenantId", "revokedAt"],
   ProcurementQuote: ["id", "rfqId", "tenantId", "supplierId", "unitPrice", "quantity", "deliveryFee", "taxAmount", "status", "deletedAt"],
