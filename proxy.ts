@@ -14,7 +14,7 @@ const PUBLIC_PATHS = new Set([
   "/marketplace", "/platform", "/solutions", "/security-overview", "/hotels/signup", "/suppliers/signup", "/carriers/portal", "/funders/portal", "/suppliers/join", "/about", "/pricing", "/solutions",
   "/contact", "/become-supplier", "/social-media", "/offline", "/help", "/flow",
   "/financing/oliv", "/oliv/referral", "/factoring-service", "/api/health", "/api/v1/products",
-  "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture",
+  "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture", "/api/v2/assistant",
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/static", "/favicon", "/logo", "/videos", "/manifest.json", "/sw.js", "/robots.txt", "/sitemap", "/api/webhooks"];
 

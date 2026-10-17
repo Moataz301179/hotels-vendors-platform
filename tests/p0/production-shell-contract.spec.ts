@@ -55,6 +55,12 @@ describe("production shell and authorization contracts", () => {
     expect(proxy).toContain("if (isApiPath) return authMiddleware(request, event);");
   });
 
+  it("keeps only the public guidance assistant endpoint outside Clerk's API gate", () => {
+    const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
+    expect(proxy).toContain('"/api/v2/assistant"');
+    expect(proxy).not.toContain('"/api/v2/"');
+  });
+
   it("keeps /register on the role-selection entry flow rather than a raw Clerk widget", () => {
     const page = readFileSync(join(root, "app/(auth)/register/page.tsx"), "utf8");
     expect(page).toContain("Start with your role in procurement");
