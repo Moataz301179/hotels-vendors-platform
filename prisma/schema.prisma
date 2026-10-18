@@ -58,6 +58,7 @@ model Tenant {
   hotels                      Hotel[]
   hotelSuppliers              HotelSupplier[]
   inventorySnapshots          InventorySnapshot[]
+  physicalInventoryCounts     PhysicalInventoryCount[]
   invoPartners                InvoPartner[]
   invoSubscriptions           InvoSubscription[]
   invoices                    Invoice[]
@@ -201,6 +202,7 @@ model Hotel {
   goodsReceiptNotes        GoodsReceiptNote[]
   consumptionForecasts     ConsumptionForecast[]
   inventoryReconciliations InventoryReconciliation[]
+  physicalInventoryCounts  PhysicalInventoryCount[]
   scheduledOrders          ScheduledOrder[]
   contractRateBaselines    ContractRateBaseline[]
 
@@ -572,6 +574,7 @@ model Product {
   ProductTierPrice        ProductTierPrice[]
   grnLineItems            GrnLineItem[]
   consumptionForecasts    ConsumptionForecast[]
+  physicalInventoryCounts PhysicalInventoryCount[]
   productVariations       ProductVariation[]
   reconciliationLineItems ReconciliationLineItem[] @relation("ProductReconciliationLineItems")
   scheduledOrderItems     ScheduledOrderItem[]
@@ -1557,6 +1560,34 @@ model InventorySnapshot {
   tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([deletedAt], map: "InventorySnapshot_deleted_idx")
+}
+
+/// A physical observation, not an inventory adjustment. Counts remain pending
+/// review until an authorized reconciliation process applies a variance.
+model PhysicalInventoryCount {
+  id                 String              @id @default(cuid())
+  tenantId           String
+  hotelId            String
+  productId          String
+  countedById        String
+  clientSubmissionId String
+  observedQuantity   Int
+  barcode            String?
+  capturedAt         DateTime
+  status             PhysicalCountStatus @default(PENDING_REVIEW)
+  reviewedById       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  hotel              Hotel               @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, clientSubmissionId])
+  @@index([tenantId, productId, createdAt])
+  @@index([hotelId, status, createdAt])
+  @@index([deletedAt])
 }
 
 model Cart {
@@ -4097,6 +4128,12 @@ enum ReconciliationStatus {
   APPROVED
   REJECTED
   ADJUSTED
+}
+
+enum PhysicalCountStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  REJECTED
 }
 
 enum QuoteStatus {

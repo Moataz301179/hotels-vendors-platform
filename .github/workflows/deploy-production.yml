@@ -2,6 +2,11 @@ name: HotelsVendors Production Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      production_migration_confirmation:
+        description: Type APPLY_AFTER_NEON_BACKUP only after a restorable Neon production branch has been created and validated.
+        required: true
+        type: string
 
 concurrency:
   group: hv-production
@@ -11,6 +16,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    environment:
+      name: production
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
@@ -60,6 +67,25 @@ jobs:
           tar -C . -rf hv-release.tar deploy/pm2/start-protected.sh
           gzip hv-release.tar
           mv hv-release.tar.gz hv-release.tgz
+      - name: Require explicit production migration confirmation
+        run: |
+          set -euo pipefail
+          test "${{ inputs.production_migration_confirmation }}" = "APPLY_AFTER_NEON_BACKUP"
+      - name: Apply approved production migrations and verify the schema
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$PRODUCTION_DATABASE_URL"
+          node -e '
+            const url = new URL(process.env.PRODUCTION_DATABASE_URL);
+            if (url.protocol !== "postgresql:" && url.protocol !== "postgres:") throw new Error("Production database URL must use PostgreSQL");
+            if (!url.hostname.endsWith(".neon.tech")) throw new Error("Production database URL must target the approved Neon host");
+            if (url.searchParams.get("sslmode") !== "verify-full") throw new Error("Production database URL must set sslmode=verify-full");
+          '
+          DATABASE_URL="$PRODUCTION_DATABASE_URL" npx prisma migrate deploy
+          DATABASE_URL="$PRODUCTION_DATABASE_URL" npx prisma migrate status
+          DATABASE_URL="$PRODUCTION_DATABASE_URL" node scripts/verify-live-procurement-schema.mjs
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
