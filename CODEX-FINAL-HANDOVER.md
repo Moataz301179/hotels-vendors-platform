@@ -1,5 +1,25 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Unreleased implementation — 2026-10-19
+
+- Local source now contains a sealed multi-vendor RFQ implementation that is not
+  yet committed, migrated, or deployed.
+- It adds a response deadline, vendor-specific internal product assignments,
+  one response per assigned vendor, anonymous buyer comparisons, and an
+  exception-reason gate for selection before the deadline.
+- New migration: `20261019030000_add_sealed_multi_vendor_rfq`. Do not apply it
+  until a production backup/clone and the existing migration approval gate are
+  complete.
+- Focused checks passed locally: 35 tests across quote submission, RFQ matching,
+  and quote conversion; TypeScript type-check passed. A full build is still the
+  release verification gate.
+- Hermes is not a continuation dependency. Use `AGENTS.md` and
+  `.agents/skills/hv-project-memory/SKILL.md` for repository continuity.
+- Deployment block: Neon rejected creation of a fresh pre-migration recovery
+  branch because the project's branch limit is reached. Existing recovery
+  branches were preserved; do not delete one without owner approval. Production
+  migration and activation remain blocked until capacity is available.
+
 ## Production release
 
 - Runtime source commit: `93b701bd8622528324a0a656b5812005bbae6bf1`.

@@ -14,6 +14,7 @@ const m = vi.hoisted(() => ({
   products: vi.fn(),
   quoteCreate: vi.fn(),
   updateMany: vi.fn(),
+  accessUpdateMany: vi.fn(),
   audit: vi.fn(),
   permission: vi.fn(),
   financial: vi.fn(),
@@ -48,20 +49,22 @@ describe('supplier quote submission boundary', () => {
     vi.resetAllMocks();
     m.actor.mockResolvedValue(supplierActor);
     m.supplier.mockResolvedValue({ id: 'supplier-a' });
-    m.grant.mockResolvedValue({ rfqId: 'rfq-a', hotelTenantId: 'hotel-tenant' });
+    m.grant.mockResolvedValue({ rfqId: 'rfq-a', hotelTenantId: 'hotel-tenant', productId: 'product-a' });
     m.grants.mockResolvedValue([{ rfqId: 'rfq-a' }]);
     m.quotes.mockResolvedValue([]);
-    m.rfq.mockResolvedValue({ id: 'rfq-a', productId: 'product-a', supplierId: 'supplier-a', buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING' });
+    m.rfq.mockResolvedValue({ id: 'rfq-a', productId: 'product-a', supplierId: null, buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING', responseDeadline: null });
     m.product.mockResolvedValue({ id: 'product-a', sourceKey: 'https://supplier.example/products/product-a' });
     m.evidence.mockResolvedValue({ id: 'evidence-a' });
     m.products.mockResolvedValue([]);
     m.quoteCreate.mockResolvedValue({ id: 'quote-a', ...quote });
     m.updateMany.mockResolvedValue({ count: 1 });
+    m.accessUpdateMany.mockResolvedValue({ count: 1 });
     m.audit.mockResolvedValue('audit-a');
     m.permission.mockResolvedValue(undefined);
     m.financial.mockResolvedValue(undefined);
     m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({
       rfqRequest: { updateMany: m.updateMany },
+      rfqSupplierAccess: { updateMany: m.accessUpdateMany },
       procurementQuote: { create: m.quoteCreate },
     }));
   });
@@ -97,9 +100,10 @@ describe('supplier quote submission boundary', () => {
     expect(m.supplier.mock.calls[0][0].where).toMatchObject({ id: 'supplier-a', tenantId: 'supplier-tenant' });
     expect(m.permission).toHaveBeenCalledWith({ userId: 'supplier-user', tenantId: 'supplier-tenant', platformRole: 'SUPPLIER' }, 'quote:submit');
     expect(m.grant.mock.calls[0][0].where).toMatchObject({ rfqId: 'rfq-a', supplierId: 'supplier-a', supplierTenantId: 'supplier-tenant' });
-    expect(m.rfq.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a' });
-    expect(m.updateMany.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', supplierId: 'supplier-a', status: 'PENDING' });
-    expect(m.quoteCreate.mock.calls[0][0].data).toMatchObject({ deliveryFee: 10, taxAmount: 5 });
+    expect(m.rfq.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant' });
+    expect(m.rfq.mock.calls[0][0].where).not.toHaveProperty('supplierId');
+    expect(m.updateMany.mock.calls[0][0].where).toMatchObject({ id: 'rfq-a', tenantId: 'hotel-tenant', status: { in: ['PENDING', 'QUOTED'] } });
+    expect(m.quoteCreate.mock.calls[0][0].data).toMatchObject({ productId: 'product-a', deliveryFee: 10, taxAmount: 5 });
   });
 
   it('does not create a commercially incomplete quote when delivery or tax is not stated', async () => {
@@ -116,6 +120,15 @@ describe('supplier quote submission boundary', () => {
     expect(await response.json()).toEqual({ error: 'QUOTE_QUANTITY_MISMATCH' });
     expect(m.product).not.toHaveBeenCalled();
     expect(m.updateMany).not.toHaveBeenCalled();
+    expect(m.quoteCreate).not.toHaveBeenCalled();
+  });
+
+  it('closes the sealed response window before reading the vendor product', async () => {
+    m.rfq.mockResolvedValue({ id: 'rfq-a', productId: 'product-a', supplierId: null, buyerId: 'buyer-a', requestedQty: 2, tenantId: 'hotel-tenant', status: 'PENDING', responseDeadline: new Date('2020-01-01') });
+    const response = await submitQuote(request(quote));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'RFQ_RESPONSE_WINDOW_CLOSED' });
+    expect(m.product).not.toHaveBeenCalled();
     expect(m.quoteCreate).not.toHaveBeenCalled();
   });
 
@@ -157,9 +170,9 @@ describe('supplier quote submission boundary', () => {
     expect(response.status).toBe(200);
     expect(m.quotes.mock.calls[0][0].where).toMatchObject({ tenantId: 'hotel-tenant', deletedAt: null });
     expect(m.quotes.mock.calls[0][0].include).toMatchObject({
-      supplier: { select: { id: true, name: true, isVerified: true } },
       rfq: { select: { id: true, productId: true, requestedQty: true, status: true, tenantId: true } },
     });
+    expect(m.quotes.mock.calls[0][0].include).not.toHaveProperty('supplier');
     const body = await response.json();
     expect(JSON.stringify(body)).not.toContain('Verified Supplier');
     expect(JSON.stringify(body)).not.toContain('supplier-a');
@@ -170,11 +183,11 @@ describe('supplier quote submission boundary', () => {
     });
   });
 
-  it('returns a conflict and creates no quote when another response claimed the RFQ first', async () => {
-    m.updateMany.mockResolvedValue({ count: 0 });
+  it('returns a conflict and creates no quote when this vendor already responded', async () => {
+    m.accessUpdateMany.mockResolvedValue({ count: 0 });
     const response = await submitQuote(request(quote));
     expect(response.status).toBe(409);
-    expect(await response.json()).toEqual({ error: 'This request already has a fixed response.' });
+    expect(await response.json()).toEqual({ error: 'This request is no longer accepting a response from your vendor account.' });
     expect(m.quoteCreate).not.toHaveBeenCalled();
     expect(m.audit).not.toHaveBeenCalled();
   });

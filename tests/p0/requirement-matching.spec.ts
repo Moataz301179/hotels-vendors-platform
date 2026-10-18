@@ -22,7 +22,7 @@ describe('queued requirement matching', () => {
     m.permission.mockResolvedValue(undefined);
     m.tenants.mockResolvedValue([{ id: 'hotel-tenant', name: 'Hotel group' }]);
     m.tenant.mockResolvedValue({ id: 'hotel-tenant', name: 'Hotel group' });
-    m.requirement.mockResolvedValue({ id: 'rfq', itemName: 'Bath towels', unitOfMeasure: 'piece' });
+    m.requirement.mockResolvedValue({ id: 'rfq', itemName: 'Bath towels', unitOfMeasure: 'piece', productId: null, matchingStatus: 'QUEUED' });
     m.requirements.mockResolvedValue([]);
     m.product.mockResolvedValue({ id: 'product', name: 'Bath towel', sku: 'BT-01', sourceKey: 'https://supplier.example/products/bt-01', supplierId: 'supplier', supplier: { tenantId: 'supplier-tenant' } });
     m.evidence.mockResolvedValue({ id: 'evidence' });
@@ -42,7 +42,7 @@ describe('queued requirement matching', () => {
   it('lists only queued unlisted requirements for a managed hotel organization', async () => {
     const response = await GET(new Request('https://x/api/v2/rfq/match?tenantId=hotel-tenant'));
     expect(response.status).toBe(200);
-    expect(m.requirements).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ tenantId: 'hotel-tenant', productId: null, supplierId: null, matchingStatus: 'QUEUED' }) }));
+    expect(m.requirements).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ tenantId: 'hotel-tenant', matchingStatus: { in: ['QUEUED', 'MATCHED'] }, status: 'PENDING' }) }));
   });
 
   it('rejects a tenant outside the platform operator scope', async () => {
@@ -68,12 +68,12 @@ describe('queued requirement matching', () => {
     expect(m.update).not.toHaveBeenCalled();
   });
 
-  it('matches once, grants only the selected supplier, and records the evidence trail', async () => {
+  it('assigns a verified vendor product without exposing it to the buyer and records the evidence trail', async () => {
     const response = await POST(request({ tenantId: 'hotel-tenant', rfqId: 'rfq', productId: 'product' }));
     expect(response.status).toBe(200);
-    expect(m.update).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: 'rfq', tenantId: 'hotel-tenant', productId: null, supplierId: null, matchingStatus: 'QUEUED' }), data: expect.objectContaining({ productId: 'product', supplierId: 'supplier', matchingStatus: 'MATCHED' }) }));
-    expect(m.grant).toHaveBeenCalledWith({ data: expect.objectContaining({ rfqId: 'rfq', supplierId: 'supplier', hotelTenantId: 'hotel-tenant', supplierTenantId: 'supplier-tenant', grantedById: 'operator' }) });
-    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: 'RFQ', tenantId: 'hotel-tenant', changes: expect.objectContaining({ kind: 'PRODUCT_INTELLIGENCE_MATCH', productId: 'product', supplierId: 'supplier' }) }), expect.anything());
+    expect(m.update).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: 'rfq', tenantId: 'hotel-tenant', productId: null, matchingStatus: 'QUEUED' }), data: expect.objectContaining({ productId: 'product', supplierId: null, matchingStatus: 'MATCHED' }) }));
+    expect(m.grant).toHaveBeenCalledWith({ data: expect.objectContaining({ rfqId: 'rfq', supplierId: 'supplier', productId: 'product', hotelTenantId: 'hotel-tenant', supplierTenantId: 'supplier-tenant', grantedById: 'operator' }) });
+    expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ entityName: 'RFQ', tenantId: 'hotel-tenant', changes: expect.objectContaining({ kind: 'SEALED_RFQ_VENDOR_ASSIGNMENT', productIds: ['product'], supplierIds: ['supplier'] }) }), expect.anything());
   });
 
   it('does not grant supplier access when a concurrent match already changed the requirement', async () => {

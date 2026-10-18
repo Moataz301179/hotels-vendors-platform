@@ -30,7 +30,7 @@ describe("supplier RFQ workspace", () => {
       supplierId: "supplier-a",
     });
     m.grants.mockResolvedValue([{ rfqId: "rfq-a" }]);
-    m.rfqs.mockResolvedValue([{ id: "rfq-a", productId: "product-a", supplierId: "supplier-a" }]);
+    m.rfqs.mockResolvedValue([{ id: "rfq-a", productId: "product-a", supplierId: null }]);
     m.products.mockResolvedValue([{ id: "product-a", name: "Bath towel", sku: "BT-100", unitOfMeasure: "piece" }]);
     m.permission.mockResolvedValue(undefined);
   });
@@ -39,14 +39,15 @@ describe("supplier RFQ workspace", () => {
     const response = await GET();
     expect(response.status).toBe(200);
     expect(m.rfqs).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: { in: ["rfq-a"] }, supplierId: "supplier-a", deletedAt: null },
+      where: { id: { in: ["rfq-a"] }, deletedAt: null },
     }));
+    expect(m.rfqs.mock.calls[0][0].where).not.toHaveProperty("supplierId");
     expect(m.products).toHaveBeenCalledWith({
       where: { id: { in: ["product-a"] }, supplierId: "supplier-a", deletedAt: null, status: "ACTIVE" },
       select: { id: true, name: true, sku: true, unitOfMeasure: true },
     });
     await expect(response.json()).resolves.toEqual({
-      rfqs: [{ id: "rfq-a", productId: "product-a", supplierId: "supplier-a", product: { id: "product-a", name: "Bath towel", sku: "BT-100", unitOfMeasure: "piece" } }],
+      rfqs: [{ id: "rfq-a", productId: "product-a", supplierId: null, product: { id: "product-a", name: "Bath towel", sku: "BT-100", unitOfMeasure: "piece" } }],
     });
   });
 });

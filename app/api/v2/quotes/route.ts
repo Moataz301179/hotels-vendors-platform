@@ -29,7 +29,7 @@ export async function GET(){
   ?await prisma.rfqSupplierAccess.findMany({where:{supplierId:user.supplierId,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true}})
   :null;
  const where=grants?{supplierId:user.supplierId!,rfqId:{in:grants.map(grant=>grant.rfqId)},deletedAt:null}:{tenantId:user.tenantId,deletedAt:null};
- const quotes=await prisma.procurementQuote.findMany({where,include:{rfq:{select:{id:true,productId:true,requestedQty:true,status:true,tenantId:true}},supplier:{select:{id:true,name:true,isVerified:true}}},orderBy:{submittedAt:"desc"},take:100});
+ const quotes=await prisma.procurementQuote.findMany({where,include:{rfq:{select:{id:true,productId:true,requestedQty:true,status:true,tenantId:true}}},orderBy:{submittedAt:"desc"},take:100});
  const productIds=[...new Set(quotes.flatMap(quote=>quote.rfq.productId?[quote.rfq.productId]:[]))];
  const supplierIds=[...new Set(quotes.map(quote=>quote.supplierId))];
  const products=productIds.length?await prisma.product.findMany({where:{id:{in:productIds},supplierId:{in:supplierIds},deletedAt:null},select:{id:true,name:true,sku:true,unitOfMeasure:true}}):[];
@@ -46,23 +46,27 @@ export async function POST(req:Request){
  const supplier=await prisma.supplier.findFirst({where:{id:user.supplierId,tenantId:user.tenantId,status:"ACTIVE",isVerified:true,deletedAt:null},select:{id:true}});if(!supplier)return NextResponse.json({error:"Supplier verification is required before submitting quotes"},{status:403});
  const parsed=quoteInput.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"rfqId, unitPrice and quantity are required"},{status:400});const b=parsed.data;const {rfqId,unitPrice,quantity}=b;
  if(unitPrice*quantity>9000000000)return NextResponse.json({error:"The stated product amount is too large"},{status:400});
- const grant=await prisma.rfqSupplierAccess.findFirst({where:{rfqId,supplierId:supplier.id,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true,hotelTenantId:true}});
+ const grant=await prisma.rfqSupplierAccess.findFirst({where:{rfqId,supplierId:supplier.id,supplierTenantId:user.tenantId,revokedAt:null},select:{rfqId:true,hotelTenantId:true,productId:true}});
  if(!grant)return NextResponse.json({error:"RFQ is not assigned to your supplier tenant"},{status:404});
- const rfq=await prisma.rfqRequest.findFirst({where:{id:grant.rfqId,tenantId:grant.hotelTenantId,supplierId:supplier.id,deletedAt:null},select:{id:true,productId:true,supplierId:true,buyerId:true,requestedQty:true,tenantId:true,status:true}});
+ const rfq=await prisma.rfqRequest.findFirst({where:{id:grant.rfqId,tenantId:grant.hotelTenantId,deletedAt:null},select:{id:true,productId:true,buyerId:true,requestedQty:true,tenantId:true,status:true,responseDeadline:true}});
  if(!rfq)return NextResponse.json({error:"RFQ is not assigned to your supplier account"},{status:404});
- if(rfq.status!=="PENDING")return NextResponse.json({error:"RFQ is no longer accepting a new fixed response"},{status:409});
+ if(!['PENDING','QUOTED'].includes(rfq.status))return NextResponse.json({error:"RFQ is no longer accepting a commercial response"},{status:409});
+ if(rfq.responseDeadline&&rfq.responseDeadline<=new Date())return NextResponse.json({error:'RFQ_RESPONSE_WINDOW_CLOSED'},{status:409});
  if(quantity!==rfq.requestedQty)return NextResponse.json({error:"QUOTE_QUANTITY_MISMATCH"},{status:409});
- if(!rfq.productId)return NextResponse.json({error:"This unlisted requirement must be matched to a verified product before it can receive a commercial response"},{status:409});
- const product=await prisma.product.findFirst({where:{id:rfq.productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null,source:{not:'FIXTURE'}},select:{id:true,sourceKey:true}});
+ const productId=grant.productId??rfq.productId;
+ if(!productId)return NextResponse.json({error:"This requirement must be matched to a verified product before it can receive a commercial response"},{status:409});
+ const product=await prisma.product.findFirst({where:{id:productId,supplierId:supplier.id,status:"ACTIVE",deletedAt:null,source:{not:'FIXTURE'}},select:{id:true,sourceKey:true}});
  if(!product)return NextResponse.json({error:"The RFQ product is no longer active"},{status:409});
  if(!await hasResolvedProductEvidence(prisma,product))return NextResponse.json({error:'RESOLVED_PRODUCT_EVIDENCE_REQUIRED'},{status:409});
  try{const quote=await prisma.$transaction(async tx=>{
-  const claimed=await tx.rfqRequest.updateMany({where:{id:rfq.id,tenantId:grant.hotelTenantId,supplierId:supplier.id,status:'PENDING',deletedAt:null},data:{status:"QUOTED"}});
-  if(claimed.count!==1)throw new Error('RFQ_ALREADY_QUOTED');
-  const created=await tx.procurementQuote.create({data:{rfqId,tenantId:rfq.tenantId,supplierId:supplier.id,buyerId:rfq.buyerId,unitPrice,quantity,currency:"EGP",leadTimeDays:b?.leadTimeDays?Number(b.leadTimeDays):undefined,deliveryFee:Number(b.deliveryFee),taxAmount:Number(b.taxAmount),validUntil:b?.validUntil?new Date(b.validUntil):undefined,notes:b?.notes||undefined}});
-  await appendAuditEntry({entityName:"PROCUREMENT_QUOTE",entityId:created.id,actionType:"SUBMITTED",tenantId:rfq.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{rfqId,unitPrice,quantity,supplierId:user.supplierId}},tx);
+  const claimedAccess=await tx.rfqSupplierAccess.updateMany({where:{rfqId,supplierId:supplier.id,supplierTenantId:user.tenantId,revokedAt:null,respondedAt:null},data:{respondedAt:new Date()}});
+  if(claimedAccess.count!==1)throw new Error('RFQ_RESPONSE_ALREADY_SUBMITTED');
+  const claimed=await tx.rfqRequest.updateMany({where:{id:rfq.id,tenantId:grant.hotelTenantId,status:{in:['PENDING','QUOTED']},deletedAt:null},data:{status:"QUOTED"}});
+  if(claimed.count!==1)throw new Error('RFQ_ALREADY_CLOSED');
+  const created=await tx.procurementQuote.create({data:{rfqId,tenantId:rfq.tenantId,supplierId:supplier.id,buyerId:rfq.buyerId,productId,unitPrice,quantity,currency:"EGP",leadTimeDays:b?.leadTimeDays?Number(b.leadTimeDays):undefined,deliveryFee:Number(b.deliveryFee),taxAmount:Number(b.taxAmount),validUntil:b?.validUntil?new Date(b.validUntil):undefined,notes:b?.notes||undefined}});
+  await appendAuditEntry({entityName:"PROCUREMENT_QUOTE",entityId:created.id,actionType:"SUBMITTED",tenantId:rfq.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{rfqId,productId,unitPrice,quantity,supplierId:user.supplierId}},tx);
   return created;
  });
  return NextResponse.json({quote,cost:costBreakdown(quote)},{status:201});
- }catch(error){if(error instanceof Error&&error.message==='RFQ_ALREADY_QUOTED')return NextResponse.json({error:'This request already has a fixed response.'},{status:409});throw error;}
+ }catch(error){if(error instanceof Error&&['RFQ_RESPONSE_ALREADY_SUBMITTED','RFQ_ALREADY_CLOSED'].includes(error.message))return NextResponse.json({error:'This request is no longer accepting a response from your vendor account.'},{status:409});throw error;}
 }

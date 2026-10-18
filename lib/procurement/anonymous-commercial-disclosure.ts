@@ -101,6 +101,8 @@ export function toBuyerSafeRfqRequest(rfq: {
   deliveryTimeline: string | null;
   specialReq: string | null;
   notes: string | null;
+  responseDeadline?: Date | null;
+  procurementMethod?: string | null;
   status: string;
   matchingStatus: string;
   createdAt: Date;
@@ -117,6 +119,8 @@ export function toBuyerSafeRfqRequest(rfq: {
     deliveryTimeline: rfq.deliveryTimeline,
     specialReq: rfq.specialReq,
     notes: rfq.notes,
+    responseDeadline: rfq.responseDeadline ?? null,
+    procurementMethod: rfq.procurementMethod ?? 'SEALED_RFQ',
     status: rfq.status,
     matchingStatus: rfq.matchingStatus,
     createdAt: rfq.createdAt,

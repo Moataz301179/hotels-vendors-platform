@@ -3827,6 +3827,11 @@ model RfqRequest {
   deliveryTimeline   String?
   specialReq         String?
   notes              String?
+  /// A sealed commercial-response deadline. Selection before this point needs
+  /// a separately recorded exception reason.
+  responseDeadline   DateTime?
+  procurementMethod  String                @default("SEALED_RFQ")
+  exceptionReason    String?
   status             RfqStatus             @default(PENDING)
   estimatedResponse  String?
   webhookPayload     String?
@@ -3855,7 +3860,11 @@ model RfqSupplierAccess {
   supplierId       String
   hotelTenantId    String
   supplierTenantId String
+  /// The verified product this vendor may quote against. It is internal-only;
+  /// buyers see the normalized RFQ, never this fulfilment linkage.
+  productId        String?
   grantedById      String?
+  respondedAt      DateTime?
   revokedAt        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -3863,6 +3872,7 @@ model RfqSupplierAccess {
   @@unique([rfqId, supplierId, supplierTenantId])
   @@index([supplierTenantId, supplierId, revokedAt])
   @@index([hotelTenantId, rfqId])
+  @@index([rfqId, respondedAt])
 }
 
 model ContractRateBaseline {
@@ -3901,6 +3911,9 @@ model ProcurementQuote {
   tenantId     String
   supplierId   String
   buyerId      String
+  /// The vendor-owned product selected during controlled matching. This does
+  /// not appear in buyer-facing comparison DTOs.
+  productId    String?
   unitPrice    Decimal     @db.Decimal(12, 2)
   quantity     Int
   currency     String      @default("EGP")
