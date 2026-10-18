@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ArrowUpRight, PackageCheck, RefreshCw, SearchCheck } from 'lucide-react';
+import { ArrowRight, PackageCheck, RefreshCw, SearchCheck } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { publicPageMetadata } from '@/lib/seo';
 import { resolvedProductEvidenceIds } from '@/lib/catalog/resolved-product-evidence';
 import { firstPublicProductImageUrl } from '@/lib/catalog/public-product-images';
 import { publicMarketReference } from '@/lib/directory/public-market-reference';
+import { MarketplaceDirectory } from '@/components/marketing/marketplace-directory';
 
 export const metadata = publicPageMetadata(
   'Hospitality Supplier Sourcing',
@@ -18,10 +19,6 @@ export const dynamic = 'force-dynamic';
 
 function firstDirectoryImage(images: unknown) {
   return Array.isArray(images) ? images.find((image): image is string => typeof image === 'string' && /^https:\/\//i.test(image)) ?? null : null;
-}
-
-function formatObservedPrice(price: number, currency: string) {
-  return new Intl.NumberFormat('en-EG', { style: 'currency', currency, maximumFractionDigits: 2 }).format(price);
 }
 
 export default async function MarketplacePage() {
@@ -50,7 +47,7 @@ export default async function MarketplacePage() {
         ['Guest supplies','/category-guest-supplies.png','In-room amenities and replenishment'],
         ['Engineering & FF&E','/category-engineering-ffe.png','Maintenance and property equipment'],
       ].map(([title,image,description])=><article key={title}><Image src={image} alt={description} fill sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 25vw"/><span><strong>{title}</strong><small>{description}</small></span></article>)}</div>
-      {unavailable ? <div className="hv-market-empty hv-market-error"><span className="hv-market-empty-icon"><RefreshCw size={23}/></span><div><h3>We couldn’t load product discovery records.</h3><p>The live directory could not be reached just now. No placeholder products or commercial terms are being substituted. Please try again in a moment.</p><a href="/marketplace" className="hv-public-text-link">Try again <ArrowRight size={15}/></a></div></div> : entries.length ? <div className="hv-market-table"><div className="hv-market-table-head"><span>ITEM / SERVICE</span><span>UNIT</span><span>MARKET SIGNAL</span><span></span></div>{entries.map(entry=><article className="hv-market-row" key={entry.id}><span className="hv-market-product">{entry.image && <img className="hv-market-product-image" src={entry.image} alt={entry.name}/>}<span><strong>{entry.name}</strong><small>{entry.itemType.toLowerCase()} · {entry.category}</small>{entry.description && <small className="hv-market-product-specification">{entry.description}</small>}</span></span><span className="hv-market-unit">{entry.unitOfMeasure ?? 'Specified in RFQ'}</span><span className="hv-market-price">{entry.marketReference ? <><strong>{formatObservedPrice(entry.marketReference.price, entry.marketReference.currency)}</strong><small>{entry.marketReference.label} · {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(entry.marketReference.observedAt))}</small></> : <strong>Request a sourcing quote</strong>}</span><Link href="/register" aria-label={`Join the network to enquire about ${entry.name}`}><ArrowUpRight size={17}/></Link></article>)}</div> : <div className="hv-market-empty"><span className="hv-market-empty-icon"><PackageCheck size={25}/></span><div><h3>The directory is being prepared.</h3><p>We will not fill this page with placeholder products or fabricated prices. Hotels can still submit a structured requirement for any product or service.</p><Link href="/register" className="hv-public-text-link">Submit a requirement <ArrowRight size={15}/></Link></div></div>}
+      {unavailable ? <div className="hv-market-empty hv-market-error"><span className="hv-market-empty-icon"><RefreshCw size={23}/></span><div><h3>We couldn’t load product discovery records.</h3><p>The live directory could not be reached just now. No placeholder products or commercial terms are being substituted. Please try again in a moment.</p><a href="/marketplace" className="hv-public-text-link">Try again <ArrowRight size={15}/></a></div></div> : entries.length ? <MarketplaceDirectory entries={entries} /> : <div className="hv-market-empty"><span className="hv-market-empty-icon"><PackageCheck size={25}/></span><div><h3>The directory is being prepared.</h3><p>We will not fill this page with placeholder products or fabricated prices. Hotels can still submit a structured requirement for any product or service.</p><Link href="/register" className="hv-public-text-link">Submit a requirement <ArrowRight size={15}/></Link></div></div>}
       <p className="hv-market-footnote">An observed market price is a dated reference only. Supplier identity, source records, hotel demand, RFQs, commercial terms, and order activity remain private.</p>
     </div></section>
   </main>;

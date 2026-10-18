@@ -62,8 +62,8 @@ export default function MarketingPage() {
             <h1>Control hospitality purchasing from requirement to receipt.</h1>
             <p className={styles.lead}>Give hotel teams, vendors and partners one evidence-backed operating path for requirements, comparable terms, approvals, delivery and receipt records.</p>
             <div className={styles.actions}>
-              <Link href="/hotels/signup" className={styles.primary}>Join as a hotel <ArrowRight size={17} /></Link>
-              <Link href="/suppliers/signup" className={styles.secondary}>Join as a vendor</Link>
+              <Link href="/marketplace" className={styles.primary}>Explore the reviewed directory <ArrowRight size={17} /></Link>
+              <Link href="/hotels/signup" className={styles.secondary}>Join as a hotel</Link>
               <Link href="/walkthrough" className={styles.textLink}>See how it works <ArrowRight size={16} /></Link>
             </div>
           </div>

@@ -1,5 +1,24 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Public directory experience — pending deployment 2026-10-19
+
+- Replaced the public marketplace's compact directory table with a responsive,
+  category-filterable discovery interface in
+  `components/marketing/marketplace-directory.tsx`.
+- Each entry remains vendor-neutral and explicitly labels a market reference as
+  a dated signal, never stock, an offer, or a commercial commitment.
+- A chosen record now hands off to the authenticated hotel workspace with the
+  product preselected; the public route never reveals vendor identity or terms.
+- The homepage primary action now leads to `/marketplace` so visitors can see
+  the reviewed directory before registration.
+- Local verification: `npm test` passed (72 files / 256 tests), `npm run build`
+  passed, and a production-build local browser inspection confirmed category
+  filters, search, cards, and secure workspace handoff links at `/marketplace`.
+- Pending: production deployment and live browser verification. This improves
+  the visible catalogue journey but does not turn 15 reviewed records into a
+  complete operating catalogue; governed catalog coverage remains an active
+  operational requirement.
+
 ## Unreleased implementation — 2026-10-19
 
 - Local source now contains a sealed multi-vendor RFQ implementation that is not
