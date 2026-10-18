@@ -173,7 +173,7 @@ describe('procurement lifecycle against the isolated database', () => {
 
     expect(response.status).toBe(200);
     const { products } = await response.json() as { products: Array<{ id: string; images: string[] }> };
-    expect(products).toContainEqual(expect.objectContaining({ id: productId, images: ['https://supplier.example.test/images/lifecycle.jpg'] }));
+    expect(products).toContainEqual(expect.objectContaining({ id: productId, images: [`/api/v2/catalog/products/${productId}/images/0`] }));
     expect(products).not.toContainEqual(expect.objectContaining({ id: unresolved.id }));
 
     const roleCatalog = await listRoleCatalog();
@@ -212,7 +212,7 @@ describe('procurement lifecycle against the isolated database', () => {
     asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
     const afterReview = await listMarketplace(new Request('https://hotelsvendors.test/api/v2/marketplace'));
     const { products } = await afterReview.json() as { products: Array<{ id: string; images: string[] }> };
-    expect(products).toContainEqual(expect.objectContaining({ id: product.id, images: ['https://supplier.example.test/images/reviewed-towel.jpg'] }));
+    expect(products).toContainEqual(expect.objectContaining({ id: product.id, images: [`/api/v2/catalog/products/${product.id}/images/0`] }));
 
     const rfqResponse = await createRfq(request('https://hotelsvendors.test/api/v2/rfq', { productId: product.id, quantity: 3 }));
     expect(rfqResponse.status).toBe(201);
