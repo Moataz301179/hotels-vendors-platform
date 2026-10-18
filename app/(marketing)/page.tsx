@@ -17,7 +17,7 @@ const categories = [
 
 const operatingSteps = [
   ["01", "Capture the operating need", "A property team records specification, quantity, timing and receiving context."],
-  ["02", "Compare commercial reality", "The team reviews eligible supplier responses on price, tax, delivery and validity."],
+  ["02", "Compare commercial reality", "The team reviews eligible vendor responses on price, tax, delivery and validity."],
   ["03", "Route accountable action", "Authority, approval and financial controls determine whether a purchase order can progress."],
 ];
 
@@ -43,11 +43,11 @@ const outcomes = [
 const flow = [
   ["Inquiry", "A hotel records item, quantity and delivery requirements."],
   ["Discovery", "Relevant verified supply and source evidence are reviewed."],
-  ["RFQ", "The requirement is routed to eligible suppliers."],
+  ["RFQ", "The requirement is routed to eligible vendors."],
   ["Comparison", "Commercial terms are compared on a consistent basis."],
   ["Approval", "The recorded authority and financial gates decide the next action."],
   ["Order", "An accepted response becomes a controlled purchase order."],
-  ["Delivery", "The supplier records a committed delivery time before dispatch."],
+  ["Delivery", "The vendor records a committed delivery time before dispatch."],
   ["Receipt", "The property records accepted and rejected quantities."],
   ["Settlement", "External funders make their own underwriting and disbursement decisions."],
 ];
@@ -60,16 +60,16 @@ export default function MarketingPage() {
           <div>
             <p className={styles.eyebrow}>Hospitality procurement network · Egypt</p>
             <h1>Control hospitality purchasing from requirement to receipt.</h1>
-            <p className={styles.lead}>Give hotel teams, suppliers and partners one evidence-backed operating path for requirements, comparable terms, approvals, delivery and receipt records.</p>
+            <p className={styles.lead}>Give hotel teams, vendors and partners one evidence-backed operating path for requirements, comparable terms, approvals, delivery and receipt records.</p>
             <div className={styles.actions}>
               <Link href="/hotels/signup" className={styles.primary}>Join as a hotel <ArrowRight size={17} /></Link>
-              <Link href="/suppliers/signup" className={styles.secondary}>Join as a supplier</Link>
+              <Link href="/suppliers/signup" className={styles.secondary}>Join as a vendor</Link>
               <Link href="/walkthrough" className={styles.textLink}>See how it works <ArrowRight size={16} /></Link>
             </div>
           </div>
           <figure className={`${styles.heroVisual} ${heroStyles.heroVisual}`}>
             <Image src="/hv-procurement-team.webp" alt="Hospitality procurement team reviewing supplies and requirements in a hotel back-of-house area" fill sizes="(max-width: 950px) calc(100vw - 64px), 57vw" preload />
-            <figcaption><span>Procurement where the operation happens</span><small>Hotel teams · suppliers · evidence</small></figcaption>
+            <figcaption><span>Procurement where the operation happens</span><small>Hotel teams · vendors · evidence</small></figcaption>
           </figure>
         </div>
       </section>
@@ -105,7 +105,7 @@ export default function MarketingPage() {
           <div className={styles.compassCopy}>
             <p className={styles.eyebrow}>Market Compass · product intelligence</p>
             <h2 id="compass-title">Turn a source record into the next accountable action.</h2>
-            <p>Market Compass brings authorized purchasing history, supplier responses and source context into a reviewable workflow. It identifies a question worth investigating; it does not invent an offer, outcome or saving.</p>
+            <p>Market Compass brings authorized purchasing history, vendor responses and source context into a reviewable workflow. It identifies a question worth investigating; it does not invent an offer, outcome or saving.</p>
             <ol>{compassSteps.map(([title, detail], index) => <li key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><p>{detail}</p></div></li>)}</ol>
             <Link href="/login?redirect_url=%2Fintelligence" className={styles.textLink}>Open the intelligence workspace <ArrowRight size={16} /></Link>
           </div>
@@ -133,7 +133,7 @@ export default function MarketingPage() {
 
       <section className={styles.mobile} aria-labelledby="mobile-title"><div className={`${styles.shell} ${styles.mobileShell}`}><div className={styles.mobileIntro}><p className={styles.eyebrow}>HOVIN mobile workspace</p><h2 id="mobile-title">The field record, designed around the receiving handoff.</h2><p>HOVIN lets the people at the delivery point review the assigned purchase order, confirm quantities, record exceptions and attach receipt evidence—without creating a second procurement record.</p><Link href="/hovin" className={styles.textLink}>Explore the mobile role <ArrowRight size={16} /></Link></div><HovinReceivingPreview /></div></section>
 
-      <section className={styles.close}><div className={styles.shell}><div><p className={styles.eyebrow}>Start in the right place</p><h2>Join the sourcing network with the role that does the work.</h2><p>Public registration is for hotels and suppliers. Carrier and funder access is provisioned through partner onboarding.</p></div><div className={styles.closeActions}><Link href="/register" className={styles.primary}>Register an organization <ArrowRight size={17} /></Link><Link href="/getting-started" className={styles.textLink}>Before you join</Link></div></div></section>
+      <section className={styles.close}><div className={styles.shell}><div><p className={styles.eyebrow}>Start in the right place</p><h2>Join the sourcing network with the role that does the work.</h2><p>Public registration is for hotels and vendors. Carrier and funder access is provisioned through partner onboarding.</p></div><div className={styles.closeActions}><Link href="/register" className={styles.primary}>Register an organization <ArrowRight size={17} /></Link><Link href="/getting-started" className={styles.textLink}>Before you join</Link></div></div></section>
     </main>
   );
 }

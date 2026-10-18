@@ -21,11 +21,11 @@ export function SiteNav() {
   const platform = [
     { href: "/platform", label: "Product overview" },
     { href: "/walkthrough", label: "Procurement workflow" },
-    { href: "/marketplace", label: "Supplier catalogue" },
+    { href: "/marketplace", label: "Reviewed catalogue" },
   ];
   const audiences = [
     { href: "/hotels/join", label: "Hotels" },
-    { href: "/suppliers/join", label: "Suppliers" },
+    { href: "/suppliers/join", label: "Vendors" },
     { href: "/contact", label: "Partner access" },
   ];
   function closeMenu() { setOpen(false); }

@@ -11,10 +11,10 @@ const workspaces = [
     icon: Building2,
   },
   {
-    title: 'Suppliers',
+    title: 'Vendors',
     description: 'Present eligible products and respond to hospitality procurement requests.',
     href: '/suppliers/signup',
-    action: 'Start supplier registration',
+    action: 'Start vendor registration',
     icon: Handshake,
   },
 ];
@@ -47,7 +47,7 @@ export default function Register() {
             <div className="hv-register-layer" aria-labelledby="procurement-roles-title">
               <div className="hv-register-layer-heading">
                 <span className="hv-register-layer-index">01</span>
-                <div><h3 id="procurement-roles-title">Procurement workspaces</h3><p>For the buyers and suppliers who create and fulfill purchasing demand.</p></div>
+                <div><h3 id="procurement-roles-title">Procurement workspaces</h3><p>For the buyers and vendors who create and fulfil purchasing demand.</p></div>
               </div>
               <div className="hv-register-card-grid">
                 {workspaces.slice(0, 2).map(({ title, description, href, action, icon: Icon }) => (
