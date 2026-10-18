@@ -29,6 +29,7 @@ const requiredSchema = {
   OrderApproval: ["id", "orderId", "approverId", "action", "deletedAt"],
   GoodsReceiptNote: ["id", "orderId", "tenantId", "status", "receivedById", "deletedAt"],
   GrnLineItem: ["id", "grnId", "orderItemId", "receivedQuantity", "acceptedQuantity"],
+  PhysicalInventoryCount: ["id", "tenantId", "hotelId", "productId", "countedById", "clientSubmissionId", "observedQuantity", "capturedAt", "status", "deletedAt"],
   AuditLog: ["id", "tenantId", "entityId", "actionType", "actorId"],
 };
 
