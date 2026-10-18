@@ -26,9 +26,7 @@ export function OrdersClient(){
  function updateLine(index:number,field:keyof ReceiptLine,value:string){setLines(current=>current.map((line,i)=>i===index?{...line,[field]:field==='rejectionReason'||field==='conditionNotes'?value:Number(value),...(field==='receivedQuantity'?{acceptedQuantity:Math.min(line.acceptedQuantity,Number(value)||0)}:{})}:line))}
  return (
   <>
-   <div className="eyebrow">Commercial activity</div>
-   <h1 style={{fontSize:42,letterSpacing:'-.05em',margin:'8px 0'}}>Orders</h1>
-   <p className="muted">Track recorded purchase orders and confirm delivery against each order line.</p>
+   <header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">Commercial activity</div><h1>Orders</h1><p className="workspace-page-lead muted">Track recorded purchase orders and confirm delivery against each order line.</p></div></header>
    {notice&&<div className="workspace-status" role="status">{notice}</div>}
    {hotelTenants.length>0&&<label style={{display:'block',maxWidth:420,marginTop:20}}>Hotel organization for payment-guarantee review<select value={hotelTenantId} onChange={e=>setHotelTenantId(e.target.value)} style={{display:'block',width:'100%',marginTop:6}}>{hotelTenants.map(tenant=><option key={tenant.id} value={tenant.id}>{tenant.name}</option>)}</select></label>}
    <div className="card" style={{marginTop:28,overflow:'auto'}}>
