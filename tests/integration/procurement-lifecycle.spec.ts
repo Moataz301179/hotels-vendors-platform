@@ -230,7 +230,7 @@ describe('procurement lifecycle against the isolated database', () => {
     const { quote } = await quoteResponse.json() as { quote: { id: string } };
 
     asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
-    const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id }));
+    const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id, exceptionReason: 'Urgent maintenance requirement requires early selection.' }));
     expect(orderResponse.status).toBe(201);
     const { order } = await orderResponse.json() as { order: { id: string } };
     const storedApprovalPolicy = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { departmentId: true, procurementApprovalPolicyId: true, approvalPolicySnapshot: true } });
@@ -286,7 +286,7 @@ describe('procurement lifecycle against the isolated database', () => {
     const matchResponse = await matchRequirement(request('https://hotelsvendors.test/api/v2/rfq/match', { tenantId: ids.hotelTenant, rfqId: rfq.id, productId }));
     expect(matchResponse.status).toBe(200);
     const matched = await prisma.rfqRequest.findUniqueOrThrow({ where: { id: rfq.id }, select: { productId: true, supplierId: true, matchingStatus: true } });
-    expect(matched).toEqual({ productId, supplierId, matchingStatus: 'MATCHED' });
+    expect(matched).toEqual({ productId, supplierId: null, matchingStatus: 'MATCHED' });
     await expect(prisma.rfqSupplierAccess.findFirst({ where: { rfqId: rfq.id, supplierId, hotelTenantId: ids.hotelTenant, supplierTenantId: ids.supplierTenant, revokedAt: null } })).resolves.not.toBeNull();
 
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
@@ -295,7 +295,7 @@ describe('procurement lifecycle against the isolated database', () => {
     const { quote } = await quoteResponse.json() as { quote: { id: string } };
 
     asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
-    const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id }));
+    const orderResponse = await acceptQuote(request('https://hotelsvendors.test/api/v2/quotes/accept', { quoteId: quote.id, exceptionReason: 'Urgent receiving requirement requires early selection.' }));
     expect(orderResponse.status).toBe(201);
     const { order } = await orderResponse.json() as { order: { id: string } };
 
