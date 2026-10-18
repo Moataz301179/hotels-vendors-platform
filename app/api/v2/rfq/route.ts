@@ -5,6 +5,7 @@ import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
 import { hasResolvedProductEvidence } from "@/lib/catalog/resolved-product-evidence";
+import { toBuyerSafeRfqRequest } from "@/lib/procurement/anonymous-commercial-disclosure";
 import { z } from "zod";
 
 const rfqInput=z.object({productId:z.string().min(1).optional(),contractBaselineId:z.string().min(1).optional(),itemName:z.string().trim().min(2).max(240).optional(),unitOfMeasure:z.string().trim().min(1).max(80).optional(),deliveryLocation:z.string().trim().max(240).optional(),packDescription:z.string().trim().max(240).optional(),quantity:z.number().int().positive().max(1_000_000),targetPrice:z.number().finite().positive().optional(),deliveryTimeline:z.string().trim().max(240).optional(),specialReq:z.string().trim().max(2000).optional(),notes:z.string().trim().max(2000).optional()}).superRefine((value,context)=>{if(value.productId||value.contractBaselineId)return;if(!value.itemName||!value.unitOfMeasure)context.addIssue({code:z.ZodIssueCode.custom,message:'An item name and unit of measure are required for an unlisted requirement'});});
@@ -22,7 +23,8 @@ export async function GET() {
    return NextResponse.json({rfqs:rfqs.map(rfq=>({...rfq,product:productById.get(rfq.productId??'')??null}))});
   }
   const where = {tenantId:user.tenantId,deletedAt:null};
-  return NextResponse.json({rfqs:await prisma.rfqRequest.findMany({where,orderBy:{createdAt:"desc"},take:100})});
+  const rfqs=await prisma.rfqRequest.findMany({where,orderBy:{createdAt:"desc"},take:100});
+  return NextResponse.json({rfqs:rfqs.map(toBuyerSafeRfqRequest)});
 }
 
 export async function POST(req:Request){

@@ -85,3 +85,41 @@ export function toAnonymousCatalogProduct(product: {
     requestForQuote: true,
   };
 }
+
+/**
+ * A hotel can track its own request, but must not receive the private
+ * fulfillment-source linkage that operations use to route it internally.
+ */
+export function toBuyerSafeRfqRequest(rfq: {
+  id: string;
+  itemName: string | null;
+  unitOfMeasure: string | null;
+  deliveryLocation: string | null;
+  packDescription: string | null;
+  requestedQty: number;
+  targetPrice: unknown;
+  deliveryTimeline: string | null;
+  specialReq: string | null;
+  notes: string | null;
+  status: string;
+  matchingStatus: string;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: rfq.id,
+    itemName: rfq.itemName,
+    unitOfMeasure: rfq.unitOfMeasure,
+    deliveryLocation: rfq.deliveryLocation,
+    packDescription: rfq.packDescription,
+    requestedQty: rfq.requestedQty,
+    targetPrice: rfq.targetPrice,
+    deliveryTimeline: rfq.deliveryTimeline,
+    specialReq: rfq.specialReq,
+    notes: rfq.notes,
+    status: rfq.status,
+    matchingStatus: rfq.matchingStatus,
+    createdAt: rfq.createdAt,
+    updatedAt: rfq.updatedAt,
+  };
+}
