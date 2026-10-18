@@ -12,7 +12,7 @@ const categories = [
   { title: "Housekeeping", body: "Cleaning chemicals, linen care and room-turnover essentials.", image: "/category-housekeeping.png", alt: "Hotel housekeeping room with linen and cleaning supplies" },
   { title: "Guest supplies", body: "In-room amenities and front-of-house replenishment.", image: "/category-guest-supplies.png", alt: "Hotel guest amenities prepared for operational use" },
   { title: "Engineering & FF&E", body: "Maintenance, replacement parts and property equipment.", image: "/category-engineering-ffe.png", alt: "Hotel engineering components and finish samples on a workbench" },
-  { title: "Supplier catalogue", body: "Supplier-managed listings published only after the required review.", image: "/category-supplier-catalogue.png", alt: "Hospitality supplier arranging material and product samples" },
+  { title: "Reviewed catalogue", body: "Product records published only after the required review.", image: "/category-supplier-catalogue.png", alt: "Hospitality product samples arranged for operational review" },
 ];
 
 const operatingSteps = [
