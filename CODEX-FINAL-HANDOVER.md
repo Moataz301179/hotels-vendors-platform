@@ -22,6 +22,22 @@
   private batches, then separately verifies source/image reuse rights before
   considering any candidate for public publication.
 
+### Intake evidence recorded after release
+
+- Production release [`2963dfa3`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39319718029)
+  completed successfully. The live health response reported matching
+  `releaseId` and `sourceCommit` `2963dfa3fff46127fed7381c65636d1971801991`,
+  database `ready`, and authorization `configured`.
+- An authenticated Administrator submitted the three generated batches through
+  the released UI: 100, 100, and 51 records. The UI confirmed 100 (one
+  duplicate relationship flagged), 100, and 51 observations queued;
+  published records stayed at zero for every submission.
+- The live source registry then reported
+  `https://www.massdistributioneg.com/products` as `permission unknown`,
+  `251 candidates`, and `ingested`; the cross-source total was 301 candidates.
+  This is intake evidence only, not proof of permission to reuse images or a
+  claim that any source is a participating Vendor.
+
 ## Catalogue intake repair — 2026-10-19 (pending release)
 
 - Working source was `59495a0d` on `main` before this repair. The only official
