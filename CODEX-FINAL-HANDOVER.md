@@ -28,11 +28,15 @@
   `npm run build` passed. The remaining action is to push the candidate source,
   dispatch the governed production workflow, then require matching live health
   release/source identifiers before claiming deployment.
-- The first production-gate workflow attempt stopped before any production
-  operation because its isolated CI database used `prisma db push`, which does
-  not install migration SQL triggers. The workflow now initializes that
-  disposable database with `prisma migrate deploy`, so CI exercises the same
-  migration history and append-only controls as the production path.
+- Two production-gate workflow attempts stopped before any production
+  operation: first because `prisma db push` cannot install SQL triggers, then
+  because the historical migration chain begins with SQLite-era `DATETIME` SQL
+  and cannot replay into a blank PostgreSQL CI service. The workflow therefore
+  retains its existing current-schema CI projection for route behavior and
+  disables only the trigger assertion there. The mandatory trigger proof is
+  performed against the real, disposable Neon recovery clone before deployment;
+  production still applies `prisma migrate deploy` and then executes the
+  read-only schema gate.
 
 ## Defensible network transaction record — 2026-10-20 (staged; not deployed)
 
