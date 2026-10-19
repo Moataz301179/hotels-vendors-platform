@@ -28,6 +28,11 @@
   `npm run build` passed. The remaining action is to push the candidate source,
   dispatch the governed production workflow, then require matching live health
   release/source identifiers before claiming deployment.
+- The first production-gate workflow attempt stopped before any production
+  operation because its isolated CI database used `prisma db push`, which does
+  not install migration SQL triggers. The workflow now initializes that
+  disposable database with `prisma migrate deploy`, so CI exercises the same
+  migration history and append-only controls as the production path.
 
 ## Defensible network transaction record — 2026-10-20 (staged; not deployed)
 
