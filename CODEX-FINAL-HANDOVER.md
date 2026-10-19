@@ -1,5 +1,27 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Bulk private catalogue intake — 2026-10-19 (pending release)
+
+- Added a reusable Administrator bulk-intake control in
+  `components/v2/directory-operations.tsx`. It accepts a normalized JSON batch
+  of at most 100 records and delegates to the existing authenticated
+  `/api/v2/admin/directory/candidates` endpoint; it does not add a second
+  ingestion API or a migration.
+- The control makes the actual boundary explicit: every submission remains
+  `PENDING_REVIEW`, generates the endpoint's audit record, and reports zero
+  publication. It cannot claim a price, stock, commercial offer, Vendor
+  identity, or image-use permission.
+- A rendered, public observation of the Mass Distribution catalogue identified
+  251 product cards. Those records have been normalized into three local,
+  disposable batches (100, 100, 51) with source permission intentionally
+  `PERMISSION_UNKNOWN`; they have not yet been sent to the production system.
+- Local verification: catalogue JSON-LD suite passed (5 tests) and
+  `npm run build` passed. Build warnings remain non-blocking: Prisma config
+  deprecation, outer workspace detection, and React 18 deprecation in Next 16.
+- Next action after release: an authenticated Administrator queues the three
+  private batches, then separately verifies source/image reuse rights before
+  considering any candidate for public publication.
+
 ## Catalogue intake repair — 2026-10-19 (pending release)
 
 - Working source was `59495a0d` on `main` before this repair. The only official
