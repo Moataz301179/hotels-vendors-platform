@@ -47,6 +47,9 @@ export async function POST(request: Request) {
   });
   if (invalid) return NextResponse.json({ error: 'OPEN_LICENSED_SOURCE_EVIDENCE_REQUIRED' }, { status: 409 });
 
+  // A governed batch can contain 100 profiles. Keep the whole review,
+  // publication, and audit record atomic, but allow enough time for a remote
+  // production database instead of Prisma's five-second interactive default.
   const result = await prisma.$transaction(async (tx) => {
     const profiles: string[] = [];
     for (const candidate of candidates) {
@@ -68,6 +71,6 @@ export async function POST(request: Request) {
     }
     await appendAuditEntry({ entityName: 'DIRECTORY_PROFILE', entityId: candidates[0].source.id, actionType: 'STATUS_CHANGED', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { action: 'OPEN_LICENSED_BATCH_PUBLISHED', records: profiles.length, sourceUrl: candidates[0].source.sourceUrl } }, tx);
     return profiles;
-  });
+  }, { timeout: 30_000 });
   return NextResponse.json({ profiles: result, published: result.length });
 }
