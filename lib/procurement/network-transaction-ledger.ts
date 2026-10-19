@@ -40,7 +40,15 @@ function sha256(value: string) {
 export async function appendNetworkTransactionEvent(tx: Prisma.TransactionClient, input: LedgerEventInput) {
   const lockKey = input.rootRfqId ?? input.orderId ?? input.invoiceId;
   if (!lockKey) throw new Error('NETWORK_TRANSACTION_ROOT_REQUIRED');
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+
+  // Every supported caller appends its AuditLog record immediately before this
+  // event. appendAuditEntry holds the global audit-chain advisory lock for the
+  // surrounding transaction, which serializes ledger appends as well. Taking a
+  // second, per-order advisory lock here is unsafe: the receiving route already
+  // holds that order lock before appending its audit entry, while a concurrent
+  // status update takes the audit lock first. That inverted lock order can
+  // deadlock a real procurement write. Keep this helper after audit append and
+  // use the audit-chain serialization as the single lock order.
 
   const transaction = await tx.networkTransaction.findFirst({
     where: {

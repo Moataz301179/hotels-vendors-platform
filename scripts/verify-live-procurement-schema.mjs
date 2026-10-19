@@ -31,6 +31,8 @@ const requiredSchema = {
   GrnLineItem: ["id", "grnId", "orderItemId", "receivedQuantity", "acceptedQuantity"],
   PhysicalInventoryCount: ["id", "tenantId", "hotelId", "productId", "countedById", "clientSubmissionId", "observedQuantity", "capturedAt", "status", "deletedAt"],
   AuditLog: ["id", "tenantId", "entityId", "actionType", "actorId"],
+  NetworkTransaction: ["id", "tenantId", "rootRfqId", "orderId", "invoiceId", "status", "retentionClass", "latestEventHash", "eventCount"],
+  NetworkTransactionEvent: ["id", "networkTransactionId", "tenantId", "sourceEntityId", "occurredAt", "payloadHash", "previousHash", "hash", "auditLogId"],
 };
 
 async function loadDatabaseUrlFromEnvFile() {

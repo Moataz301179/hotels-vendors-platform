@@ -272,6 +272,23 @@ describe('procurement lifecycle against the isolated database', () => {
     await expect(prisma.evidenceRecord.findMany({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', sourceUrl: 'https://supplier.example.test/receipts/lifecycle.jpg' } })).resolves.toHaveLength(1);
     await expect(prisma.auditLog.findFirst({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', actionType: 'CREATED' }, select: { changes: true } })).resolves.toMatchObject({ changes: expect.objectContaining({ orderId: order.id, evidenceRecordIds: expect.any(Array) }) });
     expect(auditRecords.length).toBeGreaterThanOrEqual(5);
+
+    const ledger = await prisma.networkTransaction.findUniqueOrThrow({
+      where: { orderId: order.id },
+      include: { events: { orderBy: { recordedAt: 'asc' } } },
+    });
+    expect(ledger.rootRfqId).toBe(rfq.id);
+    expect(ledger.eventCount).toBe(ledger.events.length);
+    expect(ledger.events.length).toBeGreaterThanOrEqual(5);
+    expect(ledger.latestEventHash).toBe(ledger.events.at(-1)?.hash);
+    expect(ledger.events[0]?.previousHash).toBe('genesis');
+    for (let index = 1; index < ledger.events.length; index += 1) {
+      expect(ledger.events[index]?.previousHash).toBe(ledger.events[index - 1]?.hash);
+    }
+    await expect(prisma.networkTransactionEvent.update({
+      where: { id: ledger.events[0]!.id },
+      data: { hash: 'tampered' },
+    })).rejects.toThrow(/append-only/i);
   });
 
   it('moves an unlisted hotel requirement through Product Intelligence matching before supplier disclosure', async () => {

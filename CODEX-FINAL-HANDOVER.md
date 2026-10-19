@@ -1,5 +1,34 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Neon migration recovery rehearsal — 2026-10-20 (release candidate pending deploy)
+
+- A fresh, time-bounded recovery branch, `pre-migration-149bffd6-20261020`
+  (`br-withered-surf-b55xxy0m`), was created from the current production
+  branch. It has a provider-enforced expiry of 2026-10-26 and was reset from
+  its production parent after testing; its recorded written-data size is zero.
+  It is therefore the current clean rollback point for this release window.
+- Neon branch capacity was full. Two older, superseded, zero-write backup
+  snapshots from 18 October were removed only after their exact identities and
+  lack of writes were verified: `backup-before-core-release-20261018`
+  (`br-sweet-sound-b5f6x8wd`) and
+  `production-backup-before-6006aac-20261018`
+  (`br-square-shape-b5lxbz2r`). Later recovery snapshots were retained.
+- On the isolated clone, `prisma migrate deploy` applied
+  `20261020050000_add_network_transaction_ledger`; post-migration Prisma
+  status was up to date, and the read-only schema gate passed with all 20
+  required tables. The remote lifecycle suite passed 6/6 when given a
+  120-second remote-database test budget. A direct mutation attempt against a
+  `NetworkTransactionEvent` was rejected by its append-only database trigger.
+- The ledger helper no longer acquires a second per-order advisory lock after
+  the global audit-chain lock. This removes an inverted lock order with the
+  receiving route that could deadlock concurrent order status and receipt
+  writes. The integration suite now asserts ledger event ordering, hash links,
+  event count, and immutability.
+- Release candidate verification: focused ledger route tests passed (39), and
+  `npm run build` passed. The remaining action is to push the candidate source,
+  dispatch the governed production workflow, then require matching live health
+  release/source identifiers before claiming deployment.
+
 ## Defensible network transaction record — 2026-10-20 (staged; not deployed)
 
 - The current source persists RFQs, quotes, orders, GRNs, invoices, payments,
