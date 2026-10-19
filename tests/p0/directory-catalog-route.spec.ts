@@ -63,6 +63,17 @@ describe('directory catalog foundation', () => {
     expect(m.candidateUpsert).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ duplicateOfId: 'existing-candidate', reviewStatus: 'PENDING_REVIEW' }) }));
   });
 
+  it('does not flag a re-queued source record as a duplicate of itself', async () => {
+    m.candidateFindUnique.mockResolvedValue({ id: 'candidate-1' });
+    const response = await ingestCandidates(jsonRequest('https://hotelsvendors.test/api/v2/admin/directory/candidates', {
+      source: { url: 'https://catalog.example.test/products' },
+      records: [{ sourceRecordKey: 'towel-001', name: 'Bath towel', itemType: 'PRODUCT', category: 'LINEN_TEXTILES' }],
+    }));
+    expect(response.status).toBe(201);
+    expect(m.candidateFindFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: { not: 'candidate-1' } }) }));
+    expect(m.candidateUpsert).toHaveBeenCalledWith(expect.objectContaining({ update: expect.objectContaining({ duplicateOfId: null }) }));
+  });
+
   it('publishes a reviewed profile without returning source or supplier data to discovery users', async () => {
     const pending = { id: 'candidate-1', sourceId: 'source-1', itemType: 'PRODUCT', name: 'Bath towel', nameAr: null, category: 'LINEN_TEXTILES', subcategory: null, description: 'Hotel bath towel', attributes: { material: 'cotton' }, unitOfMeasure: 'piece', purchaseUnit: null, images: ['https://images.example.test/towel.jpg'], searchTerms: ['towel'], reviewStatus: 'PENDING_REVIEW', source: { id: 'source-1', sourceUrl: 'https://catalog.example.test/products', permissionStatus: 'PERMITTED' } };
     m.candidateFindUnique.mockResolvedValue(pending);

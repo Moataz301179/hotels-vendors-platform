@@ -103,11 +103,25 @@ export async function POST(request: Request) {
   for (const item of parsed.data.records) {
     const normalizedName = normalizeDirectoryText(item.name);
     const searchText = directorySearchText(item);
-    const duplicate = await prisma.directoryCandidate.findFirst({
-      where: { normalizedName, category: item.category, itemType: item.itemType, deletedAt: null, reviewStatus: { in: ['PENDING_REVIEW', 'APPROVED'] } },
+    const sourceFingerprint = directoryFingerprint({ sourceUrl: parsed.data.source.url, sourceRecordKey: item.sourceRecordKey, itemType: item.itemType, name: item.name, category: item.category });
+    // A retry updates the existing source record. Exclude that record from the
+    // duplicate lookup; otherwise it is marked as a duplicate of itself and a
+    // previously interrupted governed batch can never be retried for review.
+    const existing = await prisma.directoryCandidate.findUnique({
+      where: { sourceFingerprint },
       select: { id: true },
     });
-    const sourceFingerprint = directoryFingerprint({ sourceUrl: parsed.data.source.url, sourceRecordKey: item.sourceRecordKey, itemType: item.itemType, name: item.name, category: item.category });
+    const duplicate = await prisma.directoryCandidate.findFirst({
+      where: {
+        normalizedName,
+        category: item.category,
+        itemType: item.itemType,
+        deletedAt: null,
+        reviewStatus: { in: ['PENDING_REVIEW', 'APPROVED'] },
+        ...(existing ? { id: { not: existing.id } } : {}),
+      },
+      select: { id: true },
+    });
     const candidate = await prisma.directoryCandidate.upsert({
       where: { sourceFingerprint },
       update: { name: item.name, nameAr: item.nameAr, normalizedName, searchText, category: item.category, subcategory: item.subcategory, description: item.description, attributes: toJson(item.attributes), unitOfMeasure: item.unitOfMeasure, purchaseUnit: item.purchaseUnit, images: toJson(safeDirectoryImages(item.images)), searchTerms: toJson(item.searchTerms), sourceSnapshot: toJson(item), duplicateOfId: duplicate?.id ?? null, reviewStatus: 'PENDING_REVIEW', reviewNote: null, reviewedAt: null, reviewedById: null },
