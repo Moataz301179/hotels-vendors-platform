@@ -102,6 +102,79 @@ function asProducts(value: unknown): ScrapeGraphProductObservation[] {
   });
 }
 
+function strings(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function jsonLdNodes(value: unknown): Record<string, unknown>[] {
+  const node = record(value);
+  if (!node) return Array.isArray(value) ? value.flatMap(jsonLdNodes) : [];
+  const graph = Array.isArray(node["@graph"]) ? node["@graph"] : [];
+  return [node, ...graph.flatMap(jsonLdNodes)];
+}
+
+function productFromJsonLd(value: Record<string, unknown>): ScrapeGraphProductObservation | null {
+  const types = strings(value["@type"]);
+  if (!types.some(type => type.toLocaleLowerCase() === "product")) return null;
+  const name = typeof value.name === "string" ? value.name.trim() : "";
+  if (!name) return null;
+  const offer = Array.isArray(value.offers) ? record(value.offers[0]) : record(value.offers);
+  const imageValues = strings(value.image).filter(image => /^https:\/\//i.test(image));
+  const price = offer?.price ?? offer?.lowPrice;
+  const stock = offer?.inventoryLevel;
+  return {
+    externalId: typeof value.productID === "string" ? value.productID : undefined,
+    name,
+    description: typeof value.description === "string" ? value.description.trim() : undefined,
+    sku: typeof value.sku === "string" ? value.sku : undefined,
+    category: typeof value.category === "string" ? value.category : undefined,
+    unitPrice: typeof price === "number" ? price : typeof price === "string" && Number.isFinite(Number(price)) ? Number(price) : null,
+    currency: typeof offer?.priceCurrency === "string" ? offer.priceCurrency.toUpperCase() : "EGP",
+    stockQuantity: typeof stock === "number" ? stock : null,
+    images: imageValues,
+    productUrl: typeof value.url === "string" && /^https?:\/\//i.test(value.url) ? value.url : undefined,
+  };
+}
+
+/**
+ * Keyless fallback for sites that expose schema.org Product JSON-LD. It keeps
+ * the acquisition queue usable when a third-party extraction provider is not
+ * configured, while returning no rows rather than guessing missing fields.
+ */
+export async function discoverPublicCatalogJsonLd(input: { sourceUrl: string; supplierName?: string }): Promise<ScrapeGraphDiscovery> {
+  const canonicalUrl = canonicalize(input.sourceUrl);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
+  let response: Response;
+  try {
+    response = await fetch(canonicalUrl, { headers: { accept: "text/html,application/xhtml+xml", "user-agent": "HotelsVendorsCatalogResearch/1.0 (+https://www.hotelsvendors.com)" }, signal: controller.signal, redirect: "follow" });
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!response.ok) throw new Error(`CATALOG_SOURCE_HTTP_${response.status}`);
+  const html = await response.text();
+  const scripts = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  const nodes = scripts.flatMap(match => {
+    try { return jsonLdNodes(JSON.parse(match[1])); } catch { return []; }
+  });
+  const byKey = new Map<string, ScrapeGraphProductObservation>();
+  for (const node of nodes) {
+    const product = productFromJsonLd(node);
+    if (product) byKey.set(`${product.productUrl ?? ""}|${product.sku ?? ""}|${product.name}`, product);
+  }
+  const products = [...byKey.values()];
+  const supplierName = input.supplierName?.trim() || new URL(response.url || canonicalUrl).hostname;
+  const observedAt = new Date().toISOString();
+  const responseHash = createHash("sha256").update(JSON.stringify({ canonicalUrl, supplierName, products })).digest("hex");
+  return { sourceUrl: input.sourceUrl, canonicalUrl, observedAt, schemaVersion: "hv-public-jsonld-v1", elapsedMs: 0, supplierName, products, responseHash };
+}
+
 /**
  * Extracts public supplier catalog observations. This is deliberately server-only:
  * SGAI_API_KEY is never accepted from a request and the result is observation data,
@@ -112,7 +185,7 @@ export async function discoverSupplierCatalogWithScrapeGraph(input: {
   supplierName?: string;
 }): Promise<ScrapeGraphDiscovery> {
   const apiKey = process.env.SGAI_API_KEY;
-  if (!apiKey) throw new Error("SCRAPEGRAPH_NOT_CONFIGURED");
+  if (!apiKey) return discoverPublicCatalogJsonLd(input);
 
   const canonicalUrl = canonicalize(input.sourceUrl);
   const client = ScrapeGraphAI({ apiKey });

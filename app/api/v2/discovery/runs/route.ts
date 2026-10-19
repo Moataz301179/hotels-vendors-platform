@@ -45,8 +45,7 @@ export async function POST(req: Request) {
     discovery = await discoverSupplierCatalogWithScrapeGraph(parsed.data);
   } catch (error) {
     const message = error instanceof Error ? error.message : "SCRAPEGRAPH_EXTRACTION_FAILED";
-    const status = message === "SCRAPEGRAPH_NOT_CONFIGURED" ? 503 : 502;
-    return NextResponse.json({ error: message, configured: status !== 503 }, { status });
+    return NextResponse.json({ error: message, configured: Boolean(process.env.SGAI_API_KEY) }, { status: 502 });
   }
 
   const sourceHash = createHash("sha256").update(`${discovery.supplierName}|${discovery.canonicalUrl}`).digest("hex");

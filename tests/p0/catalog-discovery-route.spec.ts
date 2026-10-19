@@ -42,10 +42,10 @@ describe('catalog discovery intake', () => {
     expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ changes: expect.objectContaining({ observedProducts: 1, queuedProducts: 1, status: 'PRODUCT_REVIEW_PENDING' }) }));
   });
 
-  it('does not persist a candidate when source extraction is unavailable', async () => {
-    m.discover.mockRejectedValue(new Error('SCRAPEGRAPH_NOT_CONFIGURED'));
+  it('does not persist a candidate when source extraction fails', async () => {
+    m.discover.mockRejectedValue(new Error('CATALOG_SOURCE_HTTP_403'));
     const response = await POST(request({ sourceUrl: 'https://supplier.example/catalogue' }));
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(502);
     expect(m.candidateUpsert).not.toHaveBeenCalled();
     expect(m.evidenceCreate).not.toHaveBeenCalled();
     expect(m.directorySourceUpsert).not.toHaveBeenCalled();
