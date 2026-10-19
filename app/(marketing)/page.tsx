@@ -16,6 +16,12 @@ const categories = [
   { title: "Hotel services", body: "Compliance, maintenance and specialist services with accountable scopes.", image: "/hv-workspace-team.webp", alt: "Hotel operations team coordinating service requirements", category: "Hotel services" },
 ];
 
+const quickStarts = [
+  { label: "Browse operating supplies", detail: "Start with a hotel category, then select the product reference you need.", href: "/marketplace?category=Housekeeping%20%26%20laundry" },
+  { label: "Create a controlled request", detail: "Record the specification and quantity when the right reference is not yet listed.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace" },
+  { label: "Follow an approved order", detail: "Keep approval, delivery and receiving evidence on the same record.", href: "/login?redirect_url=%2Forders" },
+];
+
 const operatingSteps = [
   ["01", "Capture the operating need", "A property team records specification, quantity, timing and receiving context."],
   ["02", "Compare commercial reality", "The team reviews eligible vendor responses on price, tax, delivery and validity."],
@@ -63,9 +69,15 @@ export default function MarketingPage() {
             <h1>Control hospitality purchasing from requirement to receipt.</h1>
             <p className={styles.lead}>Give hotel teams, vendors and partners one evidence-backed operating path for requirements, comparable terms, approvals, delivery and receipt records.</p>
             <div className={styles.actions}>
-              <Link href="/marketplace" className={styles.primary}>Explore the reviewed directory <ArrowRight size={17} /></Link>
-              <Link href="/hotels/signup" className={styles.secondary}>Join as a hotel</Link>
+              <Link href="/marketplace" className={styles.primary}>Browse the catalogue <ArrowRight size={17} /></Link>
+              <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
               <Link href="/walkthrough" className={styles.textLink}>See how it works <ArrowRight size={16} /></Link>
+            </div>
+            <div className={styles.launchpad} aria-label="Start a procurement task">
+              <div className={styles.launchpadHeading}><span>Start in one step</span><small>Choose a task, not a form.</small></div>
+              <div className={styles.launchpadActions}>{quickStarts.map((item, index) => <Link href={item.href} key={item.label} className={styles.launchpadAction}>
+                <span>{String(index + 1).padStart(2, "0")}</span><div><strong>{item.label}</strong><small>{item.detail}</small></div><ArrowRight size={16} aria-hidden="true" />
+              </Link>)}</div>
             </div>
           </div>
           <figure className={`${styles.heroVisual} ${heroStyles.heroVisual}`}>

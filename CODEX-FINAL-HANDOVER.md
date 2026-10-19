@@ -1,5 +1,45 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Catalogue publication guard and visible-entry refresh — 2026-10-20 (not deployed)
+
+- The public homepage now starts with direct, task-based paths to catalogue
+  browsing, a controlled request, and order follow-up. The authenticated
+  dashboard now presents a role-specific first action above its live metrics
+  and workflow records. These changes are in the local source only until the
+  production migration gate is resolved.
+- Added an Administrator-only open-licence publication route at
+  `app/api/v2/admin/directory/open-license-publish/route.ts`. It accepts no
+  generic scraped source: it is restricted to the two declared Open Facts
+  catalogue URLs, a recorded ODbL/CC-BY-SA evidence object, permitted source
+  status, no duplicate relationship, and a non-placeholder HTTPS image from
+  the official image host. Every batch writes an audit entry and public records
+  carry catalogue attribution; it never publishes a Vendor identity, offer,
+  stock or price.
+- Local checks: focused directory route suite passed (7 tests) and `npm run
+  build` passed. A local browser confirmed the new homepage launch paths.
+  The local dashboard could render its shared shell but cannot establish an
+  authenticated role session without production Clerk evidence.
+- Open Food Facts staging remains local and unpublished. The initial 500
+  records include 10 known `/invalid/` image URLs, so the new guard correctly
+  prevents their batch from being published as product images. Do not claim the
+  remainder is image-live until an image availability probe and batch split are
+  recorded.
+- Release blocker remains unchanged: production deploy executes all pending
+  Prisma migrations, including
+  `20261019030000_add_sealed_multi_vendor_rfq`. Do not dispatch deployment
+  until a restorable Neon production backup/clone exists and the owner approves
+  that migration. The current source change itself needs no new migration.
+
+### Strategic sequencing recorded 2026-10-20
+
+1. Complete ETA invoice lifecycle verification from approved PO, controlled
+   receiving/GRN, supplier invoice, and official submission/result evidence.
+2. Scale Vendor onboarding and supplier-owned catalogue intake with provenance,
+   permission, review and tenant-safe commercial matching.
+3. Add funder-partner evidence cases from authorized order, ETA status and
+   HOVIN receipt evidence. The platform must not represent this as automatic
+   underwriting, credit approval or funder disbursement.
+
 ## Bulk private catalogue intake — 2026-10-19 (pending release)
 
 - Added a reusable Administrator bulk-intake control in

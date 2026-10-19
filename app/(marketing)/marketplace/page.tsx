@@ -21,6 +21,14 @@ function firstDirectoryImage(images: unknown) {
   return Array.isArray(images) ? images.find((image): image is string => typeof image === 'string' && /^https:\/\//i.test(image)) ?? null : null;
 }
 
+function catalogueAttribution(attributes: unknown) {
+  if (!attributes || typeof attributes !== 'object' || Array.isArray(attributes)) return null;
+  const value = (attributes as Record<string, unknown>).catalogueAttribution;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const item = value as Record<string, unknown>;
+  return typeof item.label === 'string' && typeof item.url === 'string' && /^https:\/\//.test(item.url) ? { label: item.label, url: item.url } : null;
+}
+
 export default async function MarketplacePage() {
   const directoryProfiles = await prisma.directoryProfile.findMany({
     where: { publicationStatus: 'PUBLISHED', deletedAt: null },
@@ -36,6 +44,10 @@ export default async function MarketplacePage() {
   const publishedProducts = products && evidenceIds ? products.filter(product => evidenceIds.has(product.id)).map(product => ({ ...product, image: firstPublicProductImageUrl(product.images) })).filter(product => product.image) : null;
   const legacyProfiles = publishedProducts?.map(product => ({ id: `legacy-${product.id}`, itemType: 'PRODUCT', name: product.name, category: 'Supplier-submitted product', unitOfMeasure: product.unitOfMeasure, image: product.image, description: null, marketReference: null })) ?? [];
   const entries = [...(directoryProfiles?.map(profile => ({ id: profile.id, itemType: profile.itemType, name: profile.name, category: profile.category, unitOfMeasure: profile.unitOfMeasure, image: firstDirectoryImage(profile.images), description: profile.description, marketReference: publicMarketReference(profile.attributes) })) ?? []), ...legacyProfiles];
+  const attributions = Array.from(new Map((directoryProfiles ?? []).map(profile => {
+    const attribution = catalogueAttribution(profile.attributes);
+    return attribution ? [attribution.url, attribution] : null;
+  }).filter((entry): entry is [string, { label: string; url: string }] => entry !== null)).values());
   const unavailable = directoryProfiles === null && publishedProducts === null;
 
   return <main className="hv-public-page hv-marketplace">
@@ -49,6 +61,7 @@ export default async function MarketplacePage() {
       ].map(([title,image,description])=><article key={title}><Image src={image} alt={description} fill sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 25vw"/><span><strong>{title}</strong><small>{description}</small></span></article>)}</div>
       {unavailable ? <div className="hv-market-empty hv-market-error"><span className="hv-market-empty-icon"><RefreshCw size={23}/></span><div><h3>We couldn’t load product discovery records.</h3><p>The live directory could not be reached just now. No placeholder products or commercial terms are being substituted. Please try again in a moment.</p><a href="/marketplace" className="hv-public-text-link">Try again <ArrowRight size={15}/></a></div></div> : entries.length ? <MarketplaceDirectory entries={entries} /> : <div className="hv-market-empty"><span className="hv-market-empty-icon"><PackageCheck size={25}/></span><div><h3>The directory is being prepared.</h3><p>We will not fill this page with placeholder products or fabricated prices. Hotels can still submit a structured requirement for any product or service.</p><Link href="/register" className="hv-public-text-link">Submit a requirement <ArrowRight size={15}/></Link></div></div>}
       <p className="hv-market-footnote">An observed market price is a dated reference only. Supplier identity, source records, hotel demand, RFQs, commercial terms, and order activity remain private.</p>
+      {attributions.length ? <p className="hv-market-footnote">Open catalogue attribution: {attributions.map((attribution, index) => <span key={attribution.url}>{index ? ' · ' : ''}<a href={attribution.url} target="_blank" rel="noreferrer">{attribution.label}</a></span>)}</p> : null}
     </div></section>
   </main>;
 }

@@ -25,6 +25,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: {
 
 import { GET as getDirectory } from '@/app/api/v2/directory/route';
 import { GET as getQueue, PATCH as reviewCandidate, POST as ingestCandidates } from '@/app/api/v2/admin/directory/candidates/route';
+import { POST as publishOpenLicensed } from '@/app/api/v2/admin/directory/open-license-publish/route';
 
 const admin = { id: 'admin-1', tenantId: 'platform', platformRole: 'ADMIN' };
 const jsonRequest = (url: string, body: unknown, method = 'POST') => new Request(url, { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -92,6 +93,36 @@ describe('directory catalog foundation', () => {
     const response = await reviewCandidate(jsonRequest('https://hotelsvendors.test/api/v2/admin/directory/candidates', { candidateId: 'candidate-1', decision: 'APPROVE', reviewNote: 'The source is not yet cleared for public directory use.', publicDescription: 'White cotton bath towel suitable for hotel guest-room replenishment.' }, 'PATCH'));
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: 'SOURCE_PERMISSION_REQUIRED_FOR_PUBLICATION' });
+    expect(m.profileCreate).not.toHaveBeenCalled();
+  });
+
+  it('only batch-publishes records with an allowed open-data source and recorded licence evidence', async () => {
+    m.candidateFindMany.mockResolvedValue([{
+      id: 'open-candidate-1', itemType: 'PRODUCT', name: 'Open catalogue juice', nameAr: null,
+      category: 'FOOD_BEVERAGE', subcategory: 'Beverages', description: 'Packaged beverage reference.',
+      attributes: { openDataLicense: { dataLicense: 'ODbL-1.0', imageLicense: 'CC-BY-SA-4.0' } },
+      unitOfMeasure: 'bottle', purchaseUnit: '1 L', images: ['https://images.openfoodfacts.org/example.jpg'], searchTerms: ['juice'], duplicateOfId: null,
+      source: { id: 'open-source-1', sourceUrl: 'https://world.openfoodfacts.org/data', sourceType: 'OPEN_LICENSED_BULK_EXPORT', permissionStatus: 'PERMITTED' },
+    }]);
+    m.candidateUpdate.mockResolvedValue({ id: 'open-candidate-1' });
+    m.profileCreate.mockResolvedValue({ id: 'open-profile-1' });
+    const response = await publishOpenLicensed(jsonRequest('https://hotelsvendors.test/api/v2/admin/directory/open-license-publish', { candidateIds: ['open-candidate-1'] }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ profiles: ['open-profile-1'], published: 1 });
+    expect(m.profileCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ candidateId: 'open-candidate-1', publicationStatus: 'PUBLISHED' }) }));
+  });
+
+  it('does not auto-publish an open-data candidate with a placeholder image URL', async () => {
+    m.candidateFindMany.mockResolvedValue([{
+      id: 'broken-image-candidate', itemType: 'PRODUCT', name: 'Broken image reference', nameAr: null,
+      category: 'FOOD_BEVERAGE', subcategory: null, description: null,
+      attributes: { openDataLicense: { dataLicense: 'ODbL-1.0', imageLicense: 'CC-BY-SA-4.0' } },
+      unitOfMeasure: null, purchaseUnit: null, images: ['https://images.openfoodfacts.org/images/products/invalid/front_en.77.400.jpg'], searchTerms: [], duplicateOfId: null,
+      source: { id: 'open-source-1', sourceUrl: 'https://world.openfoodfacts.org/data', sourceType: 'OPEN_LICENSED_BULK_EXPORT', permissionStatus: 'PERMITTED' },
+    }]);
+    const response = await publishOpenLicensed(jsonRequest('https://hotelsvendors.test/api/v2/admin/directory/open-license-publish', { candidateIds: ['broken-image-candidate'] }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'OPEN_LICENSED_SOURCE_EVIDENCE_REQUIRED' });
     expect(m.profileCreate).not.toHaveBeenCalled();
   });
 });

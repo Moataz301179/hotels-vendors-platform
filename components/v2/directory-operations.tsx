@@ -20,6 +20,7 @@ export function DirectoryOperations() {
   const [busy, setBusy] = useState(false);
   const [bulkFile, setBulkFile] = useState<BulkFile | null>(null);
   const [bulkFileName, setBulkFileName] = useState('');
+  const [openLicensedCandidateIds, setOpenLicensedCandidateIds] = useState<string[]>([]);
   const load = async () => setSources(await requestJson<SourceResponse>('/api/v2/admin/directory/sources'));
   useEffect(() => {
     let active = true;
@@ -58,12 +59,25 @@ export function DirectoryOperations() {
     if (!bulkFile) return;
     setBusy(true); setMessage('');
     try {
-      const response = await requestJson<{ candidates: Array<{ duplicateOfId: string | null }> }>('/api/v2/admin/directory/candidates', { method: 'POST', body: JSON.stringify(bulkFile) });
+      const response = await requestJson<{ candidates: Array<{ id: string; duplicateOfId: string | null }> }>('/api/v2/admin/directory/candidates', { method: 'POST', body: JSON.stringify(bulkFile) });
       const duplicates = response.candidates.filter(candidate => candidate.duplicateOfId).length;
+      const openLicensed = bulkFile.source.type === 'OPEN_LICENSED_BULK_EXPORT' && bulkFile.source.permissionStatus === 'PERMITTED';
+      setOpenLicensedCandidateIds(openLicensed ? response.candidates.filter(candidate => !candidate.duplicateOfId).map(candidate => candidate.id) : []);
       setBulkFile(null); setBulkFileName('');
       setMessage(`${response.candidates.length} observations queued for private review${duplicates ? `; ${duplicates} possible duplicates are flagged for review` : ''}. Published records: 0.`);
       await load();
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to queue the catalogue batch.'); }
+    finally { setBusy(false); }
+  };
+  const publishOpenLicensed = async () => {
+    if (!openLicensedCandidateIds.length) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await requestJson<{ published: number }>('/api/v2/admin/directory/open-license-publish', { method: 'POST', body: JSON.stringify({ candidateIds: openLicensedCandidateIds }) });
+      setOpenLicensedCandidateIds([]);
+      setMessage(`${response.published} open-licensed product references published with catalogue attribution. No vendor, price, stock or offer was published.`);
+      await load();
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to publish the open-licensed batch.'); }
     finally { setBusy(false); }
   };
   return <section className="card" style={{ padding: 24, marginTop: 24 }}>
@@ -83,6 +97,7 @@ export function DirectoryOperations() {
       <label>Normalized catalogue batch<input aria-label="Normalized catalogue batch" type="file" accept="application/json" disabled={busy} onChange={event => void selectBulkFile(event.target.files?.[0])} /></label>
       {bulkFile ? <p className="muted" style={{ marginTop: 10 }}>{bulkFileName} · {bulkFile.records.length} records · source status {bulkFile.source.permissionStatus ?? 'PERMISSION_UNKNOWN'}</p> : null}
       <button type="button" className="btn btn-blue" disabled={busy || !bulkFile} style={{ marginTop: 10 }} onClick={() => void ingestBulk()}>{busy ? 'Queuing…' : 'Queue private catalogue batch'}</button>
+      {openLicensedCandidateIds.length ? <button type="button" className="btn btn-blue" disabled={busy} style={{ marginTop: 10, marginLeft: 10 }} onClick={() => void publishOpenLicensed()}>Publish verified open-licence batch</button> : null}
     </section>
     {sources ? <div style={{ marginTop: 24 }}><h3>Source registry</h3><p className="muted">{sources.metrics.totalSources} sources · {sources.metrics.permittedSources} permitted · {sources.metrics.pendingPermissionSources} awaiting permission review · {sources.metrics.candidateRecords} candidates</p>
       {sources.sources.length === 0 ? <p className="workspace-empty">No sources have been registered.</p> : <div style={{ display: 'grid', gap: 12 }}>{sources.sources.map(source => <article key={source.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 14 }}><strong>{source.sourceUrl}</strong><p className="muted" style={{ margin: '5px 0' }}>{source.permissionStatus.replaceAll('_', ' ').toLowerCase()} · {source._count.candidates} candidates · {source.refreshStatus.toLowerCase()}</p><label>Permission review note<textarea required minLength={10} maxLength={1000} value={notes[source.id] ?? source.permissionNote ?? ''} onChange={event => setNotes(current => ({ ...current, [source.id]: event.target.value }))} /></label><div style={{ display: 'flex', gap: 10, marginTop: 10 }}><button className="btn btn-blue" disabled={busy} onClick={() => void decideSource(source.id, 'PERMITTED')}>Mark permitted</button><button className="btn btn-ghost" disabled={busy} onClick={() => void decideSource(source.id, 'RESTRICTED')}>Restrict publication</button></div></article>)}</div>}
