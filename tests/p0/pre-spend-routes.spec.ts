@@ -5,6 +5,7 @@ const FinancialAccessDeniedError=vi.hoisted(()=>class FinancialAccessDeniedError
 const m=vi.hoisted(()=>({actor:vi.fn(),hotel:vi.fn(),product:vi.fn(),productList:vi.fn(),evidence:vi.fn(),baseline:vi.fn(),baselineCreate:vi.fn(),rfqCreate:vi.fn(),rfqList:vi.fn(),grantCreate:vi.fn(),grantList:vi.fn(),audit:vi.fn(),permission:vi.fn(),financial:vi.fn(),transaction:vi.fn()}));
 vi.mock('@/lib/v2-auth',()=>({getActor:m.actor}));
 vi.mock('@/lib/audit/tamper-proof',()=>({appendAuditEntry:m.audit}));
+vi.mock('@/lib/procurement/network-transaction-ledger',()=>({appendNetworkTransactionEvent:vi.fn()}));
 vi.mock('@/lib/auth/rbac',()=>({requirePermission:m.permission,PermissionDeniedError}));
 vi.mock('@/lib/auth/financial-access',()=>({requireFinancialAccess:m.financial,FinancialAccessDeniedError}));
 vi.mock('@/lib/prisma',()=>({prisma:{hotel:{findFirst:m.hotel},product:{findFirst:m.product,findMany:m.productList},evidenceRecord:{findFirst:m.evidence},contractRateBaseline:{findFirst:m.baseline,create:m.baselineCreate,findMany:vi.fn()},rfqRequest:{create:m.rfqCreate,findMany:m.rfqList},rfqSupplierAccess:{create:m.grantCreate,findMany:m.grantList},$transaction:m.transaction}}));

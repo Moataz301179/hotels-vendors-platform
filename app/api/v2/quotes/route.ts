@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { appendNetworkTransactionEvent } from "@/lib/procurement/network-transaction-ledger";
 import { costBreakdown } from "@/lib/procurement/pre-spend";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
@@ -64,7 +65,8 @@ export async function POST(req:Request){
   const claimed=await tx.rfqRequest.updateMany({where:{id:rfq.id,tenantId:grant.hotelTenantId,status:{in:['PENDING','QUOTED']},deletedAt:null},data:{status:"QUOTED"}});
   if(claimed.count!==1)throw new Error('RFQ_ALREADY_CLOSED');
   const created=await tx.procurementQuote.create({data:{rfqId,tenantId:rfq.tenantId,supplierId:supplier.id,buyerId:rfq.buyerId,productId,unitPrice,quantity,currency:"EGP",leadTimeDays:b?.leadTimeDays?Number(b.leadTimeDays):undefined,deliveryFee:Number(b.deliveryFee),taxAmount:Number(b.taxAmount),validUntil:b?.validUntil?new Date(b.validUntil):undefined,notes:b?.notes||undefined}});
-  await appendAuditEntry({entityName:"PROCUREMENT_QUOTE",entityId:created.id,actionType:"SUBMITTED",tenantId:rfq.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{rfqId,productId,unitPrice,quantity,supplierId:user.supplierId}},tx);
+  const auditLogId=await appendAuditEntry({entityName:"PROCUREMENT_QUOTE",entityId:created.id,actionType:"SUBMITTED",tenantId:rfq.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{rfqId,productId,unitPrice,quantity,supplierId:user.supplierId}},tx);
+  await appendNetworkTransactionEvent(tx,{tenantId:rfq.tenantId,rootRfqId:rfq.id,sourceEntityName:'PROCUREMENT_QUOTE',sourceEntityId:created.id,eventType:'SUBMITTED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'VERIFIED_VENDOR_RESPONSE',payload:{quantity,unitPrice,deliveryFee:Number(b.deliveryFee),taxAmount:Number(b.taxAmount),validUntil:b.validUntil?.toISOString()??null},auditLogId});
   return created;
  });
  return NextResponse.json({quote,cost:costBreakdown(quote)},{status:201});

@@ -14,11 +14,21 @@
   so retained ledger evidence cannot be silently removed through a parent
   deletion. `lib/procurement/network-transaction-ledger.ts` supplies the
   transaction-safe append primitive.
-- This ledger is not yet wired into the lifecycle routes or deployed, so it
-  cannot yet be presented as live transaction archiving. Activation must occur
-  only after the existing Neon backup/clone and migration-history gate is
-  resolved, followed by an approved retention schedule, archive manifest
-  export/storage design, and end-to-end lifecycle verification.
+- The staged ledger is now wired into the core source write paths: RFQ creation,
+  Vendor quote submission, quote-to-order conversion, approval recording, order
+  status change, GRN receipt and invoice submission each append a transaction
+  event in the same database transaction as their existing audit record. It is
+  still not deployed, so it cannot yet be presented as live transaction
+  archiving. Payment and funder write paths need the same treatment when their
+  live, partner-authorized mutation endpoints are implemented.
+- Local verification after the wiring: schema validation, Prisma client
+  generation and `npm run build` passed; 39 focused RFQ/quote/order tests and
+  2 GRN authorization tests passed. The database integration suite correctly
+  refused to run against Neon because there is no disposable branch configured.
+  Activation must occur only after the existing Neon backup/clone and
+  migration-history gate is resolved, followed by an approved retention
+  schedule, archive manifest export/storage design, and end-to-end lifecycle
+  verification.
 - The permanent architectural decision and vocabulary are recorded in
   `docs/adr/0001-network-transaction-ledger.md` and `CONTEXT.md`.
 

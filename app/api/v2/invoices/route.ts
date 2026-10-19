@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { appendNetworkTransactionEvent } from "@/lib/procurement/network-transaction-ledger";
 
 const receivingRoles = ["OWNER", "REGIONAL_GM", "GM", "FINANCIAL_CONTROLLER", "RECEIVING_CLERK"];
 
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
           tenantId: order.tenantId,
         },
       });
-      await appendAuditEntry({
+      const auditLogId=await appendAuditEntry({
         entityName: "INVOICE",
         entityId: created.id,
         actionType: "SUBMITTED",
@@ -61,6 +62,12 @@ export async function POST(req: Request) {
         actorRole: actor.platformRole,
         changes: { orderId: order.id, invoiceNumber, subtotal, vatAmount, total, etaStatus: created.etaStatus },
       }, tx);
+      await appendNetworkTransactionEvent(tx, {
+        tenantId: order.tenantId, orderId: order.id, invoiceId: created.id,
+        sourceEntityName: 'INVOICE', sourceEntityId: created.id, eventType: 'SUBMITTED',
+        actorId: actor.id, actorRole: actor.platformRole, verificationMethod: 'INVOICE_SUBMISSION',
+        payload: { invoiceNumber, subtotal, vatAmount, total, etaStatus: created.etaStatus }, auditLogId,
+      });
       return created;
     });
     return NextResponse.json({ invoice, outcome: { invoice: "SUBMITTED", eta: invoice.etaStatus } }, { status: 201 });

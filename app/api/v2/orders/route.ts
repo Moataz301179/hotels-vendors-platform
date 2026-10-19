@@ -4,6 +4,7 @@ import { getActor } from "@/lib/v2-auth";
 import { evaluateV2Authority } from "@/lib/auth/v2-authority";
 import { orderActions } from "@/lib/v2-order-actions";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { appendNetworkTransactionEvent } from "@/lib/procurement/network-transaction-ledger";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { managedHotelTenants } from "@/lib/admin/managed-hotel-tenants";
 import { classifyEtaCompliance } from "@/lib/logistics/eta-compliance";
@@ -61,8 +62,7 @@ export async function PATCH(req:Request){
    if (!requiredApproverIds.includes(user.id)) return NextResponse.json({error:'APPROVAL_DELEGATE_REQUIRED'},{status:403});
    const existingApproverIds = new Set(order.approvals.filter(a=>a.action==='APPROVED').map(a=>a.approverId));
    if (!existingApproverIds.has(user.id)) {
-    const approval=await prisma.orderApproval.create({data:{orderId:order.id,approverId:user.id,action:'APPROVED',beforeState:order.status,afterState:existingApproverIds.size+1===requiredApproverIds.length?'APPROVED':'PENDING_APPROVAL'}});
-    await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'APPROVAL_RECORDED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{approvalId:approval.id,requiredApproverIds}},);
+    const approval=await prisma.$transaction(async tx=>{const created=await tx.orderApproval.create({data:{orderId:order.id,approverId:user.id,action:'APPROVED',beforeState:order.status,afterState:existingApproverIds.size+1===requiredApproverIds.length?'APPROVED':'PENDING_APPROVAL'}});const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'APPROVAL_RECORDED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{approvalId:created.id,requiredApproverIds}},tx);await appendNetworkTransactionEvent(tx,{tenantId:order.tenantId,orderId:order.id,sourceEntityName:'ORDER',sourceEntityId:order.id,eventType:'APPROVAL_RECORDED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'RECORDED_APPROVAL',payload:{approvalId:created.id,requiredApproverIds},auditLogId});return created;});
     existingApproverIds.add(user.id);
    }
    const remainingApproverIds=requiredApproverIds.filter(id=>!existingApproverIds.has(id));
@@ -73,7 +73,7 @@ export async function PATCH(req:Request){
  }
  const result=await prisma.$transaction(async tx=>{
   const changed=await tx.order.updateMany({where:{id:order.id,status:order.status,deletedAt:null},data:{status:b.status,...(estimatedDelivery?{estimatedDelivery}:{})}});
-  if(changed.count===1)await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'STATUS_CHANGED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{from:order.status,to:b.status,...(estimatedDelivery?{estimatedDelivery:estimatedDelivery.toISOString()}:{}),}},tx);
+  if(changed.count===1){const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'STATUS_CHANGED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{from:order.status,to:b.status,...(estimatedDelivery?{estimatedDelivery:estimatedDelivery.toISOString()}:{}),}},tx);await appendNetworkTransactionEvent(tx,{tenantId:order.tenantId,orderId:order.id,sourceEntityName:'ORDER',sourceEntityId:order.id,eventType:'STATUS_CHANGED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'AUTHORISED_WORKSPACE_WRITE',payload:{from:order.status,to:b.status,estimatedDelivery:estimatedDelivery?.toISOString()??null},auditLogId});}
   return changed;
  });
  if(result.count!==1)return NextResponse.json({error:'The order changed. Refresh before acting.'},{status:409});

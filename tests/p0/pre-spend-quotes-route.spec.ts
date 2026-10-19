@@ -23,6 +23,7 @@ const m = vi.hoisted(() => ({
 
 vi.mock('@/lib/v2-auth', () => ({ getActor: m.actor }));
 vi.mock('@/lib/audit/tamper-proof', () => ({ appendAuditEntry: m.audit }));
+vi.mock('@/lib/procurement/network-transaction-ledger', () => ({ appendNetworkTransactionEvent: vi.fn() }));
 vi.mock('@/lib/auth/rbac', () => ({ requirePermission: m.permission, PermissionDeniedError }));
 vi.mock('@/lib/auth/financial-access', () => ({ requireFinancialAccess: m.financial, FinancialAccessDeniedError }));
 vi.mock('@/lib/prisma', () => ({

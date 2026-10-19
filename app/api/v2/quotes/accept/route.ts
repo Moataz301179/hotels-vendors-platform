@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getActor } from '@/lib/v2-auth';
 import { appendAuditEntry } from '@/lib/audit/tamper-proof';
+import { appendNetworkTransactionEvent } from '@/lib/procurement/network-transaction-ledger';
 import { costBreakdown } from '@/lib/procurement/pre-spend';
 import { PermissionDeniedError, requirePermission } from '@/lib/auth/rbac';
 import { FinancialAccessDeniedError, requireFinancialAccess } from '@/lib/auth/financial-access';
@@ -38,7 +39,8 @@ export async function POST(req:Request){
   await tx.procurementQuote.update({where:{id:quote.id},data:{status:'ACCEPTED'}});
   const subtotal=costs.productCost,total=costs.totalCost;
   const created=await tx.order.create({data:{orderNumber:'HV-'+crypto.randomUUID().slice(0,12).toUpperCase(),tenantId:user.tenantId,hotelId:hotel.id,supplierId:quote.supplierId,requesterId:user.id,departmentId:user.departmentId||undefined,procurementApprovalPolicyId:policy?.id,approvalPolicySnapshot:policy?{policyId:policy.id,departmentId:policy.departmentId,primaryApproverId:policy.primaryApproverId,secondaryApproverId:policy.secondaryApproverId,requiredApproverIds:[policy.primaryApproverId,...(policy.secondaryApproverId?[policy.secondaryApproverId]:[])]}:undefined,status:'PENDING_APPROVAL',currency:quote.currency,subtotal,shippingCost:costs.deliveryCost,vatAmount:costs.taxCost,total,deliveryInstructions:'Supplier quote '+quote.id,items:{create:{productId:product.id,quantity:quote.quantity,unitPrice:quote.unitPrice,total:subtotal}}}});
-  await appendAuditEntry({entityName:'ORDER',entityId:created.id,actionType:'CREATED',tenantId:user.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{quoteId:quote.id,rfqId:quote.rfqId,orderNumber:created.orderNumber,costs,selectionTiming:parsed.data.exceptionReason?'EARLY_EXCEPTION':'AFTER_RESPONSE_DEADLINE',exceptionReason:parsed.data.exceptionReason??null}},tx);
+  const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:created.id,actionType:'CREATED',tenantId:user.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{quoteId:quote.id,rfqId:quote.rfqId,orderNumber:created.orderNumber,costs,selectionTiming:parsed.data.exceptionReason?'EARLY_EXCEPTION':'AFTER_RESPONSE_DEADLINE',exceptionReason:parsed.data.exceptionReason??null}},tx);
+  await appendNetworkTransactionEvent(tx,{tenantId:user.tenantId,rootRfqId:quote.rfqId,orderId:created.id,sourceEntityName:'ORDER',sourceEntityId:created.id,eventType:'CREATED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'AUTHORISED_QUOTE_SELECTION',payload:{quoteId:quote.id,orderNumber:created.orderNumber,costs,exceptionReason:parsed.data.exceptionReason??null},auditLogId});
   return created;
  });
  const {supplierId,...buyerOrder}=order;

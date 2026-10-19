@@ -5,6 +5,7 @@ const m=vi.hoisted(()=>({actor:vi.fn(),product:vi.fn(),supplier:vi.fn(),hotel:vi
 vi.mock('@/lib/auth/v2-authority',()=>({evaluateV2Authority:vi.fn()}));
 vi.mock('@/lib/v2-auth',()=>({getActor:m.actor}));
 vi.mock('@/lib/audit/tamper-proof',()=>({appendAuditEntry:m.audit}));
+vi.mock('@/lib/procurement/network-transaction-ledger',()=>({appendNetworkTransactionEvent:vi.fn()}));
 vi.mock('@/lib/auth/rbac',()=>({requirePermission:m.permission,PermissionDeniedError}));
 vi.mock('@/lib/auth/financial-access',()=>({requireFinancialAccess:m.financial,FinancialAccessDeniedError}));
 vi.mock('@/lib/prisma',()=>({prisma:{product:{findFirst:m.product,create:m.createProduct,findMany:m.products},evidenceRecord:{create:m.evidenceCreate,findFirst:m.evidenceFind},supplier:{findFirst:m.supplier},hotel:{findFirst:m.hotel},order:{create:m.createOrder,findMany:m.orders},procurementQuote:{findFirst:m.quote},procurementApprovalPolicy:{findMany:m.policyFindMany},$transaction:m.transaction}}));

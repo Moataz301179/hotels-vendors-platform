@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { appendNetworkTransactionEvent } from "@/lib/procurement/network-transaction-ledger";
 import { validateReceipt, type ReceiptLineInput } from "@/lib/logistics/grn-acceptance";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
         data: { status: checked.orderStatus },
       });
       if (changed.count !== 1) throw new Error("ORDER_CHANGED");
-      await appendAuditEntry({
+      const grnAuditLogId=await appendAuditEntry({
         entityName: "GOODS_RECEIPT_NOTE",
         entityId: grn.id,
         actionType: "CREATED",
@@ -144,6 +145,13 @@ export async function POST(req: Request) {
         actorRole: actor.platformRole,
         changes: { from: order.status, to: checked.orderStatus, grnId: grn.id, grnNumber: grn.grnNumber, grnStatus: grn.status, evidenceRecordIds: evidence.map((record) => record.id) },
       }, tx);
+      await appendNetworkTransactionEvent(tx, {
+        tenantId: order.tenantId, orderId: order.id, sourceEntityName: 'GOODS_RECEIPT_NOTE', sourceEntityId: grn.id,
+        eventType: 'CREATED', actorId: actor.id, actorRole: actor.platformRole,
+        verificationMethod: 'CONTROLLED_RECEIPT',
+        payload: { grnNumber: grn.grnNumber, grnStatus: grn.status, orderStatus: checked.orderStatus, lineItemCount: grn.lineItems.length, evidenceRecordIds: evidence.map((record) => record.id) },
+        auditLogId: grnAuditLogId,
+      });
       return { grn, orderStatus: checked.orderStatus };
     });
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.status });
