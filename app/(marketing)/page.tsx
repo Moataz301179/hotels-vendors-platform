@@ -8,11 +8,12 @@ import heroStyles from "./public-home-hero.module.css";
 import styles from "./public-home.module.css";
 
 const categories = [
-  { title: "Food & beverage", body: "Ingredients, beverage programs and kitchen operating supplies.", image: "/category-food-beverage.png", alt: "Hotel kitchen receiving fresh ingredients and beverage supplies" },
-  { title: "Housekeeping", body: "Cleaning chemicals, linen care and room-turnover essentials.", image: "/category-housekeeping.png", alt: "Hotel housekeeping room with linen and cleaning supplies" },
-  { title: "Guest supplies", body: "In-room amenities and front-of-house replenishment.", image: "/category-guest-supplies.png", alt: "Hotel guest amenities prepared for operational use" },
-  { title: "Engineering & FF&E", body: "Maintenance, replacement parts and property equipment.", image: "/category-engineering-ffe.png", alt: "Hotel engineering components and finish samples on a workbench" },
-  { title: "Reviewed catalogue", body: "Product records published only after the required review.", image: "/category-supplier-catalogue.png", alt: "Hospitality product samples arranged for operational review" },
+  { title: "Restaurants & bars", body: "Table service, glassware, buffetware, bar supplies and kitchen equipment.", image: "/category-food-beverage.png", alt: "Hotel food and beverage operating area", category: "Restaurants & bars" },
+  { title: "Housekeeping & laundry", body: "Cleaning tools, linen, towels, textiles and laundry operations.", image: "/category-housekeeping.png", alt: "Hotel housekeeping room with linen and cleaning supplies", category: "Housekeeping & laundry" },
+  { title: "Guest rooms & amenities", body: "In-room amenities, replenishment and guest-facing operating supplies.", image: "/category-guest-supplies.png", alt: "Hotel guest amenities prepared for operational use", category: "Guest rooms & amenities" },
+  { title: "Engineering & maintenance", body: "Building systems, replacement parts, tools and property care.", image: "/category-engineering-ffe.png", alt: "Hotel engineering components on a workbench", category: "Engineering & maintenance" },
+  { title: "Furniture, fixtures & outdoor", body: "Guest-room, lobby, pool, beach and outdoor furnishing requirements.", image: "/category-supplier-catalogue.png", alt: "Hospitality furniture and fixtures selection", category: "Furniture, fixtures & outdoor" },
+  { title: "Hotel services", body: "Compliance, maintenance and specialist services with accountable scopes.", image: "/hv-workspace-team.webp", alt: "Hotel operations team coordinating service requirements", category: "Hotel services" },
 ];
 
 const operatingSteps = [
@@ -93,7 +94,7 @@ export default function MarketingPage() {
         <div className={styles.shell}>
           <Header eyebrow="Hospitality categories" title="Built around the supplies a property actually operates." text="Start with the operating area, then turn a missing item into a controlled requirement." />
           <div className={styles.categoryGrid}>
-            {categories.map(({ title, body, image, alt }) => <article key={title}><figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure><h3>{title}</h3><p>{body}</p></article>)}
+            {categories.map(({ title, body, image, alt, category }) => <Link href={`/marketplace?category=${encodeURIComponent(category)}`} className={styles.categoryCard} key={title}><figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure><h3>{title}</h3><p>{body}</p><span>Explore category <ArrowRight size={15}/></span></Link>)}
           </div>
           <div className={styles.requirement}><div><strong>Need something not shown?</strong><p>Record the specification, quantity, delivery location and timing. Product Intelligence reviews the requirement and routes a response only when the commercial record is complete.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Submit a requirement <ArrowRight size={16} /></Link></div>
         </div>

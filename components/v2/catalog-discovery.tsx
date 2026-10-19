@@ -21,8 +21,7 @@ type DiscoveryResponse = {
 
 export function CatalogDiscovery() {
   const [data, setData] = useState<DiscoveryResponse | null>(null);
-  const [sourceUrl, setSourceUrl] = useState('');
-  const [supplierName, setSupplierName] = useState('');
+  const [sourceUrls, setSourceUrls] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -39,13 +38,25 @@ export function CatalogDiscovery() {
     setBusy(true);
     setMessage('');
     try {
-      const result = await requestJson<{ run: { supplierName?: string; observedProducts: number; status: string } }>('/api/v2/discovery/runs', {
-        method: 'POST',
-        body: JSON.stringify({ sourceUrl, ...(supplierName.trim() ? { supplierName: supplierName.trim() } : {}) }),
-      });
-      setSourceUrl('');
-      setSupplierName('');
-      setMessage(`${result.run.observedProducts} source observations are waiting for review. Nothing was published.`);
+      const urls = [...new Set(sourceUrls.split(/\s+/).map(value => value.trim()).filter(Boolean))];
+      if (urls.length === 0 || urls.length > 25 || urls.some(value => !/^https:\/\//i.test(value))) {
+        setMessage('Provide 1–25 HTTPS catalogue or category URLs, one per line.');
+        return;
+      }
+      let observedProducts = 0;
+      let queuedProducts = 0;
+      const failures: string[] = [];
+      for (const sourceUrl of urls) {
+        try {
+          const result = await requestJson<{ run: { observedProducts: number; queuedProducts: number } }>('/api/v2/discovery/runs', {
+            method: 'POST', body: JSON.stringify({ sourceUrl }),
+          });
+          observedProducts += result.run.observedProducts;
+          queuedProducts += result.run.queuedProducts;
+        } catch (error) { failures.push(error instanceof Error ? error.message : sourceUrl); }
+      }
+      setSourceUrls('');
+      setMessage(`${queuedProducts} private catalogue candidates queued from ${observedProducts} observations across ${urls.length - failures.length}/${urls.length} sources.${failures.length ? ` ${failures.length} source(s) failed.` : ''} Nothing was published.`);
       await load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to run source intake.');
@@ -57,11 +68,10 @@ export function CatalogDiscovery() {
   return <section className="card" style={{ padding: 24, marginTop: 24 }}>
     <div className="eyebrow">Product intelligence</div>
     <h2>Source intake parking lot</h2>
-    <p className="muted">Collect a permitted public supplier source for review. The intake creates evidence and a research candidate only; it never creates an active supplier or listing.</p>
+    <p className="muted">Paste up to 25 approved public catalogue or category URLs. The pipeline extracts product observations, source images and private market signals into the review queue. It never creates an active vendor, a live offer, stock claim or buyer-visible price.</p>
     <form className="workspace-form" onSubmit={discover}>
-      <label>Public supplier source URL<input required type="url" maxLength={2000} value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://supplier.example/catalogue" /></label>
-      <label>Supplier name, if known<input maxLength={160} value={supplierName} onChange={event => setSupplierName(event.target.value)} placeholder="Optional; source name is used when available" /></label>
-      <button className="btn btn-blue" disabled={busy}>{busy ? 'Collecting source…' : 'Collect for review'}</button>
+      <label>Catalogue or category URLs<textarea required value={sourceUrls} onChange={event => setSourceUrls(event.target.value)} placeholder={'https://wholesaler.example/catalogue\nhttps://wholesaler.example/housekeeping'} /></label>
+      <button className="btn btn-blue" disabled={busy}>{busy ? 'Queuing catalogue sources…' : 'Queue catalogue intake'}</button>
     </form>
     {message && <p className="workspace-status" role="status">{message}</p>}
     {data && <><p className="muted" style={{ marginTop: 20, fontSize: 12 }}>Controlled path: {data.pipeline.join(' → ')}</p>
