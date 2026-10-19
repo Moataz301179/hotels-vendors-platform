@@ -29,3 +29,21 @@ invoice or e-invoice exists for the approved commercial record.
 The protected internal record linking products, quotes, source observations,
 suppliers, approvals, invoices, and actions. It remains available to properly
 authorized operational and audit roles.
+
+## Network transaction
+
+The single procurement lifecycle rooted in one RFQ and connected to its
+commercial response, order, receipt, invoice and permitted settlement evidence.
+_Avoid_: sale, marketplace order, lead
+
+## Network transaction event
+
+An immutable, hash-linked evidence record for a material lifecycle change. A
+correction appends a later event; it does not rewrite the earlier event.
+_Avoid_: activity log, editable history
+
+## Transaction archive
+
+The retained, tenant-scoped evidence package for a finalized network
+transaction. It is not a public catalogue record, a Vendor offer, or a funder
+decision.

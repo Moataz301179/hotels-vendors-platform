@@ -108,6 +108,8 @@ model Tenant {
   departments                 Department[]
   procurementApprovalPolicies ProcurementApprovalPolicy[]
   userPermissionGrants       UserPermissionGrant[]
+  networkTransactions        NetworkTransaction[]
+  networkTransactionEvents   NetworkTransactionEvent[]
 
   @@index([deletedAt], map: "Tenant_deleted_idx")
   @@index([parentTenantId], map: "Tenant_parent_idx")
@@ -1103,10 +1105,79 @@ model AuditLog {
 
   evidenceRecords   EvidenceRecord[]
   intelligenceEdges IntelligenceEdge[]
+  networkTransactionEvents NetworkTransactionEvent[]
 
   @@index([actorId])
   @@index([createdAt])
   @@index([tenantId, entityName, entityId], map: "AuditLog_tenant_entity_idx")
+}
+
+/// Durable internal root record for a single procurement lifecycle. It links
+/// mutable operational projections to append-only transaction evidence.
+model NetworkTransaction {
+  id                String                   @id @default(cuid())
+  tenantId          String
+  rootRfqId         String?                  @unique
+  orderId           String?                  @unique
+  invoiceId         String?                  @unique
+  status            NetworkTransactionStatus @default(OPEN)
+  retentionClass    String                   @default("PROCUREMENT_TRANSACTION")
+  retentionUntil    DateTime?
+  finalizedAt       DateTime?
+  archivedAt        DateTime?
+  archiveManifestHash String?
+  latestEventHash   String?
+  eventCount        Int                      @default(0)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  uuid              String?                  @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  events NetworkTransactionEvent[]
+
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, archivedAt])
+}
+
+/// Immutable business-evidence event. Corrections must append a superseding
+/// event; prior evidence is never overwritten or deleted.
+model NetworkTransactionEvent {
+  id                   String             @id @default(cuid())
+  networkTransactionId String
+  tenantId             String
+  sourceEntityName     EntityName?
+  sourceEntityId       String
+  eventType            ActionType?
+  occurredAt           DateTime
+  recordedAt           DateTime           @default(now())
+  actorId              String?
+  actorRole            String?
+  verificationMethod   String?
+  documentHash         String?
+  payload              Json?
+  payloadHash          String
+  previousHash         String
+  hash                 String
+  supersedesEventId    String?
+  auditLogId           String?            @unique
+  uuid                 String?            @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  networkTransaction NetworkTransaction      @relation(fields: [networkTransactionId], references: [id], onDelete: Restrict)
+  tenant             Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  auditLog           AuditLog?               @relation(fields: [auditLogId], references: [id], onDelete: Restrict)
+  supersedesEvent    NetworkTransactionEvent? @relation("NetworkTransactionEventSupersession", fields: [supersedesEventId], references: [id], onDelete: Restrict)
+  supersededBy       NetworkTransactionEvent[] @relation("NetworkTransactionEventSupersession")
+
+  @@index([networkTransactionId, recordedAt])
+  @@index([tenantId, occurredAt])
+  @@index([sourceEntityName, sourceEntityId])
+}
+
+enum NetworkTransactionStatus {
+  OPEN
+  COMPLETED
+  ARCHIVED
+  VOIDED
 }
 
 model FactoringCompany {

@@ -1,5 +1,27 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Defensible network transaction record — 2026-10-20 (staged; not deployed)
+
+- The current source persists RFQs, quotes, orders, GRNs, invoices, payments,
+  documents and funding records, and its material procurement mutation routes
+  already append to the protected `AuditLog` hash chain. This is a verified
+  source-level fact, not proof that every live historical transaction is
+  complete or that a backup/retention process is operating.
+- A source-level transaction-ledger migration is now staged in
+  `prisma/migrations/20261020050000_add_network_transaction_ledger`. It adds a
+  tenant-bound `NetworkTransaction` root and immutable,
+  hash-linked `NetworkTransactionEvent` records with `RESTRICT` relationships
+  so retained ledger evidence cannot be silently removed through a parent
+  deletion. `lib/procurement/network-transaction-ledger.ts` supplies the
+  transaction-safe append primitive.
+- This ledger is not yet wired into the lifecycle routes or deployed, so it
+  cannot yet be presented as live transaction archiving. Activation must occur
+  only after the existing Neon backup/clone and migration-history gate is
+  resolved, followed by an approved retention schedule, archive manifest
+  export/storage design, and end-to-end lifecycle verification.
+- The permanent architectural decision and vocabulary are recorded in
+  `docs/adr/0001-network-transaction-ledger.md` and `CONTEXT.md`.
+
 ## Catalogue publication guard and visible-entry refresh — 2026-10-20 (not deployed)
 
 - The public homepage now starts with direct, task-based paths to catalogue
