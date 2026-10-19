@@ -185,6 +185,63 @@ function productCardUrls(html: string, baseUrl: string): string[] {
   return [...urls].slice(0, MAX_PUBLIC_PRODUCT_PAGES);
 }
 
+/** WordPress/WooCommerce commonly exposes product detail URLs without JSON-LD. */
+function woocommerceProductUrls(html: string, baseUrl: string): string[] {
+  const base = new URL(baseUrl);
+  const urls = new Set<string>();
+  for (const match of html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>/gi)) {
+    const url = absolutePublicUrl(match[1], baseUrl);
+    if (!url) continue;
+    const parsed = new URL(url);
+    if (parsed.origin === base.origin && /^\/product\/[^/]+\/?$/i.test(parsed.pathname)) urls.add(url);
+  }
+  return [...urls].slice(0, MAX_PUBLIC_PRODUCT_PAGES);
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(?:amp|#038);/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(?:x27|39);/gi, "'")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function htmlAttribute(value: string, name: string): string | undefined {
+  const match = new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, "i").exec(value);
+  return match ? decodeHtml(match[1]) : undefined;
+}
+
+/**
+ * Conservative WooCommerce detail-page adapter. It requires a real product
+ * title and reads only fields rendered by the supplier's own product page.
+ */
+function productFromWooCommerceHtml(html: string, baseUrl: string): ScrapeGraphProductObservation | null {
+  const titleMatch = /<h1\b[^>]*\bclass=["'][^"']*\bproduct_title\b[^"']*["'][^>]*>([\s\S]*?)<\/h1>/i.exec(html);
+  const name = titleMatch ? decodeHtml(titleMatch[1]) : "";
+  if (!name) return null;
+  const canonical = /<link\b[^>]*\brel=["']canonical["'][^>]*>/i.exec(html)?.[0];
+  const canonicalUrl = absolutePublicUrl(canonical ? htmlAttribute(canonical, "href") : undefined, baseUrl) ?? baseUrl;
+  const sku = /<span\b[^>]*\bclass=["'][^"']*\bsku\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i.exec(html)?.[1];
+  const categoryBlock = /<span\b[^>]*\bclass=["'][^"']*(?:cat-links|product-categories)[^"']*["'][^>]*>([\s\S]*?)<\/span>/i.exec(html)?.[1];
+  const category = categoryBlock ? decodeHtml(categoryBlock).replace(/^Categories:\s*/i, "").split(",")[0]?.trim() : undefined;
+  const gallery = /<[^>]*\bclass=["'][^"']*woocommerce-product-gallery[^"']*["'][^>]*>[\s\S]*?<img\b([^>]*)>/i.exec(html)?.[1];
+  const image = gallery ? absolutePublicUrl(htmlAttribute(gallery, "src"), baseUrl) : undefined;
+  const stock = /\b(?:stock in-stock|availability-text[^>]*>\s*In stock)/i.test(html) ? 1 : /\b(?:outofstock|out of stock)\b/i.test(html) ? 0 : null;
+  return {
+    name,
+    sku: sku ? decodeHtml(sku) : undefined,
+    category,
+    stockQuantity: stock,
+    images: image ? [image] : [],
+    productUrl: canonicalUrl,
+    unitPrice: null,
+    currency: "EGP",
+  };
+}
+
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const results: R[] = [];
   let index = 0;
@@ -214,13 +271,15 @@ async function fetchPublicHtml(url: string, timeoutMs: number): Promise<{ url: s
   return { url: response.url || url, html: await response.text() };
 }
 
-function jsonLdProducts(html: string, baseUrl: string): { products: ScrapeGraphProductObservation[]; itemUrls: string[] } {
+function publicPageProducts(html: string, baseUrl: string): { products: ScrapeGraphProductObservation[]; itemUrls: string[] } {
   const scripts = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   const nodes = scripts.flatMap(match => {
     try { return jsonLdNodes(JSON.parse(match[1])); } catch { return []; }
   });
+  const jsonLd = nodes.map(node => productFromJsonLd(node, baseUrl)).filter((product): product is ScrapeGraphProductObservation => Boolean(product));
+  const wooCommerce = productFromWooCommerceHtml(html, baseUrl);
   return {
-    products: nodes.map(node => productFromJsonLd(node, baseUrl)).filter((product): product is ScrapeGraphProductObservation => Boolean(product)),
+    products: wooCommerce ? [...jsonLd, wooCommerce] : jsonLd,
     itemUrls: nodes.flatMap(node => itemListUrls(node, baseUrl)),
   };
 }
@@ -233,14 +292,14 @@ function jsonLdProducts(html: string, baseUrl: string): { products: ScrapeGraphP
 export async function discoverPublicCatalogJsonLd(input: { sourceUrl: string; supplierName?: string }): Promise<ScrapeGraphDiscovery> {
   const canonicalUrl = canonicalize(input.sourceUrl);
   const root = await fetchPublicHtml(canonicalUrl, 20_000);
-  const rootExtraction = jsonLdProducts(root.html, root.url);
-  const productUrls = [...new Set([...rootExtraction.itemUrls, ...productCardUrls(root.html, root.url)])]
+  const rootExtraction = publicPageProducts(root.html, root.url);
+  const productUrls = [...new Set([...rootExtraction.itemUrls, ...productCardUrls(root.html, root.url), ...woocommerceProductUrls(root.html, root.url)])]
     .filter((url) => new URL(url).origin === new URL(root.url).origin && url !== root.url)
     .slice(0, MAX_PUBLIC_PRODUCT_PAGES);
   const detailExtractions = await mapWithConcurrency(productUrls, PRODUCT_PAGE_CONCURRENCY, async (productUrl) => {
     try {
       const page = await fetchPublicHtml(productUrl, 10_000);
-      return jsonLdProducts(page.html, page.url).products;
+      return publicPageProducts(page.html, page.url).products;
     } catch {
       // A single unavailable product page cannot turn a whole source into an error.
       return [] as ScrapeGraphProductObservation[];
@@ -254,7 +313,7 @@ export async function discoverPublicCatalogJsonLd(input: { sourceUrl: string; su
   const supplierName = input.supplierName?.trim() || new URL(root.url || canonicalUrl).hostname;
   const observedAt = new Date().toISOString();
   const responseHash = createHash("sha256").update(JSON.stringify({ canonicalUrl, supplierName, products })).digest("hex");
-  return { sourceUrl: input.sourceUrl, canonicalUrl, observedAt, schemaVersion: "hv-public-jsonld-v2", elapsedMs: 0, supplierName, products, responseHash };
+  return { sourceUrl: input.sourceUrl, canonicalUrl, observedAt, schemaVersion: "hv-public-jsonld-v3", elapsedMs: 0, supplierName, products, responseHash };
 }
 
 /**

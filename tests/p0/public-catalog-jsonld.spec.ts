@@ -9,7 +9,7 @@ describe('public catalogue JSON-LD fallback', () => {
       <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Gastronorm Pan","sku":"GN-1","image":"https://catalog.example/pan.jpg","category":"Kitchen equipment","offers":{"@type":"Offer","price":"125.50","priceCurrency":"EGP","url":"https://catalog.example/pan"}}</script>
     `, { status: 200 })));
     const result = await discoverPublicCatalogJsonLd({ sourceUrl: 'https://catalog.example/kitchen' });
-    expect(result.schemaVersion).toBe('hv-public-jsonld-v2');
+    expect(result.schemaVersion).toBe('hv-public-jsonld-v3');
     expect(result.products).toEqual([expect.objectContaining({ name: 'Gastronorm Pan', sku: 'GN-1', unitPrice: 125.5, currency: 'EGP', images: ['https://catalog.example/pan.jpg'] })]);
   });
 
@@ -38,5 +38,24 @@ describe('public catalogue JSON-LD fallback', () => {
     })]);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(fetch).toHaveBeenLastCalledWith('https://catalog.example/products/tea-cups', expect.any(Object));
+  });
+
+  it('reads observed WooCommerce detail fields when Product JSON-LD is absent', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(new Response('<a href="https://catalog.example/product/hotel-towel/">Towel</a>', { status: 200 }))
+      .mockResolvedValueOnce(new Response(`
+        <link rel="canonical" href="https://catalog.example/product/hotel-towel/" />
+        <h1 class="product_title entry-title">Hotel towel</h1>
+        <div class="availability stock in-stock"><span class="availability-text">In stock</span></div>
+        <span class="cat-links">Categories: Guest linen</span><span class="sku">LIN-101</span>
+        <div class="woocommerce-product-gallery"><img src="/images/towel.jpg" /></div>
+      `, { status: 200 })));
+
+    const result = await discoverPublicCatalogJsonLd({ sourceUrl: 'https://catalog.example/shop' });
+
+    expect(result.products).toEqual([expect.objectContaining({
+      name: 'Hotel towel', sku: 'LIN-101', category: 'Guest linen', stockQuantity: 1,
+      productUrl: 'https://catalog.example/product/hotel-towel/', images: ['https://catalog.example/images/towel.jpg'], unitPrice: null,
+    })]);
   });
 });

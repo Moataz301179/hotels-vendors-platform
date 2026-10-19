@@ -12,12 +12,14 @@
 - The fallback now discovers bounded, same-origin product-card and schema.org
   ItemList URLs from a submitted catalogue page, fetches up to 24 candidate
   product pages with concurrency four, and retains only schema.org Product
-  facts. It never follows third-party/navigation links or invents commercial
-  data. The relevant implementation is
+  facts. It also has a conservative WooCommerce detail-page adapter for public
+  pages that render a real product title but omit Product JSON-LD; it reads
+  only visible title, SKU, category, image, and stock state. It never follows
+  third-party/navigation links or invents commercial data. The relevant implementation is
   `lib/sourcing/scrapegraph-discovery.ts` and tests are in
   `tests/p0/public-catalog-jsonld.spec.ts`.
 - Local verification after the change: `npm test -- --run` passed (74 files,
-  262 tests); `npm run build` passed. Non-blocking build warnings remain for
+  263 tests); `npm run build` passed. Non-blocking build warnings remain for
   Prisma's deprecated `package.json#prisma` setting, an outer workspace
   `pnpm-workspace.yaml`, and React 18 deprecation in Next 16.
 - Next owner action: commit and deploy this repair through the existing manual
