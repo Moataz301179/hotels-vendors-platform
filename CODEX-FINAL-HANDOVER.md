@@ -309,3 +309,30 @@
 - At handover creation, user-owned untracked directories remain preserved: `.next-maintenance-build/` and `.next-maintenance/`.
 - This handover file is intentionally added after the runtime release and is not part of release commit `93b701bd`; commit it only as documentation if a new source revision is wanted. Do not deploy it merely to change documentation.
 - No production availability blocker remains for the published supplier-neutral directory batch.
+
+## Current governed catalogue release — 2026-10-20
+
+- Runtime source commit: `97cc31349054f7f9f9d6b2609065de0603172dd3`.
+  It includes the governed-batch retry correction (`59880f67`) and Next Image
+  configuration for the permitted Open Food Facts product media.
+- Deployment evidence: [batch-retry run 39331819383](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39331819383)
+  and [image-rendering run 39332763148](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39332763148)
+  completed successfully. Live health subsequently returned matching `releaseId`
+  and `sourceCommit`, with database `ready` and authorization `configured`.
+- A governed Open Food Facts batch was published from the source's openly
+  licensed data export under source record `https://world.openfoodfacts.org/data`:
+  **100 + 98 + 95 + 97 = 390** catalogue references. Duplicate candidates
+  (**2 + 5 + 3**) were deliberately retained in private review rather than
+  published. The source is recorded as `OPEN_LICENSED_BULK_EXPORT` / `PERMITTED`.
+- Visual production check: `/marketplace` product cards now render actual
+  permitted product images through the same-site Next image optimizer. Card
+  output does not expose a Vendor name, source URL, stock assertion, price, or
+  binding offer.
+- Known scope limit: the current marketplace query renders at most 100 entries
+  per view and this first external batch maps primarily to the food-and-beverage
+  taxonomy. Pagination and hospitality-specific category curation are separate
+  follow-up work; do not represent 390 published references as a complete hotel
+  purchasing catalogue.
+- External source observations with unproven reuse rights remain private in
+  review. Do not publish them until permission, attribution, duplicate handling,
+  and category fit are evidenced.
