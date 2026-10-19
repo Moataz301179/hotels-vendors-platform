@@ -2,7 +2,8 @@ export type PublicMarketReference = {
   price: number;
   currency: string;
   observedAt: string;
-  label: 'Observed market price';
+  label: string;
+  moq: number | null;
 };
 
 /**
@@ -20,10 +21,11 @@ export function publicMarketReference(attributes: unknown): PublicMarketReferenc
   const price = value.price;
   const currency = value.currency;
   const observedAt = value.observedAt;
+  const moq = value.moq;
 
   if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
   if (typeof currency !== 'string' || !/^[A-Z]{3}$/.test(currency)) return null;
   if (typeof observedAt !== 'string' || Number.isNaN(Date.parse(observedAt))) return null;
 
-  return { price, currency, observedAt, label: 'Observed market price' };
+  return { price, currency, observedAt, label: value.label === 'Published MOQ price' ? value.label : 'Observed market price', moq: typeof moq === 'number' && Number.isInteger(moq) && moq > 0 ? moq : null };
 }

@@ -39,7 +39,7 @@ export default async function MarketplacePage() {
   const unavailable = directoryProfiles === null && publishedProducts === null;
 
   return <main className="hv-public-page hv-marketplace">
-    <section className="hv-marketplace-hero"><div className="shell"><h1>Hospitality sourcing.<br/><em>Intelligence before commitment.</em></h1><p>Discover reviewed product and service requirements. Where a reviewed market reference is available, its observed price is shown as a signal—not a supplier quote, stock promise, or commercial commitment.</p><div className="hv-marketplace-guard"><SearchCheck size={17}/><span>Supplier identity and commercial relationships remain private until the authorised order path.</span></div></div></section>
+    <section className="hv-marketplace-hero"><div className="shell"><h1>Hospitality sourcing.<br/><em>Intelligence before commitment.</em></h1><p>Discover reviewed products with listed MOQ prices where available. Larger quantities, special specifications and delivery terms move to a controlled RFQ before an order is placed.</p><div className="hv-marketplace-guard"><SearchCheck size={17}/><span>Prices and MOQ can be shown; vendor identity stays private until the fee-inclusive controlled checkout.</span></div></div></section>
     <section className="hv-public-section"><div className="shell"><div className="hv-marketplace-list-head"><div><h2>Product and service directory</h2></div><span className="hv-market-count">{unavailable ? 'Live data unavailable' : `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`}</span></div>
       <div className="hv-market-sourcing-areas" aria-label="Hospitality sourcing areas">{[
         ['Food & beverage','/category-food-beverage.png','Ingredients and beverage operations'],

@@ -13,7 +13,7 @@ export type MarketplaceDirectoryEntry = {
   unitOfMeasure: string | null;
   image: string | null;
   description: string | null;
-  marketReference: { price: number; currency: string; label: string; observedAt: string } | null;
+  marketReference: { price: number; currency: string; label: string; observedAt: string; moq: number | null } | null;
 };
 
 type Taxonomy = { group: string; subcategory: string; icon: ComponentType<{ size?: number; 'aria-hidden'?: boolean }> };
@@ -82,8 +82,8 @@ export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirector
             <p className={styles.itemType}>{entry.itemType === 'SERVICE' ? 'Service requirement' : 'Product requirement'}</p>
             <h3>{entry.name}</h3>
             <p className={styles.description}>{entry.description ?? 'A reviewed requirement record ready to be specified in the procurement workspace.'}</p>
-            <dl className={styles.facts}><div><dt>Unit</dt><dd>{entry.unitOfMeasure ?? 'Set in requirement'}</dd></div><div><dt>Market reference</dt><dd>{price ?? 'Request comparable terms'}</dd></div></dl>
-            {entry.marketReference && <p className={styles.reference}><CheckCircle2 size={14} aria-hidden="true"/>{entry.marketReference.label} · observed {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(entry.marketReference.observedAt))}</p>}
+            <dl className={styles.facts}><div><dt>Unit</dt><dd>{entry.unitOfMeasure ?? 'Set in requirement'}</dd></div><div><dt>Listed price</dt><dd>{price ?? 'Request comparable terms'}</dd></div></dl>
+            {entry.marketReference && <p className={styles.reference}><CheckCircle2 size={14} aria-hidden="true"/>{entry.marketReference.label}{entry.marketReference.moq ? ` · MOQ ${entry.marketReference.moq}` : ''} · observed {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(entry.marketReference.observedAt))}</p>}
             <Link className={styles.action} href={workspaceTarget}>Choose this requirement <ChevronRight size={17} aria-hidden="true"/></Link>
           </div>
         </article>;

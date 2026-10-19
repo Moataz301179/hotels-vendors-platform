@@ -45,6 +45,28 @@ function toJson(value: unknown) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
+function publishedCommercialTerms(attributes: unknown, publicAttributes: Record<string, unknown>) {
+  if (!attributes || typeof attributes !== 'object' || Array.isArray(attributes)) return publicAttributes;
+  const observed = (attributes as Record<string, unknown>).observedCommercialData;
+  if (!observed || typeof observed !== 'object' || Array.isArray(observed)) return publicAttributes;
+  const value = observed as Record<string, unknown>;
+  const price = value.unitPrice;
+  const currency = value.currency;
+  const observedAt = value.observedAt;
+  if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0 || typeof currency !== 'string' || typeof observedAt !== 'string') return publicAttributes;
+  const moq = value.moq;
+  return {
+    ...publicAttributes,
+    marketReference: {
+      price,
+      currency: currency.toUpperCase(),
+      observedAt,
+      label: 'Published MOQ price',
+      ...(typeof moq === 'number' && Number.isInteger(moq) && moq > 0 ? { moq } : {}),
+    },
+  };
+}
+
 async function directoryAdmin() {
   const actor = await getActor();
   if (!actor) return { actor: null, response: NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 }) };
@@ -114,7 +136,7 @@ export async function PATCH(request: Request) {
   const result = await prisma.$transaction(async (tx) => {
     const reviewed = await tx.directoryCandidate.update({ where: { id: candidate.id }, data: { reviewStatus: parsed.data.decision === 'APPROVE' ? 'APPROVED' : 'REJECTED', reviewNote: parsed.data.reviewNote, reviewedAt: new Date(), reviewedById: actor.id } });
     const profile = parsed.data.decision === 'APPROVE' ? await tx.directoryProfile.create({
-      data: { candidateId: candidate.id, itemType: candidate.itemType, name: candidate.name, nameAr: candidate.nameAr, category: candidate.category, subcategory: candidate.subcategory, description: parsed.data.publicDescription, attributes: toJson(parsed.data.publicAttributes), unitOfMeasure: candidate.unitOfMeasure, purchaseUnit: candidate.purchaseUnit, images: toJson(safeDirectoryImages(parsed.data.publicImages)), searchTerms: toJson(parsed.data.publicSearchTerms), searchText: directorySearchText({ name: candidate.name, nameAr: candidate.nameAr ?? undefined, category: candidate.category, subcategory: candidate.subcategory ?? undefined, description: parsed.data.publicDescription, searchTerms: parsed.data.publicSearchTerms }), publicationStatus: 'PUBLISHED', publishedById: actor.id },
+      data: { candidateId: candidate.id, itemType: candidate.itemType, name: candidate.name, nameAr: candidate.nameAr, category: candidate.category, subcategory: candidate.subcategory, description: parsed.data.publicDescription, attributes: toJson(publishedCommercialTerms(candidate.attributes, parsed.data.publicAttributes)), unitOfMeasure: candidate.unitOfMeasure, purchaseUnit: candidate.purchaseUnit, images: toJson(safeDirectoryImages(parsed.data.publicImages)), searchTerms: toJson(parsed.data.publicSearchTerms), searchText: directorySearchText({ name: candidate.name, nameAr: candidate.nameAr ?? undefined, category: candidate.category, subcategory: candidate.subcategory ?? undefined, description: parsed.data.publicDescription, searchTerms: parsed.data.publicSearchTerms }), publicationStatus: 'PUBLISHED', publishedById: actor.id },
       select: { id: true },
     }) : null;
     await appendAuditEntry({ entityName: parsed.data.decision === 'APPROVE' ? 'DIRECTORY_PROFILE' : 'DIRECTORY_CANDIDATE', entityId: profile?.id ?? candidate.id, actionType: 'STATUS_CHANGED', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { candidateId: candidate.id, decision: parsed.data.decision, reviewNote: parsed.data.reviewNote, sourceId: candidate.source.id } }, tx);
