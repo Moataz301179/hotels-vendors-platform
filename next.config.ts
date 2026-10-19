@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.unsplash.com" },
       { protocol: "https", hostname: "logo.clearbit.com" },
       { protocol: "https", hostname: "**.gravatar.com" },
+      // Open Food Facts is the explicitly licensed public-catalogue source.
+      // Serve its approved image URLs through Next's optimizer so marketplace
+      // cards do not depend on a browser-to-third-party hotlink succeeding.
+      { protocol: "https", hostname: "images.openfoodfacts.org" },
     ],
   },
 

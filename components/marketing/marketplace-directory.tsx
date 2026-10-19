@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Armchair, ArrowRight, BedDouble, CheckCircle2, ChevronRight, ClipboardCheck, Search, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
@@ -76,7 +77,7 @@ export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirector
         const workspaceTarget = `/login?redirect_url=${encodeURIComponent(`/workspace/marketplace?product=${entry.id}`)}`;
         const Icon = taxonomy.icon;
         return <article className={styles.card} key={entry.id}>
-          {entry.image ? <div className={styles.media}><img src={entry.image} alt="" loading="lazy" /></div> : <div className={styles.mediaFallback} aria-label={`${taxonomy.group} category artwork — product image pending source review`}>
+          {entry.image ? <div className={styles.media}><Image src={entry.image} alt="" fill sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw" /></div> : <div className={styles.mediaFallback} aria-label={`${taxonomy.group} category artwork — product image pending source review`}>
             <Icon size={56} aria-hidden={true}/>
             <span>{taxonomy.group}</span>
             <small>Product image pending review</small>
