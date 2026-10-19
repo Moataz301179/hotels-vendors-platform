@@ -76,7 +76,11 @@ export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirector
         const workspaceTarget = `/login?redirect_url=${encodeURIComponent(`/workspace/marketplace?product=${entry.id}`)}`;
         const Icon = taxonomy.icon;
         return <article className={styles.card} key={entry.id}>
-          {entry.image && <div className={styles.media}><img src={entry.image} alt="" loading="lazy" /></div>}
+          {entry.image ? <div className={styles.media}><img src={entry.image} alt="" loading="lazy" /></div> : <div className={styles.mediaFallback} aria-label={`${taxonomy.group} category artwork — product image pending source review`}>
+            <Icon size={56} aria-hidden={true}/>
+            <span>{taxonomy.group}</span>
+            <small>Product image pending review</small>
+          </div>}
           <div className={styles.cardBody}>
             <div className={styles.taxonomy}><span><Icon size={16}/>{taxonomy.group}</span><small>{taxonomy.subcategory}</small></div>
             <p className={styles.itemType}>{entry.itemType === 'SERVICE' ? 'Service requirement' : 'Product requirement'}</p>

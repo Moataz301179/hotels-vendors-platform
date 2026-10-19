@@ -32,6 +32,18 @@
   produced zero observations. Keep all newly observed candidates private until
   reuse permission, image-use review, and product review are recorded.
 
+## Marketplace visual completeness — 2026-10-19 (pending release)
+
+- Reviewed directory records that have no approved product image now render a
+  clearly labelled operating-category artwork panel instead of a blank card.
+  The panel never claims to be a photo of the named item and does not expose
+  source or vendor information.
+- Changed: `components/marketing/marketplace-directory.tsx` and
+  `components/marketing/marketplace-directory.module.css`.
+- Verification: focused directory/discovery tests passed (8 tests) and
+  `npm run build` passed. Product photography still requires an image source
+  that has cleared source-rights and catalogue review.
+
 ## Public directory experience — pending deployment 2026-10-19
 
 - Replaced the public marketplace's compact directory table with a responsive,
