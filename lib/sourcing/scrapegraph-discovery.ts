@@ -119,13 +119,25 @@ function jsonLdNodes(value: unknown): Record<string, unknown>[] {
   return [node, ...graph.flatMap(jsonLdNodes)];
 }
 
-function productFromJsonLd(value: Record<string, unknown>): ScrapeGraphProductObservation | null {
+function absolutePublicUrl(value: unknown, baseUrl: string): string | undefined {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  try {
+    const parsed = new URL(value, baseUrl);
+    return /^https?:$/i.test(parsed.protocol) ? parsed.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function productFromJsonLd(value: Record<string, unknown>, baseUrl: string): ScrapeGraphProductObservation | null {
   const types = strings(value["@type"]);
   if (!types.some(type => type.toLocaleLowerCase() === "product")) return null;
   const name = typeof value.name === "string" ? value.name.trim() : "";
   if (!name) return null;
   const offer = Array.isArray(value.offers) ? record(value.offers[0]) : record(value.offers);
-  const imageValues = strings(value.image).filter(image => /^https:\/\//i.test(image));
+  const imageValues = strings(value.image)
+    .map(image => absolutePublicUrl(image, baseUrl))
+    .filter((image): image is string => Boolean(image));
   const price = offer?.price ?? offer?.lowPrice;
   const stock = offer?.inventoryLevel;
   return {
@@ -138,7 +150,78 @@ function productFromJsonLd(value: Record<string, unknown>): ScrapeGraphProductOb
     currency: typeof offer?.priceCurrency === "string" ? offer.priceCurrency.toUpperCase() : "EGP",
     stockQuantity: typeof stock === "number" ? stock : null,
     images: imageValues,
-    productUrl: typeof value.url === "string" && /^https?:\/\//i.test(value.url) ? value.url : undefined,
+    productUrl: absolutePublicUrl(value.url, baseUrl),
+  };
+}
+
+const MAX_PUBLIC_PRODUCT_PAGES = 24;
+const PRODUCT_PAGE_CONCURRENCY = 4;
+
+function itemListUrls(value: Record<string, unknown>, baseUrl: string): string[] {
+  const types = strings(value["@type"]);
+  if (!types.some(type => type.toLocaleLowerCase() === "itemlist")) return [];
+  const elements = Array.isArray(value.itemListElement) ? value.itemListElement : [];
+  return elements.flatMap((element) => {
+    const item = record(element);
+    if (!item) return [];
+    const product = record(item.item);
+    return [absolutePublicUrl(item.url, baseUrl), absolutePublicUrl(product?.url, baseUrl)].filter((url): url is string => Boolean(url));
+  });
+}
+
+/**
+ * Finds only product-card links already rendered by the submitted catalogue.
+ * It never follows off-site links, search pages, or arbitrary navigation.
+ */
+function productCardUrls(html: string, baseUrl: string): string[] {
+  const base = new URL(baseUrl);
+  const urls = new Set<string>();
+  const anchorPattern = /<a\b([^>]*\b(?:class|data-product-id|data-product)\s*=\s*["'][^"']*(?:product|woocommerce)[^"']*["'][^>]*)>/gi;
+  for (const match of html.matchAll(anchorPattern)) {
+    const href = /\bhref\s*=\s*["']([^"']+)["']/i.exec(match[1])?.[1];
+    const url = absolutePublicUrl(href, baseUrl);
+    if (url && new URL(url).origin === base.origin && url !== baseUrl) urls.add(url);
+  }
+  return [...urls].slice(0, MAX_PUBLIC_PRODUCT_PAGES);
+}
+
+async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = [];
+  let index = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (index < items.length) {
+      const item = items[index++];
+      results.push(await fn(item));
+    }
+  }));
+  return results;
+}
+
+async function fetchPublicHtml(url: string, timeoutMs: number): Promise<{ url: string; html: string }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { accept: "text/html,application/xhtml+xml", "user-agent": "HotelsVendorsCatalogResearch/1.0 (+https://www.hotelsvendors.com)" },
+      signal: controller.signal,
+      redirect: "follow",
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!response.ok) throw new Error(`CATALOG_SOURCE_HTTP_${response.status}`);
+  return { url: response.url || url, html: await response.text() };
+}
+
+function jsonLdProducts(html: string, baseUrl: string): { products: ScrapeGraphProductObservation[]; itemUrls: string[] } {
+  const scripts = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  const nodes = scripts.flatMap(match => {
+    try { return jsonLdNodes(JSON.parse(match[1])); } catch { return []; }
+  });
+  return {
+    products: nodes.map(node => productFromJsonLd(node, baseUrl)).filter((product): product is ScrapeGraphProductObservation => Boolean(product)),
+    itemUrls: nodes.flatMap(node => itemListUrls(node, baseUrl)),
   };
 }
 
@@ -149,30 +232,29 @@ function productFromJsonLd(value: Record<string, unknown>): ScrapeGraphProductOb
  */
 export async function discoverPublicCatalogJsonLd(input: { sourceUrl: string; supplierName?: string }): Promise<ScrapeGraphDiscovery> {
   const canonicalUrl = canonicalize(input.sourceUrl);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20_000);
-  let response: Response;
-  try {
-    response = await fetch(canonicalUrl, { headers: { accept: "text/html,application/xhtml+xml", "user-agent": "HotelsVendorsCatalogResearch/1.0 (+https://www.hotelsvendors.com)" }, signal: controller.signal, redirect: "follow" });
-  } finally {
-    clearTimeout(timeout);
-  }
-  if (!response.ok) throw new Error(`CATALOG_SOURCE_HTTP_${response.status}`);
-  const html = await response.text();
-  const scripts = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
-  const nodes = scripts.flatMap(match => {
-    try { return jsonLdNodes(JSON.parse(match[1])); } catch { return []; }
+  const root = await fetchPublicHtml(canonicalUrl, 20_000);
+  const rootExtraction = jsonLdProducts(root.html, root.url);
+  const productUrls = [...new Set([...rootExtraction.itemUrls, ...productCardUrls(root.html, root.url)])]
+    .filter((url) => new URL(url).origin === new URL(root.url).origin && url !== root.url)
+    .slice(0, MAX_PUBLIC_PRODUCT_PAGES);
+  const detailExtractions = await mapWithConcurrency(productUrls, PRODUCT_PAGE_CONCURRENCY, async (productUrl) => {
+    try {
+      const page = await fetchPublicHtml(productUrl, 10_000);
+      return jsonLdProducts(page.html, page.url).products;
+    } catch {
+      // A single unavailable product page cannot turn a whole source into an error.
+      return [] as ScrapeGraphProductObservation[];
+    }
   });
   const byKey = new Map<string, ScrapeGraphProductObservation>();
-  for (const node of nodes) {
-    const product = productFromJsonLd(node);
-    if (product) byKey.set(`${product.productUrl ?? ""}|${product.sku ?? ""}|${product.name}`, product);
+  for (const product of [...rootExtraction.products, ...detailExtractions.flat()]) {
+    byKey.set(`${product.productUrl ?? ""}|${product.sku ?? ""}|${product.name}`, product);
   }
   const products = [...byKey.values()];
-  const supplierName = input.supplierName?.trim() || new URL(response.url || canonicalUrl).hostname;
+  const supplierName = input.supplierName?.trim() || new URL(root.url || canonicalUrl).hostname;
   const observedAt = new Date().toISOString();
   const responseHash = createHash("sha256").update(JSON.stringify({ canonicalUrl, supplierName, products })).digest("hex");
-  return { sourceUrl: input.sourceUrl, canonicalUrl, observedAt, schemaVersion: "hv-public-jsonld-v1", elapsedMs: 0, supplierName, products, responseHash };
+  return { sourceUrl: input.sourceUrl, canonicalUrl, observedAt, schemaVersion: "hv-public-jsonld-v2", elapsedMs: 0, supplierName, products, responseHash };
 }
 
 /**

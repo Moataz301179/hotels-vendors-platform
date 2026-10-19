@@ -1,5 +1,30 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Catalogue intake repair — 2026-10-19 (pending release)
+
+- Working source was `59495a0d` on `main` before this repair. The only official
+  workspace remains `/Users/Moatazi/hotels-vendors-new`; no worktree or branch
+  was created.
+- Production intake was exercised by an authenticated platform administrator
+  with seven researched public catalogue/category URLs. The live result was 12
+  private observations from 5/7 sources; two source attempts failed and four
+  page-level fallbacks yielded no product records. Nothing was published.
+- The fallback now discovers bounded, same-origin product-card and schema.org
+  ItemList URLs from a submitted catalogue page, fetches up to 24 candidate
+  product pages with concurrency four, and retains only schema.org Product
+  facts. It never follows third-party/navigation links or invents commercial
+  data. The relevant implementation is
+  `lib/sourcing/scrapegraph-discovery.ts` and tests are in
+  `tests/p0/public-catalog-jsonld.spec.ts`.
+- Local verification after the change: `npm test -- --run` passed (74 files,
+  262 tests); `npm run build` passed. Non-blocking build warnings remain for
+  Prisma's deprecated `package.json#prisma` setting, an outer workspace
+  `pnpm-workspace.yaml`, and React 18 deprecation in Next 16.
+- Next owner action: commit and deploy this repair through the existing manual
+  production workflow, then re-run only the source pages that previously
+  produced zero observations. Keep all newly observed candidates private until
+  reuse permission, image-use review, and product review are recorded.
+
 ## Public directory experience — pending deployment 2026-10-19
 
 - Replaced the public marketplace's compact directory table with a responsive,
