@@ -242,6 +242,68 @@ function productFromWooCommerceHtml(html: string, baseUrl: string): ScrapeGraphP
   };
 }
 
+function jsonArrayAt(value: string, key: string): unknown[] {
+  const marker = `"${key}":[`;
+  const start = value.indexOf(marker);
+  if (start < 0) return [];
+  const arrayStart = start + marker.length - 1;
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  for (let index = arrayStart; index < value.length; index++) {
+    const character = value[index];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') quoted = false;
+      continue;
+    }
+    if (character === '"') quoted = true;
+    else if (character === "[") depth++;
+    else if (character === "]" && --depth === 0) {
+      try { return JSON.parse(value.slice(arrayStart, index + 1)); } catch { return []; }
+    }
+  }
+  return [];
+}
+
+/**
+ * Next.js Server Component pages often expose their rendered product payload
+ * in self.__next_f. Read it as JSON text only; never evaluate page scripts.
+ */
+function productsFromNextFlight(html: string, baseUrl: string): ScrapeGraphProductObservation[] {
+  const rows: unknown[] = [];
+  for (const match of html.matchAll(/self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)<\/script>/g)) {
+    let payload: string;
+    try { payload = JSON.parse(match[1]); } catch { continue; }
+    for (const key of ["products", "featured"]) rows.push(...jsonArrayAt(payload, key));
+  }
+  return rows.flatMap((row) => {
+    const value = record(row);
+    if (!value) return [];
+    const name = typeof value.nameEn === "string" ? value.nameEn.trim() : typeof value.name === "string" ? value.name.trim() : "";
+    const externalId = typeof value.id === "string" || typeof value.id === "number" ? String(value.id) : undefined;
+    const image = absolutePublicUrl(value.image, baseUrl);
+    const category = typeof value.category === "string" ? value.category.trim() : undefined;
+    const price = typeof value.pricePerPiece === "number" ? value.pricePerPiece : typeof value.price === "number" ? value.price : null;
+    if (!name || !externalId || !image || !category || price === null) return [];
+    const packSize = typeof value.packSize === "string" ? value.packSize.trim() : undefined;
+    const caseCount = typeof value.caseCount === "number" && value.caseCount > 0 ? value.caseCount : null;
+    return [{
+      externalId,
+      name,
+      category,
+      description: packSize ? `Public source pack size: ${packSize}` : undefined,
+      unitPrice: price,
+      currency: "EGP",
+      stockQuantity: value.isSoldOut === true ? 0 : null,
+      moq: caseCount,
+      images: [image],
+      productUrl: absolutePublicUrl(`/products/${externalId}`, baseUrl),
+    } satisfies ScrapeGraphProductObservation];
+  });
+}
+
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const results: R[] = [];
   let index = 0;
@@ -278,8 +340,9 @@ function publicPageProducts(html: string, baseUrl: string): { products: ScrapeGr
   });
   const jsonLd = nodes.map(node => productFromJsonLd(node, baseUrl)).filter((product): product is ScrapeGraphProductObservation => Boolean(product));
   const wooCommerce = productFromWooCommerceHtml(html, baseUrl);
+  const nextFlight = productsFromNextFlight(html, baseUrl);
   return {
-    products: wooCommerce ? [...jsonLd, wooCommerce] : jsonLd,
+    products: [...jsonLd, ...(wooCommerce ? [wooCommerce] : []), ...nextFlight],
     itemUrls: nodes.flatMap(node => itemListUrls(node, baseUrl)),
   };
 }

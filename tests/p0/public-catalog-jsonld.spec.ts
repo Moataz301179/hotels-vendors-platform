@@ -58,4 +58,18 @@ describe('public catalogue JSON-LD fallback', () => {
       productUrl: 'https://catalog.example/product/hotel-towel/', images: ['https://catalog.example/images/towel.jpg'], unitPrice: null,
     })]);
   });
+
+  it('reads public product data from a Next Flight payload without evaluating scripts', async () => {
+    const flight = JSON.stringify('a:["$","$L14",null,{"products":[{"id":"17","nameEn":"Olive oil","category":"Oil & Ghee","pricePerPiece":99.5,"caseCount":12,"packSize":"Case of 12","image":"https://catalog.example/oil.png","isSoldOut":false}]}]');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
+      `<script>self.__next_f.push([1,${flight}])</script>`, { status: 200 },
+    )));
+
+    const result = await discoverPublicCatalogJsonLd({ sourceUrl: 'https://catalog.example/products' });
+
+    expect(result.products).toEqual([expect.objectContaining({
+      externalId: '17', name: 'Olive oil', category: 'Oil & Ghee', unitPrice: 99.5, moq: 12,
+      productUrl: 'https://catalog.example/products/17', images: ['https://catalog.example/oil.png'],
+    })]);
+  });
 });

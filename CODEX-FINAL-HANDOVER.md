@@ -18,8 +18,13 @@
   third-party/navigation links or invents commercial data. The relevant implementation is
   `lib/sourcing/scrapegraph-discovery.ts` and tests are in
   `tests/p0/public-catalog-jsonld.spec.ts`.
+- The same adapter now reads product objects embedded in public Next.js Flight
+  payloads as JSON text only (never by evaluating supplier page scripts). It
+  requires a public id, name, category, image, and observed price, then records
+  pack/case quantity as MOQ evidence. This covers the verified Mass
+  Distribution page structure; re-run its `/products` route after release.
 - Local verification after the change: `npm test -- --run` passed (74 files,
-  263 tests); `npm run build` passed. Non-blocking build warnings remain for
+  264 tests); `npm run build` passed. Non-blocking build warnings remain for
   Prisma's deprecated `package.json#prisma` setting, an outer workspace
   `pnpm-workspace.yaml`, and React 18 deprecation in Next 16.
 - Next owner action: commit and deploy this repair through the existing manual
