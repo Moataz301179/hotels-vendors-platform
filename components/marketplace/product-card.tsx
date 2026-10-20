@@ -60,7 +60,7 @@ export function ProductCard({
           {name}
         </h3>
         <p className="mb-3 text-xs" style={{ color: theme.text.secondary, fontWeight: 400 }}>
-          {supplierName}
+          {isMarketplace ? ("Verified Supplier — details at checkout") : supplierName}
         </p>
         <div className="mb-3 space-y-1.5">
           <div className="flex justify-between">
