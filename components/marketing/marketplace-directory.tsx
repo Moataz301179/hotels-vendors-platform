@@ -36,8 +36,8 @@ function formatObservedPrice(reference: MarketplaceDirectoryEntry['marketReferen
   return new Intl.NumberFormat('en-EG', { style: 'currency', currency: reference.currency, maximumFractionDigits: 2 }).format(reference.price);
 }
 
-export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirectoryEntry[] }) {
-  const [activeCategory, setActiveCategory] = useState('All');
+export function MarketplaceDirectory({ entries, initialCategory }: { entries: MarketplaceDirectoryEntry[]; initialCategory?: string }) {
+  const [activeCategory, setActiveCategory] = useState(initialCategory ?? 'All');
   const [activeSubcategory, setActiveSubcategory] = useState('All');
   const [query, setQuery] = useState('');
   const categories = useMemo(() => ['All', ...Array.from(new Set(entries.map(entry => taxonomyFor(entry).group))).sort()], [entries]);
@@ -45,7 +45,7 @@ export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirector
   useEffect(() => {
     const category = new URLSearchParams(window.location.search).get('category');
     if (category && categories.includes(category)) setActiveCategory(category);
-  }, [categories]);
+  }, [categories, initialCategory]);
   const visibleEntries = useMemo(() => entries.filter(entry => {
     const taxonomy = taxonomyFor(entry);
     const matchesCategory = activeCategory === 'All' || taxonomy.group === activeCategory;
@@ -57,9 +57,9 @@ export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirector
   return <section className={styles.directory} aria-labelledby="directory-title">
     <div className={styles.toolbar}>
       <div>
-        <p className={styles.eyebrow}>Reviewed directory</p>
-        <h2 id="directory-title">Choose an operating need. Continue in the secure workspace.</h2>
-        <p>These are reviewed product and service records—not vendor offers. A hotel can start a controlled requirement from any entry after sign-in.</p>
+        <p className={styles.eyebrow}>{activeCategory === 'All' ? 'Reviewed directory' : `${activeCategory} catalogue`}</p>
+        <h2 id="directory-title">{activeCategory === 'All' ? 'Choose an operating need. Continue in the secure workspace.' : `Explore ${activeCategory}.`}</h2>
+        <p>{activeCategory === 'All' ? 'These are reviewed product and service records—not vendor offers. A hotel can start a controlled requirement from any entry after sign-in.' : 'Choose a subcategory or product reference inside this sourcing area. Vendor identity and private commercial terms remain protected until the authorized workflow stage.'}</p>
       </div>
       <div className={styles.count} aria-live="polite"><ClipboardCheck size={18}/><strong>{visibleEntries.length}</strong><span>available records</span></div>
     </div>
@@ -93,7 +93,7 @@ export function MarketplaceDirectory({ entries }: { entries: MarketplaceDirector
           </div>
         </article>;
       })}
-    </div> : <div className={styles.empty}><h3>No records match this selection.</h3><p>Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>Show all records</button></div>}
+    </div> : <div className={styles.empty}><h3>{activeCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${activeCategory} yet.`}</h3><p>{activeCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{activeCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
 
     <div className={styles.requirement}>
       <div><p className={styles.eyebrow}>Not in the directory?</p><h3>Start with the requirement—not a blank search.</h3><p>In the hotel workspace, select the operating category, quantity, delivery context and response window. Product Intelligence then reviews and routes it under the sealed procurement controls.</p></div>
