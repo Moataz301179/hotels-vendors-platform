@@ -1,5 +1,18 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Authentication logo contrast correction — staged 2026-10-20
+
+- Scope: `app/globals.css` only. The login wordmark remains the shared SVG; on
+  the light authentication story panel its white mark now sits on a compact
+  charcoal tile with a visible keyboard focus ring. The public-navigation and
+  footer logo styles are unchanged.
+- Verification: targeted CSS diff check and `npm run build` passed. The build
+  was run while separate, unstaged Hermes marketplace work was present; it
+  confirms this source tree compiles but does not validate or approve Hermes'
+  catalogue changes.
+- Deployment remains pending: commit and deploy this isolated CSS change only;
+  do not stage `AGENTS.md` or the concurrent marketplace files.
+
 ## Homepage and HOVIN click-first redesign — deployed 2026-10-20
 
 - Scope is intentionally isolated from catalogue intake: only

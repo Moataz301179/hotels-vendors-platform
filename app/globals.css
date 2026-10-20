@@ -277,3 +277,21 @@ input,select,textarea{border:1px solid #cbd2d3;border-radius:var(--radius-contro
 @media(max-width:640px){.app-shell .app-top{height:64px;min-height:64px}.app-shell .app-body{padding:26px 16px 48px}.app-shell .side{top:64px}.app-shell .app-body h1{font-size:34px!important}.workspace-page-lead{font-size:14px}.workspace-metric-card{min-height:124px;padding:18px}.workspace-metric-card .metric{font-size:30px}.workspace-page-actions .btn{padding-inline:12px}.app-shell .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.workspace-request-list,.workspace-catalog-browse{grid-template-columns:1fr}.workspace-request-list{padding:18px}.workspace-request-list .workspace-empty{grid-column:auto}.workspace-request-list-item{grid-template-columns:minmax(0,1fr) auto}.workspace-request-list-item>.btn{grid-column:1/-1;width:100%}}
 @media(max-width:640px){.workspace-onboarding{padding:20px}.workspace-form-actions{justify-content:stretch}.workspace-form-actions .btn{flex:1}.workspace-stepper span{font-size:12px;padding-inline:8px}}
+
+/* Authentication brand mark: the white SVG needs its own contrast surface on the light story panel. */
+.hv-auth-logo{width:max-content;border-radius:5px}
+.hv-auth-logo:focus-visible{outline:3px solid #276a90;outline-offset:5px}
+.hv-auth-story .hv-brand-lockup>img{
+  box-sizing:border-box;
+  width:38px!important;
+  height:44px!important;
+  padding:6px;
+  border:1px solid rgba(23,36,46,.2);
+  border-radius:4px;
+  background:#17242e;
+  box-shadow:0 6px 16px rgba(23,36,46,.16);
+  filter:none;
+}
+@media(max-width:640px){
+  .hv-auth-story .hv-brand-lockup>img{width:33px!important;height:39px!important;padding:5px}
+}
