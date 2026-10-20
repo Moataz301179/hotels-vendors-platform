@@ -53,7 +53,7 @@ export default function PublicFooter() {
               <li><Link href="/orders" className="text-[13px] text-ink-600 hover:text-brass-600 dark:text-ink-300 dark:hover:text-brass-400">{t("home.footOrders")}</Link></li>
               <li><Link href="/receiving" className="text-[13px] text-ink-600 hover:text-brass-600 dark:text-ink-300 dark:hover:text-brass-400">{t("home.footReceiving")}</Link></li>
               <li><Link href="/invoices" className="text-[13px] text-ink-600 hover:text-brass-600 dark:text-ink-300 dark:hover:text-brass-400">{t("home.footInvoices")}</Link></li>
-              <li><Link href="/eta-compliance" className="text-[13px] text-ink-600 hover:text-brass-600 dark:text-ink-300 dark:hover:text-brass-400">{t("home.footETA")}</Link></li>
+              <li><Link href="/login?redirect_url=%2Feta-compliance" className="text-[13px] text-ink-600 hover:text-brass-600 dark:text-ink-300 dark:hover:text-brass-400">{t("home.footETA")}</Link></li>
             </ul>
           </div>
 
