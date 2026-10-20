@@ -1,5 +1,26 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Public ETA access-link repair — deployed 2026-10-20
+
+- Source commit `25f653e6e2b4b167ff930eaaa8b71e53aed26be7` changes only the two
+  public footer ETA links (`components/PublicFooter.tsx` and
+  `components/marketing/site-footer.tsx`). They now enter the authenticated
+  ETA workspace through `/login?redirect_url=%2Feta-compliance`; no ETA
+  authorization, database, procurement, or migration logic was changed.
+- Local verification: `npm run build` passed. Governed production workflow
+  [39357691622](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39357691622)
+  completed successfully, including isolated schema and lifecycle checks,
+  production migration/status verification, upload, activation, and release
+  health checks.
+- Live provenance verified from `/api/health`: `releaseId` and `sourceCommit`
+  both equal `25f653e6e2b4b167ff930eaaa8b71e53aed26be7`; database is `ready`
+  and authorization is `configured`. The public homepage now renders the ETA
+  footer link through the sign-in redirect.
+- Remaining risk: this confirms the public entry point, not that an
+  authenticated user can complete the ETA workflow. Direct unauthenticated
+  `/eta-compliance` behavior and the authorized end-to-end ETA lifecycle still
+  require a separate role-session verification.
+
 ## Neon migration recovery rehearsal — 2026-10-20 (release candidate pending deploy)
 
 - A fresh, time-bounded recovery branch, `pre-migration-149bffd6-20261020`
