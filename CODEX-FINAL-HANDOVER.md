@@ -1,6 +1,6 @@
 # HotelsVendors production handover — 2026-10-17
 
-## Authentication logo contrast correction — staged 2026-10-20
+## Authentication logo contrast correction — deployed 2026-10-20
 
 - Scope: `app/globals.css` only. The login wordmark remains the shared SVG; on
   the light authentication story panel its white mark now sits on a compact
@@ -10,8 +10,11 @@
   was run while separate, unstaged Hermes marketplace work was present; it
   confirms this source tree compiles but does not validate or approve Hermes'
   catalogue changes.
-- Deployment remains pending: commit and deploy this isolated CSS change only;
-  do not stage `AGENTS.md` or the concurrent marketplace files.
+- Source commit `04a12fb4c3dd40d4e834f7e7eda7947b7d1466fb` was deployed by governed
+  workflow [39361463212](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39361463212).
+  Live `/api/health` returned matching `releaseId` and `sourceCommit`, with
+  database `ready` and authorization `configured`. `AGENTS.md` and concurrent
+  marketplace files remain intentionally unstaged and outside this release.
 
 ## Homepage and HOVIN click-first redesign — deployed 2026-10-20
 
