@@ -1,6 +1,6 @@
 # HotelsVendors production handover — 2026-10-17
 
-## Homepage and HOVIN click-first redesign — pending deployment 2026-10-20
+## Homepage and HOVIN click-first redesign — deployed 2026-10-20
 
 - Scope is intentionally isolated from catalogue intake: only
   `app/(marketing)/page.tsx`, its home CSS module, and the HOVIN receiving
@@ -14,10 +14,13 @@
   release claim.
 - Verification: `git diff --check` and `npm run build` passed; local rendered
   review confirmed the homepage action cards and HOVIN scan state transition.
-- Next action: commit these four visual files only, deploy through the
-  governed production workflow, then verify matching release/source health and
-  the public homepage. Catalogue implementation remains a separate Hermes
-  scope and must not be co-staged with this change.
+- Production workflow [39360558288](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39360558288)
+  completed successfully. Live `/api/health` returned matching `releaseId`
+  and `sourceCommit` `addaf3f9521fc414e530305161e27335800cfd1a`, database
+  `ready`, and authorization `configured`; the live homepage rendered the new
+  connected-engine, HOVIN, and role-start markers.
+- Catalogue implementation remains a separate Hermes scope and must not be
+  co-staged with future homepage/dashboard changes.
 
 ## Public ETA access-link repair — deployed 2026-10-20
 
