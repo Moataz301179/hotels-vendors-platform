@@ -1,5 +1,14 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Homepage sourcing-journey rebuild — deployed 2026-10-20
+
+- Scope: rebuilt the public homepage in `app/(marketing)/page.tsx` and its scoped CSS module. The former explanatory launchpad, text rails and decorative workflow sections are replaced with visual, destination-led task cards, sourcing-area cards, a commercial-control panel, a connected workflow grid and a click-first HOVIN entry point. No marketplace, database, migration, Vendor-commercial, or mobile-release logic was changed.
+- Category destinations now use the exact Marketplace taxonomy groups: Restaurants & bars, Housekeeping & laundry, Guest rooms & amenities, Engineering & maintenance, Furniture, fixtures & outdoor, and Hotel services. They are not display-name-only queries.
+- HOVIN remains honestly labelled as an interactive product preview: a camera can identify an item, but quantity and condition still require an authorized human confirmation. No unreleased mobile screenshot or fabricated mobile data was presented as a live app.
+- Verification: `git diff --check` and local `npm run build` passed. Local preview at port 3101 rendered the rebuilt homepage and exposed all six category links with their exact Marketplace query values.
+- Source commit `3106b51fb5af53ba9627b9902b1c9aef05f8fe74` was deployed by governed workflow [39368667093](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/39368667093). Live `/api/health` reported matching `releaseId` and `sourceCommit`, database `ready`, and authorization `configured`.
+- Remaining scope: role workspace pages still require their separately approved GUI-first rebuild; avoid mixing that work with Hermes catalogue intake. Production verification proves release identity and health, not an authenticated role workflow or mobile-store release.
+
 ## Role workspace shell replacement — staged 2026-10-20
 
 - Scope: the shared application navigation and `/dashboard` are being replaced
