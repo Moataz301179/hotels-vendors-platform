@@ -1,5 +1,24 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Homepage and HOVIN click-first redesign — pending deployment 2026-10-20
+
+- Scope is intentionally isolated from catalogue intake: only
+  `app/(marketing)/page.tsx`, its home CSS module, and the HOVIN receiving
+  preview component/styles changed. No marketplace, directory, database,
+  migration, or Vendor-commercial data path was modified.
+- The final five homepage surfaces now use task/action cards and role-specific
+  start choices in place of decorative outcome blocks. The HOVIN preview is a
+  keyboard-accessible, click-driven product preview with hotel/Vendor role
+  tabs and explicit context, barcode-identification, and receipt-outcome
+  states. It is honestly labelled as a preview, not a live receipt or a mobile
+  release claim.
+- Verification: `git diff --check` and `npm run build` passed; local rendered
+  review confirmed the homepage action cards and HOVIN scan state transition.
+- Next action: commit these four visual files only, deploy through the
+  governed production workflow, then verify matching release/source health and
+  the public homepage. Catalogue implementation remains a separate Hermes
+  scope and must not be co-staged with this change.
+
 ## Public ETA access-link repair — deployed 2026-10-20
 
 - Source commit `25f653e6e2b4b167ff930eaaa8b71e53aed26be7` changes only the two

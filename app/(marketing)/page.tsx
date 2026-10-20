@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ClipboardList, PackageSearch, ScanLine, ShieldCheck } from "lucide-react";
 
 import { HovinReceivingPreview } from "@/components/marketing/hovin-receiving-preview";
 import { ProcurementFlowVisualizer } from "@/components/marketing/procurement-flow-visualizer";
@@ -41,10 +41,16 @@ const volumeSignals = [
   ["04", "Receipt", "Quantity and evidence"],
 ];
 
-const outcomes = [
-  ["Connected record", "One trace from requirement to receipt."],
-  ["Commercial clarity", "Terms remain comparable at review."],
-  ["Actionable exceptions", "The next owner is visible when delivery changes."],
+const outcomeActions = [
+  { icon: PackageSearch, label: "Start with a category", title: "Find the operating need", detail: "Browse a hospitality area, choose a product reference, then move the exact need into a controlled request.", href: "/marketplace", action: "Browse catalogue" },
+  { icon: ClipboardList, label: "Continue securely", title: "Review the next decision", detail: "Requests, comparable terms, approvals and orders stay in the workspace built for the authorized role.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace", action: "Open workspace" },
+  { icon: ScanLine, label: "Record at handoff", title: "Capture receipt evidence", detail: "The field team opens only an assigned handoff, then selects the receipt outcome with accountable controls.", href: "/hovin", action: "Explore HOVIN" },
+];
+
+const roleStarts = [
+  { icon: ShieldCheck, label: "Hotel team", detail: "Create an organization and start with a guided procurement workspace.", href: "/hotels/signup", action: "Register hotel" },
+  { icon: PackageSearch, label: "Vendor", detail: "Join to prepare your catalogue and respond only to assigned opportunities.", href: "/suppliers/signup", action: "Register vendor" },
+  { icon: ScanLine, label: "Field team", detail: "See the mobile handoff flow before controlled partner provisioning.", href: "/hovin", action: "Explore HOVIN" },
 ];
 
 const flow = [
@@ -135,18 +141,18 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.engine}`} aria-labelledby="engine-title"><div className={styles.shell}><Header eyebrow="The connected engine" title="One controlled decision path, from requirement to receipt." text="Inspect the evidence, authority and record required at every handoff. This surface illustrates operating logic; it never substitutes an actual order or external decision." /><ProcurementFlowVisualizer stages={flow} /></div></section>
+      <section className={`${styles.section} ${styles.engine}`} aria-labelledby="engine-title"><div className={styles.shell}><Header eyebrow="The connected engine" title="Choose a handoff. See what it needs. Move it forward." text="A click-first operating map for the people who request, review, approve and receive. It explains the record and control at each stage; it never substitutes for a live order or external decision." /><ProcurementFlowVisualizer stages={flow} /></div></section>
 
       <section className={styles.section} aria-labelledby="outcomes-title">
         <div className={styles.shell}>
-          <Header eyebrow="The operational result" title="Less searching. Clearer commercial action." text="Every organization keeps its role; each handoff keeps its accountable record." />
-          <div className={styles.outcomeBand}>{outcomes.map(([title, detail], index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{title}</h3><p>{detail}</p></div></article>)}</div>
+          <Header eyebrow="The operational result" title="Choose the next action instead of finding another form." text="The public path points to discovery. The secure workspace takes over only when a role needs to create, compare or record an accountable decision." />
+          <div className={styles.outcomeBand}>{outcomeActions.map(({ icon: Icon, label, title, detail, href, action }, index) => <Link href={href} className={styles.outcomeCard} key={title}><span>{String(index + 1).padStart(2, "0")}</span><Icon size={23} aria-hidden="true"/><div><p className={styles.outcomeLabel}>{label}</p><h3>{title}</h3><p>{detail}</p></div><strong>{action}<ArrowRight size={16}/></strong></Link>)}</div>
         </div>
       </section>
 
       <section className={styles.mobile} aria-labelledby="mobile-title"><div className={`${styles.shell} ${styles.mobileShell}`}><div className={styles.mobileIntro}><p className={styles.eyebrow}>HOVIN mobile workspace</p><h2 id="mobile-title">The field record, designed around the receiving handoff.</h2><p>HOVIN lets the people at the delivery point review the assigned purchase order, confirm quantities, record exceptions and attach receipt evidence—without creating a second procurement record.</p><Link href="/hovin" className={styles.textLink}>Explore the mobile role <ArrowRight size={16} /></Link></div><HovinReceivingPreview /></div></section>
 
-      <section className={styles.close}><div className={styles.shell}><div><p className={styles.eyebrow}>Start in the right place</p><h2>Join the sourcing network with the role that does the work.</h2><p>Public registration is for hotels and vendors. Carrier and funder access is provisioned through partner onboarding.</p></div><div className={styles.closeActions}><Link href="/register" className={styles.primary}>Register an organization <ArrowRight size={17} /></Link><Link href="/getting-started" className={styles.textLink}>Before you join</Link></div></div></section>
+      <section className={styles.close}><div className={styles.shell}><div className={styles.closeHeading}><p className={styles.eyebrow}>Start in the right place</p><h2>Pick the role and the task. We guide the rest.</h2><p>Public registration is for hotels and vendors. Carrier and funder access remains controlled through partner onboarding.</p></div><div className={styles.roleStartGrid}>{roleStarts.map(({ icon: Icon, label, detail, href, action }) => <Link href={href} className={styles.roleStart} key={label}><Icon size={22} aria-hidden="true"/><div><span>{label}</span><p>{detail}</p></div><strong>{action}<ArrowRight size={15}/></strong></Link>)}</div><Link href="/getting-started" className={styles.textLink}>See the guided onboarding path <ArrowRight size={16} /></Link></div></section>
     </main>
   );
 }
