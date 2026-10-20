@@ -1,5 +1,23 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Role workspace shell replacement — staged 2026-10-20
+
+- Scope: the shared application navigation and `/dashboard` are being replaced
+  with role-specific workspaces for Hotel, Vendor (backend `SUPPLIER`), Carrier,
+  Funder, and Administrator. The new navigation deliberately routes each role
+  only to the operational areas it owns.
+- Admin Control no longer renders marketplace intake, catalogue review, product
+  candidate review, or requirement matching surfaces. It is constrained to
+  access, governance, verification, and audit control; product discovery,
+  orders, receiving, and Vendor stock remain operational workspaces.
+- Design evidence used for the role sequence: SAP Ariba’s request-to-receipt
+  lifecycle, Coupa’s guided intake/approval controls, Fairmarkit’s event and
+  side-by-side comparison pattern, Alibaba Trade Center’s inquiry-to-confirmed
+  order flow, and Made-in-China’s RFQ status model. HotelsVendors preserves its
+  distinct anonymous RFQ and controlled identity-disclosure policy.
+- `npm run build` passed. Deployment and authenticated role-by-role visual
+  verification remain pending; never stage concurrent Hermes marketplace files.
+
 ## Authentication logo contrast correction — deployed 2026-10-20
 
 - Scope: `app/globals.css` only. The login wordmark remains the shared SVG; on

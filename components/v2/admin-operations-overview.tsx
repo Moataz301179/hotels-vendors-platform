@@ -32,8 +32,8 @@ export function AdminOperationsOverview() {
     {error ? <div className="workspace-status" role="alert">{error}</div> : !summary ? <p role="status" className="workspace-empty">Loading platform operations…</p> : <>
       <div className="grid3">
         <Link href="#registration-review" className="card workspace-metric-card"><div className="eyebrow">Registration review</div><div className="metric">{summary.reviewQueues.pendingRegistrations}</div><small>Pending user registrations</small></Link>
-        <Link href="#catalog-publication-review" className="card workspace-metric-card"><div className="eyebrow">Catalog review</div><div className="metric">{summary.reviewQueues.pendingCatalogReviews}</div><small>Catalog submissions awaiting a decision</small></Link>
-        <Link href="#directory-candidate-review" className="card workspace-metric-card"><div className="eyebrow">Directory review</div><div className="metric">{summary.reviewQueues.pendingDirectoryCandidates}</div><small>Supplier-neutral candidates awaiting review</small></Link>
+        <Link href="#directory-source-governance" className="card workspace-metric-card"><div className="eyebrow">Source governance</div><div className="metric">{summary.reviewQueues.pendingDirectoryCandidates}</div><small>Data sources requiring governance attention</small></Link>
+        <Link href="#supplier-review" className="card workspace-metric-card"><div className="eyebrow">Vendor verification</div><div className="metric">{summary.reviewQueues.pendingCatalogReviews}</div><small>Vendor evidence and catalogue eligibility</small></Link>
       </div>
       <div className="grid3 workspace-section">
         <div className="card workspace-metric-card"><div className="eyebrow">Open invoice face value</div><div className="metric">{egp(summary.collections.openInvoiceFaceValue)}</div><small>{summary.collections.outstandingInvoices} unpaid, partial, or overdue invoice records. Partial-payment balances require settlement reconciliation.</small></div>
