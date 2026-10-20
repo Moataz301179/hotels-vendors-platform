@@ -25,6 +25,7 @@ export interface ProductCardProps {
   onAddToCart?: (id: string, qty: number) => void;
   onViewDetails?: (id: string) => void;
   compareData?: Record<string, unknown>;
+  images?: string[];
   variant?: "marketplace" | "dashboard";
 }
 
@@ -55,7 +56,25 @@ export function ProductCard({
         fontFamily: HV_THEME.font.family,
       }}
     >
-      <div className="p-4">
+      <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg mb-3 bg-gradient-to-br from-slate-800 to-slate-900">
+          {/* Swipe image gallery - supports multiple product images */}
+          <div className="w-full h-full relative">
+            <img 
+              src={images && images.length > 0 ? images[0] : "/images/placeholder.jpg"} 
+              alt={name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+            {images && images.length > 1 && (
+              <div className="absolute bottom-2 right-2 flex gap-1">
+                {images.map((_, idx) => (
+                  <span key={idx} className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="p-4">
         <h3 className="mb-1 text-sm" style={{ color: theme.text.primary, fontWeight: 400 }}>
           {name}
         </h3>

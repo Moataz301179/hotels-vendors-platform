@@ -81,6 +81,7 @@ const FILTER_OPTIONS = [
   { label: "Rating", options: ["4.5+ Stars", "4.0+ Stars", "3.5+ Stars"] },
   { label: "Delivery", options: ["Same Day", "24 Hours", "48 Hours", "3-5 Days"] },
   { label: "Stock", options: ["In Stock", "Low Stock", "Pre-Order"] },
+  { label: "Subcategory", options: ["F&B", "Housekeeping", "FFE", "OS&E", "Guest Amenities", "Linens", "Engineering", "Spa", "IT", "Safety"] },
 ];
 
 export default function MarketplacePage() {
@@ -95,6 +96,8 @@ export default function MarketplacePage() {
   const [memberMode, setMemberMode] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // Subcategory filter for catalogue browsing
+  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
 
   // Real product data from API
