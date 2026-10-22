@@ -20,7 +20,7 @@ function selectionTarget({ itemId, category, subcategory, query }: MarketplaceSe
   if (subcategory) search.set('subcategory', subcategory);
   if (query) search.set('q', query);
   const serialized = search.toString();
-  return `/workspace/marketplace${serialized ? `?${serialized}` : ''}`;
+  return `/workspace/marketplace${itemId ? '/basket' : ''}${serialized ? `?${serialized}` : ''}`;
 }
 
 /**

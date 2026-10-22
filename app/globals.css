@@ -243,6 +243,25 @@ input,select,textarea{border:1px solid #cbd2d3;border-radius:var(--radius-contro
 /* A market reference is a compact dated signal, not a live offer. */
 .hv-market-price{display:grid;gap:3px}.hv-market-price small{font-size:9px;line-height:1.4;color:#66727a}
 
+/* Platinum surface policy: blue is a text, focus, or icon cue only. It must
+   never be the fill of an operational panel, tab, or primary action. */
+:root{
+  --blue:#e5e5e7;
+  --blue-strong:#007aff;
+  --focus:#007aff;
+  --ice-100:#f2f2f7;
+  --ice-300:#e5e5e7;
+  --workspace-accent:#1d1d1f;
+  --workspace-accent-soft:#f2f2f7;
+}
+.btn-blue,.btn-blue:hover,.btn-blue:focus-visible{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+.pill{background:#f2f2f7;color:#424245}
+.side a.active,.side a[aria-current=page],.workspace-tabs button[aria-selected=true],.nav .nav-dropdown-panel a:hover,.nav .nav-dropdown-panel a[aria-current=page]{background:#e5e5e7;color:#1d1d1f;border-color:#c7c7cc}
+.public-home-module__DFzTBW__controlSection,.public-home-module__DFzTBW__engine,.public-home-module__DFzTBW__outcomeSection,.public-home-module__DFzTBW__mobile,.public-home-module__DFzTBW__mobilePreview{background:#e5e5e7;color:var(--ink)}
+.public-home-module__DFzTBW__controlBoard,.public-home-module__DFzTBW__engine li,.public-home-module__DFzTBW__outcomeSection article,.public-home-module__DFzTBW__mobilePreview{background:#fff;border-color:#d1d1d6}
+.public-home-module__DFzTBW__controlNav .public-home-module__DFzTBW__navActive,.public-home-module__DFzTBW__controlAction{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+.workspace-alert[data-severity=action]{border-left-color:#8e8e93}
+
 /* Application workspace system: shared operational UI for every role. */
 .app-shell{
   --workspace-canvas:#f4f6f7;
