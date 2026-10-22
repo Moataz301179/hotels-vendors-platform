@@ -60,7 +60,17 @@ jobs:
           command -v pm2 >/dev/null 2>&1 && pm2 jlist | node -e '
             let input=""; process.stdin.on("data", c => input += c).on("end", () => {
               for (const app of JSON.parse(input)) {
-                console.log(JSON.stringify({name: app.name, status: app.pm2_env?.status, cwd: app.pm2_env?.pm_cwd, pid: app.pid}));
+                const cwd = app.pm2_env?.pm_cwd;
+                console.log(JSON.stringify({
+                  name: app.name,
+                  status: app.pm2_env?.status,
+                  cwd,
+                  execPath: app.pm2_env?.pm_exec_path,
+                  port: app.pm2_env?.env?.PORT ?? null,
+                  pid: app.pid,
+                  hasDotEnv: Boolean(cwd && require("fs").existsSync(`${cwd}/.env`)),
+                  hasRuntimeEnv: Boolean(cwd && require("fs").existsSync(`${cwd}/.runtime-env`)),
+                }));
               }
             });
           ' || true
