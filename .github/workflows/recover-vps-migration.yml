@@ -1,0 +1,87 @@
+name: Recover VPS migration and disk inventory
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type RECOVER_VPS_READ_ONLY to run the non-mutating recovery probe"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    if: inputs.confirmation == 'RECOVER_VPS_READ_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      CANDIDATE: prisma/migrations/20261003_funder_approval_state/migration.sql
+    steps:
+      - name: Configure existing production SSH identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST" -a -n "$VPS_USER" -a -n "$SSH_KEY"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Collect read-only VPS inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-artifact
+          ssh "$VPS_USER@$VPS_HOST" "CANDIDATE='$CANDIDATE' bash -s" <<'REMOTE' > recovery-artifact/vps-inventory.txt
+          set -euo pipefail
+          echo '=== collected_at_utc ==='
+          date -u +%FT%TZ
+          echo '=== filesystem ==='
+          df -hT /
+          echo '=== top_level_usage_bytes ==='
+          for target in /var/www /var/log /tmp; do
+            if [ -d "$target" ]; then
+              du -x -B1 -d 1 "$target" 2>/dev/null | sort -nr
+            fi
+          done
+          echo '=== active_pm2 ==='
+          command -v pm2 >/dev/null 2>&1 && pm2 jlist | node -e '
+            let input=""; process.stdin.on("data", c => input += c).on("end", () => {
+              for (const app of JSON.parse(input)) {
+                console.log(JSON.stringify({name: app.name, status: app.pm2_env?.status, cwd: app.pm2_env?.pm_cwd, pid: app.pid}));
+              }
+            });
+          ' || true
+          echo '=== migration_candidates ==='
+          find /var/www/hv-releases -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
+          echo '=== migration_candidate_sha256 ==='
+          find /var/www/hv-releases -type f -path "*/$CANDIDATE" -exec sha256sum {} \; 2>/dev/null | sort
+          REMOTE
+
+      - name: Retrieve migration candidates without logging contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh "$VPS_USER@$VPS_HOST" "CANDIDATE='$CANDIDATE' bash -s" <<'REMOTE' > recovery-artifact/migration-candidates.tar.gz
+          set -euo pipefail
+          matches=$(find /var/www/hv-releases -type f -path "*/$CANDIDATE" -print 2>/dev/null)
+          if [ -n "$matches" ]; then
+            printf '%s\n' "$matches" | tar -czf - --verbatim-files-from --files-from=-
+          else
+            tar -czf - --files-from=/dev/null
+          fi
+          REMOTE
+          sha256sum recovery-artifact/migration-candidates.tar.gz > recovery-artifact/migration-candidates.tar.gz.sha256
+
+      - name: Upload private recovery evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: vps-migration-recovery-${{ github.run_id }}
+          path: recovery-artifact/
+          retention-days: 7
+          if-no-files-found: error
