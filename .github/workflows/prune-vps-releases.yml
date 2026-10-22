@@ -1,0 +1,101 @@
+name: Prune inactive VPS releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type PRUNE_INACTIVE_RELEASES_KEEP_3 to remove inactive github release trees"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prune:
+    if: inputs.confirmation == 'PRUNE_INACTIVE_RELEASES_KEEP_3'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+    steps:
+      - name: Configure existing production SSH identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST" -a -n "$VPS_USER" -a -n "$SSH_KEY"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Prune inactive release trees with active-process guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p prune-artifact
+          ssh "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE' > prune-artifact/prune-report.txt
+          set -euo pipefail
+          RELEASE_ROOT=/var/www/hv-releases
+          PROCESS_NAME=hotels-vendors-production
+          KEEP_INACTIVE=3
+          export PROCESS_NAME
+
+          test -d "$RELEASE_ROOT"
+          active_lines=$(pm2 jlist | node -e '
+            let input=""; process.stdin.on("data", c => input += c).on("end", () => {
+              const apps = JSON.parse(input).filter(app => app.name === process.env.PROCESS_NAME && app.pm2_env?.status === "online");
+              for (const app of apps) console.log(app.pm2_env?.pm_cwd || "");
+            });
+          ')
+          active_count=$(printf '%s\n' "$active_lines" | sed '/^$/d' | wc -l | tr -d ' ')
+          test "$active_count" = 1
+          active=$(realpath -e "$active_lines")
+          case "$active" in "$RELEASE_ROOT"/github-*) ;; *) echo "Refusing unexpected active cwd: $active" >&2; exit 1;; esac
+
+          echo "=== before ==="
+          df -hT /
+          echo "active_release=$active"
+          echo "keep_inactive=$KEEP_INACTIVE"
+
+          mapfile -t ordered < <(find "$RELEASE_ROOT" -mindepth 1 -maxdepth 1 -type d -name 'github-*' -printf '%T@\t%p\n' | sort -nr)
+          test "${#ordered[@]}" -gt "$KEEP_INACTIVE"
+
+          keep_count=0
+          freed_estimate=0
+          echo "=== retained ==="
+          printf '%s\n' "$active"
+          echo "=== deleted ==="
+          for entry in "${ordered[@]}"; do
+            path=${entry#*$'\t'}
+            resolved=$(realpath -e "$path")
+            case "$resolved" in "$RELEASE_ROOT"/github-*) ;; *) echo "Refusing unsafe target: $resolved" >&2; exit 1;; esac
+            if [ "$resolved" = "$active" ]; then
+              continue
+            fi
+            if [ "$keep_count" -lt "$KEEP_INACTIVE" ]; then
+              echo "retained_inactive=$resolved"
+              keep_count=$((keep_count + 1))
+              continue
+            fi
+            bytes=$(du -sxB1 "$resolved" | awk '{print $1}')
+            echo "delete_bytes=$bytes path=$resolved"
+            rm -rf --one-file-system -- "$resolved"
+            test ! -e "$resolved"
+            freed_estimate=$((freed_estimate + bytes))
+          done
+          echo "freed_estimate_bytes=$freed_estimate"
+          echo "=== after ==="
+          df -hT /
+          echo "remaining_release_trees=$(find "$RELEASE_ROOT" -mindepth 1 -maxdepth 1 -type d -name 'github-*' | wc -l | tr -d ' ')"
+          REMOTE
+
+      - name: Upload cleanup manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: vps-release-prune-${{ github.run_id }}
+          path: prune-artifact/
+          retention-days: 30
+          if-no-files-found: error
