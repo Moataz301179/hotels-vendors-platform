@@ -56,6 +56,34 @@ function asActor(actor: Record<string, unknown>) {
   session.actor = actor;
 }
 
+/**
+ * This only models the state that the official ETA callback persists after a
+ * successful signed submission. It is deliberately direct-to-DB because the
+ * integration suite must prove the receiving gate without accepting a browser
+ * supplied ETA UUID or signature.
+ */
+async function persistAcceptedEtaClearance(orderId: string) {
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    select: { id: true, tenantId: true, hotelId: true, supplierId: true },
+  });
+  const suffix = randomUUID();
+  return prisma.invoice.create({
+    data: {
+      invoiceNumber: `IT-ETA-${run.slice(0, 12)}-${suffix.slice(0, 8)}`,
+      issueDate: new Date(),
+      status: 'VALIDATED',
+      etaStatus: 'ACCEPTED',
+      etaUuid: `eta-test-${suffix}`,
+      digitalSignature: `test-callback-signature-${suffix}`,
+      orderId: order.id,
+      hotelId: order.hotelId,
+      supplierId: order.supplierId,
+      tenantId: order.tenantId,
+    },
+  });
+}
+
 describe('procurement lifecycle against the isolated database', () => {
   beforeAll(async () => {
     await prisma.tenant.createMany({ data: [
@@ -253,7 +281,13 @@ describe('procurement lifecycle against the isolated database', () => {
 
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
-    const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] }));
+    const receiptPayload = { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] };
+    const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
+    expect(blockedReceipt.status).toBe(409);
+    await expect(blockedReceipt.json()).resolves.toEqual({ error: 'ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY' });
+
+    await persistAcceptedEtaClearance(order.id);
+    const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     expect(receiptResponse.status).toBe(201);
 
     const [storedOrder, storedRfq, storedQuote, receipts, auditRecords] = await Promise.all([
@@ -296,7 +330,7 @@ describe('procurement lifecycle against the isolated database', () => {
         data: { hash: 'tampered' },
       })).rejects.toThrow(/append-only/i);
     }
-  });
+  }, 90_000);
 
   it('moves an unlisted hotel requirement through Product Intelligence matching before supplier disclosure', async () => {
     asActor({ id: ids.buyer, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM', departmentId });
@@ -332,7 +366,13 @@ describe('procurement lifecycle against the isolated database', () => {
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'IN_TRANSIT', estimatedDelivery: new Date(Date.now() + 86_400_000).toISOString() }, 'PATCH'))).status).toBe(200);
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
-    expect((await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 5, acceptedQuantity: 5, conditionNotes: 'Matched requirement received' }] }))).status).toBe(201);
+    const receiptPayload = { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 5, acceptedQuantity: 5, conditionNotes: 'Matched requirement received' }] };
+    const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
+    expect(blockedReceipt.status).toBe(409);
+    await expect(blockedReceipt.json()).resolves.toEqual({ error: 'ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY' });
+
+    await persistAcceptedEtaClearance(order.id);
+    expect((await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload))).status).toBe(201);
     await expect(prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { status: true, paymentGuaranteed: true } })).resolves.toEqual({ status: 'DELIVERED', paymentGuaranteed: true });
-  });
+  }, 90_000);
 });

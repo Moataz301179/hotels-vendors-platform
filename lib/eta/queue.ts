@@ -2,10 +2,6 @@
  * ETA Submission Queue
  * Hotels Vendors Compliance Layer
  *
- * ⚠️ COMPLIANCE WARNING: This queue processes SIMULATED ETA submissions.
- * Submissions go to the ETA sandbox/preprod endpoint. UUIDs are fake.
- * Do NOT treat queue results as proof of real ETA compliance.
- *
  * Moves ETA e-invoicing submission out of HTTP handlers into
  * background workers with retry, DLQ, and audit logging.
  */
@@ -149,12 +145,13 @@ export function createEtaWorker(): Worker {
       // Submit to ETA
       const result = await etaClient.submitInvoice(payload as unknown as import("@/lib/eta/types").EtaInvoicePayload);
 
-      // Update invoice
+      // A submission acknowledgement is not ETA clearance.  Only the official
+      // notification callback may mark the invoice ACCEPTED.
       await prisma.invoice.update({
         where: { id: invoiceId },
         data: {
           etaUuid: result.uuid,
-          etaStatus: "ACCEPTED",
+          etaStatus: "SUBMITTING",
           submissionLog: JSON.stringify({ submissions: [result] }),
           status: "SUBMITTED",
         },
@@ -169,7 +166,7 @@ export function createEtaWorker(): Worker {
         actionType: "UPDATE",
         actorId: userId,
         actorRole: platformRole,
-        changes: { etaUuid: result.uuid, status: "ACCEPTED" },
+        changes: { etaUuid: result.uuid, status: "SUBMITTING" },
       });
 
       await recordSwarmEvent("eta_submitted", "INFO", {

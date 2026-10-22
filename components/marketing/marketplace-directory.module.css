@@ -284,6 +284,36 @@
   font-size: 13px;
   font-weight: 800;
 }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.detailAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink, #1d2730);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.workspaceAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line, #c9ccca);
+  background: #f7f7f5;
+  color: var(--ink, #1d2730);
+  padding: 11px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
 .action:hover {
   color: #123f66;
 }

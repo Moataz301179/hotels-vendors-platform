@@ -73,7 +73,9 @@ export interface TransitionGate {
 const TRANSITION_GATES: TransitionGate[] = [
   { from: "APPROVED", to: "CONFIRMED", requires: { paymentGuarantee: true } },
   { from: "CONFIRMED", to: "IN_TRANSIT", requires: { paymentGuarantee: true, etaValidation: true } },
-  { from: "IN_TRANSIT", to: "DELIVERED", requires: { authorityApproval: true } },
+  { from: "IN_TRANSIT", to: "PARTIALLY_DELIVERED", requires: { authorityApproval: true, etaValidation: true } },
+  { from: "IN_TRANSIT", to: "DELIVERED", requires: { authorityApproval: true, etaValidation: true } },
+  { from: "PARTIALLY_DELIVERED", to: "DELIVERED", requires: { authorityApproval: true, etaValidation: true } },
 ];
 
 /**
@@ -135,6 +137,25 @@ export async function atomicStatusUpdate(
           success: false,
           error: `Transition ${order.status} → ${requestedStatus} requires payment guarantee`,
         };
+      }
+      if (gate.requires.etaValidation) {
+        const etaClearance = await tx.invoice.findFirst({
+          where: {
+            orderId,
+            tenantId,
+            deletedAt: null,
+            etaStatus: "ACCEPTED",
+            etaUuid: { not: null },
+            digitalSignature: { not: null },
+          },
+          select: { id: true },
+        });
+        if (!etaClearance) {
+          return {
+            success: false,
+            error: `Transition ${order.status} → ${requestedStatus} requires an ETA-accepted, digitally signed invoice record`,
+          };
+        }
       }
     }
 

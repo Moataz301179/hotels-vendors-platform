@@ -211,6 +211,10 @@ input,select,textarea{border:1px solid #cbd2d3;border-radius:var(--radius-contro
 .hv-public-hero,.hv-marketplace-hero{background:var(--paper-100);color:var(--ink)}
 .hv-public-hero h1,.hv-marketplace-hero h1,.hv-public-hero h1 em,.hv-marketplace-hero h1 em{color:var(--ink)}
 .hv-public-hero p,.hv-marketplace-hero>div>p,.hv-public-proof span,.hv-public-hero .hv-public-text-link{color:var(--muted)}
+
+/* Marketplace references are compact product specifications, not another
+   marketing section. Platinum surfaces keep the public catalogue neutral. */
+.hv-reference-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,74px);align-items:start;margin-top:28px}.hv-reference-media{position:relative;display:grid;place-items:center;min-height:420px;background:#e7e7e4;border:1px solid var(--line)}.hv-reference-media img{object-fit:cover}.hv-reference-summary{max-width:590px}.hv-reference-summary h1{font-family:var(--font-display),sans-serif;font-size:clamp(36px,4vw,58px);letter-spacing:-.045em;line-height:1.03;margin:12px 0 20px}.hv-reference-summary>p{color:var(--muted);line-height:1.75}.hv-reference-specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:28px 0}.hv-reference-specs div{background:#fff;padding:16px}.hv-reference-specs dt{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}.hv-reference-specs dd{margin:0;font-size:14px;font-weight:650}.hv-reference-summary .hv-market-footnote{display:flex;gap:7px;align-items:flex-start;margin-top:18px}.hv-reference-summary .btn{background:#202124;color:#fff;border-color:#202124}@media(max-width:860px){.hv-reference-layout{grid-template-columns:1fr}.hv-reference-media{min-height:300px}.hv-reference-specs{grid-template-columns:1fr}}
 .hv-public-proof{border-color:var(--line)}
 .hv-public-close>.shell{background:var(--paper-200);color:var(--ink)}
 .hv-auth-page{background:var(--bg)}

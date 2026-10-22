@@ -1,0 +1,45 @@
+{
+  "recordedAt": "2026-10-23",
+  "purpose": "Protect the local HotelsVendors remediation candidate before canonical reconciliation.",
+  "liveProduction": {
+    "healthUrl": "https://www.hotelsvendors.com/api/health",
+    "releaseId": "github-3106b51fb5af53ba9627b9902b1c9aef05f8fe74",
+    "sourceCommit": "3106b51fb5af53ba9627b9902b1c9aef05f8fe74",
+    "observedAt": "2026-10-22T21:54:42.773Z"
+  },
+  "source": {
+    "candidateBase": "85042d6997864804c69fce583bc0d9d0b2e32450",
+    "canonicalMain": "1b235aeae39b176ab60c78234e591e2db911f34d",
+    "relationship": "candidateBase is an ancestor of canonicalMain; reconcile uncommitted candidate work over canonicalMain",
+    "overlapWithPostBaseCanonicalChanges": [
+      "components/marketing/marketplace-directory.tsx"
+    ]
+  },
+  "candidatePaths": [
+    "app/api/v2/grn/route.ts",
+    "app/api/v2/invoices/route.ts",
+    "app/globals.css",
+    "components/marketing/marketplace-directory.module.css",
+    "components/marketing/marketplace-directory.tsx",
+    "data/staging/hospitality-catalog-taxonomy.v1.json",
+    "docs/plans/2026-10-21-horeca-catalog-remediation-design.md",
+    "docs/plans/2026-10-23-canonical-reconciliation-and-experience-upgrade.md",
+    "lib/auth/state-machine.ts",
+    "lib/eta/client.ts",
+    "lib/eta/queue.ts",
+    "lib/security/clerk-csp.ts",
+    "prisma/schema.prisma",
+    "proxy.ts",
+    "tests/integration/procurement-lifecycle.spec.ts",
+    "tests/p0/production-shell-contract.spec.ts",
+    "app/(marketing)/marketplace/[id]/page.tsx",
+    "components/marketing/marketplace-selection-action.tsx",
+    "prisma/migrations/20261021090000_add_horeca_catalog_staging/migration.sql"
+  ],
+  "guardrails": [
+    "No git reset, clean, stash, force push, or replacement workspace.",
+    "No production database migration, PM2 restart, Nginx reload, or release activation in the reconciliation phase.",
+    "Recovered migration 20261003_funder_approval_state is already canonical and must not be regenerated or altered.",
+    "A release candidate may be activated only after source, clone-migration, standalone, browser, topology, and rollback gates pass."
+  ]
+}

@@ -20,7 +20,7 @@ export function clerkFrontendApiOrigin(publishableKey: string | undefined): stri
   }
 }
 
-export function buildClerkContentSecurityPolicy(publishableKey: string | undefined): string {
+export function buildClerkContentSecurityPolicy(publishableKey: string | undefined, nonce: string): string {
   const frontendApiOrigin = clerkFrontendApiOrigin(publishableKey);
   const clerkOrigins = [frontendApiOrigin, CLERK_DEV_FRONTEND_API].filter(Boolean).join(" ");
   const productionAccountsOrigin = frontendApiOrigin === "https://clerk.hotelsvendors.com"
@@ -30,9 +30,9 @@ export function buildClerkContentSecurityPolicy(publishableKey: string | undefin
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${configuredClerkOrigins} https://challenges.cloudflare.com ${CLERK_PROTECT}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${configuredClerkOrigins} https://challenges.cloudflare.com ${CLERK_PROTECT}`,
     "worker-src 'self' blob:",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
     "font-src 'self' https://fonts.gstatic.com",
     // Published supplier images are reviewed before activation and are loaded
     // directly by the browser. Keep the policy HTTPS-only: no server-side

@@ -3886,6 +3886,10 @@ model RfqRequest {
   contractBaselineId String?
   supplierId         String?
   catalogItemId      String?
+  /// Supplier-neutral HoReCa reference selected during public discovery. This
+  /// is distinct from a Vendor-owned Product and never discloses a commercial
+  /// source in buyer-facing discovery.
+  catalogStagingItemId String?
   itemName           String?
   unitOfMeasure      String?
   deliveryLocation   String?
@@ -3921,7 +3925,78 @@ model RfqRequest {
   @@index([tenantId])
   @@index([tenantId, contractBaselineId])
   @@index([tenantId, catalogItemId])
+  @@index([catalogStagingItemId])
   @@index([tenantId, buyerId, status])
+}
+
+/// Controlled category hierarchy for the supplier-neutral HoReCa master
+/// catalogue. Database foreign keys are created in the companion migration.
+model CatalogTaxonomy {
+  id        String   @id
+  code      String   @unique
+  label     String
+  parentId  String?
+  depth     Int      @default(0)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId, sortOrder])
+}
+
+/// Immutable source-import record. It contains no Vendor relationship and
+/// cannot itself become a commercial offer.
+model CatalogImportBatch {
+  id                 String              @id
+  sourceName         String
+  attributionSource  String
+  accessPolicy       String
+  sourceChecksum     String              @unique
+  status             CatalogImportStatus @default(UPLOADED)
+  submittedById      String?
+  reviewedById       String?
+  reviewedAt         DateTime?
+  rowCount           Int                 @default(0)
+  acceptedCount      Int                 @default(0)
+  rejectedCount      Int                 @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([status, createdAt])
+}
+
+/// Supplier-neutral B2B reference that supports RFQ discovery. `egsCode` is
+/// mandatory, but an internal code is not presented as an ETA-issued code.
+model CatalogStagingItem {
+  id                String                 @id
+  importBatchId     String
+  categoryId        String
+  itemName          String
+  itemNameAr        String?
+  normalizedKey     String
+  technicalSpecs    Json
+  imageUrls         String[]
+  imageRightsStatus String
+  defaultMoq        Int
+  estimatedPriceEgp Decimal?               @db.Decimal(14, 2)
+  egsCode           String
+  taxCodeScheme     CatalogTaxCodeScheme
+  attributionSource String
+  sourceRecordKey   String?
+  sourceObservedAt  DateTime
+  status            CatalogReferenceStatus @default(STAGED)
+  reviewNote        String?
+  reviewedById      String?
+  reviewedAt        DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  deletedAt         DateTime?
+
+  @@unique([normalizedKey, categoryId, importBatchId])
+  @@index([categoryId, status])
+  @@index([taxCodeScheme, egsCode])
+  @@index([deletedAt])
 }
 
 /// Explicit, tenant-bound grant for a supplier-side RFQ response.
@@ -4235,6 +4310,29 @@ enum RfqStatus {
   REJECTED
   EXPIRED
   CONVERTED_TO_ORDER
+}
+
+enum CatalogReferenceStatus {
+  STAGED
+  PENDING_REVIEW
+  PUBLISHED_REFERENCE
+  REJECTED
+  RETIRED
+}
+
+enum CatalogTaxCodeScheme {
+  EGS
+  GS1
+  HV_INTERNAL
+}
+
+enum CatalogImportStatus {
+  UPLOADED
+  VALIDATING
+  REVIEW_REQUIRED
+  COMPLETED
+  REJECTED
+  FAILED
 }
 
 enum ScheduleFrequency {
