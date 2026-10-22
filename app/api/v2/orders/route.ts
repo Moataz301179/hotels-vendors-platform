@@ -28,6 +28,9 @@ export async function GET(request:Request){
  return NextResponse.json({orders:orders.map(order=>{
   const invoiceIssued=(order.invoices?.length??0)>0;
   const {supplierId,supplier,invoices=[],...safeOrder}=order;
+  // Keep the private foreign key out of every order DTO. The explicit void
+  // marks the omission as intentional for lint without weakening that boundary.
+  void supplierId;
   return {...safeOrder,invoices,invoiceIssued,...(user.platformRole==='HOTEL'&&!invoiceIssued?{}:{supplier}),etaCompliance:classifyEtaCompliance(order),allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'};
  }),tenants});
 }
@@ -62,7 +65,7 @@ export async function PATCH(req:Request){
    if (!requiredApproverIds.includes(user.id)) return NextResponse.json({error:'APPROVAL_DELEGATE_REQUIRED'},{status:403});
    const existingApproverIds = new Set(order.approvals.filter(a=>a.action==='APPROVED').map(a=>a.approverId));
    if (!existingApproverIds.has(user.id)) {
-    const approval=await prisma.$transaction(async tx=>{const created=await tx.orderApproval.create({data:{orderId:order.id,approverId:user.id,action:'APPROVED',beforeState:order.status,afterState:existingApproverIds.size+1===requiredApproverIds.length?'APPROVED':'PENDING_APPROVAL'}});const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'APPROVAL_RECORDED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{approvalId:created.id,requiredApproverIds}},tx);await appendNetworkTransactionEvent(tx,{tenantId:order.tenantId,orderId:order.id,sourceEntityName:'ORDER',sourceEntityId:order.id,eventType:'APPROVAL_RECORDED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'RECORDED_APPROVAL',payload:{approvalId:created.id,requiredApproverIds},auditLogId});return created;});
+    await prisma.$transaction(async tx=>{const created=await tx.orderApproval.create({data:{orderId:order.id,approverId:user.id,action:'APPROVED',beforeState:order.status,afterState:existingApproverIds.size+1===requiredApproverIds.length?'APPROVED':'PENDING_APPROVAL'}});const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'APPROVAL_RECORDED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{approvalId:created.id,requiredApproverIds}},tx);await appendNetworkTransactionEvent(tx,{tenantId:order.tenantId,orderId:order.id,sourceEntityName:'ORDER',sourceEntityId:order.id,eventType:'APPROVAL_RECORDED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'RECORDED_APPROVAL',payload:{approvalId:created.id,requiredApproverIds},auditLogId});return created;});
     existingApproverIds.add(user.id);
    }
    const remainingApproverIds=requiredApproverIds.filter(id=>!existingApproverIds.has(id));

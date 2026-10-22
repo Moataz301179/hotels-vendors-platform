@@ -64,6 +64,10 @@ jobs:
               }
             });
           ' || true
+          echo '=== nginx_routing ==='
+          # Capture only topology directives.  Do not archive the full Nginx
+          # configuration because it can contain credentials or private paths.
+          nginx -T 2>/dev/null | grep -E '^[[:space:]]*(upstream|server|listen|server_name|proxy_pass)[[:space:]]' || true
           echo '=== migration_candidates ==='
           find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
             -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
