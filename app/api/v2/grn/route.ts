@@ -70,6 +70,24 @@ export async function POST(req: Request) {
       const checked = validateReceipt(order.items, prior, body.lines as ReceiptLineInput[]);
       if (!checked.ok) return { error: checked.error, status: 400 as const };
 
+      // A final receipt changes the commercial order to DELIVERED.  That
+      // boundary must never be crossed on a self-declared or sandbox ETA value.
+      // ETA acceptance and a real signature are both persisted evidence gates.
+      if (checked.orderStatus === "DELIVERED") {
+        const etaClearance = await tx.invoice.findFirst({
+          where: {
+            orderId: order.id,
+            tenantId: order.tenantId,
+            deletedAt: null,
+            etaStatus: "ACCEPTED",
+            etaUuid: { not: null },
+            digitalSignature: { not: null },
+          },
+          select: { id: true },
+        });
+        if (!etaClearance) return { error: "ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY", status: 409 as const };
+      }
+
       const now = new Date();
       const grn = await tx.goodsReceiptNote.create({
         data: {

@@ -27,12 +27,14 @@ function publicProfile(profile: {
 /** Public, non-commercial discovery surface. It deliberately does not select candidate or source relations. */
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
+  const id = params.get('id')?.trim();
   const q = params.get('q')?.trim();
   const category = params.get('category')?.trim();
   const itemType = params.get('itemType')?.trim();
   const profiles = await prisma.directoryProfile.findMany({
     where: {
       publicationStatus: 'PUBLISHED', deletedAt: null,
+      ...(id ? { id } : {}),
       ...(category ? { category } : {}),
       ...(itemType ? { itemType } : {}),
       ...(q ? { OR: [

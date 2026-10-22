@@ -25,11 +25,11 @@ export async function POST(req: Request) {
   }
   const order = await prisma.order.findFirst({
     where: actor.platformRole === "SUPPLIER"
-      ? { id: orderId, supplierId: actor.supplierId ?? "", status: "DELIVERED", paymentGuaranteed: true, deletedAt: null }
-      : { id: orderId, tenantId: actor.tenantId, status: "DELIVERED", paymentGuaranteed: true, deletedAt: null },
+      ? { id: orderId, supplierId: actor.supplierId ?? "", status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null }
+      : { id: orderId, tenantId: actor.tenantId, status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null },
     select: { id: true, tenantId: true, hotelId: true, supplierId: true },
   });
-  if (!order) return NextResponse.json({ error: "A received, guaranteed order is required." }, { status: 409 });
+  if (!order) return NextResponse.json({ error: "A confirmed, guaranteed order is required." }, { status: 409 });
   if (actor.platformRole !== "SUPPLIER" && actor.platformRole !== "ADMIN" && !receivingRoles.includes(actor.role)) {
     return NextResponse.json({ error: "INVOICE_ROLE_REQUIRED" }, { status: 403 });
   }
@@ -40,8 +40,9 @@ export async function POST(req: Request) {
           invoiceNumber,
           issueDate: body.issueDate ? new Date(body.issueDate) : new Date(),
           dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
-          etaUuid: typeof body.etaUuid === "string" ? body.etaUuid.trim() || undefined : undefined,
-          status: "SUBMITTED",
+          // ETA identity is written only by the official submission worker.
+          // A client must never be able to self-declare a clearance UUID.
+          status: "DRAFT",
           etaStatus: "PENDING",
           subtotal,
           vatAmount,
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
       });
       return created;
     });
-    return NextResponse.json({ invoice, outcome: { invoice: "SUBMITTED", eta: invoice.etaStatus } }, { status: 201 });
+    return NextResponse.json({ invoice, outcome: { invoice: "DRAFT", eta: invoice.etaStatus } }, { status: 201 });
   } catch (error: any) {
     console.error("[invoice] failed to record", error);
     if (error?.code === "P2002") return NextResponse.json({ error: "Invoice number already exists." }, { status: 409 });

@@ -2,11 +2,6 @@
  * ETA API Client
  * Hotels Vendors Compliance Layer
  *
- * ⚠️ COMPLIANCE WARNING: This is a SIMULATED ETA integration.
- * It targets the ETA preprod/sandbox endpoint (https://api.preprod.invoicing.eta.gov.eg).
- * UUIDs returned by the sandbox are NOT valid for real Egyptian tax compliance.
- * Do NOT present sandbox submissions as real ETA-compliant invoices.
- *
  * HTTP client for Egyptian Tax Authority e-invoicing API.
  * Handles authentication, submission, validation, and callback processing.
  */
@@ -24,7 +19,7 @@ import type {
 // ─────────────────────────────────────────
 
 const ETA_CONFIG: EtaConfig = {
-  baseUrl: process.env.ETA_API_URL || "https://api.preprod.invoicing.eta.gov.eg",
+  baseUrl: process.env.ETA_API_URL || "",
   apiPath: "/documentsubmissions",
   apiVersion: "api/v1",
   positionId: process.env.ETA_POSITION_ID || "",
@@ -51,6 +46,10 @@ interface EtaTokenResponse {
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string> {
+  if (ETA_CONFIG.environment !== "production" || !ETA_CONFIG.baseUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
+    throw new Error("ETA_NOT_CONFIGURED_FOR_PRODUCTION");
+  }
+
   // Return cached token if valid
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60000) {
     return cachedToken.token;

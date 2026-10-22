@@ -10,6 +10,8 @@ type Quote = { id: string; reference: string; quantity: number; currency: string
 type SourcingRequirement = { id: string; itemName: string | null; unitOfMeasure: string | null; requestedQty: number; status: string; matchingStatus: string; deliveryLocation: string | null; createdAt: string };
 type MarketOffer = { reference: string; productName: string; unitPrice?: number | null; currency?: string; packSize?: string; leadTimeDays?: number | null };
 type MarketCompareResponse = { comparison: { offers: MarketOffer[] } };
+type CatalogueReference = { id: string; name: string; category: string; subcategory: string | null; unitOfMeasure: string | null; purchaseUnit: string | null };
+type DirectoryResponse = { profiles: CatalogueReference[] };
 
 function ProductVisual({ product }: { product: Product }) {
   const [failed, setFailed] = useState(false);
@@ -25,7 +27,8 @@ export function ProcurementConsole() {
   const [q, setQ] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [qty, setQty] = useState(1);
-  const [requirement, setRequirement] = useState({ itemName: '', unitOfMeasure: 'piece', quantity: 1, deliveryLocation: '', responseWindowHours: 24, notes: '' });
+  const [requirement, setRequirement] = useState({ itemName: '', unitOfMeasure: 'piece', quantity: 1, deliveryLocation: '', responseWindowHours: 24, notes: '', catalogReferenceId: '' });
+  const [selectedReference, setSelectedReference] = useState<CatalogueReference | null>(null);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -46,12 +49,27 @@ export function ProcurementConsole() {
 
   useEffect(() => {
     let active = true;
-    const initialProduct = new URL(window.location.href).searchParams.get('product') ?? '';
+    const params = new URL(window.location.href).searchParams;
+    const initialProduct = params.get('product') ?? '';
+    const catalogReferenceId = params.get('catalogReference')?.trim() ?? '';
     Promise.all([
       requestJson<{ products: Product[] }>('/api/v2/marketplace?q=' + encodeURIComponent(initialProduct)),
       requestJson<{ quotes: Quote[] }>('/api/v2/quotes'),
       requestJson<{ rfqs: SourcingRequirement[] }>('/api/v2/rfq'),
-    ]).then(([p, c, r]) => { if (active) { setQ(initialProduct); setProducts(p.products); setQuotes(c.quotes); setRequirements(r.rfqs); } }).catch((loadError) => { if (active) setError((loadError as Error).message); });
+      catalogReferenceId
+        ? requestJson<DirectoryResponse>('/api/v2/directory?id=' + encodeURIComponent(catalogReferenceId))
+        : Promise.resolve({ profiles: [] }),
+    ]).then(([p, c, r, directory]) => {
+      if (!active) return;
+      setQ(initialProduct); setProducts(p.products); setQuotes(c.quotes); setRequirements(r.rfqs);
+      const reference = directory.profiles[0] ?? null;
+      if (reference) {
+        setSelectedReference(reference);
+        setRequirement((current) => ({ ...current, catalogReferenceId: reference.id, itemName: reference.name, unitOfMeasure: reference.purchaseUnit ?? reference.unitOfMeasure ?? current.unitOfMeasure }));
+      } else if (catalogReferenceId) {
+        setError('That catalogue reference is no longer available. You can still record a new controlled requirement.');
+      }
+    }).catch((loadError) => { if (active) setError((loadError as Error).message); });
     return () => { active = false; };
   }, []);
 
@@ -76,8 +94,10 @@ export function ProcurementConsole() {
   async function submitRequirement(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMsg('');
     try {
-      await requestJson('/api/v2/rfq', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(requirement) });
-      setRequirement({ itemName: '', unitOfMeasure: 'piece', quantity: 1, deliveryLocation: '', responseWindowHours: 24, notes: '' });
+      const { catalogReferenceId, ...requirementFields } = requirement;
+      await requestJson('/api/v2/rfq', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(catalogReferenceId ? { ...requirementFields, catalogReferenceId } : requirementFields) });
+      setRequirement({ itemName: '', unitOfMeasure: 'piece', quantity: 1, deliveryLocation: '', responseWindowHours: 24, notes: '', catalogReferenceId: '' });
+      setSelectedReference(null);
       setMsg('Requirement recorded in the sealed sourcing queue. It is not sent to an unverified vendor.'); await load();
     } catch (submitError) { setError((submitError as Error).message); } finally { setBusy(false); }
   }
@@ -131,7 +151,7 @@ export function ProcurementConsole() {
       {requestList.length ? <><div className="workspace-request-list-items">{requestList.map((item) => <div key={item.id} className="workspace-request-list-item"><div><strong>{item.name}</strong><small>{item.sku} · {item.unitOfMeasure}</small></div><div className="workspace-quantity-control" aria-label={`Quantity for ${item.name}`}><button type="button" onClick={() => setRequestList((current) => setRequestListQuantity(current, item.id, item.quantity - 1))} aria-label={`Decrease ${item.name} quantity`}>−</button><span>{item.quantity}</span><button type="button" onClick={() => setRequestList((current) => setRequestListQuantity(current, item.id, item.quantity + 1))} aria-label={`Increase ${item.name} quantity`}>+</button></div><button type="button" className="btn btn-ghost" onClick={() => setRequestList((current) => setRequestListQuantity(current, item.id, 0))}>Remove</button></div>)}</div><button className="btn btn-blue" disabled={busy} onClick={() => void submitRequestList()}>{busy ? 'Recording requests…' : `Send ${requestList.length} sourcing request${requestList.length === 1 ? '' : 's'}`}</button></> : <div className="workspace-empty"><strong>No products selected yet.</strong><p>Use “Add to request list” on a catalog card, then adjust the quantity here without retyping the item.</p></div>}
     </section>
 
-    <section className="card" style={{ padding: 24, marginTop: 18 }}><div className="eyebrow">Exception intake</div><h2>Need an item that is not listed?</h2><p className="muted">Record the specification once; it enters a controlled sealed sourcing queue and is never represented as a published product.</p><form onSubmit={(event) => void submitRequirement(event)} className="workspace-form"><label>Item or specification<input required maxLength={240} value={requirement.itemName} onChange={(event) => setRequirement({ ...requirement, itemName: event.target.value })} placeholder="e.g. Hotel-grade bath towel, 70 × 140 cm" /></label><label>Unit of measure<input required maxLength={80} value={requirement.unitOfMeasure} onChange={(event) => setRequirement({ ...requirement, unitOfMeasure: event.target.value })} placeholder="piece, carton, case" /></label><label>Quantity<input required type="number" min={1} step={1} value={requirement.quantity} onChange={(event) => setRequirement({ ...requirement, quantity: Number(event.target.value) })} /></label><label>Response window<select value={requirement.responseWindowHours} onChange={(event) => setRequirement({ ...requirement, responseWindowHours: Number(event.target.value) })}><option value={4}>Same day — 4 hours</option><option value={24}>Planned — 1 business day</option><option value={72}>Technical / complex — 3 days</option></select></label><label>Delivery location <span className="muted">(optional)</span><input maxLength={240} value={requirement.deliveryLocation} onChange={(event) => setRequirement({ ...requirement, deliveryLocation: event.target.value })} /></label><label>Requirement notes <span className="muted">(optional)</span><input maxLength={2000} value={requirement.notes} onChange={(event) => setRequirement({ ...requirement, notes: event.target.value })} /></label><button className="btn btn-blue" disabled={busy || !requirement.itemName.trim() || !requirement.unitOfMeasure.trim() || !Number.isInteger(requirement.quantity) || requirement.quantity < 1}>{busy ? 'Recording…' : 'Send to sealed sourcing queue'}</button></form>{requirements.filter((item) => item.itemName !== null).length > 0 && <div style={{ overflowX: 'auto', marginTop: 20 }}><table className="table"><thead><tr><th>Requirement</th><th>Quantity</th><th>Matching</th><th>Status</th><th>Recorded</th></tr></thead><tbody>{requirements.filter((item) => item.itemName !== null).map((item) => <tr key={item.id}><td><strong>{item.itemName || 'Unlisted requirement'}</strong><br /><small className="muted">{item.unitOfMeasure || 'unit not stated'}{item.deliveryLocation ? ` · ${item.deliveryLocation}` : ''}</small></td><td>{item.requestedQty}</td><td>{item.matchingStatus.replaceAll('_', ' ')}</td><td>{item.status.replaceAll('_', ' ')}</td><td>{new Date(item.createdAt).toLocaleDateString()}</td></tr>)}</tbody></table></div>}</section>
+    <section className="card" style={{ padding: 24, marginTop: 18 }}><div className="eyebrow">{selectedReference ? 'Selected catalogue reference' : 'Exception intake'}</div><h2>{selectedReference ? selectedReference.name : 'Need an item that is not listed?'}</h2><p className="muted">{selectedReference ? 'This reference stays supplier-neutral. Confirm the quantity and delivery context to create a sealed sourcing request.' : 'Record the specification once; it enters a controlled sealed sourcing queue and is never represented as a published product.'}</p><form onSubmit={(event) => void submitRequirement(event)} className="workspace-form"><label>Item or specification<input required maxLength={240} value={requirement.itemName} onChange={(event) => { setSelectedReference(null); setRequirement({ ...requirement, itemName: event.target.value, catalogReferenceId: '' }); }} placeholder="e.g. Hotel-grade bath towel, 70 × 140 cm" /></label><label>Unit of measure<input required maxLength={80} value={requirement.unitOfMeasure} onChange={(event) => setRequirement({ ...requirement, unitOfMeasure: event.target.value })} placeholder="piece, carton, case" /></label><label>Quantity<input required type="number" min={1} step={1} value={requirement.quantity} onChange={(event) => setRequirement({ ...requirement, quantity: Number(event.target.value) })} /></label><label>Response window<select value={requirement.responseWindowHours} onChange={(event) => setRequirement({ ...requirement, responseWindowHours: Number(event.target.value) })}><option value={4}>Same day — 4 hours</option><option value={24}>Planned — 1 business day</option><option value={72}>Technical / complex — 3 days</option></select></label><label>Delivery location <span className="muted">(optional)</span><input maxLength={240} value={requirement.deliveryLocation} onChange={(event) => setRequirement({ ...requirement, deliveryLocation: event.target.value })} /></label><label>Requirement notes <span className="muted">(optional)</span><input maxLength={2000} value={requirement.notes} onChange={(event) => setRequirement({ ...requirement, notes: event.target.value })} /></label><button className="btn btn-blue" disabled={busy || !requirement.itemName.trim() || !requirement.unitOfMeasure.trim() || !Number.isInteger(requirement.quantity) || requirement.quantity < 1}>{busy ? 'Recording…' : selectedReference ? 'Create sealed sourcing request' : 'Send to sealed sourcing queue'}</button></form>{requirements.filter((item) => item.itemName !== null).length > 0 && <div style={{ overflowX: 'auto', marginTop: 20 }}><table className="table"><thead><tr><th>Requirement</th><th>Quantity</th><th>Matching</th><th>Status</th><th>Recorded</th></tr></thead><tbody>{requirements.filter((item) => item.itemName !== null).map((item) => <tr key={item.id}><td><strong>{item.itemName || 'Unlisted requirement'}</strong><br /><small className="muted">{item.unitOfMeasure || 'unit not stated'}{item.deliveryLocation ? ` · ${item.deliveryLocation}` : ''}</small></td><td>{item.requestedQty}</td><td>{item.matchingStatus.replaceAll('_', ' ')}</td><td>{item.status.replaceAll('_', ' ')}</td><td>{new Date(item.createdAt).toLocaleDateString()}</td></tr>)}</tbody></table></div>}</section>
 
     {marketOffers.length > 0 && <section className="card" style={{ padding: 24, marginTop: 18 }}><h2>Comparable market references</h2><p className="muted">Recorded public observations for research. They are not live offers; verify terms through an RFQ before buying.</p><div style={{ overflowX: 'auto' }}><table className="table"><thead><tr><th>Reference</th><th>Product</th><th>Observed price</th><th>Pack / delivery window</th></tr></thead><tbody>{marketOffers.map((offer) => <tr key={offer.reference}><td>{offer.reference}</td><td><strong>{offer.productName}</strong></td><td>{offer.unitPrice === null || offer.unitPrice === undefined ? 'Not stated' : `${offer.unitPrice.toLocaleString()} ${offer.currency || 'EGP'}`}</td><td>{offer.packSize || 'Not stated'} · {offer.leadTimeDays == null ? 'Not stated' : `${offer.leadTimeDays} days`}</td></tr>)}</tbody></table></div></section>}
     {!error && products === null ? <p role="status">Loading catalog…</p> : <div className="grid3" style={{ marginTop: 18 }}>{visibleProducts?.map((product) => <article className="card" style={{ padding: 0, overflow: 'hidden' }} key={product.id}><ProductVisual product={product} /><div style={{ padding: 20 }}><span className="pill">{product.category.replaceAll('_', ' ')}</span><h3>{product.name}</h3><p className="muted">{product.sku} · {product.unitOfMeasure}</p><strong>Request for quote</strong><div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}><button className="btn btn-blue" disabled={busy || !Number.isInteger(qty) || qty < 1} onClick={() => void addToRequestList(product)}>Add to request list</button><button className="btn btn-ghost" disabled={busy || !Number.isInteger(qty) || qty < 1} onClick={() => void act('/api/v2/rfq', { productId: product.id, quantity: qty }, 'rfq')}>Request now</button></div><small className="muted" style={{ display: 'block', marginTop: 10 }}>Commercial terms are evaluated as anonymized comparable offers.</small></div></article>)}</div>}

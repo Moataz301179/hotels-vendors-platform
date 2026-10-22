@@ -38,27 +38,29 @@ describe("production shell and authorization contracts", () => {
 
   it("allows Clerk API connections in the response CSP", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
-    expect(proxy).toContain("buildClerkContentSecurityPolicy(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)");
+    expect(proxy).toContain("buildClerkContentSecurityPolicy(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, nonce)");
     const productionKey = "pk_live_Y2xlcmsuaG90ZWxzdmVuZG9ycy5jb20k";
-    const productionCsp = buildClerkContentSecurityPolicy(productionKey);
+    const productionCsp = buildClerkContentSecurityPolicy(productionKey, "test-nonce");
     expect(productionCsp).toContain("https://clerk.hotelsvendors.com");
     expect(productionCsp).toContain("https://accounts.hotelsvendors.com");
     expect(productionCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://accounts.hotelsvendors.com");
     expect(productionCsp).toContain("worker-src 'self' blob:");
     expect(productionCsp).not.toContain("united-treefrog-223");
     const stagingKey = "pk_test_dW5pdGVkLXRyZWVmcm9nLTIyMy5jbGVyay5hY2NvdW50cy5kZXYk";
-    const stagingCsp = buildClerkContentSecurityPolicy(stagingKey);
+    const stagingCsp = buildClerkContentSecurityPolicy(stagingKey, "test-nonce");
     expect(stagingCsp).toContain("https://united-treefrog-223.clerk.accounts.dev");
     expect(stagingCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://*.clerk.accounts.dev");
     expect(stagingCsp).toContain("worker-src 'self' blob:");
     expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
-    expect(proxy).toContain("if (isApiPath) return authMiddleware(request, event);");
+    expect(proxy).toContain("if (isApiPath) return authMiddleware(security.csp)(securedRequest, event);");
+    expect(productionCsp).not.toContain("unsafe-inline");
+    expect(productionCsp).not.toContain("unsafe-eval");
   });
 
   it("runs Clerk context without requiring a session for the public guidance assistant", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
     expect(proxy).toContain("optionalAssistantAuthMiddleware");
-    expect(proxy).toContain('if (pathname === "/api/v2/assistant") return optionalAssistantAuthMiddleware(request, event);');
+    expect(proxy).toContain('if (pathname === "/api/v2/assistant") return optionalAssistantAuthMiddleware(security.csp)(securedRequest, event);');
     expect(proxy).not.toContain('"/api/v2/"');
   });
 

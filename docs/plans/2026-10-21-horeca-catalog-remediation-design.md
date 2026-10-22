@@ -111,7 +111,28 @@ The displayed estimated price is a dated reference only, never a live offer.
 
 ### Current exact next action
 
-Run the full browse-to-RFQ lifecycle and affected route/auth tests against the
-now-schema-valid isolated clone. Then create a governed source commit, run its
-release candidate build/verification, and only then consider production Neon
-migration and PM2/Nginx activation with a fresh rollback check.
+### Lifecycle gate verification — 2026-10-22
+
+- The full six-case procurement lifecycle was run against the isolated Neon
+  clone with `HV_RUN_DB_INTEGRATION=1` and
+  `HV_INTEGRATION_ALLOW_REMOTE=1`; all six cases passed. This is clone-only
+  verification, not a production database change.
+- The two final-receipt paths now prove the ETA delivery gate in both
+  directions: receiving returns `409 ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY`
+  with no clearance, and succeeds only after the test fixture persists the
+  same accepted ETA UUID and digital-signature evidence that the official
+  callback must persist in production. The fixture cannot be reached by a
+  browser request and does not weaken the application gate.
+- The normal source suite also passed: 74 files / 267 tests. The remote
+  lifecycle cases have explicit 90-second test limits because the disposable
+  Neon clone and its database-level append-only ledger can exceed Vitest's
+  30-second default; no application timeout was changed.
+
+### Current exact next action
+
+Reconcile the protected local source changes with current canonical `main` in
+a reviewable release-candidate branch, then run the build and route/auth
+acceptance suite from that reconciled commit. Only after a separate production
+ETA credential/signature/callback readiness check, a provenance-reviewed
+catalogue import, and an owner-approved release plan may production Neon and
+PM2/Nginx be changed.

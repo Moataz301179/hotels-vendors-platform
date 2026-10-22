@@ -92,6 +92,16 @@ describe('directory catalog foundation', () => {
     expect(JSON.stringify(body)).not.toMatch(/supplier/i);
   });
 
+  it('resolves a selected published reference by opaque identifier without expanding the public payload', async () => {
+    m.profileFindMany.mockResolvedValue([{ id: 'profile-1', itemType: 'PRODUCT', name: 'Hotel banquet napkin', nameAr: null, category: 'FOOD_BEVERAGE', subcategory: 'Table service', description: 'Bulk hospitality reference.', attributes: {}, unitOfMeasure: 'piece', purchaseUnit: 'carton', images: [], searchTerms: ['napkin'], updatedAt: new Date('2026-10-17T00:00:00.000Z') }]);
+    const response = await getDirectory(new Request('https://hotelsvendors.test/api/v2/directory?id=profile-1'));
+    expect(response.status).toBe(200);
+    expect(m.profileFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: 'profile-1', publicationStatus: 'PUBLISHED', deletedAt: null }) }));
+    const body = await response.json() as { profiles: Array<Record<string, unknown>> };
+    expect(body.profiles).toEqual([expect.objectContaining({ id: 'profile-1', name: 'Hotel banquet napkin', purchaseUnit: 'carton', rfqRequired: true })]);
+    expect(JSON.stringify(body)).not.toMatch(/supplier|sourceUrl|candidate/i);
+  });
+
   it('keeps review queue access restricted to administrators', async () => {
     m.actor.mockResolvedValue(null);
     expect((await getQueue()).status).toBe(401);

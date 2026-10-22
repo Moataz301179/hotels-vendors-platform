@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Armchair, ArrowRight, BedDouble, CheckCircle2, ChevronRight, ClipboardCheck, Search, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
+import { Armchair, BedDouble, CheckCircle2, ChevronRight, ClipboardCheck, Search, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
+import { MarketplaceSelectionAction } from './marketplace-selection-action';
 
 export type MarketplaceDirectoryEntry = {
   id: string;
@@ -41,32 +42,33 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
   const [activeSubcategory, setActiveSubcategory] = useState('All');
   const [query, setQuery] = useState('');
   const categories = useMemo(() => ['All', ...Array.from(new Set(entries.map(entry => taxonomyFor(entry).group))).sort()], [entries]);
-  const subcategories = useMemo(() => ['All', ...Array.from(new Set(entries.filter(entry => activeCategory === 'All' || taxonomyFor(entry).group === activeCategory).map(entry => taxonomyFor(entry).subcategory))).sort()], [activeCategory, entries]);
+  const selectedCategory = categories.includes(activeCategory) ? activeCategory : 'All';
+  const subcategories = useMemo(() => ['All', ...Array.from(new Set(entries.filter(entry => selectedCategory === 'All' || taxonomyFor(entry).group === selectedCategory).map(entry => taxonomyFor(entry).subcategory))).sort()], [selectedCategory, entries]);
   useEffect(() => {
     const category = new URLSearchParams(window.location.search).get('category');
     if (category && categories.includes(category)) setActiveCategory(category);
   }, [categories, initialCategory]);
   const visibleEntries = useMemo(() => entries.filter(entry => {
     const taxonomy = taxonomyFor(entry);
-    const matchesCategory = activeCategory === 'All' || taxonomy.group === activeCategory;
+    const matchesCategory = selectedCategory === 'All' || taxonomy.group === selectedCategory;
     const matchesSubcategory = activeSubcategory === 'All' || taxonomy.subcategory === activeSubcategory;
     const haystack = `${entry.name} ${taxonomy.group} ${taxonomy.subcategory} ${entry.description ?? ''}`.toLowerCase();
     return matchesCategory && matchesSubcategory && haystack.includes(query.trim().toLowerCase());
-  }), [activeCategory, activeSubcategory, entries, query]);
+  }), [selectedCategory, activeSubcategory, entries, query]);
 
   return <section className={styles.directory} aria-labelledby="directory-title">
     <div className={styles.toolbar}>
       <div>
-        <p className={styles.eyebrow}>{activeCategory === 'All' ? 'Reviewed directory' : `${activeCategory} catalogue`}</p>
-        <h2 id="directory-title">{activeCategory === 'All' ? 'Choose an operating need. Continue in the secure workspace.' : `Explore ${activeCategory}.`}</h2>
-        <p>{activeCategory === 'All' ? 'These are reviewed product and service records—not vendor offers. A hotel can start a controlled requirement from any entry after sign-in.' : 'Choose a subcategory or product reference inside this sourcing area. Vendor identity and private commercial terms remain protected until the authorized workflow stage.'}</p>
+        <p className={styles.eyebrow}>{selectedCategory === 'All' ? 'Reviewed directory' : `${selectedCategory} catalogue`}</p>
+        <h2 id="directory-title">{selectedCategory === 'All' ? 'Choose an operating need. Continue in the secure workspace.' : `Explore ${selectedCategory}.`}</h2>
+        <p>{selectedCategory === 'All' ? 'These are reviewed product and service records—not vendor offers. A hotel can start a controlled requirement from any entry after sign-in.' : 'Choose a subcategory or product reference inside this sourcing area. Vendor identity and private commercial terms remain protected until the authorized workflow stage.'}</p>
       </div>
       <div className={styles.count} aria-live="polite"><ClipboardCheck size={18}/><strong>{visibleEntries.length}</strong><span>available records</span></div>
     </div>
 
     <div className={styles.controls}>
       <label className={styles.search}><Search size={18} aria-hidden="true"/><span className="sr-only">Search reviewed directory</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search a product, service or category" /></label>
-      <div className={styles.filters} aria-label="Filter by operating area"><SlidersHorizontal size={16} aria-hidden="true"/>{categories.map(category => <button key={category} type="button" aria-pressed={activeCategory === category} onClick={() => { setActiveCategory(category); setActiveSubcategory('All'); }}>{category}</button>)}</div>
+      <div className={styles.filters} aria-label="Filter by operating area"><SlidersHorizontal size={16} aria-hidden="true"/>{categories.map(category => <button key={category} type="button" aria-pressed={selectedCategory === category} onClick={() => { setActiveCategory(category); setActiveSubcategory('All'); }}>{category}</button>)}</div>
       {subcategories.length > 2 && <div className={styles.subfilters} aria-label="Filter by subcategory">{subcategories.map(subcategory => <button key={subcategory} type="button" aria-pressed={activeSubcategory === subcategory} onClick={() => setActiveSubcategory(subcategory)}>{subcategory}</button>)}</div>}
     </div>
 
@@ -74,7 +76,6 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
       {visibleEntries.map(entry => {
         const taxonomy = taxonomyFor(entry);
         const price = formatObservedPrice(entry.marketReference);
-        const workspaceTarget = `/login?redirect_url=${encodeURIComponent(`/workspace/marketplace?product=${entry.id}`)}`;
         const Icon = taxonomy.icon;
         return <article className={styles.card} key={entry.id}>
           {entry.image ? <div className={styles.media}><Image src={entry.image} alt="" fill sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw" /></div> : <div className={styles.mediaFallback} aria-label={`${taxonomy.group} category artwork — product image pending source review`}>
@@ -89,15 +90,18 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
             <p className={styles.description}>{entry.description ?? 'A reviewed requirement record ready to be specified in the procurement workspace.'}</p>
             <dl className={styles.facts}><div><dt>Unit</dt><dd>{entry.unitOfMeasure ?? 'Set in requirement'}</dd></div><div><dt>Listed price</dt><dd>{price ?? 'Request comparable terms'}</dd></div></dl>
             {entry.marketReference && <p className={styles.reference}><CheckCircle2 size={14} aria-hidden="true"/>{entry.marketReference.label}{entry.marketReference.moq ? ` · MOQ ${entry.marketReference.moq}` : ''} · observed {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(entry.marketReference.observedAt))}</p>}
-            <Link className={styles.action} href={workspaceTarget}>Choose this requirement <ChevronRight size={17} aria-hidden="true"/></Link>
+            <div className={styles.actions}>
+              <Link className={styles.detailAction} href={`/marketplace/${entry.id}`}>View specification <ChevronRight size={17} aria-hidden="true"/></Link>
+              <MarketplaceSelectionAction className={styles.action} itemId={entry.id} category={taxonomy.group} subcategory={taxonomy.subcategory} query={query} />
+            </div>
           </div>
         </article>;
       })}
-    </div> : <div className={styles.empty}><h3>{activeCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${activeCategory} yet.`}</h3><p>{activeCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{activeCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
+    </div> : <div className={styles.empty}><h3>{selectedCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${selectedCategory} yet.`}</h3><p>{selectedCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{selectedCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
 
     <div className={styles.requirement}>
       <div><p className={styles.eyebrow}>Not in the directory?</p><h3>Start with the requirement—not a blank search.</h3><p>In the hotel workspace, select the operating category, quantity, delivery context and response window. Product Intelligence then reviews and routes it under the sealed procurement controls.</p></div>
-      <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Open secure workspace <ArrowRight size={17}/></Link>
+      <MarketplaceSelectionAction className={styles.workspaceAction} label="Open requirement workspace" />
     </div>
   </section>;
 }
