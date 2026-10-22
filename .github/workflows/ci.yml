@@ -47,6 +47,11 @@ jobs:
         run: npx prisma db push --skip-generate
       - run: npm test
       - name: Prove procurement lifecycle against the isolated database
+        # CI uses Prisma db push against a disposable PostgreSQL service. That
+        # projection has no SQL-only append-only trigger; the trigger itself is
+        # verified on the governed Neon clone before any production promotion.
+        env:
+          HV_EXPECT_NETWORK_LEDGER_IMMUTABILITY: "0"
         run: npm run test:integration
       - name: Lint maintained transaction flows
         run: >-
