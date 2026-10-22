@@ -49,6 +49,13 @@ jobs:
               du -x -B1 -d 1 "$target" 2>/dev/null | sort -nr
             fi
           done
+          echo '=== release_and_archive_usage_bytes ==='
+          for target in /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups; do
+            if [ -d "$target" ]; then
+              printf '%s\n' "--- $target ---"
+              du -x -B1 -d 2 "$target" 2>/dev/null | sort -nr
+            fi
+          done
           echo '=== active_pm2 ==='
           command -v pm2 >/dev/null 2>&1 && pm2 jlist | node -e '
             let input=""; process.stdin.on("data", c => input += c).on("end", () => {
@@ -58,9 +65,11 @@ jobs:
             });
           ' || true
           echo '=== migration_candidates ==='
-          find /var/www/hv-releases -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
+          find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
+            -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
           echo '=== migration_candidate_sha256 ==='
-          find /var/www/hv-releases -type f -path "*/$CANDIDATE" -exec sha256sum {} \; 2>/dev/null | sort
+          find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
+            -type f -path "*/$CANDIDATE" -exec sha256sum {} \; 2>/dev/null | sort
           REMOTE
 
       - name: Retrieve migration candidates without logging contents
@@ -69,7 +78,8 @@ jobs:
           set -euo pipefail
           ssh "$VPS_USER@$VPS_HOST" "CANDIDATE='$CANDIDATE' bash -s" <<'REMOTE' > recovery-artifact/migration-candidates.tar.gz
           set -euo pipefail
-          matches=$(find /var/www/hv-releases -type f -path "*/$CANDIDATE" -print 2>/dev/null)
+          matches=$(find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
+            -type f -path "*/$CANDIDATE" -print 2>/dev/null)
           if [ -n "$matches" ]; then
             printf '%s\n' "$matches" | tar -czf - --verbatim-files-from --files-from=-
           else
