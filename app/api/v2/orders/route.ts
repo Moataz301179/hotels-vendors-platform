@@ -27,7 +27,10 @@ export async function GET(request:Request){
  const orders=await prisma.order.findMany({where,include:{supplier:{select:{name:true}},hotel:{select:{name:true}},invoices:{where:{deletedAt:null},select:{id:true,invoiceNumber:true,status:true}},items:{where:{deletedAt:null},include:{product:{select:{name:true,sku:true}}}}},orderBy:{createdAt:"desc"},take:100});
  return NextResponse.json({orders:orders.map(order=>{
   const invoiceIssued=(order.invoices?.length??0)>0;
-  const {supplier,invoices=[],...safeOrder}=order;
+  const {supplierId,supplier,invoices=[],...safeOrder}=order;
+  // Keep the private foreign key out of every order DTO. The explicit void
+  // marks the omission as intentional for lint without weakening that boundary.
+  void supplierId;
   return {...safeOrder,invoices,invoiceIssued,...(user.platformRole==='HOTEL'&&!invoiceIssued?{}:{supplier}),etaCompliance:classifyEtaCompliance(order),allowedActions:user.platformRole==='ADMIN'?[]:orderActions(user,order),canRecordGuarantee:user.platformRole==='ADMIN'&&!order.paymentGuaranteed&&order.status==='PENDING_APPROVAL'};
  }),tenants});
 }
