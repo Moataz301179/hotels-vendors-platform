@@ -96,8 +96,11 @@ jobs:
             if [ "$status" != '200' ]; then echo "Unexpected HTTP $status for $path"; cat /tmp/hv-smoke.log; exit 1; fi
           done
           curl -fsS --max-time 10 http://127.0.0.1:3100/ -o /tmp/hv-home.html
-          grep -Fq 'Hospitality procurement network' /tmp/hv-home.html
-          grep -Fq 'Control hospitality purchasing from requirement to receipt.' /tmp/hv-home.html
+          # Assert current, user-visible homepage markers rather than stale
+          # launch copy. This confirms the packaged route rendered without
+          # tying the release gate to an obsolete marketing sentence.
+          grep -Fq 'Hospitality sourcing network' /tmp/hv-home.html
+          grep -Fq 'Every operating need, on one controlled path.' /tmp/hv-home.html
           for path in /audit /security; do
             test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3100$path")" = '307'
           done
