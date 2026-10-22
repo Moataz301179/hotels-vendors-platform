@@ -144,7 +144,28 @@ jobs:
             if (!entry?.pm2_env?.pm_cwd) process.exit(1);
             process.stdout.write(entry.pm2_env.pm_cwd);
           ')"
+          ACTIVE_EXEC="$(pm2 jlist | node -e '
+            const fs = require("fs");
+            const entry = JSON.parse(fs.readFileSync(0, "utf8"))
+              .find((entry) => entry.name === "hotels-vendors-production");
+            if (!entry?.pm2_env?.pm_exec_path) process.exit(1);
+            process.stdout.write(entry.pm2_env.pm_exec_path);
+          ')"
           test -f "$ACTIVE_RELEASE/.env"
+          test -f "$ACTIVE_RELEASE/.runtime-env"
+          test "$ACTIVE_EXEC" = "$ACTIVE_RELEASE/deploy/pm2/start-protected.sh"
+          # A candidate must never replace a process whose Nginx routing has
+          # not been reconciled.  Historical evidence contains 3057/4000/3008
+          # variants; this exact workflow can activate only the governed 3008
+          # topology until a separately verified workflow supersedes it.
+          nginx -T 2>/dev/null | grep -Eq 'proxy_pass http://(127\\.0\\.0\\.1|localhost):3008[;/]'
+          ACTIVE_HEALTH="$(curl -fsS http://127.0.0.1:3008/api/health)"
+          node - "$ACTIVE_HEALTH" <<'VERIFY_ACTIVE_HEALTH'
+          const health = JSON.parse(process.argv[2]);
+          if (health.ok !== true || health.database !== "ready" || health.authorization !== "configured") {
+            throw new Error("The active production process did not pass the health gate");
+          }
+          VERIFY_ACTIVE_HEALTH
           mkdir -p "$RELEASE"
           tar -xzf "$ARCHIVE" -C "$RELEASE"
           rm -f "$ARCHIVE"
@@ -178,9 +199,15 @@ jobs:
             wait "$preflight_pid" 2>/dev/null || true
             trap - EXIT
           )
+          rollback() {
+            pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
+            HV_RUNTIME_ENV_FILE="$ACTIVE_RELEASE/.runtime-env" PORT=3008 NODE_ENV=production \
+              pm2 start "$ACTIVE_EXEC" --interpreter bash --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
+            pm2 save
+          }
           pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
           if ! HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env" HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 NODE_ENV=production pm2 start "$RELEASE/deploy/pm2/start-protected.sh" --interpreter bash --name hotels-vendors-production --cwd "$RELEASE" --time >/dev/null; then
-            PORT=3008 NODE_ENV=production pm2 start "$ACTIVE_RELEASE/server.js" --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
+            rollback
             exit 1
           fi
           health=""
@@ -189,8 +216,11 @@ jobs:
             test -n "$health" && break
             sleep 1
           done
-          test -n "$health"
-          node - "$GITHUB_SHA" "$health" <<'VERIFY_HEALTH'
+          if [ -z "$health" ]; then
+            rollback
+            exit 1
+          fi
+          if ! node - "$GITHUB_SHA" "$health" <<'VERIFY_HEALTH'
           const [expectedSha, responseBody] = process.argv.slice(2);
           const health = JSON.parse(responseBody);
           if (health.ok !== true) throw new Error("Health check did not report ok");
@@ -199,5 +229,9 @@ jobs:
           if (health.sourceCommit !== expectedSha) throw new Error("Running source commit does not match this release");
           if (health.releaseId !== `github-${expectedSha}`) throw new Error("Running release identity does not match this release");
           VERIFY_HEALTH
+          then
+            rollback
+            exit 1
+          fi
           pm2 save
           REMOTE

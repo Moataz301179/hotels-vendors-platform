@@ -433,3 +433,31 @@
 - External source observations with unproven reuse rights remain private in
   review. Do not publish them until permission, attribution, duplicate handling,
   and category fit are evidenced.
+
+## Reconciliation evidence — 2026-10-23
+
+- Canonical source: GitHub `main` now contains merge commit
+  `4bda2705b3be81aed81e7098be40d87619a89353` (PR #21). Its main-branch CI run
+  `39869538007` passed isolated database lifecycle, full tests, production build,
+  standalone package, and packaged runtime smoke checks. This is source/build
+  evidence only; it is not a production deployment.
+- Read-only VPS recovery run `39869852982` observed `/` at **97 GB total, 77 GB
+  used, 21 GB free (80%)**. The active `hotels-vendors-production` PM2 process
+  is online from `/var/www/hv-releases/github-3106b51fb5af53ba9627b9902b1c9aef05f8fe74`.
+  No file was deleted, no PM2 process was restarted, and no Nginx change was made.
+- The formerly missing migration was recovered read-only from
+  `/var/www/hotelsvendors/prisma/migrations/20261003_funder_approval_state/migration.sql`.
+  Its SHA-256 is `c89cf947b98cb79d1f1fd0dd3237e3c529d7fa3c2bfb0f19417b041d395e95c8`,
+  exactly matching the canonical migration byte-for-byte. It must not be recreated.
+- Pending source-only guard: the deployment workflow now requires the active
+  governed PM2 contract, an active health check, and matching Nginx `3008`
+  routing before replacement; it rolls the old runtime back if startup or
+  public health identity fails. The recovery workflow is extended to capture
+  sanitized Nginx topology directives so that the historical port conflict is
+  resolved from live evidence before a release attempt.
+- Still blocked from production activation: run the updated read-only topology
+  capture; rehearse migrations against a fresh restorable Neon clone; obtain
+  source-backed, rights-cleared hospitality catalogue data rather than inventing
+  10,000 references; and complete authenticated role/browser acceptance with
+  real non-production test identities. ETA remains fail-closed until official
+  credentials, signing hardware, and callback verification are supplied.
