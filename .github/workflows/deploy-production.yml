@@ -158,7 +158,12 @@ jobs:
           # not been reconciled.  Historical evidence contains 3057/4000/3008
           # variants; this exact workflow can activate only the governed 3008
           # topology until a separately verified workflow supersedes it.
-          nginx -T 2>/dev/null | grep -Eq 'proxy_pass http://(127\\.0\\.0\\.1|localhost):3008[;/]'
+          nginx_topology="$(nginx -T 2>/dev/null)"
+          if ! printf '%s\n' "$nginx_topology" | grep -Eq 'proxy_pass http://(127\\.0\\.0\\.1|localhost):3008[;/]' && \
+             ! { printf '%s\n' "$nginx_topology" | grep -Eq 'proxy_pass http://nextjs[;/]' && printf '%s\n' "$nginx_topology" | grep -Eq 'upstream nextjs[[:space:]]*\\{[[:space:]]*server[[:space:]]+(127\\.0\\.0\\.1|localhost):3008[;[:space:]]'; }; then
+            echo "Refusing activation: Nginx does not route the governed nextjs upstream to port 3008" >&2
+            exit 1
+          fi
           ACTIVE_HEALTH="$(curl -fsS http://127.0.0.1:3008/api/health)"
           node - "$ACTIVE_HEALTH" <<'VERIFY_ACTIVE_HEALTH'
           const health = JSON.parse(process.argv[2]);
