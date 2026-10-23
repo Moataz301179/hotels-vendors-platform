@@ -22,6 +22,12 @@ describe("read-only VPS recovery CSP inventory", () => {
     expect(workflow).toContain("nginx: master process");
   });
 
+  it("maps public listener ownership when more than one Nginx master exists", () => {
+    expect(workflow).toContain("=== nginx_listener_ownership ===");
+    expect(workflow).toContain("ss -ltnp");
+    expect(workflow).toContain("pgrep -f 'nginx: master process'");
+  });
+
   it("keeps the inventory read-only", () => {
     expect(workflow).not.toMatch(/\bsed[[:space:]]+-i\b/);
     expect(workflow).not.toMatch(/\bnginx[[:space:]]+-s\b/);
