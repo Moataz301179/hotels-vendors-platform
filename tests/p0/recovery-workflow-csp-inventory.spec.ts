@@ -16,6 +16,12 @@ describe("read-only VPS recovery CSP inventory", () => {
     expect(workflow).toContain("proxy_cache_path|proxy_cache|proxy_no_cache|proxy_cache_bypass|fastcgi_cache");
   });
 
+  it("records the active Nginx command identity before any configuration repair", () => {
+    expect(workflow).toContain("=== nginx_runtime_identity ===");
+    expect(workflow).toContain("systemctl show nginx --property=ExecStart --property=ExecReload --no-pager");
+    expect(workflow).toContain("nginx: master process");
+  });
+
   it("keeps the inventory read-only", () => {
     expect(workflow).not.toMatch(/\bsed[[:space:]]+-i\b/);
     expect(workflow).not.toMatch(/\bnginx[[:space:]]+-s\b/);

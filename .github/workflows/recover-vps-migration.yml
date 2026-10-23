@@ -101,6 +101,12 @@ jobs:
               print $0
             }
           ' || true
+          echo '=== nginx_runtime_identity ==='
+          # `nginx -T` uses its default config path, while systemd can launch
+          # a master with a different explicit configuration. Record only the
+          # command identities needed to verify those paths agree.
+          systemctl show nginx --property=ExecStart --property=ExecReload --no-pager || true
+          ps -eo pid=,args= | awk '/nginx: master process/ { print }' || true
           echo '=== migration_candidates ==='
           find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
             -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
