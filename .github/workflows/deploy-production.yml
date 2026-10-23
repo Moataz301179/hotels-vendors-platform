@@ -189,7 +189,7 @@ jobs:
             if (health.sourceCommit !== expectedSha || health.releaseId !== `github-${expectedSha}`) {
               throw new Error("The active production process does not match its immutable release identity");
             }
-            VERIFY_ACTIVE_HEALTH
+          VERIFY_ACTIVE_HEALTH
           }
           restore_active_release() {
             pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
@@ -249,7 +249,7 @@ jobs:
             const csp = headers[0].toLowerCase();
             if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) throw new Error("Candidate application CSP contains an unsafe directive");
             if (!/script-src[^;]*'nonce-/.test(csp)) throw new Error("Candidate application CSP is missing the application nonce");
-            VERIFY_PREFLIGHT_CSP
+          VERIFY_PREFLIGHT_CSP
             then
               exit 1
             fi
