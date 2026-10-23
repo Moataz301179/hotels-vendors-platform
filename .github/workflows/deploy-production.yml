@@ -159,8 +159,18 @@ jobs:
           # variants; this exact workflow can activate only the governed 3008
           # topology until a separately verified workflow supersedes it.
           nginx_topology="$(nginx -T 2>/dev/null)"
-          if ! printf '%s\n' "$nginx_topology" | grep -Eq 'proxy_pass http://(127\\.0\\.0\\.1|localhost):3008[;/]' && \
-             ! { printf '%s\n' "$nginx_topology" | grep -Eq 'proxy_pass http://nextjs[;/]' && printf '%s\n' "$nginx_topology" | grep -Eq 'upstream nextjs[[:space:]]*\\{[[:space:]]*server[[:space:]]+(127\\.0\\.0\\.1|localhost):3008[;[:space:]]'; }; then
+          if ! printf '%s\n' "$nginx_topology" | awk '
+            {
+              line = $0
+              sub(/#.*/, "", line)
+              if (line ~ /^[[:space:]]*upstream[[:space:]]+nextjs[[:space:]]*\{/) in_nextjs = 1
+              if (in_nextjs && line ~ /server[[:space:]]+(127\.0\.0\.1|localhost):3008([^0-9]|$)/) nextjs_on_3008 = 1
+              if (in_nextjs && line ~ /}/) in_nextjs = 0
+              if (line ~ /proxy_pass[[:space:]]+http:\/\/(127\.0\.0\.1|localhost):3008([^0-9]|$)/) direct_on_3008 = 1
+              if (line ~ /proxy_pass[[:space:]]+http:\/\/nextjs([^[:alnum:]_-]|$)/) uses_nextjs = 1
+            }
+            END { exit (direct_on_3008 || (uses_nextjs && nextjs_on_3008)) ? 0 : 1 }
+          '; then
             echo "Refusing activation: Nginx does not route the governed nextjs upstream to port 3008" >&2
             exit 1
           fi
