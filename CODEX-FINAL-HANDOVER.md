@@ -461,3 +461,25 @@
   10,000 references; and complete authenticated role/browser acceptance with
   real non-production test identities. ETA remains fail-closed until official
   credentials, signing hardware, and callback verification are supplied.
+
+## PR #24 Nginx topology-guard regression evidence — 2026-10-23
+
+- Scope: PR #24 remains open on
+  `codex/vps-migration-recovery-expanded`. Commit `26b040248c69dee826eae2d8264d91ce3420fa52`
+  adds `tests/p0/deploy-topology-guard.spec.ts`; it does not alter the deployed
+  guard logic. The test extracts the exact AWK program from
+  `.github/workflows/deploy-production.yml` and executes that program directly.
+- Verified results: `npx vitest run tests/p0/deploy-topology-guard.spec.ts --reporter=verbose`
+  passed **9/9**. It accepts direct `3008` routing and both single-line and
+  multi-line `upstream nextjs` routing to `3008`; it rejects non-governed ports,
+  missing routing, look-alike upstream names, and unrelated upstreams.
+- Additional local checks passed: `npx eslint tests/p0/deploy-topology-guard.spec.ts`,
+  `git diff --check`, YAML parsing of `.github/workflows/deploy-production.yml`,
+  and `bash -n` of the exact `Activate release and verify` workflow shell block.
+  GitHub Actions build `39878547771` passed for commit `26b0402`.
+- No production action was performed for this change: no merge, deployment,
+  release call, PM2 restart, or Nginx modification. CI proves source checks only.
+- Remaining blocker and next action: obtain owner approval for a separate,
+  production-verification step before any release workflow is manually invoked.
+  That step must retain the governed `3008` topology and active health gate;
+  it is outside this PR documentation/test update.
