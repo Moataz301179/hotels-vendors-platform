@@ -1,5 +1,15 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Production recovery, strict CSP, and public catalogue gate — deployed 2026-10-24
+
+- Governed release [40030655001](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40030655001) deployed merge commit `1d017670c102e5853850cc26aa18700c35079279`. Independent live health evidence returned HTTP 200 with matching `releaseId` and `sourceCommit`, database `ready`, and authorization `configured`.
+- The preceding 502 was caused by the failed release rollback leaving the PM2 process errored. The activation workflow now restores the immutable active release with its required runtime identity before attempting a candidate swap; the 502 is resolved.
+- The public CSP now carries a per-response nonce and contains neither `unsafe-inline` nor `unsafe-eval` on `/`, `/api/health`, or `/marketplace`. The guard waits for the bounded Nginx graceful-worker handoff and still restores the old configuration and release if strict CSP does not become public.
+- Read-only VPS evidence verified that systemd's Nginx master owns ports 80/443 and no effective Nginx proxy/FastCGI cache directives are configured. A second non-listening Nginx master remains an operational-cleanup item; do not stop it until its owner and purpose are separately verified.
+- Public marketplace verification after the release found no `Demerara Crunch Shortbreads`, `Fisherman’s Pie`, or `Nature Valley` strings. The tracked legacy page `/marketplace/cmvftclvf00wucryf2kw1jppu` returns HTTP 404. This proves the publication gate prevents those unscreened legacy consumer records from public discovery; it does **not** establish a 10,000-item, reviewed Egyptian HoReCa catalogue.
+- Verification: PR #29 CI [40025605363](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40025605363), PR #30 CI [40026861611](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40026861611), PR #31 CI [40027429139](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40027429139), PR #32 CI [40027960774](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40027960774), and PR #33 CI [40030339758](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40030339758) passed. The release gate also passed schema, unit, integration, lint, build, package, and live health/CSP gates.
+- Remaining scope: provenance-reviewed Egyptian HoReCa catalogue acquisition and publication at the target scale; authenticated role-workspace acceptance; end-to-end basket/RFQ and ETA lifecycle evidence; and separately authorized investigation/cleanup of the non-listening Nginx master.
+
 ## Canonical catalogue reference to RFQ repair — 2026-10-23 (local release candidate; not deployed)
 
 - Source base: canonical `main` commit `1b235aeae39b176ab60c78234e591e2db911f34d`; candidate commit `750afa0` was rebased onto that base without replacing the recovered production migration. The current follow-up changes remain local on `codex/vps-migration-recovery-expanded` until an approved release gate is completed.
