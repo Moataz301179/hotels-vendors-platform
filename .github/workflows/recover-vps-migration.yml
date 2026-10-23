@@ -78,6 +78,17 @@ jobs:
           # Capture only topology directives.  Do not archive the full Nginx
           # configuration because it can contain credentials or private paths.
           nginx -T 2>/dev/null | grep -E '^[[:space:]]*(upstream|server|listen|server_name|proxy_pass)[[:space:]]' || true
+          echo '=== nginx_csp_directives ==='
+          # A downstream Nginx CSP can override the nonce-based application
+          # policy. Capture only CSP header directives and their source file
+          # marker; never emit the whole configuration or unrelated headers.
+          nginx -T 2>/dev/null | awk '
+            /^# configuration file / { source = $0; next }
+            tolower($0) ~ /^[[:space:]]*(add_header|more_set_headers|proxy_hide_header)[[:space:]]+content-security-policy/ {
+              print source
+              print $0
+            }
+          ' || true
           echo '=== migration_candidates ==='
           find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
             -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
