@@ -11,6 +11,11 @@ describe("read-only VPS recovery CSP inventory", () => {
     expect(workflow).toContain("(add_header|more_set_headers|proxy_hide_header)[[:space:]]+content-security-policy");
   });
 
+  it("captures cache declarations without mutating the VPS", () => {
+    expect(workflow).toContain("=== nginx_cache_directives ===");
+    expect(workflow).toContain("proxy_cache_path|proxy_cache|proxy_no_cache|proxy_cache_bypass|fastcgi_cache");
+  });
+
   it("keeps the inventory read-only", () => {
     expect(workflow).not.toMatch(/\bsed[[:space:]]+-i\b/);
     expect(workflow).not.toMatch(/\bnginx[[:space:]]+-s\b/);
