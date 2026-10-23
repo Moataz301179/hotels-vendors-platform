@@ -57,6 +57,14 @@ describe("production shell and authorization contracts", () => {
     expect(productionCsp).not.toContain("unsafe-eval");
   });
 
+  it("reconciles and verifies the live Nginx CSP instead of allowing a stale override", () => {
+    const deploy = readFileSync(join(root, ".github/workflows/deploy-production.yml"), "utf8");
+    expect(deploy).toContain("scripts/reconcile-nginx-csp.mjs");
+    expect(deploy).toContain("restore_nginx_csp");
+    expect(deploy).toContain("Public CSP still contains an unsafe directive");
+    expect(deploy).toContain("Public CSP is missing the application nonce");
+  });
+
   it("runs Clerk context without requiring a session for the public guidance assistant", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
     expect(proxy).toContain("optionalAssistantAuthMiddleware");
