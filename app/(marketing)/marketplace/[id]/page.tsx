@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, ClipboardCheck, PackageCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 import { MarketplaceSelectionAction } from '@/components/marketing/marketplace-selection-action';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,7 @@ function stringAttribute(attributes: unknown, key: string) {
 export default async function MarketplaceReferencePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const entry = await prisma.directoryProfile.findFirst({
-    where: { id, publicationStatus: 'PUBLISHED', deletedAt: null },
+    where: { ...publicMarketplaceDirectoryProfileWhere, id },
     select: {
       id: true, itemType: true, name: true, nameAr: true, category: true,
       subcategory: true, description: true, unitOfMeasure: true, purchaseUnit: true,

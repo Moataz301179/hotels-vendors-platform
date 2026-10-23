@@ -3,9 +3,8 @@ import Image from 'next/image';
 import { ArrowRight, PackageCheck, RefreshCw, SearchCheck } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { publicPageMetadata } from '@/lib/seo';
-import { resolvedProductEvidenceIds } from '@/lib/catalog/resolved-product-evidence';
-import { firstPublicProductImageUrl } from '@/lib/catalog/public-product-images';
 import { publicMarketReference } from '@/lib/directory/public-market-reference';
+import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 import { MarketplaceDirectory } from '@/components/marketing/marketplace-directory';
 
 export const metadata = publicPageMetadata(
@@ -33,24 +32,16 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   const query = await searchParams;
   const selectedCategory = typeof query.category === 'string' ? query.category : undefined;
   const directoryProfiles = await prisma.directoryProfile.findMany({
-    where: { publicationStatus: 'PUBLISHED', deletedAt: null },
+    where: publicMarketplaceDirectoryProfileWhere,
     select: { id: true, itemType: true, name: true, category: true, unitOfMeasure: true, images: true, description: true, attributes: true },
     orderBy: { updatedAt: 'desc' }, take: 100,
   }).catch(() => null);
-  const products = await prisma.product.findMany({
-    where: { status: 'ACTIVE', deletedAt: null, source:{not:'FIXTURE'}, supplier: { status: 'ACTIVE', isVerified: true, deletedAt:null } },
-    select: { id: true, name: true, sku: true, unitOfMeasure: true, images: true, sourceKey: true },
-    take: 100,
-  }).catch(() => null);
-  const evidenceIds = products ? await resolvedProductEvidenceIds(prisma, products).catch(() => null) : null;
-  const publishedProducts = products && evidenceIds ? products.filter(product => evidenceIds.has(product.id)).map(product => ({ ...product, image: firstPublicProductImageUrl(product.images) })).filter(product => product.image) : null;
-  const legacyProfiles = publishedProducts?.map(product => ({ id: `legacy-${product.id}`, itemType: 'PRODUCT', name: product.name, category: 'Supplier-submitted product', unitOfMeasure: product.unitOfMeasure, image: product.image, description: null, marketReference: null })) ?? [];
-  const entries = [...(directoryProfiles?.map(profile => ({ id: profile.id, itemType: profile.itemType, name: profile.name, category: profile.category, unitOfMeasure: profile.unitOfMeasure, image: firstDirectoryImage(profile.images), description: profile.description, marketReference: publicMarketReference(profile.attributes) })) ?? []), ...legacyProfiles];
+  const entries = directoryProfiles?.map(profile => ({ id: profile.id, itemType: profile.itemType, name: profile.name, category: profile.category, unitOfMeasure: profile.unitOfMeasure, image: firstDirectoryImage(profile.images), description: profile.description, marketReference: publicMarketReference(profile.attributes) })) ?? [];
   const attributions = Array.from(new Map((directoryProfiles ?? []).map(profile => {
     const attribution = catalogueAttribution(profile.attributes);
     return attribution ? [attribution.url, attribution] : null;
   }).filter((entry): entry is [string, { label: string; url: string }] => entry !== null)).values());
-  const unavailable = directoryProfiles === null && publishedProducts === null;
+  const unavailable = directoryProfiles === null;
 
   const categoryTitle = selectedCategory ? `${selectedCategory} sourcing` : 'Hospitality sourcing';
   return <main className="hv-public-page hv-marketplace">
@@ -62,7 +53,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
         ['Guest rooms & amenities','/category-guest-supplies.png','In-room amenities and replenishment'],
         ['Engineering & maintenance','/category-engineering-ffe.png','Maintenance and property equipment'],
       ].map(([title,image,description])=><Link href={`/marketplace?category=${encodeURIComponent(title)}`} key={title}><Image src={image} alt={description} fill sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 25vw"/><span><strong>{title}</strong><small>{description}</small></span></Link>)}</div>}
-      {unavailable ? <div className="hv-market-empty hv-market-error"><span className="hv-market-empty-icon"><RefreshCw size={23}/></span><div><h3>We couldn’t load product discovery records.</h3><p>The live directory could not be reached just now. No placeholder products or commercial terms are being substituted. Please try again in a moment.</p><a href="/marketplace" className="hv-public-text-link">Try again <ArrowRight size={15}/></a></div></div> : entries.length ? <MarketplaceDirectory entries={entries} initialCategory={selectedCategory} /> : <div className="hv-market-empty"><span className="hv-market-empty-icon"><PackageCheck size={25}/></span><div><h3>The directory is being prepared.</h3><p>We will not fill this page with placeholder products or fabricated prices. Hotels can still submit a structured requirement for any product or service.</p><Link href="/register" className="hv-public-text-link">Submit a requirement <ArrowRight size={15}/></Link></div></div>}
+      {unavailable ? <div className="hv-market-empty hv-market-error"><span className="hv-market-empty-icon"><RefreshCw size={23}/></span><div><h3>We couldn’t load product discovery records.</h3><p>The live directory could not be reached just now. No placeholder products or commercial terms are being substituted. Please try again in a moment.</p><Link href="/marketplace" className="hv-public-text-link">Try again <ArrowRight size={15}/></Link></div></div> : entries.length ? <MarketplaceDirectory entries={entries} initialCategory={selectedCategory} /> : <div className="hv-market-empty"><span className="hv-market-empty-icon"><PackageCheck size={25}/></span><div><h3>The directory is being prepared.</h3><p>We will not fill this page with placeholder products or fabricated prices. Hotels can still submit a structured requirement for any product or service.</p><Link href="/register" className="hv-public-text-link">Submit a requirement <ArrowRight size={15}/></Link></div></div>}
       <p className="hv-market-footnote">An observed market price is a dated reference only. Supplier identity, source records, hotel demand, RFQs, commercial terms, and order activity remain private.</p>
       {attributions.length ? <p className="hv-market-footnote">Open catalogue attribution: {attributions.map((attribution, index) => <span key={attribution.url}>{index ? ' · ' : ''}<a href={attribution.url} target="_blank" rel="noreferrer">{attribution.label}</a></span>)}</p> : null}
     </div></section>
