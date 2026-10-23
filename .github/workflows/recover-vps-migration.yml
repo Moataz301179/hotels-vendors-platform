@@ -89,6 +89,18 @@ jobs:
               print $0
             }
           ' || true
+          echo '=== nginx_cache_directives ==='
+          # The public response can retain an upstream header in a configured
+          # cache even after the site-level CSP override is removed. Capture
+          # only cache declarations and their source markers before deciding
+          # whether a targeted, separately approved cache operation is needed.
+          nginx -T 2>/dev/null | awk '
+            /^# configuration file / { source = $0; next }
+            tolower($0) ~ /^[[:space:]]*(proxy_cache_path|proxy_cache|proxy_no_cache|proxy_cache_bypass|fastcgi_cache)/ {
+              print source
+              print $0
+            }
+          ' || true
           echo '=== migration_candidates ==='
           find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
             -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
