@@ -178,13 +178,39 @@ jobs:
             echo "Refusing activation: Nginx does not route the governed nextjs upstream to port 3008" >&2
             exit 1
           fi
-          ACTIVE_HEALTH="$(curl -fsS http://127.0.0.1:3008/api/health)"
-          node - "$ACTIVE_HEALTH" <<'VERIFY_ACTIVE_HEALTH'
-          const health = JSON.parse(process.argv[2]);
-          if (health.ok !== true || health.database !== "ready" || health.authorization !== "configured") {
-            throw new Error("The active production process did not pass the health gate");
+          verify_active_release() {
+            ACTIVE_HEALTH="$(curl -fsS http://127.0.0.1:3008/api/health 2>/dev/null || true)"
+            node - "$ACTIVE_SOURCE_SHA" "$ACTIVE_HEALTH" <<'VERIFY_ACTIVE_HEALTH'
+            const [expectedSha, responseBody] = process.argv.slice(2);
+            const health = JSON.parse(responseBody);
+            if (health.ok !== true || health.database !== "ready" || health.authorization !== "configured") {
+              throw new Error("The active production process did not pass the health gate");
+            }
+            if (health.sourceCommit !== expectedSha || health.releaseId !== `github-${expectedSha}`) {
+              throw new Error("The active production process does not match its immutable release identity");
+            }
+            VERIFY_ACTIVE_HEALTH
           }
-          VERIFY_ACTIVE_HEALTH
+          restore_active_release() {
+            pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
+            HV_RUNTIME_ENV_FILE="$ACTIVE_RELEASE/.runtime-env" HV_RELEASE_ID="$ACTIVE_RELEASE_ID" HV_SOURCE_SHA="$ACTIVE_SOURCE_SHA" PORT=3008 NODE_ENV=production \
+              pm2 start "$ACTIVE_EXEC" --interpreter bash --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              if verify_active_release; then
+                pm2 save
+                return 0
+              fi
+              sleep 1
+            done
+            return 1
+          }
+          if ! verify_active_release; then
+            echo "Active production process is unhealthy; restoring its immutable release before activation" >&2
+            if ! restore_active_release; then
+              echo "Active production process did not recover before activation" >&2
+              exit 1
+            fi
+          fi
           mkdir -p "$RELEASE"
           tar -xzf "$ARCHIVE" -C "$RELEASE"
           rm -f "$ARCHIVE"
@@ -232,23 +258,10 @@ jobs:
             trap - EXIT
           )
           rollback() {
-            pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
-            HV_RUNTIME_ENV_FILE="$ACTIVE_RELEASE/.runtime-env" HV_RELEASE_ID="$ACTIVE_RELEASE_ID" HV_SOURCE_SHA="$ACTIVE_SOURCE_SHA" PORT=3008 NODE_ENV=production \
-              pm2 start "$ACTIVE_EXEC" --interpreter bash --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
-            rollback_health=""
-            for attempt in 1 2 3 4 5 6 7 8 9 10; do
-              rollback_health="$(curl -fsS http://127.0.0.1:3008/api/health 2>/dev/null || true)"
-              test -n "$rollback_health" && break
-              sleep 1
-            done
-            node - "$ACTIVE_SOURCE_SHA" "$rollback_health" <<'VERIFY_ROLLBACK'
-            const [expectedSha, responseBody] = process.argv.slice(2);
-            const health = JSON.parse(responseBody);
-            if (health.ok !== true || health.sourceCommit !== expectedSha || health.releaseId !== `github-${expectedSha}`) {
-              throw new Error("Rollback did not restore the prior production release identity");
-            }
-            VERIFY_ROLLBACK
-            pm2 save
+            if ! restore_active_release; then
+              echo "Rollback did not restore the prior production release identity" >&2
+              return 1
+            fi
           }
           nginx_site_config=/etc/nginx/sites-enabled/hotelsvendors.com
           nginx_csp_backup="$RELEASE/nginx-csp-before-${GITHUB_SHA}.conf"

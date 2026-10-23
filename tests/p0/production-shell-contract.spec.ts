@@ -72,6 +72,8 @@ describe("production shell and authorization contracts", () => {
     expect(deploy).toContain('ACTIVE_SOURCE_SHA="${ACTIVE_RELEASE_ID#github-}"');
     expect(deploy).toContain('HV_RELEASE_ID="$ACTIVE_RELEASE_ID" HV_SOURCE_SHA="$ACTIVE_SOURCE_SHA" PORT=3008');
     expect(deploy).toContain("Rollback did not restore the prior production release identity");
+    expect(deploy).toContain("Active production process is unhealthy; restoring its immutable release before activation");
+    expect(deploy).toContain("Active production process did not recover before activation");
   });
 
   it("runs Clerk context without requiring a session for the public guidance assistant", () => {
