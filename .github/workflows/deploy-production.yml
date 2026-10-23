@@ -305,8 +305,8 @@ jobs:
             rollback
             exit 1
           fi
-          csp_headers="$(curl -ksSI --max-time 20 https://www.hotelsvendors.com/ 2>/dev/null || true)"
-          if ! node - "$csp_headers" <<'VERIFY_CSP'
+          verify_public_csp() {
+            node - "$1" <<'VERIFY_CSP'
           const headers = process.argv[2]
             .split(/\r?\n/)
             .filter((line) => /^content-security-policy:/i.test(line));
@@ -315,7 +315,20 @@ jobs:
           if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) throw new Error("Public CSP still contains an unsafe directive");
           if (!/script-src[^;]*'nonce-/.test(csp)) throw new Error("Public CSP is missing the application nonce");
           VERIFY_CSP
-          then
+          }
+          # A graceful Nginx reload keeps old workers briefly alive. Do not
+          # mistake that handoff for a persistent CSP override, but fail closed
+          # if the nonce-based application policy never becomes public.
+          csp_headers=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            candidate_csp_headers="$(curl -ksSI --max-time 20 https://www.hotelsvendors.com/ 2>/dev/null || true)"
+            if verify_public_csp "$candidate_csp_headers" >/dev/null 2>&1; then
+              csp_headers="$candidate_csp_headers"
+              break
+            fi
+            sleep 1
+          done
+          if ! verify_public_csp "$csp_headers"; then
             restore_nginx_csp || true
             rollback
             exit 1

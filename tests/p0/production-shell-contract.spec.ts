@@ -64,6 +64,9 @@ describe("production shell and authorization contracts", () => {
     expect(deploy).toContain("Candidate application CSP contains an unsafe directive");
     expect(deploy).toContain("Public CSP still contains an unsafe directive");
     expect(deploy).toContain("Public CSP is missing the application nonce");
+    expect(deploy).toContain("verify_public_csp()");
+    expect(deploy).toContain('if verify_public_csp "$candidate_csp_headers" >/dev/null 2>&1; then');
+    expect(deploy).toContain('if ! verify_public_csp "$csp_headers"; then');
   });
 
   it("restores an immutable release identity when activation rolls back", () => {
