@@ -32,7 +32,7 @@ function expectTopology(nginxTopology: string, expectedStatus: number) {
 describe("production Nginx topology guard", () => {
   it("executes the workflow guard before the governed health gate", () => {
     expect(workflow.indexOf('if ! printf \'%s\\n\' "$nginx_topology" | awk \'')).toBeLessThan(
-      workflow.indexOf('ACTIVE_HEALTH="$(curl -fsS http://127.0.0.1:3008/api/health)"'),
+      workflow.indexOf("verify_active_release()"),
     );
   });
 
