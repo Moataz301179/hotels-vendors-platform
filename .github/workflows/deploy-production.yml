@@ -70,6 +70,7 @@ jobs:
           tar -C .next --transform='s,^static,.next/static,' -rf hv-release.tar static
           tar -C . -rf hv-release.tar public
           tar -C . -rf hv-release.tar scripts/verify-live-procurement-schema.mjs
+          tar -C . -rf hv-release.tar scripts/reconcile-nginx-csp.mjs
           tar -C . -rf hv-release.tar deploy/pm2/start-protected.sh
           gzip hv-release.tar
           mv hv-release.tar.gz hv-release.tgz
@@ -220,6 +221,15 @@ jobs:
               pm2 start "$ACTIVE_EXEC" --interpreter bash --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
             pm2 save
           }
+          nginx_site_config=/etc/nginx/sites-enabled/hotelsvendors.com
+          nginx_csp_backup="$RELEASE/nginx-csp-before-${GITHUB_SHA}.conf"
+          restore_nginx_csp() {
+            if [ -f "$nginx_csp_backup" ]; then
+              cp "$nginx_csp_backup" "$(readlink -f "$nginx_site_config")"
+              nginx -t >/dev/null
+              systemctl reload nginx
+            fi
+          }
           pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
           if ! HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env" HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 NODE_ENV=production pm2 start "$RELEASE/deploy/pm2/start-protected.sh" --interpreter bash --name hotels-vendors-production --cwd "$RELEASE" --time >/dev/null; then
             rollback
@@ -245,6 +255,26 @@ jobs:
           if (health.releaseId !== `github-${expectedSha}`) throw new Error("Running release identity does not match this release");
           VERIFY_HEALTH
           then
+            rollback
+            exit 1
+          fi
+          if ! node "$RELEASE/scripts/reconcile-nginx-csp.mjs" "$nginx_site_config" "$nginx_csp_backup" || ! nginx -t || ! systemctl reload nginx; then
+            restore_nginx_csp || true
+            rollback
+            exit 1
+          fi
+          csp_headers="$(curl -ksSI --max-time 20 https://www.hotelsvendors.com/ 2>/dev/null || true)"
+          if ! node - "$csp_headers" <<'VERIFY_CSP'
+          const headers = process.argv[2]
+            .split(/\r?\n/)
+            .filter((line) => /^content-security-policy:/i.test(line));
+          if (headers.length !== 1) throw new Error("Expected exactly one public Content-Security-Policy header");
+          const csp = headers[0].toLowerCase();
+          if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) throw new Error("Public CSP still contains an unsafe directive");
+          if (!/script-src[^;]*'nonce-/.test(csp)) throw new Error("Public CSP is missing the application nonce");
+          VERIFY_CSP
+          then
+            restore_nginx_csp || true
             rollback
             exit 1
           fi
