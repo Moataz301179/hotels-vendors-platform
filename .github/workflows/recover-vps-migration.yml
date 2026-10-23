@@ -107,6 +107,15 @@ jobs:
           # command identities needed to verify those paths agree.
           systemctl show nginx --property=ExecStart --property=ExecReload --no-pager || true
           ps -eo pid=,args= | awk '/nginx: master process/ { print }' || true
+          echo '=== nginx_listener_ownership ==='
+          # Two Nginx masters require port-to-process evidence before a reload,
+          # stop, or config repair can be directed safely.
+          ss -ltnp 2>/dev/null | awk '/:(80|443)[[:space:]]/ { print }' || true
+          for pid in $(pgrep -f 'nginx: master process' || true); do
+            ps -p "$pid" -o pid=,ppid=,user=,lstart=,args= 2>/dev/null || true
+            readlink "/proc/$pid/exe" 2>/dev/null || true
+            readlink "/proc/$pid/cwd" 2>/dev/null || true
+          done
           echo '=== migration_candidates ==='
           find /var/www/hv-releases /var/www/hv-archive /var/www/hotelsvendors /var/www/hv-backups \
             -type f -path "*/$CANDIDATE" -print 2>/dev/null | sort
