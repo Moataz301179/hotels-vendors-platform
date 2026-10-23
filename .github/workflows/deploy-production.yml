@@ -155,6 +155,9 @@ jobs:
           test -f "$ACTIVE_RELEASE/.env"
           test -f "$ACTIVE_RELEASE/.runtime-env"
           test "$ACTIVE_EXEC" = "$ACTIVE_RELEASE/deploy/pm2/start-protected.sh"
+          ACTIVE_RELEASE_ID="$(basename "$ACTIVE_RELEASE")"
+          ACTIVE_SOURCE_SHA="${ACTIVE_RELEASE_ID#github-}"
+          test "$ACTIVE_SOURCE_SHA" != "$ACTIVE_RELEASE_ID"
           # A candidate must never replace a process whose Nginx routing has
           # not been reconciled.  Historical evidence contains 3057/4000/3008
           # variants; this exact workflow can activate only the governed 3008
@@ -211,14 +214,40 @@ jobs:
               sleep 1
             done
             test -n "${health:-}"
+            preflight_headers="$(curl -fsSI --max-time 10 http://127.0.0.1:3010/ 2>/dev/null)"
+            if ! node - "$preflight_headers" <<'VERIFY_PREFLIGHT_CSP'
+            const headers = process.argv[2]
+              .split(/\r?\n/)
+              .filter((line) => /^content-security-policy:/i.test(line));
+            if (headers.length !== 1) throw new Error("Candidate application did not emit exactly one Content-Security-Policy header");
+            const csp = headers[0].toLowerCase();
+            if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) throw new Error("Candidate application CSP contains an unsafe directive");
+            if (!/script-src[^;]*'nonce-/.test(csp)) throw new Error("Candidate application CSP is missing the application nonce");
+            VERIFY_PREFLIGHT_CSP
+            then
+              exit 1
+            fi
             kill "$preflight_pid" 2>/dev/null || true
             wait "$preflight_pid" 2>/dev/null || true
             trap - EXIT
           )
           rollback() {
             pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
-            HV_RUNTIME_ENV_FILE="$ACTIVE_RELEASE/.runtime-env" PORT=3008 NODE_ENV=production \
+            HV_RUNTIME_ENV_FILE="$ACTIVE_RELEASE/.runtime-env" HV_RELEASE_ID="$ACTIVE_RELEASE_ID" HV_SOURCE_SHA="$ACTIVE_SOURCE_SHA" PORT=3008 NODE_ENV=production \
               pm2 start "$ACTIVE_EXEC" --interpreter bash --name hotels-vendors-production --cwd "$ACTIVE_RELEASE" --time >/dev/null
+            rollback_health=""
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              rollback_health="$(curl -fsS http://127.0.0.1:3008/api/health 2>/dev/null || true)"
+              test -n "$rollback_health" && break
+              sleep 1
+            done
+            node - "$ACTIVE_SOURCE_SHA" "$rollback_health" <<'VERIFY_ROLLBACK'
+            const [expectedSha, responseBody] = process.argv.slice(2);
+            const health = JSON.parse(responseBody);
+            if (health.ok !== true || health.sourceCommit !== expectedSha || health.releaseId !== `github-${expectedSha}`) {
+              throw new Error("Rollback did not restore the prior production release identity");
+            }
+            VERIFY_ROLLBACK
             pm2 save
           }
           nginx_site_config=/etc/nginx/sites-enabled/hotelsvendors.com

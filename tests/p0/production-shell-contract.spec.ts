@@ -61,8 +61,17 @@ describe("production shell and authorization contracts", () => {
     const deploy = readFileSync(join(root, ".github/workflows/deploy-production.yml"), "utf8");
     expect(deploy).toContain("scripts/reconcile-nginx-csp.mjs");
     expect(deploy).toContain("restore_nginx_csp");
+    expect(deploy).toContain("Candidate application CSP contains an unsafe directive");
     expect(deploy).toContain("Public CSP still contains an unsafe directive");
     expect(deploy).toContain("Public CSP is missing the application nonce");
+  });
+
+  it("restores an immutable release identity when activation rolls back", () => {
+    const deploy = readFileSync(join(root, ".github/workflows/deploy-production.yml"), "utf8");
+    expect(deploy).toContain('ACTIVE_RELEASE_ID="$(basename "$ACTIVE_RELEASE")"');
+    expect(deploy).toContain('ACTIVE_SOURCE_SHA="${ACTIVE_RELEASE_ID#github-}"');
+    expect(deploy).toContain('HV_RELEASE_ID="$ACTIVE_RELEASE_ID" HV_SOURCE_SHA="$ACTIVE_SOURCE_SHA" PORT=3008');
+    expect(deploy).toContain("Rollback did not restore the prior production release identity");
   });
 
   it("runs Clerk context without requiring a session for the public guidance assistant", () => {
