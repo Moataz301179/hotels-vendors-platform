@@ -7,6 +7,7 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 import { buildClerkContentSecurityPolicy } from "@/lib/security/clerk-csp";
+import { isProtectedPage } from "@/lib/security/protected-page-routes";
 
 const PUBLIC_PATHS = new Set([
   "/", "/login", "/register", "/sign-in", "/sign-up", "/auth-complete", "/forgot-password",
@@ -22,13 +23,6 @@ function isPublic(pathname: string) {
   if(pathname.startsWith("/marketplace/")) return true;
   if(pathname.startsWith("/solutions/")) return true;
   return PUBLIC_PATHS.has(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
-}
-const PROTECTED_PAGE_PREFIXES = [
-  "/dashboard", "/admin", "/audit", "/security", "/carrier", "/funding", "/intelligence",
-  "/demand-aggregation", "/onboarding", "/orders", "/suppliers", "/workspace", "/settings",
-];
-function isProtectedPage(pathname: string) {
-  return PROTECTED_PAGE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 type SecurityContext = { request: NextRequest; csp: string };
 
