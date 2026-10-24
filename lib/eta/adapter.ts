@@ -57,13 +57,15 @@ export class ETAAdapter {
       throw new Error("ETA credentials are not configured. ETA_API_URL, ETA_IDENTITY_URL, ETA_CLIENT_ID and ETA_CLIENT_SECRET must be supplied through the deployment secret store.");
     }
     const tokenUrl = new URL("/connect/token", this.identityEndpoint).toString();
+    const basicAuthorization = Buffer.from(`${clientId}:${clientSecret}`, "utf8").toString("base64");
     const response = await fetch(tokenUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${basicAuthorization}`,
+      },
       body: new URLSearchParams({
         grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret,
       }).toString(),
     });
     if (!response.ok) {

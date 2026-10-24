@@ -61,13 +61,15 @@ async function getAccessToken(): Promise<string> {
   const url = new URL("/connect/token", ETA_CONFIG.identityUrl).toString();
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    client_id: ETA_CONFIG.clientId ?? "",
-    client_secret: ETA_CONFIG.clientSecret ?? "",
   });
+  const basicAuthorization = Buffer.from(`${ETA_CONFIG.clientId}:${ETA_CONFIG.clientSecret}`, "utf8").toString("base64");
 
   const response = await fetchWithRetry(url, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${basicAuthorization}`,
+    },
     body: body.toString(),
   });
 

@@ -3,8 +3,10 @@
  * HotelsVendors — Autonomous Onboarding Pipeline
  *
  * Listens for User.Registered events (via BullMQ onboarding-queue).
- * Validates Tax ID and Commercial Register against Egyptian Tax Authority
- * eInvoicing API. Updates user KYC status on completion.
+ * This worker previously treated the e-Invoicing surface as a taxpayer/KYC
+ * lookup. The public ETA integration SDK does not define that operation.
+ * It is deliberately disabled until an independently authorized KYC provider
+ * and its data-processing controls are integrated.
  *
  * Queue: onboarding-queue
  */
@@ -25,34 +27,14 @@ interface EtaVerificationPayload {
  * look compliant.
  */
 export function etaVerificationConfigurationError(): string | null {
-  if (!process.env.ETA_API_URL?.trim()) return "ETA_API_URL is not configured";
-  if (!process.env.ETA_API_KEY?.trim()) return "ETA_API_KEY is not configured";
-  return null;
+  return "ETA e-Invoicing is not an onboarding/KYC verification API; configure an authorized KYC provider instead";
 }
 
 async function callEtaApi(endpoint: string, payload: Record<string, unknown>, timeout = 15000) {
-  const configurationError = etaVerificationConfigurationError();
-  if (configurationError) throw new Error(`ETA_VERIFICATION_NOT_CONFIGURED: ${configurationError}`);
-
-  const baseUrl = process.env.ETA_API_URL!.replace(/\/$/, "");
-  const apiKey = process.env.ETA_API_KEY!.trim();
-
-  const res = await fetch(`${baseUrl}${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-      "X-Request-ID": `hv-${Date.now().toString(36)}`,
-    },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(timeout),
-  });
-
-  if (!res.ok) {
-    throw new Error(`ETA API returned ${res.status}: ${await res.text().catch(() => "")}`);
-  }
-
-  return res.json();
+  void endpoint;
+  void payload;
+  void timeout;
+  throw new Error(`ETA_VERIFICATION_UNSUPPORTED: ${etaVerificationConfigurationError()}`);
 }
 
 export async function processEtaVerification(payload: EtaVerificationPayload) {

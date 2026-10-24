@@ -44,7 +44,10 @@ describe("ETA adapter configuration", () => {
     await expect(new ETAAdapter().getToken()).resolves.toBe("token");
     expect(fetchSpy).toHaveBeenCalledWith(
       "https://identity.eta.example.test/connect/token",
-      expect.objectContaining({ method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" } }),
+      expect.objectContaining({ method: "POST", headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic Y2xpZW50OnNlY3JldA==",
+      } }),
     );
   });
 });
