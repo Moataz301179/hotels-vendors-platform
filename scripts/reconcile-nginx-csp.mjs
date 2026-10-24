@@ -27,8 +27,19 @@ const retained = lines.filter((line) => {
   return true;
 });
 
-if (hiddenApplicationCsp !== 1 || unsafeReplacementCsp !== 1) {
+// A release can legitimately reach this point after a prior successful CSP
+// reconciliation. Treat that already-clean configuration as a no-op. A
+// partial legacy override is ambiguous and must still fail closed.
+const alreadyClean = hiddenApplicationCsp === 0 && unsafeReplacementCsp === 0;
+const completeLegacyOverride = hiddenApplicationCsp === 1 && unsafeReplacementCsp === 1;
+
+if (!alreadyClean && !completeLegacyOverride) {
   throw new Error(`EXPECTED_ONE_LEGACY_CSP_DIRECTIVE_EACH: hide=${hiddenApplicationCsp} add=${unsafeReplacementCsp}`);
+}
+
+if (alreadyClean) {
+  console.log(JSON.stringify({ ok: true, changed: { proxyHideHeader: 0, addHeader: 0 }, alreadyClean: true }));
+  process.exit(0);
 }
 
 mkdirSync(dirname(backupPath), { recursive: true });
