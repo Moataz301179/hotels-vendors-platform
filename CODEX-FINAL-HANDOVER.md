@@ -1,5 +1,24 @@
 # HotelsVendors production handover — 2026-10-17
 
+## MVP cold-run baseline — 2026-10-24 (read-only; no release or data mutation)
+
+- **Release foundation: pass.** `https://www.hotelsvendors.com/api/health` returned HTTP 200 with release/source `github-1d017670c102e5853850cc26aa18700c35079279`, database `ready`, and authorization `configured`. This confirms availability only; it is not a workflow acceptance result.
+- **Public catalogue: hold.** Public `/marketplace` renders the five intended HoReCa families, but the cold-run captured only 15 distinct public specification routes and 30 `product image pending review` markers. This is not the requested 10,000-item, provenance-reviewed Egyptian HoReCa catalogue. It must remain a supplier-neutral reference catalogue until each record passes rights, taxonomy, specification, media, and publication review.
+- **Basket/RFQ: source contract pass; live acceptance pending.** Focused catalogue/discovery, source-gate, anonymity, RFQ workspace, dashboard-context, HOVIN receipt-context and ETA-status tests passed (7 files / 16 assertions). Public unauthenticated access correctly redirects `/workspace/marketplace/basket` to sign-in while preserving its return URL, but no controlled Hotel session completed the basket-to-sealed-RFQ path in production during this baseline.
+- **ETA delivery-control access: fail.** A direct unauthenticated request to `/eta-compliance` returned HTTP 500. Comparable protected routes redirect to sign-in. Repair this failure and prove role-scoped access before attempting the broader ETA invoice-submission gate acceptance.
+- **Dashboards: hold.** Protected workspace entry points redirect unauthenticated users correctly, but no authenticated Hotel, Vendor, Carrier, Funder, or Administrator session was available for a task-based UI and data-scope acceptance pass. Do not claim the role dashboards are MVP accepted from route presence or unit tests.
+- **HOVIN/mobile: fail for release readiness.** The public HOVIN page explicitly reports that neither a signed Android package nor a TestFlight/App Store link has been published. No native mobile project, `.apk`, `.aab`, `.ipa`, Expo configuration, or Android/iOS build files were found in this canonical repository. A separate mobile repository may exist, but no release evidence for it was established here.
+- **UI/content: hold.** The live probe verifies routes and HTML, not visual quality. Current browser-capture review at desktop and mobile widths, plus authenticated-role screenshots, is still required before accepting the Apple-restraint visual system or claiming removal of generic/placeholder content.
+
+### Required repair sequence before an MVP production acceptance run
+
+1. Repair `/eta-compliance` unauthenticated failure and add a regression test for redirect/error behavior; then verify controlled Hotel/Vendor/Admin views against real role-scoped data.
+2. Establish one evidence-backed Egyptian HoReCa catalogue intake/publication pipeline. Publish only reviewed records; measure category/subcategory coverage, image readiness, duplicate rate, provenance and rights. Scale toward 10,000 only after that gate works—do not seed invented or consumer-retail records.
+3. Run one controlled Hotel journey in production: public category → product reference → signed-in requirement basket → sealed RFQ; assert no Vendor identity, stock, price, source URL, or private terms leak before authorized execution.
+4. Validate each role dashboard from the work it owns (Hotel request/approval, Vendor response/fulfilment, Carrier handoff/tracking, Funder authorized decision, Admin governance), with empty/error/loading states and no generic marketing cards.
+5. Choose and deliver a real HOVIN release path (native Android/iOS or an explicitly accepted PWA), then test receiving on a physical-device build. A marketing preview is not a mobile release.
+6. Complete a screenshot-based responsive and accessibility acceptance pass at 390, 768, 1024 and 1440 px. Review copy for operational clarity, remove unreleased claims, and verify every CTA opens the exact contextual next task.
+
 ## Production recovery, strict CSP, and public catalogue gate — deployed 2026-10-24
 
 - Governed release [40030655001](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40030655001) deployed merge commit `1d017670c102e5853850cc26aa18700c35079279`. Independent live health evidence returned HTTP 200 with matching `releaseId` and `sourceCommit`, database `ready`, and authorization `configured`.
