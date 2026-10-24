@@ -20,6 +20,7 @@ import type {
 
 const ETA_CONFIG: EtaConfig = {
   baseUrl: process.env.ETA_API_URL || "",
+  identityUrl: process.env.ETA_IDENTITY_URL || "",
   apiPath: "/documentsubmissions",
   apiVersion: "api/v1",
   positionId: process.env.ETA_POSITION_ID || "",
@@ -46,7 +47,7 @@ interface EtaTokenResponse {
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string> {
-  if (ETA_CONFIG.environment !== "production" || !ETA_CONFIG.baseUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
+  if (ETA_CONFIG.environment !== "production" || !ETA_CONFIG.baseUrl || !ETA_CONFIG.identityUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
     throw new Error("ETA_NOT_CONFIGURED_FOR_PRODUCTION");
   }
 
@@ -55,7 +56,9 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const url = `${ETA_CONFIG.baseUrl}/connect/token`;
+  // ETA publishes a dedicated identity-service host for access tokens. Never
+  // infer it from the invoicing API host: the two endpoints are distinct.
+  const url = new URL("/connect/token", ETA_CONFIG.identityUrl).toString();
   const body = new URLSearchParams({
     grant_type: "client_credentials",
     client_id: ETA_CONFIG.clientId ?? "",

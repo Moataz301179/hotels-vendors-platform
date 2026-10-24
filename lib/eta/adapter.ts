@@ -5,8 +5,8 @@
  * Zero UI references. Zero client-side exposure.
  *
  * SECURITY: Client credentials are resolved server-side ONLY via process.env
- * (ETA_CLIENT_ID / ETA_CLIENT_SECRET / ETA_API_URL). Never hardcoded.
- * PIN/user authorization confirmed by user before real auth enabled.
+ * (ETA_CLIENT_ID / ETA_CLIENT_SECRET / ETA_IDENTITY_URL / ETA_API_URL).
+ * Never hardcode credentials, taxpayer values, PINs, or hardware-token claims.
  */
 
 export interface ETAPayload {
@@ -41,35 +41,30 @@ export interface ETAResponse {
 
 export class ETAAdapter {
   private readonly endpoint: string;
+  private readonly identityEndpoint: string;
   private token: string | null = null;
 
   constructor() {
-    // G4: No hardcoded secrets. Credentials resolved server-side via environment.
-    // The user has secured Client ID / Client Secret server-side (confirmed).
-    // Middleware (ePass2003 / USB token) working (user confirmed).
-    // Endpoint: must be reachable before submission (optional webhook; user left Callback URL empty intentionally per SDK).
-    this.endpoint =
-      process.env.ETA_API_URL || "https://sdk.invoicing.eta.gov.eg/api/";
+    this.endpoint = process.env.ETA_API_URL?.trim() || "";
+    this.identityEndpoint = process.env.ETA_IDENTITY_URL?.trim() || "";
   }
 
   async getToken(): Promise<string> {
     // 01-login-as-taxpayer-system (official SDK endpoint; versioned via api/v1/ per G9)
     const clientId = process.env.ETA_CLIENT_ID;
     const clientSecret = process.env.ETA_CLIENT_SECRET;
-    if (!clientId || !clientSecret) {
-      throw new Error("ETA credentials not configured: ETA_CLIENT_ID and ETA_CLIENT_SECRET must be set server-side (not in chat, not committed to git). The user has secured these securely after portal registration (HVSAAS — Client ID received from portal).");
+    if (!this.endpoint || !this.identityEndpoint || !clientId || !clientSecret) {
+      throw new Error("ETA credentials are not configured. ETA_API_URL, ETA_IDENTITY_URL, ETA_CLIENT_ID and ETA_CLIENT_SECRET must be supplied through the deployment secret store.");
     }
-    const tokenUrl = new URL(
-      "/connect/token",
-      this.endpoint
-    ).toString();
+    const tokenUrl = new URL("/connect/token", this.identityEndpoint).toString();
     const response = await fetch(tokenUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
         client_id: clientId,
         client_secret: clientSecret,
-      }),
+      }).toString(),
     });
     if (!response.ok) {
       const text = await response.text().catch(() => "unknown");
@@ -91,9 +86,9 @@ export class ETAAdapter {
   async submitInvoice(payload: ETAPayload): Promise<ETAResponse> {
     // Idempotency handled by queue layer (lib/fintech/idempotency) using key invoice_eta:{invoiceId}
     const token = await this.getToken();
-    // Actual HTTP call to ETA submission endpoint (versioned via api/v1/ per G9; endpoint configured via ETA_API_URL env)
-    // The payload includes the taxpayer Tax Registration ID (VATEG-704226146 / 704226146) verified from end-entity certificate + portal profile.
-    // Digital signature fields (digitalSignatureUuid, signedAt) must be set by middleware/USB token service (ePass2003 — user confirmed middleware working) before submission; adapter does NOT sign itself (G4 invisible engine).
+    // Actual submission is permitted only after the caller supplies a
+    // production-format, externally signed document. This adapter never signs
+    // documents and never assumes a hardware-token integration exists.
     const submitUrl = new URL("/api/v1.0/documentsubmissions", this.endpoint).toString();
     try {
       const response = await fetch(submitUrl, {
