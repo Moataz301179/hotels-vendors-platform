@@ -1,5 +1,13 @@
 # HotelsVendors production handover — 2026-10-17
 
+## ETA entry and idempotent production release repair — deployed 2026-10-24
+
+- Governed release [40043695192](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40043695192) deployed merge commit `5fc90823e01622edc985d1852d72550553fc7807` after PR [#35](https://github.com/Moataz301179/hotels-vendors-platform/pull/35) and PR [#36](https://github.com/Moataz301179/hotels-vendors-platform/pull/36) passed CI.
+- `/eta-compliance` was missing from the edge protected-route classifier. A signed-out request reached the server-side role gate and returned HTTP 500. It is now classified as protected and live verification returned HTTP 307 with `location: /login?redirect_url=%2Feta-compliance`.
+- A first activation attempt correctly rolled back because the Nginx CSP reconciler required a legacy override even when the production Nginx configuration was already clean (`hide=0`, `add=0`). The reconciler now treats exactly-zero legacy directives as an idempotent no-op, while still rejecting partial legacy configurations. The repaired workflow completed schema, lifecycle, test, build, package, migration, activation, public CSP and live-health gates.
+- Independent post-release evidence: `/api/health` reported release/source `github-5fc90823e01622edc985d1852d72550553fc7807`, database `ready`, authorization `configured`; public CSP contains a nonce and neither `unsafe-inline` nor `unsafe-eval`; `/marketplace` returned HTTP 200.
+- Local verification: protected-route/CSP/shell tests passed (14 assertions) and `SESSION_SECRET=build-validation-only-not-a-runtime-secret NODE_ENV=production npm run build` passed. No product catalogue data, vendor commercial data, or mobile artefact was added by this release.
+
 ## MVP cold-run baseline — 2026-10-24 (read-only; no release or data mutation)
 
 - **Release foundation: pass.** `https://www.hotelsvendors.com/api/health` returned HTTP 200 with release/source `github-1d017670c102e5853850cc26aa18700c35079279`, database `ready`, and authorization `configured`. This confirms availability only; it is not a workflow acceptance result.
