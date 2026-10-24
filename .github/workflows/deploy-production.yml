@@ -27,6 +27,7 @@ jobs:
       ETA_CLIENT_ID: ${{ secrets.ETA_CLIENT_ID }}
       ETA_CLIENT_SECRET: ${{ secrets.ETA_CLIENT_SECRET }}
       ETA_CALLBACK_API_KEY: ${{ secrets.ETA_CALLBACK_API_KEY }}
+      ETA_ENVIRONMENT: ${{ vars.ETA_ENVIRONMENT }}
       SESSION_SECRET: ci-only-not-used-by-clerk
       REDIS_URL: redis://127.0.0.1:6379
     services:
@@ -131,6 +132,7 @@ jobs:
             if [ -n "$ETA_CLIENT_ID" ]; then printf 'ETA_CLIENT_ID=%q\n' "$ETA_CLIENT_ID"; fi
             if [ -n "$ETA_CLIENT_SECRET" ]; then printf 'ETA_CLIENT_SECRET=%q\n' "$ETA_CLIENT_SECRET"; fi
             if [ -n "$ETA_CALLBACK_API_KEY" ]; then printf 'ETA_CALLBACK_API_KEY=%q\n' "$ETA_CALLBACK_API_KEY"; fi
+            case "$ETA_ENVIRONMENT" in preprod|production) printf 'ETA_ENVIRONMENT=%q\n' "$ETA_ENVIRONMENT" ;; "") ;; *) echo "ETA_ENVIRONMENT must be preprod or production" >&2; exit 1 ;; esac
           } > hv-runtime.env
           scp hv-runtime.env "$VPS_USER@$VPS_HOST:/tmp/hv-runtime-${GITHUB_SHA}.env"
           rm -f hv-runtime.env

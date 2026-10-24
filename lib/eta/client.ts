@@ -28,7 +28,7 @@ const ETA_CONFIG: EtaConfig = {
   privateKey: process.env.ETA_PRIVATE_KEY || "",
   clientId: process.env.ETA_CLIENT_ID || "",
   clientSecret: process.env.ETA_CLIENT_SECRET || "",
-  environment: (process.env.ETA_ENVIRONMENT as "sandbox" | "production") || "sandbox",
+  environment: (process.env.ETA_ENVIRONMENT as "sandbox" | "preprod" | "production") || "sandbox",
   timeoutMs: 30000,
   maxRetries: 3,
   retryDelayMs: 2000,
@@ -47,8 +47,8 @@ interface EtaTokenResponse {
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string> {
-  if (ETA_CONFIG.environment !== "production" || !ETA_CONFIG.baseUrl || !ETA_CONFIG.identityUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
-    throw new Error("ETA_NOT_CONFIGURED_FOR_PRODUCTION");
+  if (!['preprod', 'production'].includes(ETA_CONFIG.environment) || !ETA_CONFIG.baseUrl || !ETA_CONFIG.identityUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
+    throw new Error("ETA_NOT_CONFIGURED");
   }
 
   // Return cached token if valid

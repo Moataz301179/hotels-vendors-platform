@@ -109,7 +109,7 @@ export interface EtaConfig {
   privateKey: string;
   clientId?: string;
   clientSecret?: string;
-  environment: "sandbox" | "production";
+  environment: "sandbox" | "preprod" | "production";
   maxRetries?: number;
   timeoutMs?: number;
   retryDelayMs?: number;

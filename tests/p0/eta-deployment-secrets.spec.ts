@@ -9,5 +9,7 @@ describe("ETA deployment secret handling", () => {
       expect(workflow).toContain(`${name}: \${{ secrets.${name} }}`);
       expect(workflow).toContain(`printf '${name}=%q\\n' "$${name}"`);
     }
+    expect(workflow).toContain("ETA_ENVIRONMENT: ${{ vars.ETA_ENVIRONMENT }}");
+    expect(workflow).toContain('case "$ETA_ENVIRONMENT" in preprod|production)');
   });
 });
