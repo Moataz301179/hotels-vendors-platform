@@ -19,7 +19,8 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "eta:signer-gateway": "tsx scripts/eta-signer-gateway.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
