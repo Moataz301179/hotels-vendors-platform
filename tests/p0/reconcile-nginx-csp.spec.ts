@@ -28,14 +28,30 @@ describe("Nginx CSP reconciliation", () => {
     expect(readFileSync(target, "utf8")).not.toContain("Content-Security-Policy");
   });
 
-  it("refuses an unknown configuration without changing it", () => {
+  it("accepts an already-clean configuration without changing it", () => {
     const root = mkdtempSync(join(tmpdir(), "hv-nginx-csp-"));
     const target = join(root, "hotelsvendors.com");
     const backup = join(root, "backup.conf");
-    const unexpected = "server { proxy_pass http://nextjs; }\n";
-    writeFileSync(target, unexpected);
+    const clean = "server { proxy_pass http://nextjs; }\n";
+    writeFileSync(target, clean);
+
+    const output = execFileSync("node", [script, target, backup], { encoding: "utf8" });
+    expect(JSON.parse(output)).toMatchObject({ ok: true, alreadyClean: true, changed: { proxyHideHeader: 0, addHeader: 0 } });
+    expect(readFileSync(target, "utf8")).toBe(clean);
+  });
+
+  it("refuses a partial legacy override without changing it", () => {
+    const root = mkdtempSync(join(tmpdir(), "hv-nginx-csp-"));
+    const target = join(root, "hotelsvendors.com");
+    const backup = join(root, "backup.conf");
+    const partial = `server {
+  proxy_hide_header Content-Security-Policy;
+  proxy_pass http://nextjs;
+}
+`;
+    writeFileSync(target, partial);
 
     expect(() => execFileSync("node", [script, target, backup], { encoding: "utf8", stdio: "pipe" })).toThrow();
-    expect(readFileSync(target, "utf8")).toBe(unexpected);
+    expect(readFileSync(target, "utf8")).toBe(partial);
   });
 });
