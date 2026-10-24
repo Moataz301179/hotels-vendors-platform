@@ -18,7 +18,10 @@ type ImportRow = {
 type ValidationResult = { valid: boolean; normalizedKey?: string; errors: string[] };
 
 const consumerRetailTerms = /\b(shortbread|fisherman'?s\s+pie|nature\s+valley|demerara|snack\s*bar|single[- ]serve\s+retail)\b/i;
-const sourcePermission = new Set(['PERMITTED', 'OPEN_LICENSED', 'VENDOR_AUTHORIZED']);
+// A supplier-neutral catalogue can be authored from first-party operating
+// specifications.  That is distinct from copying a public supplier catalogue:
+// the latter still requires an explicit cleared source policy before staging.
+const sourcePermission = new Set(['INTERNALLY_AUTHORED', 'PERMITTED', 'OPEN_LICENSED', 'VENDOR_AUTHORIZED']);
 
 const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
 const isObject = (value: unknown) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);

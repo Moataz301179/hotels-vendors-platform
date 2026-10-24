@@ -71,6 +71,11 @@ async function main() {
     return sum + (typeof item.targetSkus === "number" ? item.targetSkus : 0);
   }, 0);
 
+  const referenceCatalogReady = products.length >= target
+    && duplicateSkus.length === 0
+    && invalid.length === 0
+    && provenanceTagged === products.length;
+  const offerCatalogReady = referenceCatalogReady && candidateStatus === "VERIFIED_OPERATIONAL";
   const report = {
     targetSkus: target,
     sourceCatalogRecords: products.length,
@@ -85,7 +90,12 @@ async function main() {
     categoryCounts: Object.fromEntries([...categoryCounts.entries()].sort()),
     duplicateSkus,
     invalid,
-    materializationReady: products.length >= target && duplicateSkus.length === 0 && invalid.length === 0 && provenanceTagged === products.length && candidateStatus === "VERIFIED_OPERATIONAL",
+    // Supplier-neutral product references may be released for RFQ discovery
+    // without a named Vendor. A verified operational Vendor register remains
+    // required only for a commercial offer/fulfilment catalogue.
+    referenceCatalogReady,
+    offerCatalogReady,
+    materializationReady: referenceCatalogReady,
   };
   console.log(JSON.stringify(report, null, 2));
   if (!report.materializationReady) process.exitCode = 2;
