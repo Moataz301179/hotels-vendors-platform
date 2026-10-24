@@ -275,7 +275,9 @@ export async function rejectInvoice(uuid: string, reason: string): Promise<void>
 
 export interface EtaCallbackPayload {
   uuid: string;
-  status: EtaDocumentStatus;
+  /** ETA notification status, for example Valid, Invalid, Rejected or Cancelled. */
+  status: string;
+  deliveryId?: string;
   dateTimeValidated?: string;
   rejectionReasons?: { error: string; errorCode: string }[];
 }
