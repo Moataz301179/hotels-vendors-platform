@@ -86,46 +86,15 @@ export class ETAAdapter {
   }
 
   async submitInvoice(payload: ETAPayload): Promise<ETAResponse> {
-    // Idempotency handled by queue layer (lib/fintech/idempotency) using key invoice_eta:{invoiceId}
-    const token = await this.getToken();
-    // Actual submission is permitted only after the caller supplies a
-    // production-format, externally signed document. This adapter never signs
-    // documents and never assumes a hardware-token integration exists.
-    const submitUrl = new URL("/api/v1.0/documentsubmissions", this.endpoint).toString();
-    try {
-      const response = await fetch(submitUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errText = await response.text().catch(() => "unknown error");
-        return {
-          status: "FAILED",
-          message: `ETA submission returned ${response.status}: ${errText}`,
-          errors: [errText],
-        };
-      }
-      const result = (await response.json()) as Partial<ETAResponse>;
-      return {
-        status:
-          result.status ??
-          ("PENDING" as ETAResponse["status"]),
-        message: result.message ?? undefined,
-        documentUuid: result.documentUuid ?? payload.uuid,
-        errors: result.errors ?? undefined,
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        status: "FAILED",
-        message: `ETA submission network error: ${message}`,
-        errors: [message],
-      };
-    }
+    void payload;
+    // ETA requires an issuer CAdES-BES signature embedded in each submitted
+    // document. Do not allow this older adapter to bypass the verified eSeal
+    // bridge while that bridge remains unavailable to the service.
+    return {
+      status: "FAILED",
+      message: "ETA_HARDWARE_SIGNING_NOT_CONFIGURED",
+      errors: ["ETA_HARDWARE_SIGNING_NOT_CONFIGURED"],
+    };
   }
 
   async getStatus(uuid: string): Promise<ETAResponse> {

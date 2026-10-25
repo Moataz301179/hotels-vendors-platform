@@ -133,6 +133,15 @@ async function etaFetch(path: string, options: RequestInit = {}): Promise<Respon
   });
 }
 
+function requireVerifiedEsealSubmissionBridge(): never {
+  // ETA requires an issuer CAdES-BES signature embedded in every submitted
+  // invoice. The USB token has been proven locally, but no approved bridge can
+  // yet create and embed that production signature from this service. Never
+  // acquire a taxpayer token or send an unsigned document while that boundary
+  // remains unresolved.
+  throw new Error("ETA_HARDWARE_SIGNING_NOT_CONFIGURED: refusing unsigned document submission until the verified eSeal bridge is configured");
+}
+
 // ─────────────────────────────────────────
 // 4. API METHODS
 // ─────────────────────────────────────────
@@ -141,6 +150,11 @@ async function etaFetch(path: string, options: RequestInit = {}): Promise<Respon
  * Submit an invoice to the ETA.
  */
 export async function submitInvoice(payload: EtaInvoicePayload): Promise<EtaSubmissionResponse> {
+  void payload;
+  requireVerifiedEsealSubmissionBridge();
+
+  // Kept below as the controlled integration path. It becomes reachable only
+  // when an approved bridge provides a canonical CAdES-BES-signed document.
   const response = await etaFetch("/documentsubmissions", {
     method: "POST",
     body: JSON.stringify({
