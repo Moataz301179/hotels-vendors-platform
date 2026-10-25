@@ -45,6 +45,7 @@ interface EtaTokenResponse {
 }
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let tokenRequestInFlight: Promise<string> | null = null;
 
 async function getAccessToken(): Promise<string> {
   if (!['preprod', 'production'].includes(ETA_CONFIG.environment) || !ETA_CONFIG.baseUrl || !ETA_CONFIG.identityUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
@@ -56,6 +57,25 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
+  // ETA access tokens are shared process-wide. A burst of invoice-status
+  // reads must not turn into concurrent client-credential requests: share the
+  // pending request and clear it after either a successful or failed attempt.
+  if (tokenRequestInFlight) {
+    return tokenRequestInFlight;
+  }
+
+  const tokenRequest = requestAccessToken();
+  tokenRequestInFlight = tokenRequest;
+  try {
+    return await tokenRequest;
+  } finally {
+    if (tokenRequestInFlight === tokenRequest) {
+      tokenRequestInFlight = null;
+    }
+  }
+}
+
+async function requestAccessToken(): Promise<string> {
   // ETA publishes a dedicated identity-service host for access tokens. Never
   // infer it from the invoicing API host: the two endpoints are distinct.
   const url = new URL("/connect/token", ETA_CONFIG.identityUrl).toString();
