@@ -1,12 +1,15 @@
 /**
- * ETA Payload Canonicalizer
- * Hotels Vendors Compliance Layer
+ * ETA JSON document canonicalization.
  *
- * Alphabetical canonical flattening for ETA invoice payloads.
- * Produces a deterministic key=value string suitable for RSA signing.
+ * ETA signs a deterministic serialization of the unsigned document, not an
+ * alphabetically sorted key/value projection. The order in the submitted JSON
+ * is significant; array property names are repeated for every element.
+ *
+ * Source: ETA SDK "Document Serialization Approach". This helper prepares the
+ * bytes for an approved CAdES-BES provider. It neither signs nor submits.
  */
 
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 
 export interface CanonicalEntry {
   key: string;
@@ -14,76 +17,87 @@ export interface CanonicalEntry {
 }
 
 export interface CanonicalResult {
+  /** Preserved field sequence, useful only for diagnostics and tests. */
   entries: CanonicalEntry[];
   canonicalString: string;
   sha256Digest: string;
 }
 
-function flattenObject(
-  obj: Record<string, unknown>,
-  prefix = ""
-): CanonicalEntry[] {
-  const entries: CanonicalEntry[] = [];
+type JsonScalar = string | number | boolean | null;
+type JsonValue = JsonScalar | JsonValue[] | { [key: string]: JsonValue };
 
-  for (const [rawKey, val] of Object.entries(obj)) {
-    const key = prefix ? `${prefix}.${rawKey}` : rawKey;
+function quote(value: JsonScalar): string {
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    throw new Error("ETA_CANONICALIZATION_INVALID_NUMBER");
+  }
+  return `"${String(value)}"`;
+}
 
-    if (val === null || val === undefined) {
-      entries.push({ key, value: "" });
-    } else if (Array.isArray(val)) {
-      val.forEach((item, idx) => {
-        const arrayKey = `${key}.${idx}`;
-        if (typeof item === "object" && item !== null) {
-          entries.push(...flattenObject(item as Record<string, unknown>, arrayKey));
-        } else {
-          entries.push({ key: arrayKey, value: formatValue(item) });
-        }
-      });
-    } else if (typeof val === "object") {
-      entries.push(...flattenObject(val as Record<string, unknown>, key));
-    } else {
-      entries.push({ key, value: formatValue(val) });
+function assertJsonValue(value: unknown): asserts value is JsonValue {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("ETA_CANONICALIZATION_INVALID_NUMBER");
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach(assertJsonValue);
+    return;
+  }
+  if (typeof value === "object") {
+    for (const child of Object.values(value as Record<string, unknown>)) assertJsonValue(child);
+    return;
+  }
+  throw new Error("ETA_CANONICALIZATION_INVALID_VALUE");
+}
+
+function serialize(value: JsonValue, entries: CanonicalEntry[]): string {
+  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return quote(value);
+  }
+  if (Array.isArray(value)) {
+    throw new Error("ETA_CANONICALIZATION_UNNAMED_ARRAY");
+  }
+
+  let serialized = "";
+  for (const [key, child] of Object.entries(value)) {
+    const upperKey = key.toUpperCase();
+    if (Array.isArray(child)) {
+      serialized += quote(upperKey);
+      entries.push({ key: upperKey, value: "[array]" });
+      for (const item of child) {
+        serialized += quote(upperKey);
+        entries.push({ key: upperKey, value: "[item]" });
+        serialized += serialize(item, entries);
+      }
+      continue;
     }
-  }
 
-  // Sort alphabetically by key (case-insensitive)
-  entries.sort((a, b) => a.key.localeCompare(b.key, undefined, { sensitivity: "base" }));
-  return entries;
-}
-
-function formatValue(val: unknown): string {
-  if (typeof val === "number") {
-    // Avoid scientific notation
-    if (Number.isInteger(val)) return val.toString();
-    // Use fixed notation for decimals
-    return val.toLocaleString("en-US", {
-      useGrouping: false,
-      maximumFractionDigits: 20,
+    serialized += quote(upperKey);
+    entries.push({
+      key: upperKey,
+      value: child === null || typeof child !== "object" ? String(child) : "[object]",
     });
+    serialized += serialize(child, entries);
   }
-  if (typeof val === "string") {
-    // Normalize ISO date strings
-    if (/^\d{4}-\d{2}-\d{2}T/.test(val)) return val;
-    return val;
+  return serialized;
+}
+
+export function canonicalizeEtaPayload(payload: Record<string, unknown>): CanonicalResult {
+  if (!payload || Object.keys(payload).length === 0) {
+    throw new Error("ETA_CANONICALIZATION_EMPTY_DOCUMENT");
   }
-  return String(val);
-}
+  if (Object.prototype.hasOwnProperty.call(payload, "signatures")) {
+    throw new Error("ETA_CANONICALIZATION_REQUIRES_UNSIGNED_DOCUMENT");
+  }
 
-function toCanonical(entries: CanonicalEntry[]): string {
-  return entries.map((e) => `${e.key}=${e.value}`).join("\n");
-}
-
-function sha256(data: string): string {
-  return createHash("sha256").update(data).digest("hex");
-}
-
-export function canonicalizeEtaPayload(
-  payload: Record<string, unknown>
-): CanonicalResult {
-  const entries = flattenObject(payload);
-  const canonicalString = toCanonical(entries);
-  const sha256Digest = sha256(canonicalString);
-  return { entries, canonicalString, sha256Digest };
+  assertJsonValue(payload);
+  const entries: CanonicalEntry[] = [];
+  const canonicalString = serialize(payload, entries);
+  return {
+    entries,
+    canonicalString,
+    sha256Digest: createHash("sha256").update(canonicalString, "utf8").digest("hex"),
+  };
 }
 
 export function toCanonicalString(payload: Record<string, unknown>): string {
@@ -91,9 +105,7 @@ export function toCanonicalString(payload: Record<string, unknown>): string {
 }
 
 export function assertCanonicalizable(payload: Record<string, unknown>): void {
-  if (!payload || Object.keys(payload).length === 0) {
-    throw new Error("Cannot canonicalize empty payload");
-  }
+  canonicalizeEtaPayload(payload);
 }
 
 export function buildDualField(english: string, arabic: string) {
@@ -108,7 +120,7 @@ export function buildDualField(english: string, arabic: string) {
 export function applyDualLanguage(
   line: Record<string, unknown>,
   english: string,
-  arabic: string
+  arabic: string,
 ): Record<string, unknown> {
   return {
     ...line,
