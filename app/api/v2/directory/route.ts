@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 
 function publicProfile(profile: {
   id: string; itemType: string; name: string; nameAr: string | null; category: string; subcategory: string | null;
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
   const itemType = params.get('itemType')?.trim();
   const profiles = await prisma.directoryProfile.findMany({
     where: {
-      publicationStatus: 'PUBLISHED', deletedAt: null,
+      ...publicMarketplaceDirectoryProfileWhere,
       ...(id ? { id } : {}),
       ...(category ? { category } : {}),
       ...(itemType ? { itemType } : {}),

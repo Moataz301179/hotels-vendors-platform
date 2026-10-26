@@ -6,6 +6,7 @@ import { appendNetworkTransactionEvent } from "@/lib/procurement/network-transac
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { FinancialAccessDeniedError, requireFinancialAccess } from "@/lib/auth/financial-access";
 import { hasResolvedProductEvidence } from "@/lib/catalog/resolved-product-evidence";
+import { publicMarketplaceDirectoryProfileWhere } from "@/lib/directory/public-marketplace";
 import { toBuyerSafeRfqRequest } from "@/lib/procurement/anonymous-commercial-disclosure";
 import { z } from "zod";
 
@@ -41,7 +42,7 @@ export async function POST(req:Request){
  if(baselineId&&!baseline)return NextResponse.json({error:"An active contract baseline for your hotel was not found"},{status:404});
  if(baseline&&requestedProductId&&requestedProductId!==baseline.productId)return NextResponse.json({error:"The product must match the selected contract baseline"},{status:409});
  const productId=baseline?.productId||requestedProductId;
- const catalogReference=catalogReferenceId?await prisma.directoryProfile.findFirst({where:{id:catalogReferenceId,publicationStatus:'PUBLISHED',deletedAt:null},select:{id:true,name:true,unitOfMeasure:true,purchaseUnit:true}}):null;
+ const catalogReference=catalogReferenceId?await prisma.directoryProfile.findFirst({where:{...publicMarketplaceDirectoryProfileWhere,id:catalogReferenceId},select:{id:true,name:true,unitOfMeasure:true,purchaseUnit:true}}):null;
  if(catalogReferenceId&&!catalogReference)return NextResponse.json({error:"Reviewed catalogue reference not found"},{status:404});
  if(catalogReference&&productId)return NextResponse.json({error:"Choose either a reviewed catalogue reference or a Vendor product"},{status:409});
  const product=productId?await prisma.product.findFirst({where:{id:productId,supplierId:baseline?.supplierId,status:"ACTIVE",deletedAt:null,source:{not:'FIXTURE'},supplier:{status:"ACTIVE",isVerified:true}},select:{id:true,sourceKey:true,supplierId:true,supplier:{select:{tenantId:true}}}}):null;

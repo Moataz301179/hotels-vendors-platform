@@ -96,7 +96,7 @@ describe('directory catalog foundation', () => {
     m.profileFindMany.mockResolvedValue([{ id: 'profile-1', itemType: 'PRODUCT', name: 'Hotel banquet napkin', nameAr: null, category: 'FOOD_BEVERAGE', subcategory: 'Table service', description: 'Bulk hospitality reference.', attributes: {}, unitOfMeasure: 'piece', purchaseUnit: 'carton', images: [], searchTerms: ['napkin'], updatedAt: new Date('2026-10-17T00:00:00.000Z') }]);
     const response = await getDirectory(new Request('https://hotelsvendors.test/api/v2/directory?id=profile-1'));
     expect(response.status).toBe(200);
-    expect(m.profileFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: 'profile-1', publicationStatus: 'PUBLISHED', deletedAt: null }) }));
+    expect(m.profileFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ id: 'profile-1', publicationStatus: 'PUBLISHED', deletedAt: null, candidate: expect.objectContaining({ is: expect.objectContaining({ reviewStatus: 'APPROVED' }) }) }) }));
     const body = await response.json() as { profiles: Array<Record<string, unknown>> };
     expect(body.profiles).toEqual([expect.objectContaining({ id: 'profile-1', name: 'Hotel banquet napkin', purchaseUnit: 'carton', rfqRequired: true })]);
     expect(JSON.stringify(body)).not.toMatch(/supplier|sourceUrl|candidate/i);
