@@ -29,3 +29,23 @@ export function projectTransactionStatus(facts: TransactionFacts): { status: str
   if (facts.requested) return { status: "REQUEST", frozen: false };
   return { status: "BLOCKED", frozen: true };
 }
+
+export function projectFactoringStatus(status: string): { status: string; frozen: boolean } {
+  switch (status) {
+    case "PENDING":
+    case "UNDER_REVIEW":
+      return { status: "DRAWDOWN_SUBMITTED", frozen: false };
+    case "APPROVED":
+      return { status: "FUNDER_ACCEPTED", frozen: false };
+    case "DISBURSED":
+      return { status: "DISBURSEMENT_CONFIRMED", frozen: false };
+    case "SETTLED":
+      return { status: "SETTLED", frozen: false };
+    case "REJECTED":
+      return { status: "FUNDER_REJECTED", frozen: true };
+    case "DEFAULTED":
+      return { status: "DEFAULT_OR_RECOVERY", frozen: true };
+    default:
+      return { status: "BLOCKED", frozen: true };
+  }
+}
