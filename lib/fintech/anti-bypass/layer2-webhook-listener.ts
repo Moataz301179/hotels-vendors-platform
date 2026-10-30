@@ -2,53 +2,36 @@
  * LAYER 2: State Synchronization & Disbursement Blocking
  * Oliv Payout Callback Webhook Listener
  *
- * FRA Decision No. 51 of 2026: Oliv must freeze the invoice in the
- * centralized portal. This webhook validates that Oliv's callback
- * includes our referral token — proving the transaction originated
- * through HotelsVendors.
- *
- * BLOCKING LOGIC:
- * - Oliv CANNOT reconcile payout without our referral token
- * - Missing/expired/invalid token = "Unauthorized Reconciliation" log + alert
- * - Valid token = update factoring_transactions table + release disbursement
+ * A verified callback may report a funder status. HotelsVendors does not
+ * calculate a platform fee, reduce the payout, or book that fee as revenue.
+ * A second disbursement of the same ETA UUID is refused. A disbursement
+ * without a confirmed facility, or above the facility remainder, is refused.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { verifyReferralToken, type ReferralToken } from "./layer1-referral-token";
+import { decideCallback } from "@/lib/fintech/drawdown-gate";
 
 const WEBHOOK_SECRET = process.env.OLIV_WEBHOOK_SECRET || "";
 const PARTNER_ID = "HOTELSVENDORS_GLOBAL_001";
 
 export interface OlivPayoutCallback {
-  // Oliv's identifiers
   olivTransactionId: string;
   olivReferenceNumber: string;
-
-  // The referral token we sent — Oliv MUST echo this back
   referralToken: ReferralToken;
-
-  // Invoice identifiers
   etaUuid: string;
   supplierTaxId: string;
-
-  // Payout details
   payoutStatus: "APPROVED" | "DISBURSED" | "SETTLED" | "REJECTED" | "DEFAULTED";
   disbursedAmount: number;
   factoringFee: number;
   advanceRate: number;
   disbursementDate: string;
   expectedSettlementDate: string;
-
-  // Optional: Oliv's internal notes
   notes?: string;
 }
 
-/**
- * Webhook signature verification.
- * Oliv signs the payload with their secret — we verify it here.
- */
 function verifyOlivSignature(
   payload: string,
   signature: string,
@@ -59,7 +42,6 @@ function verifyOlivSignature(
     return false;
   }
 
-  // Oliv signs: timestamp + "." + body
   const expectedSignature = crypto
     .createHmac("sha256", WEBHOOK_SECRET)
     .update(`${timestamp}.${payload}`)
@@ -71,17 +53,10 @@ function verifyOlivSignature(
   );
 }
 
-/**
- * POST /api/v1/oliv/payout-callback
- *
- * Oliv pings this endpoint when payout status changes.
- * We validate the referral token before allowing reconciliation.
- */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // 1. Extract headers
     const olivSignature = request.headers.get("x-oliv-signature") || "";
     const olivTimestamp = request.headers.get("x-oliv-timestamp") || "";
     const idempotencyKey = request.headers.get("x-idempotency-key") || "";
@@ -93,12 +68,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse body
     const rawBody = await request.text();
 
-    // 3. Verify Oliv's HMAC signature
     if (!verifyOlivSignature(rawBody, olivSignature, olivTimestamp)) {
-      // Log unauthorized attempt
       await prisma.auditLog.create({
         data: {
           tenantId: "SYSTEM",
@@ -119,14 +91,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Parse callback payload
     const body: OlivPayoutCallback = JSON.parse(rawBody);
-
-    // 5. LAYER 2 CORE: Verify the referral token
     const tokenVerification = verifyReferralToken(body.referralToken);
 
     if (!tokenVerification.valid) {
-      // CRITICAL: Oliv tried to reconcile without valid token
       await prisma.auditLog.create({
         data: {
           tenantId: "SYSTEM",
@@ -144,7 +112,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Alert: This is a bypass attempt
       console.error(
         `[LAYER-2] UNAUTHORIZED RECONCILIATION ATTEMPT:`,
         `ETA=${body.etaUuid}`,
@@ -164,7 +131,6 @@ export async function POST(request: NextRequest) {
 
     const tokenPayload = tokenVerification.payload!;
 
-    // 6. Verify ETA UUID matches token
     if (tokenPayload.etaUuid !== body.etaUuid) {
       await prisma.auditLog.create({
         data: {
@@ -186,7 +152,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. Idempotency check
     if (idempotencyKey) {
       const existing = await prisma.factoringTransaction.findUnique({
         where: { olivTransactionId: body.olivTransactionId },
@@ -200,44 +165,86 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 8. Process payout status
+    const prior = await prisma.factoringTransaction.findFirst({
+      where: {
+        etaUuid: body.etaUuid,
+        payoutStatus: { in: ["DISBURSED", "SETTLED"] },
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    const supplier = await prisma.supplier.findUnique({
+      where: { taxId: body.supplierTaxId },
+      select: { id: true },
+    });
+
+    const facility = supplier
+      ? await prisma.olivCreditFacility.findFirst({
+          where: { supplierId: supplier.id, status: "ACTIVE", deletedAt: null },
+          select: { availableEgp: true },
+        })
+      : null;
+
+    const decision = decideCallback({
+      payoutStatus: body.payoutStatus,
+      disbursedAmount: body.disbursedAmount,
+      etaAlreadyDisbursed: Boolean(prior),
+      facilityConfirmed: Boolean(facility),
+      facilityRemaining: facility?.availableEgp == null ? null : Number(facility.availableEgp),
+    });
+
+    if (!decision.ok) {
+      await prisma.auditLog.create({
+        data: {
+          tenantId: "SYSTEM",
+          entityId: body.etaUuid,
+          actorId: "OLIV_CALLBACK",
+          actionType: "UPDATE",
+          changes: {
+            reason: decision.code,
+            difference: decision.difference ?? null,
+            etaUuid: body.etaUuid,
+            olivTransactionId: body.olivTransactionId,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      return NextResponse.json(
+        { error: decision.code, difference: decision.difference ?? null },
+        { status: 409 }
+      );
+    }
+
     const now = new Date();
     const factoringTx = await prisma.factoringTransaction.create({
       data: {
-        tenantId: "SYSTEM", // Will be resolved to actual tenant
+        tenantId: "SYSTEM",
         etaUuid: body.etaUuid,
         supplierTaxId: body.supplierTaxId,
         hotelTaxId: tokenPayload.hotelTaxId,
-
-        // Referral token (immutable record)
         referralTokenSignature: body.referralToken.signature,
         referralTokenPayload: body.referralToken.payload,
         referralTokenGeneratedAt: new Date(body.referralToken.generatedAt),
         referralTokenExpiresAt: new Date(body.referralToken.expiresAt),
-
-        // Oliv transaction data
         olivTransactionId: body.olivTransactionId,
         olivReferenceNumber: body.olivReferenceNumber,
-        payoutStatus: body.payoutStatus,
-        disbursedAmount: body.disbursedAmount,
+        payoutStatus: decision.payoutStatus,
+        disbursedAmount: decision.disbursedAmount,
         factoringFee: body.factoringFee,
         advanceRate: body.advanceRate,
         disbursementDate: new Date(body.disbursementDate),
         expectedSettlementDate: new Date(body.expectedSettlementDate),
-
-        // HotelsVendors platform fee (2% deducted before disbursement)
-        platformFeeRate: 0.02,
-        platformFeeAmount: Math.round(body.disbursedAmount * 0.02 * 100) / 100,
-        netDisbursement: Math.round((body.disbursedAmount - body.disbursedAmount * 0.02) * 100) / 100,
-
-        // Metadata
+        platformFeeRate: decision.platformFeeRate,
+        platformFeeAmount: decision.platformFeeAmount,
+        netDisbursement: decision.netDisbursement,
         processedAt: now,
         callbackTimestamp: now,
         rawCallback: JSON.stringify(body),
       },
     });
 
-    // 9. Log successful reconciliation
     await prisma.auditLog.create({
       data: {
         tenantId: "SYSTEM",
@@ -247,42 +254,19 @@ export async function POST(request: NextRequest) {
         changes: {
           etaUuid: body.etaUuid,
           olivTransactionId: body.olivTransactionId,
-          payoutStatus: body.payoutStatus,
-          disbursedAmount: body.disbursedAmount,
-          platformFee: factoringTx.platformFeeAmount,
-          netDisbursement: factoringTx.netDisbursement,
+          payoutStatus: decision.payoutStatus,
+          disbursedAmount: decision.disbursedAmount,
+          platformFee: null,
           tokenVerified: true,
           processingTimeMs: Date.now() - startTime,
         },
       },
     });
 
-    // 10. Sync ledger
-    await prisma.ledgerEntry.create({
-      data: {
-        tenantId: "SYSTEM",
-        entityType: "PLATFORM_FEE",
-        entityId: body.olivTransactionId,
-        entryType: "PLATFORM_FEE",
-        account: "REVENUE",
-        amount: factoringTx.platformFeeAmount,
-        currency: "EGP",
-        reference: `OLIV-${body.olivTransactionId}`,
-        metadata: JSON.stringify({
-          etaUuid: body.etaUuid,
-          olivTransactionId: body.olivTransactionId,
-          advanceRate: body.advanceRate,
-          description: `Platform fee for ETA ${body.etaUuid}`,
-        }),
-      },
-    });
-
     return NextResponse.json({
       success: true,
       transactionId: factoringTx.id,
-      platformFee: factoringTx.platformFeeAmount,
-      netDisbursement: factoringTx.netDisbursement,
-      message: "Reconciliation accepted — referral token verified",
+      message: "Funder status recorded. HotelsVendors did not calculate a fee or release funds.",
     });
   } catch (error) {
     console.error("[LAYER-2] Callback processing error:", error);
