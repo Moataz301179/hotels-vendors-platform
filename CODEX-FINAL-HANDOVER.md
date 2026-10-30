@@ -1,11 +1,11 @@
 # HotelsVendors production handover — 2026-10-17
 
-## Governed production release attempt — 2026-10-30 (blocked before VPS contact)
+## Governed production release — 2026-10-30 (deployed)
 
 - **Release candidate:** commit `20e1ec2c75d39d4ce04085cb88f3c24ffce2cf5d` on `codex/vps-migration-recovery-expanded` was committed and pushed after local full test/build verification.
-- **Workflow evidence:** [run 40987722201](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40987722201) passed dependency installation, Prisma client generation, isolated database schema verification, all unit tests, integration lifecycle verification, financial-control lint, production build, release packaging, explicit production-migration confirmation, and production `prisma migrate deploy`/status/schema verification.
-- **Blocker:** the workflow stopped at **Configure SSH** before archive upload or VPS activation because the GitHub production environment has no `VPS_SSH_HOST_KEY` secret. `VPS_SSH_KEY`, `VPS_HOST`, and `VPS_USER` were present. This is an intentional no-contact failure: the workflow refuses an unpinned SSH host and did not change PM2, Nginx, or the public application.
-- **Exact next action:** obtain the target VPS's SSH host-key entry through a trusted Hostinger/server-console channel, add it as the `VPS_SSH_HOST_KEY` production secret, then re-run this workflow for commit `20e1ec2`. Do not substitute runtime `ssh-keyscan` output for that pin.
+- **Initial blocked run:** [run 40987722201](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40987722201) passed every source/database gate but stopped at SSH configuration before contacting the VPS because `VPS_SSH_HOST_KEY` was absent. The existing verified host pin from this Mac was placed in the GitHub Production environment; no runtime `ssh-keyscan` was used.
+- **Successful release:** [run 40988309957](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40988309957) passed dependency installation, Prisma client generation, isolated schema verification, all unit and integration tests, financial-control lint, production build, release packaging, production `prisma migrate deploy`/status/schema verification, SSH pin verification, VPS upload, protected runtime upload, activation, and its release-identity health gate.
+- **Independent live verification:** `https://www.hotelsvendors.com/api/health` returned `ok: true`, `database: ready`, `authorization: configured`, `sourceCommit: e122a4e734df84af81d5b762675d3d79a0d6fb6e`, and matching `releaseId: github-e122a4e734df84af81d5b762675d3d79a0d6fb6e` after activation.
 
 ## Grok branch reconciliation — 2026-10-30 (local candidate; not deployed)
 
