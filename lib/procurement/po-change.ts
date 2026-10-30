@@ -45,9 +45,17 @@ export function decidePoChange(input: {
   return { ok: true, action: "PROPOSE", changed };
 }
 
-export function pendingPoChange(snapshot: unknown): { changed: string[]; orderItemId: string } | null {
+function readProposed(value: unknown): PoTerms | null {
+  if (!value || typeof value !== "object") return null;
+  const proposed = value as { quantity?: unknown; unitPrice?: unknown; deliveryDate?: unknown };
+  if (typeof proposed.quantity !== "number" || typeof proposed.unitPrice !== "number") return null;
+  if (!(proposed.deliveryDate === null || typeof proposed.deliveryDate === "string")) return null;
+  return { quantity: proposed.quantity, unitPrice: proposed.unitPrice, deliveryDate: proposed.deliveryDate };
+}
+
+export function pendingPoChange(snapshot: unknown): { changed: string[]; orderItemId: string; proposed: PoTerms | null } | null {
   if (!snapshot || typeof snapshot !== "object") return null;
-  const poChange = (snapshot as { poChange?: { acceptedAt?: string | null; changed?: string[]; orderItemId?: string } }).poChange;
+  const poChange = (snapshot as { poChange?: { acceptedAt?: string | null; changed?: string[]; orderItemId?: string; proposed?: unknown } }).poChange;
   if (!poChange || poChange.acceptedAt || !poChange.orderItemId) return null;
-  return { changed: poChange.changed ?? [], orderItemId: poChange.orderItemId };
+  return { changed: poChange.changed ?? [], orderItemId: poChange.orderItemId, proposed: readProposed(poChange.proposed) };
 }
