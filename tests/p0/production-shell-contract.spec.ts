@@ -57,6 +57,13 @@ describe("production shell and authorization contracts", () => {
     expect(productionCsp).not.toContain("unsafe-eval");
   });
 
+  it("dynamically renders the shared layout so Next can attach the CSP nonce to Clerk and application scripts", () => {
+    const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+    expect(layout).toContain('import { connection } from \'next/server\'');
+    expect(layout).toContain("await connection();");
+    expect(layout).toMatch(/<html lang="en"><body><ClerkProvider/);
+  });
+
   it("reconciles and verifies the live Nginx CSP instead of allowing a stale override", () => {
     const deploy = readFileSync(join(root, ".github/workflows/deploy-production.yml"), "utf8");
     expect(deploy).toContain("scripts/reconcile-nginx-csp.mjs");

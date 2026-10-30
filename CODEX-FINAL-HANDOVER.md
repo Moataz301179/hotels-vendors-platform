@@ -618,3 +618,11 @@
   production-verification step before any release workflow is manually invoked.
   That step must retain the governed `3008` topology and active health gate;
   it is outside this PR documentation/test update.
+## Clerk signup CSP repair — 2026-10-30 (candidate)
+
+- **Observed live defect:** both `/hotels/signup` and `/suppliers/signup` rendered their role-specific marketing copy but no Clerk inputs or action controls. Browser inspection found no `.cl-rootBox`, no inputs, and `window.Clerk` remained undefined after the Clerk loader was requested.
+- **Cause:** the live response CSP required a per-request nonce while the pages were statically rendered. Next therefore emitted framework and client scripts with no nonce, so the strict `script-src ... 'strict-dynamic'` policy blocked the client bundle that mounts Clerk.
+- **Source correction:** `app/layout.tsx` now waits for `connection()` before rendering. This makes the shared layout request-rendered, allowing Next 16 to apply the nonce forwarded by `proxy.ts` to framework and Clerk scripts. The `ClerkProvider` is also placed inside the required `html > body` root-layout structure.
+- **Verification:** `npx vitest run tests/p0/production-shell-contract.spec.ts` passed (9 assertions); `npx tsc --noEmit` passed; `SESSION_SECRET=<ephemeral> npm run build` passed; and `git diff --check` passed. The temporary build value was not saved or printed.
+- **Next action:** commit, push, and run the governed production workflow. After activation, verify the live CSP nonce appears on framework scripts and that both role signup pages render Clerk controls without creating a user.
+
