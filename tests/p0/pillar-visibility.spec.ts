@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {allocateFreight} from '@/lib/logistics/freight-allocation';
 import {compareLandedCost,reportedSavings} from '@/lib/procurement/landed-cost';
-import {projectTransactionStatus} from '@/lib/procurement/transaction-status';
+import {projectFactoringStatus,projectTransactionStatus} from '@/lib/procurement/transaction-status';
 
 const line={quantity:10,unitPrice:100,taxRate:0.14,freight:20,financeFee:0,hvFee:0,specificationMatch:true,paymentTermDays:45};
 
@@ -11,4 +11,5 @@ describe('pillar visibility',()=>{
  it('does not present potential or realized amounts as a saving',()=>{expect(reportedSavings(250)).toEqual({verifiedSavings:250,realizedSavings:null,potentialSavings:null,savingsBasis:'verified-ledger-only'})});
  it('allocates freight only for the same route, window, and handling',()=>{const a={orderId:'a',route:'HRG',window:'AM',handling:'DRY',weightKg:30,cubeM3:1};const b={...a,orderId:'b',weightKg:70};expect(allocateFreight([a,b],100,'weight')).toEqual({ok:true,rule:'weight',allocations:[{orderId:'a',amount:30},{orderId:'b',amount:70}]});expect(allocateFreight([a,{...b,route:'SSH'}],100,'weight')).toMatchObject({ok:false,code:'NOT_CONSOLIDATABLE'})});
  it('freezes the status on an exception or a rejected ETA invoice',()=>{const base={requested:true,approved:true,poIssued:true,fulfilled:true,received:true,etaStatus:'valid' as const,funder:'accepted' as const,maturityReached:false,settled:false,exception:null};expect(projectTransactionStatus(base).status).toBe('FUNDER_ACCEPTED');expect(projectTransactionStatus({...base,exception:'RECEIVER_DISPUTE_OPEN'})).toEqual({status:'RECEIVER_DISPUTE_OPEN',frozen:true});expect(projectTransactionStatus({...base,etaStatus:'cancelled'}).frozen).toBe(true)});
+ it('maps a recorded funder request without letting HotelsVendors disburse it',()=>{expect(projectFactoringStatus('APPROVED')).toEqual({status:'FUNDER_ACCEPTED',frozen:false});expect(projectFactoringStatus('DISBURSED')).toEqual({status:'DISBURSEMENT_CONFIRMED',frozen:false});expect(projectFactoringStatus('REJECTED')).toEqual({status:'FUNDER_REJECTED',frozen:true});expect(projectFactoringStatus('UNKNOWN')).toEqual({status:'BLOCKED',frozen:true})});
 });
