@@ -7,7 +7,7 @@ export async function GET() {
   const user = await getActor();
   if (!user) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   const supplierScope = user.platformRole === "SUPPLIER" ? { supplierId: user.supplierId || "__unassigned__" } : { tenantId: user.tenantId };
-  const [orders, rfqs, opportunities, savings, products, suppliers, shipments, fundingRequests] = await Promise.all([
+  const [orders, rfqs, opportunities, savings, products, suppliers, shipments, fundingRequests, funderConfirmedPayouts] = await Promise.all([
     prisma.order.count({ where: { ...supplierScope, deletedAt: null } }),
     prisma.rfqRequest.count({ where: { ...supplierScope, deletedAt: null, status: { in: ["PENDING", "QUOTED"] } } }),
     prisma.opportunity.count({ where: { tenantId: user.tenantId, deletedAt: null, status: { notIn: ["CLOSED", "VERIFIED"] } } }),
@@ -19,6 +19,7 @@ export async function GET() {
     prisma.supplier.count({ where: { tenantId: user.tenantId, deletedAt: null, status: "ACTIVE" } }),
     prisma.shipment.count({ where: { tenantId: user.tenantId, deletedAt: null } }),
     prisma.factoringRequest.count({ where: { tenantId: user.tenantId, deletedAt: null } }),
+    prisma.factoringRequest.count({ where: { tenantId: user.tenantId, deletedAt: null, status: "DISBURSED" } }),
   ]);
   const verified = savings._sum.verifiedAmount == null ? null : Number(savings._sum.verifiedAmount);
   return NextResponse.json({
@@ -29,6 +30,7 @@ export async function GET() {
       rfqs,
       shipments,
       fundingRequests,
+      funderConfirmedPayouts,
       opportunities,
       activeProducts: products,
       activeSuppliers: suppliers,
