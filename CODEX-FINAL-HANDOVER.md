@@ -626,3 +626,11 @@
 - **Verification:** `npx vitest run tests/p0/production-shell-contract.spec.ts` passed (9 assertions); `npx tsc --noEmit` passed; `SESSION_SECRET=<ephemeral> npm run build` passed; and `git diff --check` passed. The temporary build value was not saved or printed.
 - **Next action:** commit, push, and run the governed production workflow. After activation, verify the live CSP nonce appears on framework scripts and that both role signup pages render Clerk controls without creating a user.
 
+## Clerk role-auth routing repair — 2026-10-30 (candidate)
+
+- **Scope:** Clerk continues to own authentication for every platform role. Hotel and Vendor remain the only public registration paths; carrier and funder accounts remain provisioned partner roles and may sign in normally once provisioned.
+- **Observed state:** live Clerk controls show Google and Apple on both role signups and the shared login. The prior client-rendering/CSP failure was already repaired in runtime source `576e7ce`.
+- **Correction:** all Clerk completions now first pass through `/auth/continue`. The server creates the scoped public-registration record where appropriate, sends pending registrations to `/onboarding`, and only sends active users to a safe same-origin return path. The shared login uses Clerk redirect OAuth, disables opaque OAuth sign-up (`transferable={false}`), and routes new users to the role-selection page rather than silently assigning an OAuth sign-in to a default role.
+- **Verification:** `npx vitest run tests/p0/clerk-auth-routing.spec.ts tests/p0/production-shell-contract.spec.ts` passed (11 assertions); `npx tsc --noEmit` passed; `SESSION_SECRET=<ephemeral> npm run build` passed; and `git diff --check` passed. No Clerk user, provider, OAuth credential, or production database record was created or modified during validation.
+- **Next action:** deploy this source revision, then verify Google and Apple callbacks with controlled non-production identities for a Hotel, Vendor, and provisioned partner account. Do not use a production identity for browser automation.
+
