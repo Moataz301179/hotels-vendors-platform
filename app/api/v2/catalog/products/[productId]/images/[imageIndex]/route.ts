@@ -9,20 +9,17 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 export async function GET(_request: Request, { params }: { params: Promise<{ productId: string; imageIndex: string }> }) {
   const actor = await getActor();
   if (!actor) return Response.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-  if (actor.platformRole !== "HOTEL" && actor.platformRole !== "ADMIN") return Response.json({ error: "BUYER_CATALOG_ACCESS_REQUIRED" }, { status: 403 });
+  if (actor.platformRole !== "HOTEL") return Response.json({ error: "BUYER_CATALOG_ACCESS_REQUIRED" }, { status: 403 });
 
   const { productId, imageIndex } = await params;
   const index = Number(imageIndex);
   if (!Number.isSafeInteger(index) || index < 0) return Response.json({ error: "CATALOG_IMAGE_NOT_FOUND" }, { status: 404 });
 
-  let categoryScope: Prisma.ProductWhereInput = {};
-  if (actor.platformRole === "HOTEL") {
-    if (!actor.departmentId) return Response.json({ error: "CATALOG_IMAGE_NOT_FOUND" }, { status: 404 });
-    const grants = await prisma.departmentCategoryAccess.findMany({ where: { departmentId: actor.departmentId, revokedAt: null }, select: { category: true } });
-    const categories = [...new Set(grants.map((grant) => grant.category))];
-    if (!categories.length) return Response.json({ error: "CATALOG_IMAGE_NOT_FOUND" }, { status: 404 });
-    categoryScope = { category: { in: categories } };
-  }
+  if (!actor.departmentId) return Response.json({ error: "CATALOG_IMAGE_NOT_FOUND" }, { status: 404 });
+  const grants = await prisma.departmentCategoryAccess.findMany({ where: { departmentId: actor.departmentId, revokedAt: null }, select: { category: true } });
+  const categories = [...new Set(grants.map((grant) => grant.category))];
+  if (!categories.length) return Response.json({ error: "CATALOG_IMAGE_NOT_FOUND" }, { status: 404 });
+  const categoryScope: Prisma.ProductWhereInput = { category: { in: categories } };
 
   const product = await prisma.product.findFirst({
     where: { id: productId, status: "ACTIVE", deletedAt: null, source: { not: "FIXTURE" }, supplier: { status: "ACTIVE", isVerified: true, deletedAt: null }, ...categoryScope },

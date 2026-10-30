@@ -91,11 +91,13 @@ export function RequirementBasket() {
     setStatus('submitting');
     setMessage('');
     const recordedIds: string[] = [];
+    const submissionItems=items.map((item)=>item.idempotencyKey?item:{...item,idempotencyKey:crypto.randomUUID()});
+    updateItems(submissionItems);
     try {
-      for (const item of resolvedItems) {
+      for (const item of resolvedItems.map((item)=>submissionItems.find((candidate)=>candidate.catalogReferenceId===item.catalogReferenceId)!)) {
         await requestJson('/api/v2/rfq', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', 'x-idempotency-key': item.idempotencyKey! },
           body: JSON.stringify({
             catalogReferenceId: item.catalogReferenceId,
             quantity: item.quantity,

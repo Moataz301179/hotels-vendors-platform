@@ -27,6 +27,12 @@ describe('catalogue-reference basket', () => {
     expect(setCatalogReferenceBasketQuantity([{ catalogReferenceId: 'directory-reference-1', quantity: 2 }], 'directory-reference-1', 0)).toEqual([]);
   });
 
+  it('keeps a valid retry key but clears it when the submitted quantity changes', () => {
+    const idempotencyKey = 'basket-retry-key-0001';
+    expect(parseCatalogReferenceBasket(JSON.stringify([{ catalogReferenceId: 'directory-reference-1', quantity: 2, idempotencyKey }]))).toEqual([{ catalogReferenceId: 'directory-reference-1', quantity: 2, idempotencyKey }]);
+    expect(setCatalogReferenceBasketQuantity([{ catalogReferenceId: 'directory-reference-1', quantity: 2, idempotencyKey }], 'directory-reference-1', 3)).toEqual([{ catalogReferenceId: 'directory-reference-1', quantity: 3, idempotencyKey: undefined }]);
+  });
+
   it('keeps unsubmitted selections after a partial RFQ submission', () => {
     const basket = [
       { catalogReferenceId: 'directory-reference-1', quantity: 2 },

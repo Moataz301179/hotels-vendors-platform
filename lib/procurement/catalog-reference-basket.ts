@@ -1,6 +1,7 @@
 export type CatalogReferenceBasketItem = {
   catalogReferenceId: string;
   quantity: number;
+  idempotencyKey?: string;
 };
 
 export const CATALOG_REFERENCE_BASKET_STORAGE_KEY = 'hv.catalogue-reference-basket.v1';
@@ -40,7 +41,7 @@ export function setCatalogReferenceBasketQuantity(
   const id = catalogReferenceId.trim();
   if (!validReferenceId(id)) return items;
   if (!Number.isInteger(quantity) || quantity <= 0) return items.filter((item) => item.catalogReferenceId !== id);
-  return items.map((item) => item.catalogReferenceId === id ? { ...item, quantity } : item);
+  return items.map((item) => item.catalogReferenceId === id ? { ...item, quantity, idempotencyKey: undefined } : item);
 }
 
 export function removeCatalogReferenceBasketItems(
@@ -61,7 +62,10 @@ export function parseCatalogReferenceBasket(raw: string | null): CatalogReferenc
       const value = candidate as Record<string, unknown>;
       if (typeof value.catalogReferenceId !== 'string' || typeof value.quantity !== 'number') return items;
       if (!Number.isInteger(value.quantity) || value.quantity <= 0) return items;
-      return addCatalogReferenceToBasket(items, value.catalogReferenceId, value.quantity);
+      const next=addCatalogReferenceToBasket(items, value.catalogReferenceId, value.quantity);
+      const idempotencyKey=typeof value.idempotencyKey==='string'&&/^[-A-Za-z0-9._:]{16,192}$/.test(value.idempotencyKey)?value.idempotencyKey:null;
+      if(!idempotencyKey)return next;
+      return next.map((item)=>item.catalogReferenceId===value.catalogReferenceId?{...item,idempotencyKey}:item);
     }, []);
   } catch {
     return [];

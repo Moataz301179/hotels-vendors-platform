@@ -57,6 +57,14 @@ describe('observed market comparison', () => {
     expect(m.opportunityCreate).not.toHaveBeenCalled();
   });
 
+  it('does not allow an administrator to run a buyer market comparison', async () => {
+    m.actor.mockResolvedValue({ id: 'admin-1', tenantId: 'platform', platformRole: 'ADMIN' });
+    const response = await POST(request({ query: 'towel', quantity: 10 }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'HOTEL_ROLE_REQUIRED' });
+    expect(m.compare).not.toHaveBeenCalled();
+  });
+
   it('returns anonymous market-reference terms without leaking an observed supplier or source', async () => {
     const response = await POST(request({ query: 'towel', quantity: 10 }));
 
