@@ -10,7 +10,7 @@ const sharedAccount: NavigationItem[] = [
 
 const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
   HOTEL: [
-    { label: 'Hotel operations', items: [{ href: '/dashboard', label: 'Today' }, { href: '/workspace/marketplace', label: 'Source supplies' }, { href: '/orders', label: 'Orders & receiving' }] },
+    { label: 'Hotel operations', items: [{ href: '/dashboard', label: 'Today' }, { href: '/workspace/marketplace', label: 'Source supplies' }, { href: '/orders?view=approval', label: 'Approvals' }, { href: '/orders?view=receiving', label: 'Receiving' }] },
     { label: 'Plan and control', items: [{ href: '/intelligence', label: 'Market Compass' }, { href: '/demand-aggregation', label: 'Volume planning' }, { href: '/funding', label: 'Funding records' }] },
     { label: 'Organization', items: sharedAccount },
   ],
@@ -20,11 +20,11 @@ const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
     { label: 'Organization', items: sharedAccount },
   ],
   SHIPPING: [
-    { label: 'Carrier operations', items: [{ href: '/dashboard', label: 'Today' }, { href: '/carrier', label: 'Delivery tasks' }, { href: '/orders', label: 'Handoff records' }] },
+    { label: 'Carrier operations', items: [{ href: '/dashboard', label: 'Today' }, { href: '/carrier', label: 'Delivery tasks' }, { href: '/carrier/handoff', label: 'Handoff records' }] },
     { label: 'Organization', items: sharedAccount },
   ],
   FACTORING: [
-    { label: 'Funder operations', items: [{ href: '/dashboard', label: 'Today' }, { href: '/funding', label: 'Funding decisions' }, { href: '/orders', label: 'Authorized records' }] },
+    { label: 'Funder operations', items: [{ href: '/dashboard', label: 'Today' }, { href: '/funding', label: 'Funding records' }, { href: '/funding/evidence', label: 'Evidence' }] },
     { label: 'Organization', items: sharedAccount },
   ],
   ADMIN: [
