@@ -88,6 +88,7 @@ describe("production shell and authorization contracts", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
     expect(proxy).toContain("const clerkSecurityMiddleware");
     expect(proxy).toContain('pathname === "/api/v2/assistant"');
+    expect(proxy).toContain('pathname === "/api/health"');
     expect(proxy).toContain("return clerkSecurityMiddleware(security.csp)(securedRequest, event);");
     expect(proxy).not.toContain('cookies.get("__session")');
   });

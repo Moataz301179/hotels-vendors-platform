@@ -92,6 +92,15 @@ const clerkSecurityMiddleware = (csp: string) => clerkMiddleware(async (auth, re
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const security = securityContext(request);
   const securedRequest = security.request;
+
+  // Health is a non-authenticated liveness dependency for the immutable
+  // release preflight. It must not wait on Clerk before reporting whether the
+  // application/database process is alive; every interactive auth route still
+  // enters clerkSecurityMiddleware below.
+  if (securedRequest.nextUrl.pathname === "/api/health") {
+    return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
+  }
+
   return clerkSecurityMiddleware(security.csp)(securedRequest, event);
 }
 
