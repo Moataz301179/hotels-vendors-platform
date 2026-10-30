@@ -25,18 +25,27 @@ export default async function EtaCompliancePage() {
       deliveryDate: true,
       supplier: { select: { name: true } },
       hotel: { select: { name: true } },
+      invoices: { where: { deletedAt: null }, select: { id: true } },
     },
     orderBy: { updatedAt: "desc" },
     take: 100,
   });
   const now = new Date();
-  const rows = orders.map(order => ({ ...order, compliance: classifyEtaCompliance(order, now) }));
+  const rows = orders.map(order => ({
+    ...order,
+    compliance: classifyEtaCompliance(order, now),
+    counterparty: actor.platformRole === "SUPPLIER"
+      ? order.hotel.name
+      : actor.platformRole === "HOTEL" && order.invoices.length === 0
+        ? "Hidden until the invoice is recorded"
+        : order.supplier.name,
+  }));
   const attention = rows.filter(row => ["MISSING", "OVERDUE", "DUE_SOON"].includes(row.compliance));
 
   return <>
     <div className="eyebrow">Delivery control</div>
     <h1>ETA compliance</h1>
-    <p className="muted" style={{ maxWidth: 760 }}>Review recorded delivery commitments. An ETA is shown only when it was recorded on the order; missing information is never inferred.</p>
+    <p className="muted" style={{ maxWidth: 760 }}>Review recorded delivery commitments. An ETA is shown only when it was recorded on the order; missing information is never inferred. A hotel does not see the supplier name before an invoice is recorded.</p>
     <div className="grid4" style={{ marginTop: 28 }}>
       {([
         ["Orders monitored", rows.length, "#315d8a"],
@@ -48,7 +57,7 @@ export default async function EtaCompliancePage() {
     <section className="card workspace-table-wrap" style={{ padding: 24, marginTop: 24 }}>
       <h2>Recorded delivery commitments</h2>
       <p className="muted">Statuses are calculated from the stored order state and committed ETA at {now.toLocaleString()}.</p>
-      {rows.length ? <table className="table"><thead><tr><th>Order</th><th>{actor.platformRole === "SUPPLIER" ? "Hotel" : "Supplier"}</th><th>Order state</th><th>Committed ETA</th><th>Compliance</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}><td>{row.orderNumber}</td><td>{actor.platformRole === "SUPPLIER" ? row.hotel.name : row.supplier.name}</td><td>{row.status.replaceAll("_", " ")}</td><td>{row.estimatedDelivery ? row.estimatedDelivery.toLocaleString() : "Not recorded"}</td><td><span style={{ color: tone[row.compliance], fontWeight: 700 }}>{etaComplianceLabel[row.compliance]}</span></td></tr>)}</tbody></table> : <p className="workspace-empty">No orders are available for your organization yet.</p>}
+      {rows.length ? <table className="table"><thead><tr><th>Order</th><th>{actor.platformRole === "SUPPLIER" ? "Hotel" : "Supplier"}</th><th>Order state</th><th>Committed ETA</th><th>Compliance</th></tr></thead><tbody>{rows.map(row => <tr key={row.id}><td>{row.orderNumber}</td><td>{row.counterparty}</td><td>{row.status.replaceAll("_", " ")}</td><td>{row.estimatedDelivery ? row.estimatedDelivery.toLocaleString() : "Not recorded"}</td><td><span style={{ color: tone[row.compliance], fontWeight: 700 }}>{etaComplianceLabel[row.compliance]}</span></td></tr>)}</tbody></table> : <p className="workspace-empty">No orders are available for your organization yet.</p>}
     </section>
   </>;
 }
