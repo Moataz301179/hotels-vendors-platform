@@ -84,10 +84,12 @@ describe("production shell and authorization contracts", () => {
     expect(deploy).toContain("Active production process did not recover before activation");
   });
 
-  it("runs Clerk context for every matched route, including public auth completion", () => {
+  it("runs Clerk context for interactive auth and protected routes without delaying public liveness", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
     expect(proxy).toContain("const clerkSecurityMiddleware");
-    expect(proxy).toContain('pathname === "/api/v2/assistant"');
+    expect(proxy).toContain("CLERK_CONTEXT_PUBLIC_PATHS");
+    expect(proxy).toContain('"/auth/continue"');
+    expect(proxy).toContain('"/hotels/signup"');
     expect(proxy).toContain('pathname === "/api/health"');
     expect(proxy).toContain("return clerkSecurityMiddleware(security.csp)(securedRequest, event);");
     expect(proxy).not.toContain('cookies.get("__session")');

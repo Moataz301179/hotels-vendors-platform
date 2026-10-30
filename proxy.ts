@@ -18,6 +18,14 @@ const PUBLIC_PATHS = new Set([
   "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture",
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/static", "/favicon", "/logo", "/videos", "/manifest.json", "/sw.js", "/robots.txt", "/sitemap", "/api/webhooks"];
+const CLERK_CONTEXT_PUBLIC_PATHS = new Set([
+  "/login",
+  "/sign-in",
+  "/sign-up",
+  "/hotels/signup",
+  "/suppliers/signup",
+  "/auth/continue",
+]);
 
 function isPublic(pathname: string) {
   if(pathname.startsWith("/marketplace/")) return true;
@@ -86,9 +94,10 @@ const clerkSecurityMiddleware = (csp: string) => clerkMiddleware(async (auth, re
   return addSecurityHeaders(NextResponse.next({ request: { headers: request.headers } }), csp);
 });
 
-// Every request in the matcher runs through Clerk first. In particular, the
-// OAuth completion page uses auth() server-side and must receive Clerk's
-// request context even though it is not itself an access-controlled UI.
+// Interactive Clerk pages, OAuth completion, optional authenticated assistant
+// context, and protected routes run through Clerk. Public marketing/liveness
+// routes intentionally do not: neither rendering a public page nor answering
+// a health probe must depend on Clerk availability.
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const security = securityContext(request);
   const securedRequest = security.request;
@@ -98,6 +107,11 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
   // application/database process is alive; every interactive auth route still
   // enters clerkSecurityMiddleware below.
   if (securedRequest.nextUrl.pathname === "/api/health") {
+    return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
+  }
+
+  const pathname = securedRequest.nextUrl.pathname;
+  if (isPublic(pathname) && !CLERK_CONTEXT_PUBLIC_PATHS.has(pathname)) {
     return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
   }
 
