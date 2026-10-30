@@ -52,7 +52,8 @@ describe("production shell and authorization contracts", () => {
     expect(stagingCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://*.clerk.accounts.dev");
     expect(stagingCsp).toContain("worker-src 'self' blob:");
     expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
-    expect(proxy).toContain("return clerkSecurityMiddleware(security.csp)(securedRequest, event);");
+    expect(proxy).toContain("clerkSecurityMiddleware(security.csp)(securedRequest, event)");
+    expect(proxy).toContain("alignLoopbackRewrite(clerkResponse, securedRequest)");
     expect(productionCsp).not.toContain("unsafe-inline");
     expect(productionCsp).not.toContain("unsafe-eval");
   });
@@ -91,7 +92,8 @@ describe("production shell and authorization contracts", () => {
     expect(proxy).toContain('"/auth/continue"');
     expect(proxy).toContain('"/hotels/signup"');
     expect(proxy).toContain('pathname === "/api/health"');
-    expect(proxy).toContain("return clerkSecurityMiddleware(security.csp)(securedRequest, event);");
+    expect(proxy).toContain("clerkSecurityMiddleware(security.csp)(securedRequest, event)");
+    expect(proxy).toContain("alignLoopbackRewrite(clerkResponse, securedRequest)");
     expect(proxy).not.toContain('cookies.get("__session")');
   });
 

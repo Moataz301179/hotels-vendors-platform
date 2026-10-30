@@ -7,6 +7,7 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 import { buildClerkContentSecurityPolicy } from "@/lib/security/clerk-csp";
+import { alignLoopbackRewrite } from "@/lib/security/loopback-rewrite";
 import { isProtectedPage } from "@/lib/security/protected-page-routes";
 
 const PUBLIC_PATHS = new Set([
@@ -115,7 +116,9 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
     return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
   }
 
-  return clerkSecurityMiddleware(security.csp)(securedRequest, event);
+  const clerkResponse = await clerkSecurityMiddleware(security.csp)(securedRequest, event);
+  if (clerkResponse instanceof Response) return alignLoopbackRewrite(clerkResponse, securedRequest);
+  return clerkResponse;
 }
 
 export const config = {
