@@ -52,16 +52,14 @@ describe("production shell and authorization contracts", () => {
     expect(stagingCsp.split("; ").find((directive) => directive.startsWith("script-src"))).toContain("https://*.clerk.accounts.dev");
     expect(stagingCsp).toContain("worker-src 'self' blob:");
     expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
-    expect(proxy).toContain("if (isApiPath) return authMiddleware(security.csp)(securedRequest, event);");
+    expect(proxy).toContain("return clerkSecurityMiddleware(security.csp)(securedRequest, event);");
     expect(productionCsp).not.toContain("unsafe-inline");
     expect(productionCsp).not.toContain("unsafe-eval");
   });
 
-  it("dynamically renders the shared layout so Next can attach the CSP nonce to Clerk and application scripts", () => {
+  it("uses Clerk's dynamic renderer so its bootstrap receives the CSP nonce", () => {
     const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
-    expect(layout).toContain('import { connection } from \'next/server\'');
-    expect(layout).toContain("await connection();");
-    expect(layout).toMatch(/<html lang="en"><body><ClerkProvider/);
+    expect(layout).toContain("<ClerkProvider dynamic");
   });
 
   it("reconciles and verifies the live Nginx CSP instead of allowing a stale override", () => {
@@ -86,11 +84,12 @@ describe("production shell and authorization contracts", () => {
     expect(deploy).toContain("Active production process did not recover before activation");
   });
 
-  it("runs Clerk context without requiring a session for the public guidance assistant", () => {
+  it("runs Clerk context for every matched route, including public auth completion", () => {
     const proxy = readFileSync(join(root, "proxy.ts"), "utf8");
-    expect(proxy).toContain("optionalAssistantAuthMiddleware");
-    expect(proxy).toContain('if (pathname === "/api/v2/assistant") return optionalAssistantAuthMiddleware(security.csp)(securedRequest, event);');
-    expect(proxy).not.toContain('"/api/v2/"');
+    expect(proxy).toContain("const clerkSecurityMiddleware");
+    expect(proxy).toContain('pathname === "/api/v2/assistant"');
+    expect(proxy).toContain("return clerkSecurityMiddleware(security.csp)(securedRequest, event);");
+    expect(proxy).not.toContain('cookies.get("__session")');
   });
 
   it("keeps /register on the role-selection entry flow rather than a raw Clerk widget", () => {

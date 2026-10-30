@@ -1,5 +1,12 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Clerk strict-CSP and OAuth-completion repair — 2026-10-30 (release candidate)
+
+- **Verified defect:** A production HTML audit showed that the Clerk bootstrap script had no nonce while the response used `script-src 'nonce-…' 'strict-dynamic'`; browsers consequently block the bootstrap in a fresh session. The previous `connection()`-only change did not cause Clerk to render its nonce-aware server script.
+- **Changed scope:** Root `ClerkProvider` now uses its supported `dynamic` mode so it consumes the nonce forwarded by `proxy.ts`. The proxy now invokes Clerk middleware for every matched request before public/protected route decisions, which gives `/auth/continue` the Clerk request context required by its server-side actor resolution. The strict CSP remains in place; no `unsafe-inline` or `unsafe-eval` directive, migration, schema change, database write, or new authentication provider was added.
+- **Verification:** `npx vitest run tests/p0/production-shell-contract.spec.ts tests/p0/clerk-auth-routing.spec.ts` passed (2 files, 11 tests); `npx tsc --noEmit`, `git diff --check`, and `SESSION_SECRET=<ephemeral> npm run build` passed. The release still requires post-activation HTML/console verification that the Clerk bootstrap nonce equals the response CSP nonce and that the Clerk control renders.
+- **External provider gate:** The Clerk dashboard instance supplied during investigation is Development/test mode and cannot establish production OAuth configuration. It has Google using shared credentials and no Apple connection. Live HTML uses a distinct `pk_live_`/`clerk.hotelsvendors.com` instance. Before claiming Google/Apple production acceptance, open that actual live instance, configure the existing production Google/Apple credentials and callback/origin allowlists, then complete controlled real-provider callback tests. Do not create or substitute credentials without the owner.
+
 ## Governed production release — 2026-10-30 (deployed)
 
 - **Release candidate:** commit `20e1ec2c75d39d4ce04085cb88f3c24ffce2cf5d` on `codex/vps-migration-recovery-expanded` was committed and pushed after local full test/build verification.

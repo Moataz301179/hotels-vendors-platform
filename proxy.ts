@@ -48,8 +48,32 @@ function addSecurityHeaders(response: NextResponse, csp: string) {
   return response;
 }
 
-const authMiddleware = (csp: string) => clerkMiddleware(async (auth, request: NextRequest) => {
+const clerkSecurityMiddleware = (csp: string) => clerkMiddleware(async (auth, request: NextRequest) => {
   const { pathname, search } = request.nextUrl;
+  const host = request.headers.get("host") || "";
+
+  if (host.startsWith("invo.")) {
+    const url = request.nextUrl.clone();
+    if (pathname === "/") url.pathname = "/invo";
+    else if (!pathname.startsWith("/invo") && !pathname.startsWith("/api/")) url.pathname = `/invo${pathname}`;
+    return addSecurityHeaders(NextResponse.rewrite(url, { request: { headers: request.headers } }), csp);
+  }
+  if (pathname === "/demo" || pathname.startsWith("/demo/")) {
+    return addSecurityHeaders(NextResponse.redirect(new URL("/sandbox", request.url)), csp);
+  }
+
+  // Clerk runs for public routes too so it can establish and refresh session
+  // context for sign-in, sign-up, and OAuth completion. Authorization remains
+  // limited to protected application/API resources below.
+  if (isPublic(pathname) || pathname === "/api/v2/assistant") {
+    return addSecurityHeaders(NextResponse.next({ request: { headers: request.headers } }), csp);
+  }
+
+  const isApiPath = pathname.startsWith("/api/") || pathname.startsWith("/trpc/");
+  if (!isApiPath && !isProtectedPage(pathname)) {
+    return addSecurityHeaders(NextResponse.next({ request: { headers: request.headers } }), csp);
+  }
+
   const { isAuthenticated } = await auth();
   if (!isAuthenticated) {
     if (pathname.startsWith("/api/")) {
@@ -62,50 +86,13 @@ const authMiddleware = (csp: string) => clerkMiddleware(async (auth, request: Ne
   return addSecurityHeaders(NextResponse.next({ request: { headers: request.headers } }), csp);
 });
 
-// The public assistant may offer fixed, non-tenant guidance when signed out,
-// while authenticated requests can use the same endpoint for scoped records.
-// Clerk must still run here so auth() in the route has request context.
-const optionalAssistantAuthMiddleware = (csp: string) => clerkMiddleware(async (_auth, request: NextRequest) =>
-  addSecurityHeaders(NextResponse.next({ request: { headers: request.headers } }), csp),
-);
-
-// Do not run Clerk's request authentication pipeline on public pages/assets.
-// It is unnecessary for these routes and can stall SSR when Clerk config/network
-// is unhealthy. Protected requests still pass through verified Clerk auth below;
-// the session-cookie check is only an early routing optimization, never proof of identity.
+// Every request in the matcher runs through Clerk first. In particular, the
+// OAuth completion page uses auth() server-side and must receive Clerk's
+// request context even though it is not itself an access-controlled UI.
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const security = securityContext(request);
   const securedRequest = security.request;
-  const { pathname, search } = securedRequest.nextUrl;
-  const host = securedRequest.headers.get("host") || "";
-
-  if (host.startsWith("invo.")) {
-    const url = securedRequest.nextUrl.clone();
-    if (pathname === "/") url.pathname = "/invo";
-    else if (!pathname.startsWith("/invo") && !pathname.startsWith("/api/")) url.pathname = `/invo${pathname}`;
-    return addSecurityHeaders(NextResponse.rewrite(url, { request: { headers: securedRequest.headers } }), security.csp);
-  }
-  if (pathname === "/demo" || pathname.startsWith("/demo/")) {
-    return addSecurityHeaders(NextResponse.redirect(new URL("/sandbox", securedRequest.url)), security.csp);
-  }
-  if (pathname === "/api/v2/assistant") return optionalAssistantAuthMiddleware(security.csp)(securedRequest, event);
-  if (isPublic(pathname)) return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
-
-  const isApiPath = pathname.startsWith("/api/") || pathname.startsWith("/trpc/");
-  if (!isApiPath && !isProtectedPage(pathname)) return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
-
-  // API clients can present a verified Clerk bearer token without a browser
-  // session cookie. Let Clerk validate that token instead of rejecting it
-  // during the page-navigation optimization below.
-  if (isApiPath) return authMiddleware(security.csp)(securedRequest, event);
-
-  if (!securedRequest.cookies.get("__session")?.value) {
-    const url = new URL("/login", securedRequest.url);
-    url.searchParams.set("redirect_url", `${pathname}${search}`);
-    return addSecurityHeaders(NextResponse.redirect(url), security.csp);
-  }
-
-  return authMiddleware(security.csp)(securedRequest, event);
+  return clerkSecurityMiddleware(security.csp)(securedRequest, event);
 }
 
 export const config = {

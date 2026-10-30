@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import { connection } from 'next/server';
 import '@fontsource/plus-jakarta-sans/400.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
@@ -36,10 +35,7 @@ export const metadata: Metadata = {
   },
 };
 export default async function RootLayout({children}:{children:React.ReactNode}){
-  // The response CSP carries a unique nonce from proxy.ts. Rendering this
-  // layout only after a request arrives lets Next attach that nonce to its
-  // client bundles, including the Clerk loader used by the role sign-up pages.
-  await connection();
-
-  return <html lang="en"><body><ClerkProvider localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
+  // `dynamic` makes Clerk read the nonce forwarded by proxy.ts and attach it
+  // to the Clerk bootstrap script. This is required by our strict-dynamic CSP.
+  return <html lang="en"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
 }
