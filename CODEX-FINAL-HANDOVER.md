@@ -1,5 +1,12 @@
 # HotelsVendors production handover — 2026-10-17
 
+## Governed production release attempt — 2026-10-30 (blocked before VPS contact)
+
+- **Release candidate:** commit `20e1ec2c75d39d4ce04085cb88f3c24ffce2cf5d` on `codex/vps-migration-recovery-expanded` was committed and pushed after local full test/build verification.
+- **Workflow evidence:** [run 40987722201](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/40987722201) passed dependency installation, Prisma client generation, isolated database schema verification, all unit tests, integration lifecycle verification, financial-control lint, production build, release packaging, explicit production-migration confirmation, and production `prisma migrate deploy`/status/schema verification.
+- **Blocker:** the workflow stopped at **Configure SSH** before archive upload or VPS activation because the GitHub production environment has no `VPS_SSH_HOST_KEY` secret. `VPS_SSH_KEY`, `VPS_HOST`, and `VPS_USER` were present. This is an intentional no-contact failure: the workflow refuses an unpinned SSH host and did not change PM2, Nginx, or the public application.
+- **Exact next action:** obtain the target VPS's SSH host-key entry through a trusted Hostinger/server-console channel, add it as the `VPS_SSH_HOST_KEY` production secret, then re-run this workflow for commit `20e1ec2`. Do not substitute runtime `ssh-keyscan` output for that pin.
+
 ## Grok branch reconciliation — 2026-10-30 (local candidate; not deployed)
 
 - **Verified source:** local checkout `codex/vps-migration-recovery-expanded` at `9c0459b64598e4b597b37cbc18257b60fe76bf93`, with pre-existing owner work preserved. The independently pushed `origin/codex/pillar-visibility` branch was inspected against the actual source; it was not merged wholesale because its orders client contains a malformed state declaration and the branch also carries unrelated drawdown and purchase-order mutation work.
