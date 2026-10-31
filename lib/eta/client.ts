@@ -13,6 +13,7 @@ import type {
   EtaConfig,
   EtaDocumentStatus,
 } from "./types";
+import { getSigningBridge, type SigningBridge, LocalGatewayBridge, UnconfiguredSigningBridge } from "./signer-bridge";
 
 // ─────────────────────────────────────────
 // 1. CONFIGURATION
@@ -153,6 +154,8 @@ async function etaFetch(path: string, options: RequestInit = {}): Promise<Respon
   });
 }
 
+export { UnconfiguredSigningBridge, LocalGatewayBridge } from "./signer-bridge";
+
 function requireVerifiedEsealSubmissionBridge(): never {
   // ETA requires an issuer CAdES-BES signature embedded in every submitted
   // invoice. The USB token has been proven locally, but no approved bridge can
@@ -161,6 +164,13 @@ function requireVerifiedEsealSubmissionBridge(): never {
   // remains unresolved.
   throw new Error("ETA_HARDWARE_SIGNING_NOT_CONFIGURED: refusing unsigned document submission until the verified eSeal bridge is configured");
 }
+
+let cachedBridge: SigningBridge | null = null;
+
+// Re-export getSigningBridge from signer-bridge.ts to avoid duplicate declaration.
+// The function is already imported at the top of this file; this block is
+// intentionally removed to prevent TS2552/TS2440 conflicts.
+// export function getSigningBridge(): SigningBridge { ... }
 
 // ─────────────────────────────────────────
 // 4. API METHODS
@@ -171,6 +181,21 @@ function requireVerifiedEsealSubmissionBridge(): never {
  */
 export async function submitInvoice(payload: EtaInvoicePayload): Promise<EtaSubmissionResponse> {
   void payload;
+  // Submission is opt-in even when ETA credentials happen to be present in a
+  // runtime environment. This prevents a partially configured release from
+  // acquiring taxpayer tokens or attempting a document submission.
+  if (process.env.ETA_SUBMISSION_ENABLED !== "true") {
+    throw new Error("ETA_SUBMISSION_DISABLED: ETA document submission has not been explicitly enabled");
+  }
+
+  const bridge = getSigningBridge();
+  const signed = await bridge.sign(Buffer.from(JSON.stringify(payload)), 'SHA256');
+  if (!signed) {
+    throw new Error("ETA_SIGNING_FAILED: bridge did not return a signed document");
+  }
+
+  // The verified bridge is now required to complete the submission with the
+  // signed document.
   requireVerifiedEsealSubmissionBridge();
 
   // Kept below as the controlled integration path. It becomes reachable only

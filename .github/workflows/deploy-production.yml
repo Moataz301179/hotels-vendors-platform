@@ -29,6 +29,7 @@ jobs:
       ETA_CALLBACK_API_KEY: ${{ secrets.ETA_CALLBACK_API_KEY }}
       ETA_REGISTRATION_NUMBER: ${{ secrets.ETA_REGISTRATION_NUMBER }}
       ETA_ENVIRONMENT: ${{ vars.ETA_ENVIRONMENT }}
+      ETA_SUBMISSION_ENABLED: ${{ vars.ETA_SUBMISSION_ENABLED }}
       SESSION_SECRET: ci-only-not-used-by-clerk
       REDIS_URL: redis://127.0.0.1:6379
     services:
@@ -138,6 +139,7 @@ jobs:
             if [ -n "$ETA_CALLBACK_API_KEY" ]; then printf 'ETA_CALLBACK_API_KEY=%q\n' "$ETA_CALLBACK_API_KEY"; fi
             if [ -n "$ETA_REGISTRATION_NUMBER" ]; then printf 'ETA_REGISTRATION_NUMBER=%q\n' "$ETA_REGISTRATION_NUMBER"; fi
             case "$ETA_ENVIRONMENT" in preprod|production) printf 'ETA_ENVIRONMENT=%q\n' "$ETA_ENVIRONMENT" ;; "") ;; *) echo "ETA_ENVIRONMENT must be preprod or production" >&2; exit 1 ;; esac
+            case "$ETA_SUBMISSION_ENABLED" in true|false|"") printf 'ETA_SUBMISSION_ENABLED=%q\n' "${ETA_SUBMISSION_ENABLED:-false}" ;; *) echo "ETA_SUBMISSION_ENABLED must be true or false" >&2; exit 1 ;; esac
           } > hv-runtime.env
           scp hv-runtime.env "$VPS_USER@$VPS_HOST:/tmp/hv-runtime-${GITHUB_SHA}.env"
           rm -f hv-runtime.env
@@ -242,6 +244,14 @@ jobs:
           set +a
           case "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" in pk_live_*) ;; *) echo "Refusing to deploy without a live Clerk publishable key" >&2; exit 1;; esac
           case "$CLERK_SECRET_KEY" in sk_live_*) ;; *) echo "Refusing to deploy without a live Clerk secret key" >&2; exit 1;; esac
+           case "${ETA_SUBMISSION_ENABLED:-false}" in
+             false) ;;
+             true)
+               test "$ETA_ENVIRONMENT" = "production"
+               test -n "$ETA_API_URL" -a -n "$ETA_IDENTITY_URL" -a -n "$ETA_CLIENT_ID" -a -n "$ETA_CLIENT_SECRET" -a -n "$ETA_CALLBACK_API_KEY" -a -n "$ETA_REGISTRATION_NUMBER"
+               ;;
+             *) echo "ETA_SUBMISSION_ENABLED must be true or false" >&2; exit 1;;
+           esac
           (
             cd "$RELEASE"
             node scripts/verify-live-procurement-schema.mjs

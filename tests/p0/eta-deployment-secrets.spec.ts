@@ -10,6 +10,9 @@ describe("ETA deployment secret handling", () => {
       expect(workflow).toContain(`printf '${name}=%q\\n' "$${name}"`);
     }
     expect(workflow).toContain("ETA_ENVIRONMENT: ${{ vars.ETA_ENVIRONMENT }}");
+    expect(workflow).toContain("ETA_SUBMISSION_ENABLED: ${{ vars.ETA_SUBMISSION_ENABLED }}");
     expect(workflow).toContain('case "$ETA_ENVIRONMENT" in preprod|production)');
+    expect(workflow).toContain('case "$ETA_SUBMISSION_ENABLED" in true|false|"")');
+    expect(workflow).not.toContain("ETA_PRIVATE_KEY");
   });
 });

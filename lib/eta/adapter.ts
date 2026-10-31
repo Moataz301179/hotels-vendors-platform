@@ -9,6 +9,8 @@
  * Never hardcode credentials, taxpayer values, PINs, or hardware-token claims.
  */
 
+import { getSigningBridge } from "./signer-bridge";
+
 export interface ETAPayload {
   uuid: string;
   serialNumber: string;
@@ -87,14 +89,31 @@ export class ETAAdapter {
 
   async submitInvoice(payload: ETAPayload): Promise<ETAResponse> {
     void payload;
+    if (process.env.ETA_SUBMISSION_ENABLED !== "true") {
+      return {
+        status: "FAILED",
+        message: "ETA_SUBMISSION_DISABLED",
+        errors: ["ETA_SUBMISSION_DISABLED"],
+      };
+    }
     // ETA requires an issuer CAdES-BES signature embedded in each submitted
     // document. Do not allow this older adapter to bypass the verified eSeal
     // bridge while that bridge remains unavailable to the service.
-    return {
-      status: "FAILED",
-      message: "ETA_HARDWARE_SIGNING_NOT_CONFIGURED",
-      errors: ["ETA_HARDWARE_SIGNING_NOT_CONFIGURED"],
-    };
+    try {
+      const bridge = getSigningBridge();
+      await bridge.sign(Buffer.from(JSON.stringify(payload)), 'SHA256');
+    } catch (error) {
+      return {
+        status: "FAILED",
+        message: error instanceof Error ? error.message : "ETA_HARDWARE_SIGNING_NOT_CONFIGURED",
+        errors: [error instanceof Error ? error.message : "ETA_HARDWARE_SIGNING_NOT_CONFIGURED"],
+      };
+    }
+
+    requireVerifiedEsealSubmissionBridge();
+
+    // Kept below as the controlled integration path. It becomes reachable only
+    // when an approved bridge provides a canonical CAdES-BES-signed document.
   }
 
   async getStatus(uuid: string): Promise<ETAResponse> {

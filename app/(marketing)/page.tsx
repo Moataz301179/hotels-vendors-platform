@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { HovinReceivingPreview } from "@/components/marketing/hovin-receiving-preview";
+import { HeroCarousel } from "@/components/marketing/hero-carousel";
 import heroStyles from "./public-home-hero.module.css";
 import styles from "./public-home.module.css";
 
@@ -66,10 +67,7 @@ export default function MarketingPage() {
               </Link>)}
             </div>
           </div>
-          <figure className={`${styles.heroVisual} ${heroStyles.heroVisual}`}>
-            <Image src="/hv-procurement-team.webp" alt="Hospitality procurement team reviewing supplies and requirements in a hotel back-of-house area" fill sizes="(max-width: 950px) calc(100vw - 64px), 57vw" preload />
-            <figcaption><span>One shared record for the people who source, approve and receive.</span><small>Hotel teams · Vendors · evidence</small></figcaption>
-          </figure>
+          <HeroCarousel />
         </div>
       </section>
 

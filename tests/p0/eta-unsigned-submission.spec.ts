@@ -6,6 +6,7 @@ const original = {
   clientId: process.env.ETA_CLIENT_ID,
   clientSecret: process.env.ETA_CLIENT_SECRET,
   environment: process.env.ETA_ENVIRONMENT,
+  enabled: process.env.ETA_SUBMISSION_ENABLED,
 };
 
 afterEach(() => {
@@ -15,6 +16,7 @@ afterEach(() => {
     ETA_CLIENT_ID: original.clientId,
     ETA_CLIENT_SECRET: original.clientSecret,
     ETA_ENVIRONMENT: original.environment,
+    ETA_SUBMISSION_ENABLED: original.enabled,
   })) {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
@@ -30,6 +32,7 @@ describe("ETA submission signing gate", () => {
     process.env.ETA_CLIENT_ID = "client";
     process.env.ETA_CLIENT_SECRET = "secret";
     process.env.ETA_ENVIRONMENT = "preprod";
+    process.env.ETA_SUBMISSION_ENABLED = "true";
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -40,6 +43,7 @@ describe("ETA submission signing gate", () => {
   });
 
   it("does not let the legacy adapter bypass the unsigned-submission gate", async () => {
+    process.env.ETA_SUBMISSION_ENABLED = "true";
     process.env.ETA_API_URL = "https://api.eta.example.test";
     process.env.ETA_IDENTITY_URL = "https://identity.eta.example.test";
     process.env.ETA_CLIENT_ID = "client";
