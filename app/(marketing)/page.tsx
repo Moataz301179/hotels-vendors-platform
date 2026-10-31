@@ -54,11 +54,11 @@ export default function MarketingPage() {
       <section className={`${styles.hero} ${heroStyles.hero}`}>
         <div className={`${styles.shell} ${heroStyles.heroShell}`}>
           <div>
-            <p className={styles.eyebrow}>Hospitality sourcing network · Egypt</p>
-            <h1>Every operating need, on one controlled path.</h1>
-            <p className={styles.lead}>Move from a visual product reference to a controlled request, approval, delivery and receipt record without exposing private Vendor relationships at the discovery stage.</p>
+            <p className={styles.eyebrow}>Procurement network · Egypt</p>
+            <h1>Run procurement like an operating system.<em> Every handoff, one record.</em></h1>
+            <p className={styles.lead}>Sealed sourcing, approval authority, delivery evidence and ETA e-invoice intelligence — connected for hotels, suppliers, carriers and funders in the Egyptian market.</p>
             <div className={styles.actions}>
-              <Link href="/marketplace" className={styles.primary}>Explore sourcing areas <ArrowRight size={17} /></Link>
+              <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
               <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
             </div>
             <div className={styles.taskDock} aria-label="Start a procurement task">
