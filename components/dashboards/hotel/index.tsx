@@ -13,6 +13,7 @@ import {
 import { requestJson } from "@/lib/v2-http";
 import { MetricTile } from "@/components/dashboards/shared/metric-tile";
 import { StatusPill } from "@/components/dashboards/shared/status-pill";
+import { RoleAuditWidget } from "@/components/v2/role-audit-widget";
 import { EmptyState } from "@/components/dashboards/shared/empty-state";
 import { LoadingPage } from "@/components/dashboards/shared/loading-card";
 
@@ -135,6 +136,7 @@ export function HotelDashboard() {
           </ol>
           <p><Truck aria-hidden="true" /> Each step keeps its own organization-scoped record.</p>
         </aside>
+      <RoleAuditWidget />
       </section>
     </div>
   );

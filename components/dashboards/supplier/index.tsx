@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { requestJson } from "@/lib/v2-http";
 import { LoadingPage } from "@/components/dashboards/shared/loading-card";
+import { RoleAuditWidget } from "@/components/v2/role-audit-widget";
 
 interface DashboardMetrics {
   orders: number;
@@ -131,6 +132,7 @@ export function SupplierDashboard() {
           </ol>
           <p><TrendingUp aria-hidden="true" /> Each commercial response is recorded against the authorised buyer organisation and audited.</p>
         </aside>
+      <RoleAuditWidget />
       </section>
     </div>
   );

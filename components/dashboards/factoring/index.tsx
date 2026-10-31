@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { requestJson } from "@/lib/v2-http";
 import { LoadingPage } from "@/components/dashboards/shared/loading-card";
+import { RoleAuditWidget } from "@/components/v2/role-audit-widget";
 
 interface FundingData {
   fundingRequests: number;
@@ -130,6 +131,7 @@ export function FactoringDashboard() {
           </ol>
           <p><TrendingUp aria-hidden="true" /> The platform must not represent this as automatic underwriting, credit approval or funder disbursement.</p>
         </aside>
+      <RoleAuditWidget />
       </section>
     </div>
   );

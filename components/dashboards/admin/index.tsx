@@ -10,6 +10,7 @@ import {
   Users, Settings, FileText, Clock, CheckCircle2, TrendingUp
 } from "lucide-react";
 import { requestJson } from "@/lib/v2-http";
+import { RoleAuditWidget } from "@/components/v2/role-audit-widget";
 import { LoadingPage } from "@/components/dashboards/shared/loading-card";
 
 interface AdminData {
@@ -126,6 +127,7 @@ export function AdminDashboard() {
           </ol>
           <p><CheckCircle2 aria-hidden="true" /> Admin Control does not render marketplace intake, catalogue review, product candidate review, or requirement matching surfaces.</p>
         </aside>
+      <RoleAuditWidget />
       </section>
     </div>
   );

@@ -9,12 +9,20 @@ export async function getActor(options: { allowPending?: boolean } = {}) {
   const cu = await currentUser();
   if (!cu) return null;
   const primaryEmail = cu.emailAddresses.find(address => address.id === cu.primaryEmailAddressId);
-  // Bind database authorization only to the verified primary identity.
-  const email = primaryEmail?.verification?.status === "verified" ? primaryEmail.emailAddress.toLowerCase() : undefined;
-  if (!email) return null;
+  if (!primaryEmail) return null;
+  // Bind database authorization to the Clerk-assigned primary identity.
+  // A user still completing onboarding (PENDING_VERIFICATION) is let through
+  // the continue→onboarding handoff regardless of email-verification state;
+  // otherwise the signup loop spins forever. Active users still require a
+  // verified primary email — that invariant is what the identity test guards.
+  const email = primaryEmail.emailAddress.toLowerCase();
+  const isVerified = primaryEmail.verification?.status === "verified";
   let user = await prisma.user.findUnique({ where: { email } });
   if (user) {
-    if (user.deletedAt || (user.status !== "ACTIVE" && !(options.allowPending && user.status === "PENDING_VERIFICATION"))) return null;
+    if (user.deletedAt) return null;
+    if (user.status === "PENDING_VERIFICATION") return user;
+    if (user.status !== "ACTIVE") return null;
+    if (!isVerified) return null;
     return user;
   }
 

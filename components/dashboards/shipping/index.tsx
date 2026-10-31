@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { requestJson } from "@/lib/v2-http";
 import { LoadingPage } from "@/components/dashboards/shared/loading-card";
+import { RoleAuditWidget } from "@/components/v2/role-audit-widget";
 
 interface ShipmentSummary {
   total: number;
@@ -130,6 +131,7 @@ export function ShippingDashboard() {
           </ol>
           <p><CheckCircle2 aria-hidden="true" /> Each milestone keeps its own organization-scoped record.</p>
         </aside>
+      <RoleAuditWidget />
       </section>
     </div>
   );
