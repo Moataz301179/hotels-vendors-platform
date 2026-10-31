@@ -33,19 +33,9 @@ HotelsVendors had ETA compliance monitoring but **no way for a hotel to connect 
 ## Still open (not blockers, but not done)
 
 1. **HOVIN native mobile app** — requires a separate Expo/native project and store submission. The web receiving workflow (`app/api/v2/mobile/receipts/[orderId]/route.ts`) is functional; the native app is out of codebase scope.
-2. **ETA hardware signer** — `ETA_SUBMISSION_ENABLED=false` is intentional gating, not an error. The software path is fail-closed; hardware signing requires PKCS#12 certificate parsing which is marked "not yet implemented" in `lib/eta/signer.ts:137`. Needs a real ZATCA-issued certificate to complete.
+2. **ETA hardware signer** — `ETA_SUBMISSION_ENABLED=false` is intentional gating (the tax integration is Egypt's ETA, `invoice:submit_eta`, not Saudi ZATCA). The software path is fail-closed (`ETA_HARDWARE_SIGNING_NOT_CONFIGURED` throws from `lib/eta/signer.ts`); hardware signing requires PKCS#12 certificate parsing which is marked "not yet implemented" (`lib/eta/signer.ts:137`). Needs a real ZATCA-issued certificate to complete — deferred until the user provides the physical certificate.
 3. **Catalog product density** — the intelligence engine can discover and import products, but the live catalog depends on supplier onboarding and real supplier data. The import pipeline exists; the data is the bottleneck.
 4. **Clerk sign-in** — the Clerk SDK is configured (`@clerk/nextjs` in package.json, live keys in production env), but the sign-in/sign-up pages are Clerk-hosted (`/sign-in/[[...sign-in]]`, `/sign-up/[[...sign-up]]`). These work as-is; custom branding/flow would be a separate product decision.
 
 ## How to deploy this change
-```bash
-# 1. Build
-rm -rf .next && NODE_ENV=production npx next build
-
-# 2. Copy static into standalone
-cp -r .next/static .next/standalone/ && cp -r .next/server/* .next/standalone/.next/server/ && cp -r public .next/standalone/
-
-# 3. Deploy to VPS (187.77.181.3)
-cd /var/www/hotelsvendors-v2 && pm2 delete hotels-vendors && pm2 start ecosystem.config.js --env production
-```
-DELETE not restart — restart keeps stale module cache → 404 on all `/_next/static/chunks/*`. Copy static BEFORE start PM2.
+Production deploy is guarded by `.github/workflows/deploy-production.yml`: it runs ONLY from `refs/heads/main` with a green CI build (`require-main-ref` gate). The PR is draft (#43); merge is authorized once CI passes. After merge to `main`, the deploy workflow runs manually (`workflow_dispatch`) — the user must confirm a restorable Neon production branch exists (`production_migration_confirmation: APPLY_AFTER_NEON_BACKUP`). The deploy job uses `pm2 delete` (not restart) and copies `.next/static` before PM2 start; rollback uses `pm2 delete` followed by restoring the previous `ACTIVE_RELEASE` from `/var/www/hv-releases` or `/var/www/hv-archive` (see `recover-vps-migration.yml`).

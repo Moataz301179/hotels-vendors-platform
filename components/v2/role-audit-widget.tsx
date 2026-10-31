@@ -6,7 +6,7 @@ import { requestJson } from '@/lib/v2-http';
 import { ShieldCheck, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface AuditSummary {
-  recentActions: { id: string; createdAt: string; entityName: string | null; entityId: string; actionType: string | null; actorRole: string | null }[];
+  entries: { id: string; createdAt: string; entityName: string | null; entityId: string; actionType: string | null; actorRole: string | null }[];
   total: number;
   verification: { valid: boolean; totalEntries: number } | null;
 }
@@ -69,13 +69,13 @@ export function RoleAuditWidget() {
         </div>
       )}
 
-      {(data?.recentActions.length ?? 0) === 0 ? (
+      {(data?.entries.length ?? 0) === 0 ? (
         <p className="workspace-empty">No recorded actions for your delegated team yet.</p>
       ) : (
         <table className="table">
           <thead><tr><th>Time</th><th>Entity</th><th>Action</th><th>Actor role</th></tr></thead>
           <tbody>
-            {data?.recentActions.map(a => (
+            {data?.entries.map(a => (
               <tr key={a.id}>
                 <td className="text-xs text-foreground-muted">{new Date(a.createdAt).toLocaleString('en-GB')}</td>
                 <td>{a.entityName ?? 'Record'}<br /><span className="text-xs text-foreground-muted">{a.entityId.slice(0, 12)}…</span></td>

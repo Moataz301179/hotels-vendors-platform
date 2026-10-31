@@ -36,6 +36,11 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
   const isVerified = primaryEmail.verification?.status === "verified";
   let user = await prisma.user.findUnique({ where: { email } });
   if (user) {
+    // Trusted identity binding: a row carrying a Clerk subject must belong to
+    // this Clerk session. Without this, an unverified email could claim
+    // another person's existing pending record by email alone. Legacy rows
+    // created before Clerk binding (no clerkUserId) still match by email.
+    if (user.clerkUserId && user.clerkUserId !== userId) return null;
     if (user.deletedAt) return null;
     if (user.status === "PENDING_VERIFICATION") return allowPending ? user : null;
     if (user.status !== "ACTIVE") return null;
@@ -75,7 +80,7 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
         create: { roleId: role.id, permissionId: permission.id },
       });
     }
-    return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,platformRole,tenantId:tenant.id,roleId:role.id,status:"PENDING_VERIFICATION"}});
+    return tx.user.upsert({where:{email},update:{clerkUserId: userId},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,clerkUserId: userId,platformRole,tenantId:tenant.id,roleId:role.id,status:"PENDING_VERIFICATION"}});
   });
   return user;
 }

@@ -265,6 +265,7 @@ model User {
   canOverride                    Boolean                     @default(false)
   inviteToken                    String?                     @unique
   inviteExpiresAt                DateTime?
+  clerkUserId                    String?                    @unique
   invitedBy                      String?
   createdAt                      DateTime                    @default(now())
   updatedAt                      DateTime                    @updatedAt
