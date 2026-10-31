@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, production-transformation, release/demand-network-20261005, release/premium-mvp-20261005]
   pull_request:
-    branches: [main, production-transformation]
+    branches: [main, production-transformation, codex/vps-migration-recovery-expanded]
 
 concurrency:
   group: hv-ci-${{ github.ref }}
@@ -92,8 +92,11 @@ jobs:
           if [ "$ready" -ne 1 ]; then cat /tmp/hv-smoke.log; exit 1; fi
           grep -q '"ok":true' /tmp/hv-health.json
           for path in / /login /register /walkthrough /getting-started /marketplace /platform /solutions /security-overview /hotels/signup /suppliers/signup /carriers/portal /funders/portal /solutions/hotels /solutions/suppliers /solutions/carriers /solutions/funders; do
+            set +e
             status=$(curl -sS --max-time 10 -o /tmp/hv-smoke-page.html -w '%{http_code}' "http://127.0.0.1:3100$path")
-            if [ "$status" != '200' ]; then echo "Unexpected HTTP $status for $path"; cat /tmp/hv-smoke.log; exit 1; fi
+            curl_exit=$?
+            set -e
+            if [ "$curl_exit" -ne 0 ] || [ "$status" != '200' ]; then echo "Unexpected HTTP ${status:-none} for $path (curl exit $curl_exit)"; cat /tmp/hv-smoke.log; exit 1; fi
           done
           curl -fsS --max-time 10 http://127.0.0.1:3100/ -o /tmp/hv-home.html
           # Assert current, user-visible homepage markers rather than stale
