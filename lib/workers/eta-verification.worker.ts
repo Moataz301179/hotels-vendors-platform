@@ -3,8 +3,10 @@
  * HotelsVendors — Autonomous Onboarding Pipeline
  *
  * Listens for User.Registered events (via BullMQ onboarding-queue).
- * Validates Tax ID and Commercial Register against Egyptian Tax Authority
- * eInvoicing API. Updates user KYC status on completion.
+ * This worker previously treated the e-Invoicing surface as a taxpayer/KYC
+ * lookup. The public ETA integration SDK does not define that operation.
+ * It is deliberately disabled until an independently authorized KYC provider
+ * and its data-processing controls are integrated.
  *
  * Queue: onboarding-queue
  */
@@ -18,37 +20,28 @@ interface EtaVerificationPayload {
   tenantId: string;
 }
 
-const ETA_BASE_URL = process.env.ETA_API_URL || "https://invoicing.eta.gov.eg/einvoicingapi";
-const ETA_API_KEY = process.env.ETA_API_KEY || "";
+/**
+ * The onboarding worker is allowed to update KYC only from an authenticated
+ * upstream result.  It must never turn missing credentials into a successful
+ * mock verification: that would make an unconfigured production environment
+ * look compliant.
+ */
+export function etaVerificationConfigurationError(): string | null {
+  return "ETA e-Invoicing is not an onboarding/KYC verification API; configure an authorized KYC provider instead";
+}
 
 async function callEtaApi(endpoint: string, payload: Record<string, unknown>, timeout = 15000) {
-  if (!ETA_API_KEY) {
-    console.warn("[ETA Worker] ETA_API_KEY not configured — using mock mode");
-    return { status: "MOCK_VERIFIED", verified: true, source: "mock" };
-  }
-
-  const res = await fetch(`${ETA_BASE_URL}${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${ETA_API_KEY}`,
-      "X-Request-ID": `hv-${Date.now().toString(36)}`,
-    },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(timeout),
-  });
-
-  if (!res.ok) {
-    throw new Error(`ETA API returned ${res.status}: ${await res.text().catch(() => "")}`);
-  }
-
-  return res.json();
+  void endpoint;
+  void payload;
+  void timeout;
+  throw new Error(`ETA_VERIFICATION_UNSUPPORTED: ${etaVerificationConfigurationError()}`);
 }
 
 export async function processEtaVerification(payload: EtaVerificationPayload) {
   const { userId, taxId, commercialReg, tenantId } = payload;
 
-  console.log(`[ETA Worker] Verifying user ${userId} — Tax ID: ${taxId}, CR: ${commercialReg}`);
+  // Never print tax or commercial-registration identifiers to worker logs.
+  console.log(`[ETA Worker] Verifying onboarding tax registration for user ${userId}`);
 
   try {
     // 1. Verify Tax ID against ETA eInvoicing
@@ -65,7 +58,7 @@ export async function processEtaVerification(payload: EtaVerificationPayload) {
       queryType: "STATUS_CHECK",
     }).catch(() => ({ status: "UNKNOWN" }));
 
-    const verified = taxResult?.verified === true || taxResult?.status === "MOCK_VERIFIED";
+    const verified = taxResult?.verified === true;
     const status = verified ? "VERIFIED" : "FAILED";
 
     // 3. Update user KYC status
@@ -86,10 +79,8 @@ export async function processEtaVerification(payload: EtaVerificationPayload) {
         actorId: "ETA_VERIFICATION_WORKER",
         actionType: "UPDATE",
         changes: {
-          taxId,
-          commercialReg,
           verified,
-          etaStatus: taxResult?.status || "mock",
+          etaStatus: taxResult?.status || "UNKNOWN",
           processingTimeMs: Date.now() - (payload as any)._startTime || 0,
         },
       },
@@ -109,8 +100,6 @@ export async function processEtaVerification(payload: EtaVerificationPayload) {
         actionType: "UPDATE",
         changes: {
           error: err instanceof Error ? err.message : "Unknown error",
-          taxId,
-          commercialReg,
           status: "ERROR",
           retryAfter: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         },

@@ -34,4 +34,8 @@ export const metadata: Metadata = {
     images: ['/hero-clean.jpeg'],
   },
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <ClerkProvider localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><html lang="en"><body><LanguageProvider>{children}</LanguageProvider></body></html></ClerkProvider>}
+export default async function RootLayout({children}:{children:React.ReactNode}){
+  // `dynamic` makes Clerk read the nonce forwarded by proxy.ts and attach it
+  // to the Clerk bootstrap script. This is required by our strict-dynamic CSP.
+  return <html lang="en"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
+}

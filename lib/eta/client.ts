@@ -20,6 +20,7 @@ import type {
 
 const ETA_CONFIG: EtaConfig = {
   baseUrl: process.env.ETA_API_URL || "",
+  identityUrl: process.env.ETA_IDENTITY_URL || "",
   apiPath: "/documentsubmissions",
   apiVersion: "api/v1",
   positionId: process.env.ETA_POSITION_ID || "",
@@ -27,7 +28,7 @@ const ETA_CONFIG: EtaConfig = {
   privateKey: process.env.ETA_PRIVATE_KEY || "",
   clientId: process.env.ETA_CLIENT_ID || "",
   clientSecret: process.env.ETA_CLIENT_SECRET || "",
-  environment: (process.env.ETA_ENVIRONMENT as "sandbox" | "production") || "sandbox",
+  environment: (process.env.ETA_ENVIRONMENT as "sandbox" | "preprod" | "production") || "sandbox",
   timeoutMs: 30000,
   maxRetries: 3,
   retryDelayMs: 2000,
@@ -44,10 +45,11 @@ interface EtaTokenResponse {
 }
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let tokenRequestInFlight: Promise<string> | null = null;
 
 async function getAccessToken(): Promise<string> {
-  if (ETA_CONFIG.environment !== "production" || !ETA_CONFIG.baseUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
-    throw new Error("ETA_NOT_CONFIGURED_FOR_PRODUCTION");
+  if (!['preprod', 'production'].includes(ETA_CONFIG.environment) || !ETA_CONFIG.baseUrl || !ETA_CONFIG.identityUrl || !ETA_CONFIG.clientId || !ETA_CONFIG.clientSecret) {
+    throw new Error("ETA_NOT_CONFIGURED");
   }
 
   // Return cached token if valid
@@ -55,16 +57,39 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const url = `${ETA_CONFIG.baseUrl}/connect/token`;
+  // ETA access tokens are shared process-wide. A burst of invoice-status
+  // reads must not turn into concurrent client-credential requests: share the
+  // pending request and clear it after either a successful or failed attempt.
+  if (tokenRequestInFlight) {
+    return tokenRequestInFlight;
+  }
+
+  const tokenRequest = requestAccessToken();
+  tokenRequestInFlight = tokenRequest;
+  try {
+    return await tokenRequest;
+  } finally {
+    if (tokenRequestInFlight === tokenRequest) {
+      tokenRequestInFlight = null;
+    }
+  }
+}
+
+async function requestAccessToken(): Promise<string> {
+  // ETA publishes a dedicated identity-service host for access tokens. Never
+  // infer it from the invoicing API host: the two endpoints are distinct.
+  const url = new URL("/connect/token", ETA_CONFIG.identityUrl).toString();
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    client_id: ETA_CONFIG.clientId ?? "",
-    client_secret: ETA_CONFIG.clientSecret ?? "",
   });
+  const basicAuthorization = Buffer.from(`${ETA_CONFIG.clientId}:${ETA_CONFIG.clientSecret}`, "utf8").toString("base64");
 
   const response = await fetchWithRetry(url, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${basicAuthorization}`,
+    },
     body: body.toString(),
   });
 
@@ -128,6 +153,15 @@ async function etaFetch(path: string, options: RequestInit = {}): Promise<Respon
   });
 }
 
+function requireVerifiedEsealSubmissionBridge(): never {
+  // ETA requires an issuer CAdES-BES signature embedded in every submitted
+  // invoice. The USB token has been proven locally, but no approved bridge can
+  // yet create and embed that production signature from this service. Never
+  // acquire a taxpayer token or send an unsigned document while that boundary
+  // remains unresolved.
+  throw new Error("ETA_HARDWARE_SIGNING_NOT_CONFIGURED: refusing unsigned document submission until the verified eSeal bridge is configured");
+}
+
 // ─────────────────────────────────────────
 // 4. API METHODS
 // ─────────────────────────────────────────
@@ -136,6 +170,11 @@ async function etaFetch(path: string, options: RequestInit = {}): Promise<Respon
  * Submit an invoice to the ETA.
  */
 export async function submitInvoice(payload: EtaInvoicePayload): Promise<EtaSubmissionResponse> {
+  void payload;
+  requireVerifiedEsealSubmissionBridge();
+
+  // Kept below as the controlled integration path. It becomes reachable only
+  // when an approved bridge provides a canonical CAdES-BES-signed document.
   const response = await etaFetch("/documentsubmissions", {
     method: "POST",
     body: JSON.stringify({
@@ -272,7 +311,9 @@ export async function rejectInvoice(uuid: string, reason: string): Promise<void>
 
 export interface EtaCallbackPayload {
   uuid: string;
-  status: EtaDocumentStatus;
+  /** ETA notification status, for example Valid, Invalid, Rejected or Cancelled. */
+  status: string;
+  deliveryId?: string;
   dateTimeValidated?: string;
   rejectionReasons?: { error: string; errorCode: string }[];
 }

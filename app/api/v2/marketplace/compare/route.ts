@@ -13,7 +13,7 @@ const requestSchema = z.object({ query: z.string().trim().min(2).max(160), quant
 export async function POST(req: Request) {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-  if (actor.platformRole !== "HOTEL" && actor.platformRole !== "ADMIN") return NextResponse.json({ error: "HOTEL_ROLE_REQUIRED" }, { status: 403 });
+  if (actor.platformRole !== "HOTEL") return NextResponse.json({ error: "HOTEL_ROLE_REQUIRED" }, { status: 403 });
   const parsed = requestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Product query and positive quantity are required" }, { status: 400 });
   try {

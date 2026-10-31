@@ -22,6 +22,13 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      ETA_API_URL: ${{ secrets.ETA_API_URL }}
+      ETA_IDENTITY_URL: ${{ secrets.ETA_IDENTITY_URL }}
+      ETA_CLIENT_ID: ${{ secrets.ETA_CLIENT_ID }}
+      ETA_CLIENT_SECRET: ${{ secrets.ETA_CLIENT_SECRET }}
+      ETA_CALLBACK_API_KEY: ${{ secrets.ETA_CALLBACK_API_KEY }}
+      ETA_REGISTRATION_NUMBER: ${{ secrets.ETA_REGISTRATION_NUMBER }}
+      ETA_ENVIRONMENT: ${{ vars.ETA_ENVIRONMENT }}
       SESSION_SECRET: ci-only-not-used-by-clerk
       REDIS_URL: redis://127.0.0.1:6379
     services:
@@ -98,12 +105,15 @@ jobs:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_HOST_KEY: ${{ secrets.VPS_SSH_HOST_KEY }}
         run: |
-          test -n "$SSH_KEY" -a -n "$VPS_HOST" -a -n "$VPS_USER"
+          test -n "$SSH_KEY" -a -n "$VPS_HOST" -a -n "$VPS_USER" -a -n "$VPS_SSH_HOST_KEY"
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          printf '%s\n' "$VPS_SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -F "$VPS_HOST" -f ~/.ssh/known_hosts >/dev/null
       - name: Upload release
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -121,6 +131,13 @@ jobs:
           {
             printf 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=%q\n' "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
             printf 'CLERK_SECRET_KEY=%q\n' "$CLERK_SECRET_KEY"
+            if [ -n "$ETA_API_URL" ]; then printf 'ETA_API_URL=%q\n' "$ETA_API_URL"; fi
+            if [ -n "$ETA_IDENTITY_URL" ]; then printf 'ETA_IDENTITY_URL=%q\n' "$ETA_IDENTITY_URL"; fi
+            if [ -n "$ETA_CLIENT_ID" ]; then printf 'ETA_CLIENT_ID=%q\n' "$ETA_CLIENT_ID"; fi
+            if [ -n "$ETA_CLIENT_SECRET" ]; then printf 'ETA_CLIENT_SECRET=%q\n' "$ETA_CLIENT_SECRET"; fi
+            if [ -n "$ETA_CALLBACK_API_KEY" ]; then printf 'ETA_CALLBACK_API_KEY=%q\n' "$ETA_CALLBACK_API_KEY"; fi
+            if [ -n "$ETA_REGISTRATION_NUMBER" ]; then printf 'ETA_REGISTRATION_NUMBER=%q\n' "$ETA_REGISTRATION_NUMBER"; fi
+            case "$ETA_ENVIRONMENT" in preprod|production) printf 'ETA_ENVIRONMENT=%q\n' "$ETA_ENVIRONMENT" ;; "") ;; *) echo "ETA_ENVIRONMENT must be preprod or production" >&2; exit 1 ;; esac
           } > hv-runtime.env
           scp hv-runtime.env "$VPS_USER@$VPS_HOST:/tmp/hv-runtime-${GITHUB_SHA}.env"
           rm -f hv-runtime.env
@@ -279,7 +296,7 @@ jobs:
           fi
           health=""
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            health="$(curl -ksSf https://www.hotelsvendors.com/api/health 2>/dev/null || true)"
+            health="$(curl --fail --silent --show-error --proto '=https' --tlsv1.2 https://www.hotelsvendors.com/api/health 2>/dev/null || true)"
             test -n "$health" && break
             sleep 1
           done
@@ -321,7 +338,7 @@ jobs:
           # if the nonce-based application policy never becomes public.
           csp_headers=""
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            candidate_csp_headers="$(curl -ksSI --max-time 20 https://www.hotelsvendors.com/ 2>/dev/null || true)"
+            candidate_csp_headers="$(curl --fail --silent --show-error --proto '=https' --tlsv1.2 --head --max-time 20 https://www.hotelsvendors.com/ 2>/dev/null || true)"
             if verify_public_csp "$candidate_csp_headers" >/dev/null 2>&1; then
               csp_headers="$candidate_csp_headers"
               break

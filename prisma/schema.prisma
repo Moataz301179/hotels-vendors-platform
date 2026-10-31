@@ -2797,6 +2797,8 @@ model GoodsReceiptNote {
   receivedAt        DateTime  @default(now())
   inspectedAt       DateTime?
   acceptedAt        DateTime?
+  quantityVarianceAcceptedAt   DateTime?
+  quantityVarianceAcceptedById String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   uuid              String?   @unique(map: "GoodsReceiptNote_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -3911,6 +3913,7 @@ model RfqRequest {
   estimatedResponse  String?
   webhookPayload     String?
   webhookResponse    String?
+  idempotencyKey     String?
   tenantId           String
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
@@ -3927,6 +3930,7 @@ model RfqRequest {
   @@index([tenantId, catalogItemId])
   @@index([catalogStagingItemId])
   @@index([tenantId, buyerId, status])
+  @@unique([tenantId, buyerId, idempotencyKey])
 }
 
 /// Controlled category hierarchy for the supplier-neutral HoReCa master

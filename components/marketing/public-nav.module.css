@@ -1,4 +1,4 @@
-.nav { position:sticky; top:0; z-index:50; background:rgba(47,47,47,.92); color:#fff; border-bottom:1px solid rgba(255,255,255,.16); font-family:var(--font-display),sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+.nav { position:sticky; top:0; z-index:50; background:#2f2f2feb; color:#fff; border-bottom:1px solid rgba(255,255,255,.16); font-family:var(--font-display),sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
 .inner { max-width:1400px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:76px; padding:12px 32px; }
 .brand { display:flex; align-items:center; gap:10px; color:#fff; font-size:16px; font-weight:750; text-decoration:none; white-space:nowrap; }
 .brand :global(.hv-brand-lockup) { color:#fff; text-transform:uppercase; font-size:18px; letter-spacing:.04em; }
@@ -7,8 +7,8 @@
 .wordmark { width:165px; height:auto; }
 .desktop,.actions { display:flex; align-items:center; gap:24px; }
 .desktop a,.signIn { color:#fff; font-size:14px; text-decoration:none; min-height:44px; display:flex; align-items:center; }
-.join { display:flex; align-items:center; min-height:44px; padding:10px 16px; border-radius:var(--radius-control); background:var(--blue); color:var(--ink); border:1px solid var(--blue); font-size:14px; font-weight:650; text-decoration:none; white-space:nowrap; }
-.join:hover { background:var(--ice-100); border-color:var(--ink); }
+.join { display:flex; align-items:center; min-height:44px; padding:10px 16px; border-radius:var(--radius-control); background:#95c4f5; color:#172534; border:1px solid #95c4f5; font-size:14px; font-weight:650; text-decoration:none; white-space:nowrap; }
+.join:hover { background:#276aa9; border-color:#276aa9; color:#fff; }
 .dropdown { position:relative; }
 .dropdown summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:6px; list-style:none; font-size:14px; }
 .dropdown summary::-webkit-details-marker { display:none; }

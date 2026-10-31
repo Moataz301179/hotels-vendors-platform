@@ -69,14 +69,24 @@ export async function POST(request: Request) {
   if (new Set(verifiedProducts.map((product) => product.supplierId)).size !== verifiedProducts.length) return NextResponse.json({ error: "DISTINCT_VENDOR_PRODUCTS_REQUIRED" }, { status: 409 });
   for (const product of verifiedProducts) if (!await hasResolvedProductEvidence(prisma, product)) return NextResponse.json({ error: "RESOLVED_PRODUCT_EVIDENCE_REQUIRED" }, { status: 409 });
   const matched = await prisma.$transaction(async (tx) => {
+    const lock = await tx.rfqRequest.updateMany({
+      where: { id: requirement.id, tenantId: targetTenant.id, matchingStatus: { in: ['QUEUED', 'MATCHED'] }, status: 'PENDING', deletedAt: null },
+      data: { updatedAt: new Date() },
+    });
+    if (lock.count !== 1) return { kind: 'UNAVAILABLE' } as const;
+    const existingGrants = await tx.rfqSupplierAccess.findMany({ where: { rfqId: requirement.id, revokedAt: null }, select: { supplierId: true } });
+    const existingSupplierIds = new Set(existingGrants.map((grant) => grant.supplierId));
+    const newProducts = verifiedProducts.filter((product) => !existingSupplierIds.has(product.supplierId));
+    if (!newProducts.length) return { kind: 'ALREADY_ASSIGNED', total: existingGrants.length } as const;
+    if (existingGrants.length + newProducts.length > 5) return { kind: 'VENDOR_LIMIT_REACHED', total: existingGrants.length } as const;
     if (requirement.matchingStatus === 'QUEUED') {
       const update = await tx.rfqRequest.updateMany({
         where: { id: requirement.id, tenantId: targetTenant.id, productId: null, matchingStatus: "QUEUED", status: "PENDING", deletedAt: null },
         data: { productId: verifiedProducts[0].id, catalogItemId: verifiedProducts[0].id, supplierId: null, matchingStatus: "MATCHED" },
       });
-      if (update.count !== 1) return false;
+      if (update.count !== 1 && !existingGrants.length) return { kind: 'UNAVAILABLE' } as const;
     }
-    await Promise.all(verifiedProducts.map((product) => tx.rfqSupplierAccess.create({ data: { rfqId: requirement.id, supplierId: product.supplierId, productId: product.id, hotelTenantId: targetTenant.id, supplierTenantId: product.supplier.tenantId, grantedById: auth.actor.id } })));
+    await Promise.all(newProducts.map((product) => tx.rfqSupplierAccess.create({ data: { rfqId: requirement.id, supplierId: product.supplierId, productId: product.id, hotelTenantId: targetTenant.id, supplierTenantId: product.supplier.tenantId, grantedById: auth.actor.id } })));
     await appendAuditEntry({
       entityName: "RFQ",
       entityId: requirement.id,
@@ -84,10 +94,12 @@ export async function POST(request: Request) {
       tenantId: targetTenant.id,
       actorId: auth.actor.id,
       actorRole: auth.actor.platformRole,
-      changes: { kind: "SEALED_RFQ_VENDOR_ASSIGNMENT", itemName: requirement.itemName, unitOfMeasure: requirement.unitOfMeasure, productIds: verifiedProducts.map((product) => product.id), supplierIds: verifiedProducts.map((product) => product.supplierId), matchingStatus: "MATCHED" },
+      changes: { kind: "SEALED_RFQ_VENDOR_ASSIGNMENT", itemName: requirement.itemName, unitOfMeasure: requirement.unitOfMeasure, productIds: newProducts.map((product) => product.id), supplierIds: newProducts.map((product) => product.supplierId), matchingStatus: "MATCHED" },
     }, tx);
-    return true;
+    return { kind: 'MATCHED', total: existingGrants.length + newProducts.length } as const;
   });
-  if (!matched) return NextResponse.json({ error: "RFQ_ALREADY_MATCHED" }, { status: 409 });
-  return NextResponse.json({ matched: true, rfqId: requirement.id, assignedVendorCount: verifiedProducts.length });
+  if (matched.kind === 'UNAVAILABLE') return NextResponse.json({ error: "RFQ_ALREADY_MATCHED" }, { status: 409 });
+  if (matched.kind === 'VENDOR_LIMIT_REACHED') return NextResponse.json({ error: 'RFQ_VENDOR_ASSIGNMENT_LIMIT_REACHED', assignedVendorCount: matched.total }, { status: 409 });
+  if (matched.kind === 'ALREADY_ASSIGNED') return NextResponse.json({ matched: true, alreadyAssigned: true, rfqId: requirement.id, assignedVendorCount: matched.total });
+  return NextResponse.json({ matched: true, rfqId: requirement.id, assignedVendorCount: matched.total });
 }

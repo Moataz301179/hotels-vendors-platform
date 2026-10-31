@@ -46,9 +46,10 @@ let supplierId = '';
 let productId = '';
 let departmentId = '';
 
+let requestSequence = 0;
 const request = (url: string, body: unknown, method = 'POST') => new Request(url, {
   method,
-  headers: { 'content-type': 'application/json' },
+  headers: { 'content-type': 'application/json', ...(url.endsWith('/api/v2/rfq') ? { 'x-idempotency-key': `integration-rfq-${run}-${++requestSequence}` } : {}) },
   body: JSON.stringify(body),
 });
 

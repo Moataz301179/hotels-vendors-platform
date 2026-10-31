@@ -100,6 +100,8 @@ export interface EtaSubmissionResponse {
 
 export interface EtaConfig {
   baseUrl: string;
+  /** ETA identity-service base URL, separate from the invoicing API host. */
+  identityUrl?: string;
   apiPath: string;
   apiVersion?: string;
   positionId: string;
@@ -107,7 +109,7 @@ export interface EtaConfig {
   privateKey: string;
   clientId?: string;
   clientSecret?: string;
-  environment: "sandbox" | "production";
+  environment: "sandbox" | "preprod" | "production";
   maxRetries?: number;
   timeoutMs?: number;
   retryDelayMs?: number;
