@@ -63,7 +63,7 @@ describe("identity boundary: pending users and verified email", () => {
 
   it("getOnboardingActor ALLOWS a pending-verification user so the handoff can route to onboarding", async () => {
     m.current.mockResolvedValue(verifiedClerkUser("pending@example.com", { emailAddresses: [{ id: "primary", emailAddress: "pending@example.com", verification: { status: "unverified" } }] }));
-    m.user.mockResolvedValue({ id: "u", platformRole: "HOTEL", tenantId: "own", status: "PENDING_VERIFICATION", deletedAt: null });
+    m.user.mockResolvedValue({ id: "u", platformRole: "HOTEL", tenantId: "own", status: "PENDING_VERIFICATION", deletedAt: null, clerkUserId: "clerk-user" });
     expect(await getOnboardingActor()).toMatchObject({ status: "PENDING_VERIFICATION" });
   });
 
