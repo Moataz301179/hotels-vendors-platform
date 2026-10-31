@@ -12,7 +12,10 @@ const updateSchema = z.object({
   healthCheckUrl: z.string().url().optional(),
 });
 
-export async function GET(_req: Request, { params }: { params: { connectorId: string } }) {
+type RouteContext = { params: Promise<{ connectorId: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
+  const { connectorId } = await params;
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
 
@@ -24,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: { connectorId: st
   }
 
   const connector = await prisma.hotelConnector.findFirst({
-    where: { id: params.connectorId, tenantId: actor.tenantId, deletedAt: null },
+    where: { id: connectorId, tenantId: actor.tenantId, deletedAt: null },
     include: { hotel: { select: { id: true, name: true, city: true } } },
   });
   if (!connector) return NextResponse.json({ error: "CONNECTOR_NOT_FOUND" }, { status: 404 });
@@ -32,7 +35,8 @@ export async function GET(_req: Request, { params }: { params: { connectorId: st
   return NextResponse.json({ connector });
 }
 
-export async function PATCH(req: Request, { params }: { params: { connectorId: string } }) {
+export async function PATCH(req: Request, { params }: RouteContext) {
+  const { connectorId } = await params;
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
 
@@ -49,12 +53,12 @@ export async function PATCH(req: Request, { params }: { params: { connectorId: s
   }
 
   const existing = await prisma.hotelConnector.findFirst({
-    where: { id: params.connectorId, tenantId: actor.tenantId, deletedAt: null },
+    where: { id: connectorId, tenantId: actor.tenantId, deletedAt: null },
   });
   if (!existing) return NextResponse.json({ error: "CONNECTOR_NOT_FOUND" }, { status: 404 });
 
   const updated = await prisma.hotelConnector.update({
-    where: { id: params.connectorId },
+    where: { id: connectorId },
     data: {
       ...(parsed.data.status !== undefined ? { status: parsed.data.status } : {}),
       ...(parsed.data.config !== undefined ? { config: parsed.data.config as any } : {}),
@@ -77,7 +81,8 @@ export async function PATCH(req: Request, { params }: { params: { connectorId: s
   return NextResponse.json({ connector: updated });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { connectorId: string } }) {
+export async function DELETE(_req: Request, { params }: RouteContext) {
+  const { connectorId } = await params;
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
 
@@ -89,12 +94,12 @@ export async function DELETE(_req: Request, { params }: { params: { connectorId:
   }
 
   const existing = await prisma.hotelConnector.findFirst({
-    where: { id: params.connectorId, tenantId: actor.tenantId, deletedAt: null },
+    where: { id: connectorId, tenantId: actor.tenantId, deletedAt: null },
   });
   if (!existing) return NextResponse.json({ error: "CONNECTOR_NOT_FOUND" }, { status: 404 });
 
   await prisma.hotelConnector.update({
-    where: { id: params.connectorId },
+    where: { id: connectorId },
     data: { deletedAt: new Date() },
   });
 

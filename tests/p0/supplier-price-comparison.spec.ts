@@ -51,41 +51,41 @@ describe("supplier price comparison boundaries", () => {
 
   it("rejects unauthenticated comparison", async () => {
     m.actor.mockResolvedValue(null);
-    const response = await GET(makeRequest("p1"), { params: { productId: "p1" } });
+    const response = await GET(makeRequest("p1"), { params: Promise.resolve({ productId: "p1" }) });
     expect(response.status).toBe(401);
     expect(m.hotel).not.toHaveBeenCalled();
   });
 
   it("requires price:compare permission", async () => {
     m.permission.mockRejectedValue(new PermissionDeniedError("denied"));
-    const response = await GET(makeRequest("p1"), { params: { productId: "p1" } });
+    const response = await GET(makeRequest("p1"), { params: Promise.resolve({ productId: "p1" }) });
     expect(response.status).toBe(403);
     expect(m.product).not.toHaveBeenCalled();
   });
 
   it("returns 404 when product is missing", async () => {
     m.product.mockResolvedValue(null);
-    const response = await GET(makeRequest("missing"), { params: { productId: "missing" } });
+    const response = await GET(makeRequest("missing"), { params: Promise.resolve({ productId: "missing" }) });
     expect(response.status).toBe(404);
     expect(m.baseline).not.toHaveBeenCalled();
   });
 
   it("returns 409 when historical baseline is missing", async () => {
     m.baseline.mockResolvedValue(null);
-    const response = await GET(makeRequest("p1"), { params: { productId: "p1" } });
+    const response = await GET(makeRequest("p1"), { params: Promise.resolve({ productId: "p1" }) });
     expect(response.status).toBe(409);
     expect(m.comparisonCreate).not.toHaveBeenCalled();
   });
 
   it("returns 409 when supplier does not supply the product", async () => {
     m.product.mockResolvedValue({ id: "p1", supplierId: "supplier-2", unitPrice: 90, name: "Test Product", supplier: { priceFeedConsentStatus: "GRANTED", priceFeedConsentExpiresAt: new Date("2099-01-01") } });
-    const response = await GET(makeRequest("p1", "supplier-1"), { params: { productId: "p1" } });
+    const response = await GET(makeRequest("p1", "supplier-1"), { params: Promise.resolve({ productId: "p1" }) });
     expect(response.status).toBe(409);
     expect(m.comparisonCreate).not.toHaveBeenCalled();
   });
 
   it("creates a price comparison and returns it", async () => {
-    const response = await GET(makeRequest("p1", "supplier-1", 2), { params: { productId: "p1" } });
+    const response = await GET(makeRequest("p1", "supplier-1", 2), { params: Promise.resolve({ productId: "p1" }) });
     expect(response.status).toBe(200);
     expect(m.comparisonCreate.mock.calls[0][0].data).toMatchObject({
       tenantId: "tenant",
@@ -105,7 +105,7 @@ describe("supplier price comparison boundaries", () => {
 
   it("fails closed when supplier consent is revoked or expired", async () => {
     m.product.mockResolvedValue({ id: "p1", supplierId: "supplier-1", unitPrice: 90, name: "Test Product", supplier: { priceFeedConsentStatus: "REVOKED", priceFeedConsentExpiresAt: null } });
-    const response = await GET(makeRequest("p1"), { params: { productId: "p1" } });
+    const response = await GET(makeRequest("p1"), { params: Promise.resolve({ productId: "p1" }) });
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: "SUPPLIER_PRICE_FEED_NOT_CONSENTED" });
     expect(m.comparisonCreate).not.toHaveBeenCalled();

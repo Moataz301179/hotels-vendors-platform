@@ -10,7 +10,8 @@ const querySchema = z.object({
   quantity: z.coerce.number().int().positive().max(1_000_000).default(1),
 });
 
-export async function GET(request: Request, { params }: { params: { productId: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ productId: string }> }) {
+  const { productId } = await params;
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   try {
@@ -29,7 +30,6 @@ export async function GET(request: Request, { params }: { params: { productId: s
     return NextResponse.json({ error: "Valid quantity is required." }, { status: 400 });
   }
 
-  const { productId } = params;
   const { supplierId, quantity } = parsed.data;
 
   const hotel = await prisma.hotel.findFirst({
