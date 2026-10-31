@@ -23,6 +23,12 @@ export function RoleAuditWidget() {
       const result = await requestJson<AuditSummary>('/api/v2/audit/delegated?limit=5');
       setData(result);
     } catch (e) {
+      // A 403 means the caller lacks audit:read. The widget is rendered on
+      // dashboards for roles that may not hold that permission; fail silently
+      // rather than surfacing an authorization error to an operator who was
+      // never expecting an audit widget.
+      const status = (e as { status?: number })?.status;
+      if (status === 403) { setData(null); return; }
       setError(e instanceof Error ? e.message : 'Unable to load audit records.');
     } finally {
       setLoading(false);

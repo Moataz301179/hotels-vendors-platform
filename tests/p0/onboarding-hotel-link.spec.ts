@@ -12,7 +12,7 @@ const m = vi.hoisted(() => ({
   transaction: vi.fn(),
 }));
 
-vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
+vi.mock("@/lib/v2-auth", () => ({ getOnboardingActor: m.actor }));
 vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   tenant: { update: m.tenantUpdate },

@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getActor } from "@/lib/v2-auth";
+import { getOnboardingActor } from "@/lib/v2-auth";
 
 /**
  * Tenant-scoped operational signals. These are derived from persisted records
  * on every request; the UI never presents demo or locally fabricated alerts.
+ *
+ * Alerts are a read-only operational surface. They resolve the actor through
+ * the onboarding handoff so a user still completing their profile can see
+ * signals for their own tenant, but the returned data is strictly
+ * tenant-scoped and never grants access to other organizations.
  */
 export async function GET() {
-  const actor = await getActor({ allowPending: true });
+  const actor = await getOnboardingActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
 
   const now = new Date();

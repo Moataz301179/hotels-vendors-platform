@@ -1,9 +1,27 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import type { PlatformRole } from "@prisma/client";
+import type { PlatformRole, User } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-export async function getActor(options: { allowPending?: boolean } = {}) {
+export async function getActor(): Promise<User | null> {
+  return getActorInternal(false);
+}
+
+/**
+ * Onboarding-only actor resolution.
+ *
+ * Used exclusively by the Clerk completion handoff (/auth/continue) and the
+ * onboarding endpoint (/api/v2/onboarding). It returns a user who is still
+ * PENDING_VERIFICATION so the handoff can route them to onboarding instead of
+ * looping back to login. It is NOT a general bypass: it is never called from
+ * protected operational APIs or dashboards, and a user resolved this way is
+ * still blocked from every permissioned action by the route-level gates.
+ */
+export async function getOnboardingActor(): Promise<User | null> {
+  return getActorInternal(true);
+}
+
+async function getActorInternal(allowPending: boolean): Promise<User | null> {
   const { userId } = await auth();
   if (!userId) return null;
   const cu = await currentUser();
@@ -11,16 +29,15 @@ export async function getActor(options: { allowPending?: boolean } = {}) {
   const primaryEmail = cu.emailAddresses.find(address => address.id === cu.primaryEmailAddressId);
   if (!primaryEmail) return null;
   // Bind database authorization to the Clerk-assigned primary identity.
-  // A user still completing onboarding (PENDING_VERIFICATION) is let through
-  // the continue→onboarding handoff regardless of email-verification state;
-  // otherwise the signup loop spins forever. Active users still require a
-  // verified primary email — that invariant is what the identity test guards.
+  // Active users require a verified primary email. A user still completing
+  // onboarding is let through ONLY when allowPending is set, and only by the
+  // two onboarding endpoints — never by protected operational APIs.
   const email = primaryEmail.emailAddress.toLowerCase();
   const isVerified = primaryEmail.verification?.status === "verified";
   let user = await prisma.user.findUnique({ where: { email } });
   if (user) {
     if (user.deletedAt) return null;
-    if (user.status === "PENDING_VERIFICATION") return user;
+    if (user.status === "PENDING_VERIFICATION") return allowPending ? user : null;
     if (user.status !== "ACTIVE") return null;
     if (!isVerified) return null;
     return user;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActor } from "@/lib/v2-auth";
 import { prisma } from "@/lib/prisma";
+import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { verifyTenantAuditRecords } from "@/lib/audit/tamper-proof";
 
 /**
@@ -12,11 +13,21 @@ import { verifyTenantAuditRecords } from "@/lib/audit/tamper-proof";
  * supplier can see what their own team submitted, and the record hashes are
  * verifiable per tenant.
  *
- * Scope: only the caller's own tenant. No cross-tenant leakage.
+ * Scope: only the caller's own tenant. No cross-tenant leakage. Access is
+ * gated by audit:read — tenant filtering alone is not authorization, so a
+ * user without the permission cannot reach the query at all.
  */
 export async function GET(req: Request) {
   const u = await getActor();
   if (!u) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+
+  try {
+    await requirePermission({ userId: u.id, tenantId: u.tenantId, platformRole: u.platformRole }, "audit:read");
+  } catch (error) {
+    if (error instanceof PermissionDeniedError)
+      return NextResponse.json({ error: "AUDIT_READ_PERMISSION_REQUIRED" }, { status: 403 });
+    throw error;
+  }
 
   const url = new URL(req.url);
   const cursor = url.searchParams.get("cursor");
