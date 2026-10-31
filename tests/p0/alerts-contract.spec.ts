@@ -8,7 +8,7 @@ const m = vi.hoisted(() => ({
   opportunities: vi.fn(),
 }));
 
-vi.mock("@/lib/v2-auth", () => ({ getOnboardingActor: m.actor }));
+vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     product: { findMany: m.products },
