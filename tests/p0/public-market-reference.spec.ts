@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { publicMarketReference } from '@/lib/directory/public-market-reference';
 
 describe('public market-reference mapper', () => {
-  it('returns an observed price signal without leaking a source, supplier, or availability claim', () => {
+  it('withholds observed price signals from public discovery', () => {
     expect(publicMarketReference({
       marketReference: {
         price: 85,
@@ -12,19 +12,11 @@ describe('public market-reference mapper', () => {
         supplierName: 'Private supplier',
         availability: 'In stock',
       },
-    })).toEqual({
-      price: 85,
-      currency: 'EGP',
-      observedAt: '2026-10-18T00:00:00.000Z',
-      label: 'Observed market price',
-      moq: null,
-    });
+    })).toBeNull();
   });
 
-  it('carries an approved MOQ price without exposing its vendor or source', () => {
-    expect(publicMarketReference({ marketReference: { price: 750, currency: 'EGP', observedAt: '2026-10-18T00:00:00.000Z', label: 'Published MOQ price', moq: 12, supplierName: 'Hidden vendor' } })).toEqual({
-      price: 750, currency: 'EGP', observedAt: '2026-10-18T00:00:00.000Z', label: 'Published MOQ price', moq: 12,
-    });
+  it('withholds MOQ values from public discovery', () => {
+    expect(publicMarketReference({ marketReference: { price: 750, currency: 'EGP', observedAt: '2026-10-18T00:00:00.000Z', label: 'Published MOQ price', moq: 12, supplierName: 'Hidden vendor' } })).toBeNull();
   });
 
   it('rejects malformed, stale-shape, or non-positive observed prices', () => {

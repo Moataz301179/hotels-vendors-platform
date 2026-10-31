@@ -5,9 +5,9 @@
  * Signs invoice XML payloads with a CMS/PKCS#7 detached signature
  * as required by the Egyptian Tax Authority (ETA).
  *
- * ⚠️  ARCHITECTURE ONLY — This module provides the signing interface
- *     and a placeholder implementation. Replace with real PKCS#12
- *     certificate signing once ETA issues production credentials.
+ * ⚠️  ARCHITECTURE ONLY — This module provides the signing interface but
+ *     never fabricates a placeholder result. Replace the controlled test-key
+ *     adapter with a verified eSeal provider bridge before ETA production use.
  *
  * Signing flow:
  *   1. Canonicalize the XML (C14N)
@@ -16,7 +16,7 @@
  *   4. Return the detached signature as a base64-encoded buffer
  */
 
-import { createHash, createSign, createVerify, randomBytes } from "crypto";
+import { createHash, createSign, createVerify } from "crypto";
 
 // ── Types ──
 
@@ -29,8 +29,8 @@ export interface SigningResult {
   algorithm: string;
   /** ISO timestamp of signing */
   signedAt: string;
-  /** Whether this is a real or placeholder signature */
-  isPlaceholder: boolean;
+  /** Always false: this module refuses to fabricate a signature. */
+  isPlaceholder: false;
 }
 
 export interface CertificateInfo {
@@ -89,34 +89,15 @@ async function signWithPrivateKey(
   };
 }
 
-// ── Placeholder signing ──
-
-function signPlaceholder(xmlBytes: Buffer): SigningResult {
-  const canonical = canonicalizeXml(xmlBytes.toString("utf8"));
-  const digest = sha256Digest(canonical);
-  const nonce = randomBytes(16).toString("hex");
-
-  console.warn(
-    "[ETA SIGNER] Using PLACEHOLDER signature. " +
-    "Replace with real PKCS#12 certificate before production deployment."
-  );
-
-  return {
-    signature: `PLACEHOLDER_${nonce}_${Date.now()}`,
-    digest,
-    algorithm: "PLACEHOLDER-SHA256",
-    signedAt: new Date().toISOString(),
-    isPlaceholder: true,
-  };
-}
-
 // ── Public API ──
 
 /**
  * Sign an invoice XML payload.
  *
- * If a real PKCS#12 certificate is provided, signs with RSA-SHA256.
- * Otherwise, returns a placeholder signature with a console warning.
+ * This function refuses to generate a placeholder signature. The USB eSeal
+ * bridge must yield a verified signing operation before ETA submission is
+ * enabled. A PEM key is accepted only for an explicit, externally managed
+ * test adapter; it must never be inferred from the presence of a certificate.
  *
  * @param xmlBytes   — The raw XML buffer to sign
  * @param cert       — Optional: PKCS#12 certificate buffer (.p12/.pfx)
@@ -128,18 +109,13 @@ export async function signInvoice(
   cert?: Buffer,
   privateKey?: Buffer
 ): Promise<SigningResult> {
-  if (cert && privateKey) {
-    // TODO: In production, extract key from PKCS#12:
-    // const p12 = await import("pkcs12");
-    // const { key, cert: extractedCert } = p12.parse(cert, passphrase);
-    // For now, fall through to placeholder
-    console.warn(
-      "[ETA SIGNER] PKCS#12 certificate provided but parsing not yet implemented. " +
-      "Using placeholder signature."
-    );
+  if (cert && !privateKey) {
+    throw new Error("ETA_HARDWARE_SIGNING_NOT_CONFIGURED: certificate-only signing requires the approved eSeal provider bridge");
   }
-
-  return signPlaceholder(xmlBytes);
+  if (!privateKey) {
+    throw new Error("ETA_HARDWARE_SIGNING_NOT_CONFIGURED: refusing to emit a placeholder signature");
+  }
+  return signWithPrivateKey(xmlBytes, privateKey);
 }
 
 /**
@@ -151,11 +127,6 @@ export function verifySignature(
   signatureBase64: string,
   publicKeyPem: Buffer
 ): boolean {
-  if (signatureBase64.startsWith("PLACEHOLDER_")) {
-    console.warn("[ETA SIGNER] Cannot verify placeholder signature.");
-    return false;
-  }
-
   try {
     const canonical = canonicalizeXml(xmlBytes.toString("utf8"));
     const verify = createVerify("RSA-SHA256");
@@ -168,16 +139,10 @@ export function verifySignature(
 
 /**
  * Parse a PKCS#12 certificate and extract info.
- * Placeholder — returns dummy data.
+ * Certificate parsing is intentionally unavailable until the approved eSeal
+ * provider integration is selected and validated.
  */
 export function parseCertificate(cert: Buffer): CertificateInfo {
-  // TODO: Use a proper PKCS#12 parser (e.g., node-forge or p12)
-  console.warn("[ETA SIGNER] PKCS#12 parsing not implemented. Returning dummy info.");
-  return {
-    subject: "PLACEHOLDER -待ETA证书",
-    issuer: "PLACEHOLDER -待ETA证书",
-    serialNumber: randomBytes(8).toString("hex"),
-    validFrom: new Date(),
-    validTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-  };
+  void cert;
+  throw new Error("ETA_HARDWARE_SIGNING_NOT_CONFIGURED: PKCS#12 parsing is not an approved substitute for the registered eSeal token");
 }

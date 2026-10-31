@@ -1,0 +1,21 @@
+.carousel { position: relative; overflow: hidden; border: 1px solid rgba(23, 31, 38, .16); border-radius: 26px; background: #15232a; color: #fff; box-shadow: 0 28px 72px rgba(16, 25, 31, .17); }
+.imageFrame { position: relative; aspect-ratio: 16 / 8.6; overflow: hidden; }
+.imageFrame :global(img:not(.logo)) { object-fit: cover; object-position: center; animation: reveal .55s ease-out both; }
+.imageWash { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9, 16, 21, .08) 30%, rgba(9, 16, 21, .76) 100%); pointer-events: none; }
+.logo { position: absolute; top: 22px; left: 22px; width: min(150px, 42%); height: auto; filter: brightness(0) invert(1); }
+.counter { position: absolute; right: 22px; bottom: 18px; margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+.content { padding: 24px 26px 12px; }
+.eyebrow { margin: 0 0 8px; color: #b7e6ef; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.content h2 { max-width: 19ch; margin: 0; font-size: clamp(26px, 3.2vw, 44px); line-height: 1.03; letter-spacing: -.04em; }
+.content > p:not(.eyebrow) { max-width: 56ch; margin: 14px 0 0; color: rgba(255, 255, 255, .79); line-height: 1.6; }
+.action { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; color: #fff; font-weight: 750; text-decoration: none; }
+.action:hover { color: #b7e6ef; }
+.controls { display: flex; align-items: center; gap: 8px; padding: 18px 26px 26px; }
+.controls button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(255, 255, 255, .25); border-radius: 999px; background: transparent; color: #fff; cursor: pointer; }
+.controls button:hover, .controls button:focus-visible { border-color: #b7e6ef; background: rgba(183, 230, 239, .14); outline: none; }
+.dots { display: flex; flex: 1; gap: 7px; padding-inline: 4px; }
+.dots button { width: 26px; height: 5px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .3); }
+.dots button[aria-current="true"] { width: 44px; background: #b7e6ef; }
+@keyframes reveal { from { opacity: .35; transform: scale(1.035); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .imageFrame :global(img:not(.logo)) { animation: none; } }
+@media (max-width: 520px) { .carousel { border-radius: 20px; } .content { padding: 21px 20px 9px; } .controls { padding: 16px 20px 22px; } .logo { top: 16px; left: 16px; } .counter { right: 16px; bottom: 14px; } }

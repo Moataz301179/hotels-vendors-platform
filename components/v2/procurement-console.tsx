@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { requestJson } from '@/lib/v2-http';
 import { addProductToRequestList, removeRecordedRequestListItems, setRequestListQuantity, type RequestListItem } from '@/lib/procurement/request-list';
@@ -34,6 +34,7 @@ export function ProcurementConsole() {
   const [busy, setBusy] = useState(false);
   const [marketOffers, setMarketOffers] = useState<MarketOffer[]>([]);
   const [requestList, setRequestList] = useState<RequestListItem[]>([]);
+  const requirementSubmissionKey = useRef<string | null>(null);
 
   async function load() {
     setBusy(true);
@@ -85,7 +86,7 @@ export function ProcurementConsole() {
   async function act(url: string, body: object, kind: 'rfq' | 'order') {
     setBusy(true); setMsg('');
     try {
-      const result = await requestJson<{ order?: { orderNumber: string } }>(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      const result = await requestJson<{ order?: { orderNumber: string } }>(url, { method: 'POST', headers: kind === 'rfq' ? { 'content-type': 'application/json', 'x-idempotency-key': crypto.randomUUID() } : { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       setMsg(kind === 'rfq' ? 'Sealed sourcing request recorded. Comparable terms appear after vendors respond or the response window closes.' : `Order ${result.order?.orderNumber} recorded for approval.`);
       await load();
     } catch (actionError) { setMsg((actionError as Error).message); } finally { setBusy(false); }
@@ -95,7 +96,10 @@ export function ProcurementConsole() {
     event.preventDefault(); setBusy(true); setMsg('');
     try {
       const { catalogReferenceId, ...requirementFields } = requirement;
-      await requestJson('/api/v2/rfq', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(catalogReferenceId ? { ...requirementFields, catalogReferenceId } : requirementFields) });
+      const idempotencyKey=requirementSubmissionKey.current??crypto.randomUUID();
+      requirementSubmissionKey.current=idempotencyKey;
+      await requestJson('/api/v2/rfq', { method: 'POST', headers: { 'content-type': 'application/json', 'x-idempotency-key': idempotencyKey }, body: JSON.stringify(catalogReferenceId ? { ...requirementFields, catalogReferenceId } : requirementFields) });
+      requirementSubmissionKey.current=null;
       setRequirement({ itemName: '', unitOfMeasure: 'piece', quantity: 1, deliveryLocation: '', responseWindowHours: 24, notes: '', catalogReferenceId: '' });
       setSelectedReference(null);
       setMsg('Requirement recorded in the sealed sourcing queue. It is not sent to an unverified vendor.'); await load();
@@ -111,10 +115,12 @@ export function ProcurementConsole() {
     if (!requestList.length) return;
     setBusy(true); setError(''); setMsg('');
     const recordedProductIds: string[] = [];
+    const submissionItems=requestList.map((item)=>item.idempotencyKey?item:{...item,idempotencyKey:crypto.randomUUID()});
+    setRequestList(submissionItems);
     try {
-      for (const item of requestList) {
+      for (const item of submissionItems) {
         await requestJson('/api/v2/rfq', {
-          method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ productId: item.id, quantity: item.quantity }),
+          method: 'POST', headers: { 'content-type': 'application/json', 'x-idempotency-key': item.idempotencyKey! }, body: JSON.stringify({ productId: item.id, quantity: item.quantity }),
         });
         recordedProductIds.push(item.id);
       }

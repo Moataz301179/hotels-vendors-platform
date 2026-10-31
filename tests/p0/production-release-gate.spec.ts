@@ -25,4 +25,13 @@ describe("production release gate", () => {
     expect(launcher).toContain("exec node server.js");
     expect(launcher).not.toContain(".next/standalone/server.js");
   });
+
+  it("pins the VPS SSH host key and verifies public TLS without insecure bypasses", () => {
+    expect(workflow).toContain('VPS_SSH_HOST_KEY: ${{ secrets.VPS_SSH_HOST_KEY }}');
+    expect(workflow).toContain('ssh-keygen -F "$VPS_HOST" -f ~/.ssh/known_hosts');
+    expect(workflow).not.toContain('ssh-keyscan -H "$VPS_HOST"');
+    expect(workflow).toContain("curl --fail --silent --show-error --proto '=https' --tlsv1.2 https://www.hotelsvendors.com/api/health");
+    expect(workflow).toContain("curl --fail --silent --show-error --proto '=https' --tlsv1.2 --head --max-time 20 https://www.hotelsvendors.com/");
+    expect(workflow).not.toContain('curl -ks');
+  });
 });

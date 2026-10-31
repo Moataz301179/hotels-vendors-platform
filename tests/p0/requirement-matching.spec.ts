@@ -1,19 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const PermissionDeniedError = vi.hoisted(() => class PermissionDeniedError extends Error {});
-const m = vi.hoisted(() => ({ actor: vi.fn(), permission: vi.fn(), tenants: vi.fn(), tenant: vi.fn(), requirement: vi.fn(), requirements: vi.fn(), product: vi.fn(), evidence: vi.fn(), update: vi.fn(), grant: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
+const m = vi.hoisted(() => ({ actor: vi.fn(), permission: vi.fn(), tenants: vi.fn(), tenant: vi.fn(), requirement: vi.fn(), requirements: vi.fn(), product: vi.fn(), evidence: vi.fn(), update: vi.fn(), grant: vi.fn(), grants: vi.fn(), audit: vi.fn(), transaction: vi.fn() }));
 
 vi.mock('@/lib/v2-auth', () => ({ getActor: m.actor }));
 vi.mock('@/lib/auth/rbac', () => ({ requirePermission: m.permission, PermissionDeniedError }));
 vi.mock('@/lib/admin/managed-hotel-tenants', () => ({ managedHotelTenants: m.tenants, managedHotelTenant: m.tenant }));
 vi.mock('@/lib/audit/tamper-proof', () => ({ appendAuditEntry: m.audit }));
-vi.mock('@/lib/prisma', () => ({ prisma: { rfqRequest: { findFirst: m.requirement, findMany: m.requirements, updateMany: m.update }, product: { findFirst: m.product }, evidenceRecord: { findFirst: m.evidence }, rfqSupplierAccess: { create: m.grant }, $transaction: m.transaction } }));
+vi.mock('@/lib/prisma', () => ({ prisma: { rfqRequest: { findFirst: m.requirement, findMany: m.requirements, updateMany: m.update }, product: { findFirst: m.product }, evidenceRecord: { findFirst: m.evidence }, rfqSupplierAccess: { create: m.grant, findMany: m.grants }, $transaction: m.transaction } }));
 
 import { GET, POST } from '@/app/api/v2/rfq/match/route';
 
 const admin = { id: 'operator', tenantId: 'platform', platformRole: 'ADMIN', role: 'OWNER' };
 const request = (body: unknown) => new Request('https://x/api/v2/rfq/match', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-type TransactionCallback = (transaction: { rfqRequest: { updateMany: unknown }; rfqSupplierAccess: { create: unknown } }) => unknown;
+type TransactionCallback = (transaction: { rfqRequest: { updateMany: unknown }; rfqSupplierAccess: { create: unknown; findMany: unknown } }) => unknown;
 
 describe('queued requirement matching', () => {
   beforeEach(() => {
@@ -28,8 +28,9 @@ describe('queued requirement matching', () => {
     m.evidence.mockResolvedValue({ id: 'evidence' });
     m.update.mockResolvedValue({ count: 1 });
     m.grant.mockResolvedValue({ id: 'grant' });
+    m.grants.mockResolvedValue([]);
     m.audit.mockResolvedValue('audit');
-    m.transaction.mockImplementation((fn: TransactionCallback) => fn({ rfqRequest: { updateMany: m.update }, rfqSupplierAccess: { create: m.grant } }));
+    m.transaction.mockImplementation((fn: TransactionCallback) => fn({ rfqRequest: { updateMany: m.update }, rfqSupplierAccess: { create: m.grant, findMany: m.grants } }));
   });
 
   it('does not reveal requirement queues to a non-admin user', async () => {
@@ -77,10 +78,27 @@ describe('queued requirement matching', () => {
   });
 
   it('does not grant supplier access when a concurrent match already changed the requirement', async () => {
-    m.update.mockResolvedValue({ count: 0 });
+    m.update.mockResolvedValueOnce({ count: 0 });
     const response = await POST(request({ tenantId: 'hotel-tenant', rfqId: 'rfq', productId: 'product' }));
     expect(response.status).toBe(409);
     expect(m.grant).not.toHaveBeenCalled();
     expect(m.audit).not.toHaveBeenCalled();
+  });
+
+  it('treats a repeat Vendor assignment as a controlled idempotent result', async () => {
+    m.grants.mockResolvedValue([{ supplierId: 'supplier' }]);
+    const response = await POST(request({ tenantId: 'hotel-tenant', rfqId: 'rfq', productId: 'product' }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ matched: true, alreadyAssigned: true, assignedVendorCount: 1 });
+    expect(m.grant).not.toHaveBeenCalled();
+    expect(m.audit).not.toHaveBeenCalled();
+  });
+
+  it('enforces the five-Vendor assignment cap across matching requests', async () => {
+    m.grants.mockResolvedValue([{ supplierId: 'a' }, { supplierId: 'b' }, { supplierId: 'c' }, { supplierId: 'd' }, { supplierId: 'e' }]);
+    const response = await POST(request({ tenantId: 'hotel-tenant', rfqId: 'rfq', productId: 'product' }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'RFQ_VENDOR_ASSIGNMENT_LIMIT_REACHED', assignedVendorCount: 5 });
+    expect(m.grant).not.toHaveBeenCalled();
   });
 });

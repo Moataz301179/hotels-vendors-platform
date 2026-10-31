@@ -8,11 +8,11 @@ import { toAnonymousCatalogProduct } from "@/lib/procurement/anonymous-commercia
 export async function GET(req: Request) {
   const user = await getActor();
   if (!user) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+  if (user.platformRole !== 'HOTEL') return NextResponse.json({ error: 'BUYER_CATALOG_ACCESS_REQUIRED' }, { status: 403 });
   const q = new URL(req.url).searchParams.get("q")?.trim();
-  const networkScope = user.platformRole === "HOTEL" || user.platformRole === "ADMIN";
   const products = await prisma.product.findMany({
     where: {
-      ...(networkScope ? { supplier: { status:"ACTIVE", isVerified:true, deletedAt:null } } : { tenantId:user.tenantId }),
+      supplier: { status:"ACTIVE", isVerified:true, deletedAt:null },
       status: "ACTIVE", deletedAt: null, source:{not:"FIXTURE"},
       ...(q ? { OR: [{ name:{contains:q,mode:"insensitive"} }, { sku:{contains:q,mode:"insensitive"} }] } : {})
     },

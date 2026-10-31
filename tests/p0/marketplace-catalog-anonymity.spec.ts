@@ -22,4 +22,16 @@ describe("buyer marketplace catalog", () => {
     expect(body.products[0].images).toEqual(["/api/v2/catalog/products/product-1/images/0"]);
     expect(JSON.stringify(body)).not.toContain("supplier.example");
   });
+
+  it('does not allow a non-Hotel actor to use the buyer catalogue endpoint', async () => {
+    m.actor.mockResolvedValue({ id: 'admin-1', tenantId: 'platform', platformRole: 'ADMIN' });
+    const response = await GET(new Request('https://hotelsvendors.test/api/v2/marketplace'));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'BUYER_CATALOG_ACCESS_REQUIRED' });
+    expect(m.products).not.toHaveBeenCalled();
+    m.actor.mockResolvedValue({ id: 'vendor-1', tenantId: 'vendor-tenant', platformRole: 'SUPPLIER' });
+    const vendorResponse = await GET(new Request('https://hotelsvendors.test/api/v2/marketplace'));
+    expect(vendorResponse.status).toBe(403);
+    expect(m.products).not.toHaveBeenCalled();
+  });
 });

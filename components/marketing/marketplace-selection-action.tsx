@@ -3,6 +3,7 @@
 import { SignInButton, useAuth } from '@clerk/nextjs';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { addCatalogReferenceToBasket, persistCatalogReferenceBasket, readCatalogReferenceBasket } from '@/lib/procurement/catalog-reference-basket';
 
 type MarketplaceSelectionActionProps = {
   itemId?: string;
@@ -33,12 +34,16 @@ export function MarketplaceSelectionAction(props: MarketplaceSelectionActionProp
   const target = selectionTarget(props);
   const label = props.label ?? 'Add to requirement';
   const content = <><span>{label}</span><ArrowRight size={17} aria-hidden="true" /></>;
+  const preserveSelection = () => {
+    if (!props.itemId) return;
+    persistCatalogReferenceBasket(addCatalogReferenceToBasket(readCatalogReferenceBasket(), props.itemId));
+  };
 
-  if (isLoaded && isSignedIn) return <Link className={props.className} href={target}>{content}</Link>;
+  if (isLoaded && isSignedIn) return <Link className={props.className} href={target} onClick={preserveSelection}>{content}</Link>;
 
   return <SignInButton
     mode="modal"
     forceRedirectUrl={target}
     signUpForceRedirectUrl={target}
-  ><button type="button" className={props.className}>{content}</button></SignInButton>;
+  ><button type="button" className={props.className} onClick={preserveSelection}>{content}</button></SignInButton>;
 }

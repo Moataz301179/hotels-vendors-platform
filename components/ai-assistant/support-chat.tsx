@@ -1,18 +1,11 @@
 "use client";
 
-/* AISupportChat — customer support & complaints assistant for the Contact page.
-   Streams from the real public AI endpoint (/api/v1/ai/public, Ollama-backed, no
-   auth). Specialized prompt for support/complaints/billing/orders/ETA/factoring.
-   NO fabricated data: never invents account/order numbers or resolutions. */
+/* AISupportChat — public, read-only guidance for the Contact page.
+   It uses the deployed v2 assistant contract. Anonymous requests receive
+   deterministic public guidance only: no tenant tools, provider call, account
+   data, order status, or made-up support resolution is exposed here. */
 import { useEffect, useRef, useState } from "react";
 import { Send, Bot, Loader2, Sparkles } from "lucide-react";
-
-const SUPPORT_PROMPT =
-  "You are the HOTELSVENDORS customer support assistant. Help with: technical issues, " +
-  "billing/payments, order status, supplier problems, factoring/Oliv financing, ETA compliance, " +
-  "and complaints. Be empathetic and concise. Never invent account/order numbers or promise " +
-  "specific resolutions or timelines you can't verify — say the team has been notified and " +
-  "that the user will be followed up. Always end with one clear next step.";
 
 interface Msg {
   role: "user" | "assistant";
@@ -24,6 +17,13 @@ const WELCOME: Msg = {
   content:
     "Hi — I'm the HOVIN support assistant. How can I help you today (orders, billing, suppliers, ETA, financing, or a complaint)?",
 };
+
+export function supportAssistantFailureMessage(status?: number, code?: string) {
+  if (status === 503 || code === "AI_PROVIDER_UNAVAILABLE") {
+    return "The assistant service is temporarily unavailable. Please try again shortly or email support@hotelsvendors.com.";
+  }
+  return "I couldn't reach the assistant just now. Please try again or email support@hotelsvendors.com.";
+}
 
 export function AISupportChat() {
   const [messages, setMessages] = useState<Msg[]>([WELCOME]);
@@ -48,37 +48,43 @@ export function AISupportChat() {
       { role: "assistant", content: "" },
     ]);
     try {
-      const res = await fetch("/api/v1/ai/public", {
+      const res = await fetch("/api/v2/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "system", content: SUPPORT_PROMPT }, ...messages.filter((m) => m.content), { role: "user", content: text }],
+          question: text,
+          messages: [...messages.filter((m) => m.content), { role: "user", content: text }],
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        setMessages((prev) => {
-          const next = [...prev];
-          const last = next[next.length - 1];
-          if (last?.role === "assistant") last.content += chunk;
-          return next;
-        });
+      const payload = await res.json().catch(() => null) as { text?: string; content?: string; code?: string } | null;
+      if (!res.ok) throw new Error(JSON.stringify({ status: res.status, code: payload?.code }));
+      const response = payload?.text || payload?.content || "The assistant returned no answer.";
+      setMessages((prev) => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last?.role === "assistant") last.content = response;
+        return next;
+      });
+    } catch (caught) {
+      let status: number | undefined;
+      let code: string | undefined;
+      if (caught instanceof Error) {
+        try {
+          ({ status, code } = JSON.parse(caught.message) as { status?: number; code?: string });
+        } catch {
+          // Network failures have no HTTP status and use the safe generic copy.
+        }
       }
-    } catch {
+      const failureMessage = supportAssistantFailureMessage(status, code);
       setMessages((prev) => {
         const next = [...prev];
         next[next.length - 1] = {
           role: "assistant",
-          content: "I couldn't reach the assistant just now. Please try again or email support@hotelsvendors.com.",
+          content: failureMessage,
         };
         return next;
       });
-      setError("Assistant temporarily unavailable — email support@hotelsvendors.com or WhatsApp us.");
+      setError(failureMessage);
     } finally {
       setLoading(false);
     }

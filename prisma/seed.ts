@@ -108,6 +108,14 @@ async function main() {
     { code: "factoring:approve_credit", name: "Approve Credit", description: "Approve factoring credit lines" },
     // Invoice submission
     { code: "invoice:submit", name: "Submit Invoices", description: "Submit invoices for processing" },
+    // B47/B48 Supplier list & price comparison
+    { code: "einvoice:ingest", name: "Ingest E-Invoices", description: "Ingest hotel e-invoice data for supplier list extraction" },
+    { code: "price:compare", name: "Compare Prices", description: "Compare connected supplier prices against hotel historical prices" },
+    { code: "consent:manage", name: "Manage Consent", description: "Manage data processing consent records for ingestion" },
+    // B47/B48 External blocker resolutions
+    { code: "price:feed:write", name: "Supplier Price Feed Consent", description: "Supplier opt-in/out of connected price feeds" },
+    { code: "price:feed:read", name: "View Supplier Price Feed Status", description: "View supplier price feed consent status" },
+    { code: "integration:manage", name: "Manage Integrations", description: "Create and manage hotel PMS/ERP connectors" },
   ];
 
   for (const p of permissionCodes) {

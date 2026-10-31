@@ -15,6 +15,10 @@ describe('buyer request list', () => {
     expect(setRequestListQuantity([{ ...product, quantity: 2 }], product.id, 0)).toEqual([]);
   });
 
+  it('clears a retry key when the buyer changes a request-list quantity', () => {
+    expect(setRequestListQuantity([{ ...product, quantity: 2, idempotencyKey: 'request-list-retry-0001' }], product.id, 3)).toEqual([{ ...product, quantity: 3, idempotencyKey: undefined }]);
+  });
+
   it('keeps only unrecorded products after a partial submission', () => {
     const secondProduct = { id: 'catalog-product-2', name: 'Hand soap', sku: 'SOAP-01', unitOfMeasure: 'case' };
     const selected = addProductToRequestList(addProductToRequestList([], product, 3), secondProduct, 2);
