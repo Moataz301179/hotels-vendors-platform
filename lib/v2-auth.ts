@@ -41,6 +41,10 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
     // another person's existing pending record by email alone. Legacy rows
     // created before Clerk binding (no clerkUserId) still match by email.
     if (user.clerkUserId && user.clerkUserId !== userId) return null;
+    // Legacy unbound rows (pre-Clerk, no clerkUserId): an unverified email
+    // must never claim another person's existing pending or active account.
+    // Verified ownership is required before any legacy row is returned.
+    if (!user.clerkUserId && !isVerified) return null;
     if (user.deletedAt) return null;
     if (user.status === "PENDING_VERIFICATION") return allowPending ? user : null;
     if (user.status !== "ACTIVE") return null;

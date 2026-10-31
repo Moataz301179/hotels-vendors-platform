@@ -78,4 +78,19 @@ describe("identity boundary: pending users and verified email", () => {
     expect(await getOnboardingActor()).toBeNull();
     expect(m.user).not.toHaveBeenCalled();
   });
+
+  it("getOnboardingActor allows a verified legacy unbound pending user (email-only, pre-Clerk)", async () => {
+    m.current.mockResolvedValue(verifiedClerkUser("legacy@example.com"));
+    m.user.mockResolvedValue({ id: "legacy", platformRole: "HOTEL", tenantId: "legacy-tenant", status: "PENDING_VERIFICATION", deletedAt: null, clerkUserId: null });
+    expect(await getOnboardingActor()).toMatchObject({ status: "PENDING_VERIFICATION", id: "legacy" });
+  });
+
+  it("getOnboardingActor REJECTS an unverified legacy unbound pending user", async () => {
+    m.current.mockResolvedValue({
+      primaryEmailAddressId: "primary",
+      emailAddresses: [{ id: "primary", emailAddress: "legacy@example.com", verification: { status: "unverified" } }],
+    });
+    m.user.mockResolvedValue({ id: "legacy", platformRole: "HOTEL", tenantId: "legacy-tenant", status: "PENDING_VERIFICATION", deletedAt: null, clerkUserId: null });
+    expect(await getOnboardingActor()).toBeNull();
+  });
 });
