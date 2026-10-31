@@ -4,8 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { managedHotelTenant, managedHotelTenants } from "@/lib/admin/managed-hotel-tenants";
+import {
+  assertKnownPermission,
+  isGrantableByTenant,
+  requiresAdmin,
+  PERMISSION_CODES,
+} from "@/lib/auth/permission-registry";
 
-const grantInput = z.object({ tenantId: z.string().min(1), userId: z.string().min(1), permissionCode: z.string().min(1) });
+const grantInput = z.object({
+  tenantId: z.string().min(1),
+  userId: z.string().min(1),
+  permissionCode: z.string().min(1),
+});
 const revokeInput = z.object({ tenantId: z.string().min(1), grantId: z.string().min(1) });
 const roleInput = z.object({ tenantId: z.string().min(1), userId: z.string().min(1), role: z.enum(["OWNER", "REGIONAL_GM", "GM", "FINANCIAL_CONTROLLER", "DEPARTMENT_HEAD", "CLERK", "RECEIVING_CLERK", "LOGISTICS_COORDINATOR"]) });
 
@@ -40,10 +50,20 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
-  if ("error" in auth) return auth.error;
   const parsed = grantInput.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "TENANT_USER_AND_PERMISSION_REQUIRED" }, { status: 400 });
+  // S2: reject unknown permission codes at the boundary — before any auth check
+  try {
+    assertKnownPermission(parsed.data.permissionCode);
+  } catch {
+    return NextResponse.json({ error: "UNKNOWN_PERMISSION_CODE" }, { status: 400 });
+  }
+  const auth = await requireAdmin();
+  if ("error" in auth) return auth.error;
+  // S2: non-ADMIN actors may only grant tenant-level codes
+  if (requiresAdmin(parsed.data.permissionCode)) {
+    return NextResponse.json({ error: "ADMIN_PERMISSION_GRANT_REQUIRED" }, { status: 403 });
+  }
   const targetTenant = await managedHotelTenant(auth.actor.tenantId, parsed.data.tenantId);
   if (!targetTenant) return NextResponse.json({ error: "HOTEL_TENANT_NOT_FOUND" }, { status: 404 });
   const [user, permission] = await Promise.all([

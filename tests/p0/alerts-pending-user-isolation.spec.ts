@@ -20,7 +20,6 @@ vi.mock("@/lib/prisma", () => ({
 
 import { GET } from "@/app/api/v2/alerts/route";
 
-const pendingActor = { id: "u-pending", tenantId: "tenant-a", platformRole: "HOTEL", status: "PENDING_VERIFICATION" };
 const activeActor = { id: "u-active", tenantId: "tenant-a", platformRole: "HOTEL", status: "ACTIVE" };
 
 describe("alerts: pending users must not see operational data", () => {

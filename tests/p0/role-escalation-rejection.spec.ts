@@ -64,12 +64,27 @@ describe("user-permissions: unauthorized role escalation", () => {
     expect(res.status).toBe(404);
   });
 
-  it("prevents self-escalation to ADMIN permission", async () => {
+  it("prevents self-escalation to unknown permission codes", async () => {
     m.actor.mockResolvedValue({ id: "admin-1", tenantId: "hotel-tenant", platformRole: "HOTEL" });
     const res = await POST(grantRequest({
       tenantId: "hotel-tenant", userId: "admin-1", permissionCode: "admin:create",
     }));
+    // admin:create is not in the permission registry — rejected at the boundary
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("UNKNOWN_PERMISSION_CODE");
+  });
+
+  it("prevents self-escalation to admin-only permission codes", async () => {
+    m.actor.mockResolvedValue({ id: "admin-1", tenantId: "hotel-tenant", platformRole: "HOTEL" });
+    const res = await POST(grantRequest({
+      tenantId: "hotel-tenant", userId: "admin-1", permissionCode: "audit:read",
+    }));
+    // Non-ADMIN actor blocked at the authorization gate (requireAdmin)
+    // before the permission-level check (requiresAdmin) is evaluated.
     expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toBe("ADMIN_ROLE_REQUIRED");
   });
 
   it("allows ADMIN to grant non-admin permissions to managed hotel tenants", async () => {
