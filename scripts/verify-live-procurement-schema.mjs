@@ -14,7 +14,7 @@ import { Client } from "pg";
  */
 const requiredSchema = {
   Tenant: ["id", "status", "verificationStatus", "taxId", "deletedAt"],
-  User: ["id", "email", "status", "platformRole", "tenantId", "supplierId", "departmentId", "deletedAt"],
+  User: ["id", "email", "status", "platformRole", "tenantId", "supplierId", "departmentId", "deletedAt", "clerkUserId"],
   Hotel: ["id", "tenantId", "status", "taxId", "deletedAt"],
   Supplier: ["id", "tenantId", "status", "isVerified", "taxId", "deletedAt"],
   Product: ["id", "tenantId", "supplierId", "status", "sku", "images", "deletedAt"],

@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { getActor } from '@/lib/v2-auth';
+import { getOnboardingActor } from '@/lib/v2-auth';
 import { appendAuditEntry } from '@/lib/audit/tamper-proof';
 
 async function loadState() {
-  const u = await getActor({ allowPending: true });
+  const u = await getOnboardingActor();
   if (!u) return null;
   const [hotel, supplier, carrier, funder, progress] = await Promise.all([
     prisma.hotel.count({ where: { tenantId: u.tenantId, deletedAt: null } }),
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const u = await getActor({ allowPending: true });
+  const u = await getOnboardingActor();
   if (!u) return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 });
   const parsed = z.object({ name: z.string().trim().min(2).max(160), taxId: z.string().trim().max(80), city: z.string().trim().min(1).max(100), governorate: z.string().trim().min(1).max(100), address: z.string().max(300).optional(), phone: z.string().max(50).optional() }).safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'Enter valid organization details and a tax ID where required' }, { status: 400 });

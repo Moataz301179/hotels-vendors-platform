@@ -53,30 +53,19 @@ export interface PreSpendAssessment {
   };
 }
 
-const PRICE_BENCHMARKS: Record<string, { marketAvg: number; bestPrice: number; bestSupplier: string }> = {
-  p1: { marketAvg: 350, bestPrice: 320, bestSupplier: "Nile F&B Wholesale" },
-  p2: { marketAvg: 680, bestPrice: 650, bestSupplier: "Cairo Grains Co." },
-  p3: { marketAvg: 4200, bestPrice: 3900, bestSupplier: "Oils & Fats Direct" },
-  p8: { marketAvg: 220, bestPrice: 195, bestSupplier: "Textile Plus" },
-  p9: { marketAvg: 1200, bestPrice: 1100, bestSupplier: "Linen Express" },
-};
+const EMPTY_PRICE_BENCHMARKS: Record<string, { marketAvg: number; bestPrice: number; bestSupplier: string }> = {};
 
-const DEPARTMENT_BUDGETS: Record<string, { name: string; total: number; committed: number; pending: number }> = {
-  hk: { name: "Housekeeping", total: 150000, committed: 45000, pending: 12000 },
-  fb: { name: "F&B Kitchen", total: 300000, committed: 98000, pending: 25000 },
-  am: { name: "Amenities", total: 80000, committed: 22000, pending: 8000 },
-  en: { name: "Engineering", total: 200000, committed: 65000, pending: 15000 },
-};
+const EMPTY_DEPARTMENT_BUDGETS: Record<string, { name: string; total: number; committed: number; pending: number }> = {};
 
 export function assessCart(
   lines: { productId: string; qty: number; price: number }[],
   departmentId: string = "hk"
 ): PreSpendAssessment {
-  const budget = DEPARTMENT_BUDGETS[departmentId] || DEPARTMENT_BUDGETS.hk;
+  const budget = EMPTY_DEPARTMENT_BUDGETS[departmentId] || { name: "Unconfigured", total: 0, committed: 0, pending: 0 };
   const cartTotal = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
 
   const lineAssessments: CartLineAssessment[] = lines.map((line) => {
-    const benchmark = PRICE_BENCHMARKS[line.productId];
+    const benchmark = EMPTY_PRICE_BENCHMARKS[line.productId];
     const alerts: PreSpendAlert[] = [];
 
     if (benchmark) {
@@ -182,7 +171,7 @@ function suggestSplitOrder(lines: { productId: string; qty: number; price: numbe
 
   const totalValue = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
   const potentialSavings = lines.reduce((sum, l) => {
-    const benchmark = PRICE_BENCHMARKS[l.productId];
+    const benchmark = EMPTY_PRICE_BENCHMARKS[l.productId];
     if (benchmark && l.price > benchmark.bestPrice) {
       sum += (l.price - benchmark.bestPrice) * l.qty;
     }
@@ -196,8 +185,8 @@ function suggestSplitOrder(lines: { productId: string; qty: number; price: numbe
     suggestedTotal: Math.round(totalValue - potentialSavings),
     savings: Math.round(potentialSavings),
     breakdown: [
-      { supplierId: 's1', supplierName: 'Misr F&B Distribution', items: ['F&B lines'], subtotal: Math.round(totalValue * 0.6) },
-      { supplierId: 's2', supplierName: 'Nile Housekeeping Supply Co.', items: ['HK lines'], subtotal: Math.round(totalValue * 0.4) },
+      { supplierId: 's1', supplierName: 'TBD — awaiting supplier catalog data', items: ['F&B lines'], subtotal: Math.round(totalValue * 0.6) },
+      { supplierId: 's2', supplierName: 'TBD — awaiting supplier catalog data', items: ['HK lines'], subtotal: Math.round(totalValue * 0.4) },
     ],
   };
 }

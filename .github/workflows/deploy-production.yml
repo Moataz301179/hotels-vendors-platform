@@ -13,7 +13,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  require-main-ref:
+    # Production deploys only from main, and only a sha whose CI `build` passed.
+    # Server-side twin: environment `production` deployment branch rule = main.
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - name: Refuse any ref other than main
+        env:
+          DEPLOY_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$DEPLOY_REF" != "refs/heads/main" ]; then
+            echo "Production deploys run only from refs/heads/main (got: $DEPLOY_REF)" >&2
+            exit 1
+          fi
+      - name: Require green CI build on this sha
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            r="$(gh api "repos/$REPO/commits/$SHA/check-runs?check_name=build&per_page=50" \
+              --jq '[.check_runs[] | select(.app.slug == "github-actions")] | sort_by(.started_at) | last | "\(.status // "missing") \(.conclusion // "none")"')"
+            echo "attempt $i: CI build on $SHA = $r"
+            case "$r" in
+              "completed success") exit 0 ;;
+              completed*) echo "::error::CI build on $SHA is not green ($r). Nothing deploys on red CI."; exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "::error::CI build on $SHA did not finish within 30 minutes."; exit 1
   deploy:
+    needs: require-main-ref
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment:

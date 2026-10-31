@@ -26,20 +26,14 @@ interface LedgerRow {
   riskScore: number;
 }
 
-const kpis: KPIData[] = [
-  { label: "Available Capital", value: "EGP 2,450,000", change: "+12.4%", trend: "up", icon: <DollarSign size={20} /> },
-  { label: "Utilized Credit", value: "EGP 1,820,000", change: "+8.2%", trend: "up", icon: <Activity size={20} /> },
-  { label: "Real-time Risk Score", value: "82/100", change: "-3 pts", trend: "down", icon: <ShieldCheck size={20} /> },
-  { label: "Settlement Rate", value: "94.2%", change: "+1.1%", trend: "up", icon: <TrendingUp size={20} /> },
+const EMPTY_KPIS: KPIData[] = [
+  { label: "Available Capital", value: "—", change: "—", trend: "neutral", icon: <DollarSign size={20} /> },
+  { label: "Utilized Credit", value: "—", change: "—", trend: "neutral", icon: <Activity size={20} /> },
+  { label: "Real-time Risk Score", value: "—", change: "—", trend: "neutral", icon: <ShieldCheck size={20} /> },
+  { label: "Settlement Rate", value: "—", change: "—", trend: "neutral", icon: <TrendingUp size={20} /> },
 ];
 
-const ledgerData: LedgerRow[] = [
-  { id: "1", invoiceId: "INV-2026-00142", hotel: "Stella Di Mare Resort", supplier: "Nile Fresh Foods", amount: 45200, currency: "EGP", status: "paid", date: "2026-06-08", taxStamp: "ETA-UUID: a3f8c2d1-0042", ledgerHash: "0x7f3a...e2b1", riskScore: 92 },
-  { id: "2", invoiceId: "INV-2026-00141", hotel: "Jaz Aquamarine", supplier: "Pyramid Linens", amount: 28700, currency: "EGP", status: "pending", date: "2026-06-07", taxStamp: "ETA-UUID: b4e9d3e2-0041", ledgerHash: "0x8a4b...f3c2", riskScore: 78 },
-  { id: "3", invoiceId: "INV-2026-00140", hotel: "Sunrise Palace", supplier: "Red Sea Amenities", amount: 61500, currency: "EGP", status: "invoiced", date: "2026-06-06", taxStamp: "ETA-UUID: c5f0e4f3-0040", ledgerHash: "0x9b5c...g4d3", riskScore: 85 },
-  { id: "4", invoiceId: "INV-2026-00139", hotel: "Baron Resort Sharm", supplier: "Cairo Kitchen Pro", amount: 128400, currency: "EGP", status: "delivered", date: "2026-06-05", taxStamp: "ETA-UUID: d6a1f5a4-0039", ledgerHash: "0xac6d...h5e4", riskScore: 91 },
-  { id: "5", invoiceId: "INV-2026-00138", hotel: "Hurghada Grand", supplier: "Delta Maintenance", amount: 18900, currency: "EGP", status: "overdue", date: "2026-05-28", taxStamp: "ETA-UUID: e7b2a6b5-0038", ledgerHash: "0xbd7e...i6f5", riskScore: 42 },
-];
+const EMPTY_LEDGER: LedgerRow[] = [];
 
 const STATUS_MAP: Record<string, { bg: string; text: string }> = {
   paid: { bg: "bg-success-bg", text: "text-success" },
@@ -64,12 +58,15 @@ function riskColor(score: number): string {
   return "text-error";
 }
 
-export function FinancialDashboard() {
+export function FinancialDashboard({ kpis, ledgerData }: { kpis?: KPIData[]; ledgerData?: LedgerRow[] }) {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const pageSize = 5;
 
-  const filtered = ledgerData.filter(
+  const activeKpis = kpis && kpis.length > 0 ? kpis : EMPTY_KPIS;
+  const activeLedger = ledgerData && ledgerData.length > 0 ? ledgerData : EMPTY_LEDGER;
+
+  const filtered = activeLedger.filter(
     (row) =>
       row.invoiceId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       row.hotel.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,7 +80,7 @@ export function FinancialDashboard() {
     <div className="flex flex-col gap-6">
       {/* KPI Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi) => (
+        {activeKpis.map((kpi) => (
           <div
             key={kpi.label}
             className="rounded-xl border border-border-default bg-surface p-5 shadow-sm"

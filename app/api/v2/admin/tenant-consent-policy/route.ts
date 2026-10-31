@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { managedHotelTenant } from "@/lib/admin/managed-hotel-tenants";
 
 const policySchema = z.object({
   tenantId: z.string().min(1),
@@ -33,7 +34,14 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "tenantId and defaultConsentLegalBasis are required." }, { status: 400 });
   }
 
-  const { tenantId, defaultConsentLegalBasis } = parsed.data;
+  const { tenantId: requestedTenantId, defaultConsentLegalBasis } = parsed.data;
+
+  // Reject cross-tenant targeting BEFORE any tenant lookup. A non-ADMIN with
+  // consent:manage may only manage their own organization; the rejection is a
+  // 403, never a 404, so the response cannot enumerate tenants.
+  const target = await resolveTargetTenant(actor, requestedTenantId);
+  if ("error" in target) return target.error;
+  const tenantId = target.tenantId;
 
   const tenant = await prisma.tenant.findFirst({
     where: { id: tenantId, deletedAt: null },
@@ -47,17 +55,63 @@ export async function PATCH(req: Request) {
     select: { id: true, name: true, defaultConsentLegalBasis: true },
   });
 
+  // Audit against the AFFECTED tenant, not the actor's tenant, so the record is
+  // visible in the victim's own audit trail. Actor identity is recorded
+  // separately; the hash chain format is unchanged.
   await appendAuditEntry({
     entityName: "TENANT",
     entityId: tenant.id,
     actionType: "UPDATED",
-    tenantId: actor.tenantId,
+    tenantId: tenant.id,
     actorId: actor.id,
     actorRole: actor.platformRole,
-    changes: { defaultConsentLegalBasis },
+    changes: {
+      defaultConsentLegalBasis,
+      affectedTenantId: tenant.id,
+      actorTenantId: actor.tenantId,
+      crossTenant: !target.isOwn,
+    },
   });
 
   return NextResponse.json({ tenant: updated });
+}
+
+/**
+ * Resolve the tenant this consent-policy operation may act on.
+ *
+ * A non-ADMIN with consent:manage may only manage their own organization.
+ * Any caller-supplied tenantId that is not the caller's own must be rejected
+ * BEFORE any tenant lookup or update, with a 403 — never a 404, so the
+ * response cannot be used to enumerate tenants.
+ *
+ * Platform ADMINs may act on any managed hotel tenant; targets that are not
+ * managed hotel tenants of the platform tenant are rejected.
+ */
+async function resolveTargetTenant(
+  actor: { id: string; tenantId: string; platformRole: string },
+  requestedTenantId: string | null
+): Promise<{ tenantId: string; isOwn: boolean } | { error: NextResponse }> {
+  if (!requestedTenantId || requestedTenantId === actor.tenantId) {
+    return { tenantId: actor.tenantId, isOwn: true };
+  }
+  if (actor.platformRole !== "ADMIN") {
+    return {
+      error: NextResponse.json(
+        { error: "CONSENT_MANAGE_OWN_TENANT_ONLY" },
+        { status: 403 }
+      ),
+    };
+  }
+  const managed = await managedHotelTenant(actor.tenantId, requestedTenantId);
+  if (!managed) {
+    return {
+      error: NextResponse.json(
+        { error: "HOTEL_TENANT_NOT_FOUND" },
+        { status: 404 }
+      ),
+    };
+  }
+  return { tenantId: managed.id, isOwn: false };
 }
 
 export async function GET(request: Request) {
@@ -71,7 +125,13 @@ export async function GET(request: Request) {
     throw error;
   }
 
-  const tenantId = new URL(request.url).searchParams.get("tenantId") || actor.tenantId;
+  // No tenantId query param => caller's own tenant. Any other tenantId is
+  // rejected for non-ADMIN before a lookup.
+  const requestedTenantId = new URL(request.url).searchParams.get("tenantId");
+  const target = await resolveTargetTenant(actor, requestedTenantId);
+  if ("error" in target) return target.error;
+  const tenantId = target.tenantId;
+
   const tenant = await prisma.tenant.findFirst({
     where: { id: tenantId, deletedAt: null },
     select: { id: true, name: true, defaultConsentLegalBasis: true },

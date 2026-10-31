@@ -25,7 +25,7 @@ describe("Clerk authentication routing", () => {
     expect(login).toContain('transferable={false}');
     expect(login).toContain('withSignUp={false}');
     expect(login).toContain('oauthFlow="redirect"');
-    expect(completion).toContain('getActor({ allowPending: true })');
+    expect(completion).toContain('getOnboardingActor()');
     expect(completion).toContain('user.status === "PENDING_VERIFICATION"');
   });
 });

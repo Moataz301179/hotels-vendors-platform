@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, Building2, ClipboardCheck, FileText, PackageCheck, ShieldCheck, Truck, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { requestJson } from '@/lib/v2-http';
+import { RoleAuditWidget } from '@/components/v2/role-audit-widget';
 import { roleDisplayName, type WorkspaceRole, workspaceRole } from '@/lib/dashboard/role-navigation';
 import { roleWorkspace } from '@/lib/dashboard/role-workspace';
 
@@ -40,5 +41,6 @@ export default function Dashboard(){
   <header className="role-dashboard-hero"><div><span className="eyebrow">{model.eyebrow}</span><h1>{scopedWorkspace?.title ?? model.title}</h1><p>{scopedWorkspace?.description ?? model.detail}</p></div><Link href={primary.href} className="role-dashboard-primary"><PrimaryIcon aria-hidden="true"/><span><small>Start here</small><strong>{primary.title}</strong><em>{primary.detail}</em></span><ArrowRight aria-hidden="true"/></Link></header>
   <section className="role-dashboard-metrics" aria-label={`${roleDisplayName(data.role)} workspace status`}>{metrics.map(metric=><Link href={metric.href} className="card role-dashboard-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.detail}</small><ArrowRight aria-hidden="true"/></Link>)}</section>
   <section className="role-dashboard-main"><div className="role-dashboard-actions"><div className="workspace-section-heading"><div><span className="eyebrow">Your next actions</span><h2>Choose one clear task.</h2></div></div><div className="role-dashboard-action-grid">{actions.map(action=>{const Icon=iconFor(action.icon);return <Link href={action.href} className="card role-dashboard-action" key={action.title}><Icon aria-hidden="true"/><h3>{action.title}</h3><p>{action.detail}</p><span>Open <ArrowRight aria-hidden="true"/></span></Link>})}</div></div><aside className="card role-dashboard-journey" aria-label="How work moves"><span className="eyebrow">How work moves</span><ol>{journey.map((step,index)=><li key={step}><span>{String(index+1).padStart(2,'0')}</span><strong>{step}</strong></li>)}</ol><p><Building2 aria-hidden="true"/> Each step keeps its own organization-scoped record.</p></aside></section>
+  <RoleAuditWidget />
  </div>;
 }
