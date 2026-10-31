@@ -71,6 +71,17 @@ describe("AI procurement assistant contract", () => {
     expect(m.conversationCreate).not.toHaveBeenCalled();
   });
 
+  it("keeps anonymous public guidance deterministic even when the configured provider is unavailable", async () => {
+    m.actor.mockResolvedValue(null);
+    m.llm.mockResolvedValue({ content: "AI service temporarily unavailable." });
+    const response = await POST(request({ question: "Where can I find delivery ETA help?" }));
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toMatchObject({ scope: "public-guidance", toolsUsed: [] });
+    expect(body.text).toContain("committed delivery time");
+    expect(m.llm).not.toHaveBeenCalled();
+  });
+
   it("returns every grounded tool and its source evidence", async () => {
     const response = await POST(request({ question: "Show inventory, cashflow and RFQ status." }));
     expect(response.status).toBe(200);
