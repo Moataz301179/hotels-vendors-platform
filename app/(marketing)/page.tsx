@@ -51,7 +51,7 @@ const roleStarts = [
 export default function MarketingPage() {
   return (
     <main className={styles.home}>
-      <section className={heroStyles.hero}}>
+      <section className={heroStyles.hero}>
         <div className={`${styles.shell} ${heroStyles.heroShell}`}>
           <div>
             <p className={styles.eyebrow}>Procurement network · Egypt</p>
