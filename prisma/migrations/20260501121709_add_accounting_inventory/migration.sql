@@ -2,7 +2,7 @@
 CREATE TABLE "JournalEntry" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "entryNumber" TEXT NOT NULL,
-    "date" DATETIME NOT NULL,
+    "date" TIMESTAMP NOT NULL,
     "sourceType" TEXT NOT NULL,
     "sourceId" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -11,8 +11,8 @@ CREATE TABLE "JournalEntry" (
     "totalCredit" REAL NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'POSTED',
     "hotelId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "JournalEntry_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE "InventorySnapshot" (
     "aiSuggestion" TEXT,
     "occupancyRate" REAL,
     "consumptionRate" REAL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "InventorySnapshot_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -48,7 +48,7 @@ CREATE TABLE "new_Product" (
     "reorderPoint" INTEGER NOT NULL DEFAULT 10,
     "reorderQty" INTEGER NOT NULL DEFAULT 50,
     "avgDailyUsage" REAL NOT NULL DEFAULT 0,
-    "lastCountedAt" DATETIME,
+    "lastCountedAt" TIMESTAMP,
     "aiForecast" TEXT,
     "unitOfMeasure" TEXT NOT NULL DEFAULT 'piece',
     "shelfLifeDays" INTEGER,
@@ -57,8 +57,8 @@ CREATE TABLE "new_Product" (
     "specs" TEXT,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "supplierId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Product_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 INSERT INTO "new_Product" ("category", "createdAt", "currency", "description", "id", "images", "leadTimeDays", "minOrderQty", "name", "shelfLifeDays", "sku", "specs", "status", "stockQuantity", "subcategory", "supplierId", "temperatureReq", "unitOfMeasure", "unitPrice", "updatedAt", "volumeTiers") SELECT "category", "createdAt", "currency", "description", "id", "images", "leadTimeDays", "minOrderQty", "name", "shelfLifeDays", "sku", "specs", "status", "stockQuantity", "subcategory", "supplierId", "temperatureReq", "unitOfMeasure", "unitPrice", "updatedAt", "volumeTiers" FROM "Product";

@@ -20,8 +20,8 @@ CREATE TABLE "Competitor" (
     "funding" TEXT,
     "totalRaised" TEXT,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateTable
@@ -33,13 +33,13 @@ CREATE TABLE "MarketInsight" (
     "detail" TEXT,
     "sourceUrl" TEXT,
     "sourceName" TEXT,
-    "publishedAt" DATETIME,
+    "publishedAt" TIMESTAMP,
     "confidence" INTEGER NOT NULL DEFAULT 80,
     "impactScore" INTEGER NOT NULL DEFAULT 50,
     "competitorId" TEXT,
     "discoveredBy" TEXT NOT NULL,
     "verified" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "MarketInsight_competitorId_fkey" FOREIGN KEY ("competitorId") REFERENCES "Competitor" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
@@ -62,8 +62,8 @@ CREATE TABLE "FeatureProposal" (
     "proposedBy" TEXT NOT NULL,
     "votes" INTEGER NOT NULL DEFAULT 0,
     "relatedCompetitorIds" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateTable
@@ -76,12 +76,12 @@ CREATE TABLE "AgentRun" (
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "output" TEXT,
     "findings" TEXT,
-    "startedAt" DATETIME,
-    "completedAt" DATETIME,
+    "startedAt" TIMESTAMP,
+    "completedAt" TIMESTAMP,
     "durationMs" INTEGER,
     "parentRunId" TEXT,
     "childRunIds" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateIndex

@@ -249,3 +249,31 @@ PostgreSQL target for restore/rehearsal. Isolated Neon writes still require a
 separately reviewed branch-identity safety mechanism; do not relax the existing
 Neon denial or reuse production. Keep P0-CLERK, P0-ROLES and P0-NEON pending
 until live acceptance evidence exists, then rerun the release gate.
+
+### Latest isolated browser acceptance evidence (2026-11-02)
+
+An independent Playwright rerun was pointed at the isolated worktree on local
+port 3110. The configured smoke suite completed with 0/9 passing: all seven
+public-route requests returned HTTP 500 and both protected-route checks stayed
+on the requested path until timeout. Isolated dev-server output identifies the
+missing Clerk publishable key; the marketplace path also reports that the
+configured database user is denied. No auth state or credential contents were
+read or created. The guarded five-role suite remains blocked because approved
+dev Clerk configuration and five real non-production role states are absent.
+
+The controller's earlier localhost:3100 target was served by a different local
+checkout (`/Users/Moatazi/hotels-vendors/hotels-vendors/release`), not this
+isolated worktree. That checkout returned 404 for `/security-overview`,
+`/dashboard`, and `/onboarding`. Treat that run as invalid for acceptance of the
+current candidate. The isolated rerun confirms that the current runner still
+lacks the config/data prerequisites; it does not indicate that source or auth
+acceptance is fixed. Keep browser smoke, P0-CLERK, P0-ROLES, and the release gate
+blocked until the approved prerequisites are supplied and the full suites pass.
+
+## Applied migration source recovery — 2026-11-03
+
+Recovered six exact historical migration files from project-specific Mac checkouts; every source SHA-256 now matches all 51 successful migration ledger entries on the verified Neon rehearsal clone. The missing October 31 file and five altered May files are restored byte-for-byte. No SQL was synthesized, reapplied, or run against production. Added an immutable historical checksum regression baseline. Backup and rehearsal branches are ready and expire 2026-11-04 22:24 UTC; a fresh snapshot was refused by the project limit. P0-NEON remains pending full rehearsal/recovery acceptance. Clerk CLI transport is verified; real five-role development Clerk sessions/configuration remain unavailable. Production deployment remains blocked by web acceptance.
+
+## Runner authentication and Clerk routing repair — 2026-11-03
+
+Fixed a controller environment defect: isolating HOME without an explicit CODEX_HOME hid the valid ChatGPT credential directory. The repair worker now references the original Codex auth directory without copying credentials. No local model or paid API fallback is enabled. Preserved the concurrent Clerk explicit-path fix from commit 43b4b5f; role and nested authentication-route acceptance remains unverified. Other concurrent source work is preserved.
