@@ -30,7 +30,9 @@ describe("production activation shell syntax", () => {
   it("parses the exact YAML-rendered remote script before it can reach the VPS", () => {
     const remoteScript = activationRemoteScript();
     expect(remoteScript).toContain("verify_active_release()");
-    expect(remoteScript).toContain("VERIFY_ACTIVE_HEALTH");
+    expect(remoteScript).toContain("verify_process_identity()");
+    expect(remoteScript).toContain('verify_process_identity predeploy "$ACTIVE_SOURCE_SHA"');
+    expect(remoteScript).toContain('verify_process_identity postactivation "$GITHUB_SHA"');
     expect(remoteScript).toContain("VERIFY_PREFLIGHT_CSP");
 
     const syntax = spawnSync("bash", ["-n"], {

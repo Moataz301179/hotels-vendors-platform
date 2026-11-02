@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { validateProductionPm2State } from "../../scripts/recovery/verify-production-pm2-state.mjs";
@@ -14,7 +14,9 @@ describe("production PM2 predecessor identity gate", () => {
   let legacyLauncher = "";
 
   function fixture(launcher: "start-protected.sh" | "start-with-env.sh" = "start-with-env.sh", { env = true, runtimeEnv = true } = {}) {
-    root = mkdtempSync(join(tmpdir(), "hv-pm2-identity-"));
+    // macOS temporary directories may enter through /var while their canonical
+    // path is /private/var. Keep the fixture canonical like the production cwd.
+    root = realpathSync(mkdtempSync(join(tmpdir(), "hv-pm2-identity-")));
     cwd = join(root, `github-${sha}`);
     protectedLauncher = join(cwd, "deploy/pm2/start-protected.sh");
     legacyLauncher = join(cwd, "deploy/pm2/start-with-env.sh");
