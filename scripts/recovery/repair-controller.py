@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Persistent, fail-closed repair controller. No model credits or production writes required."""
-import argparse, datetime, fcntl, json, os, pathlib, subprocess, time, secrets
+"""Persistent, fail-closed release controller; production writes are disabled."""
+import argparse, datetime, fcntl, json, os, pathlib, shutil, signal, subprocess, time, secrets
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 STATE = ROOT / '.agent-runs' / 'repair-controller'
 TASKS = [
@@ -45,15 +45,32 @@ def cycle():
  return report
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--once',action='store_true');ap.add_argument('--interval',type=int,default=900);args=ap.parse_args()
+ ap=argparse.ArgumentParser();ap.add_argument('--once',action='store_true');ap.add_argument('--interval',type=int,default=900);ap.add_argument('--watch-repairs',action='store_true',help='poll public GitHub workflow metadata and run isolated ChatGPT Codex repairs');ap.add_argument('--poll-seconds',type=int,default=300);args=ap.parse_args()
  STATE.mkdir(parents=True,exist_ok=True)
  with (STATE/'controller.lock').open('w') as lock:
   try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError: print('Controller already running');return
-  while True:
-   try: cycle()
-   except Exception as exc:
-    with (STATE/'errors.log').open('a') as f:f.write(f'{datetime.datetime.now(datetime.timezone.utc).isoformat()} {exc!r}\n')
-   if args.once:break
-   time.sleep(max(60,args.interval))
+  watcher=None
+  if args.watch_repairs:
+   node=shutil.which('node')
+   if not node: raise SystemExit('Repair watcher blocked: Node.js not found on PATH')
+   log=(STATE/'repair-loop.log').open('a')
+   watcher=subprocess.Popen([node,str(ROOT/'scripts/recovery/repair-loop.mjs'),'--repo',str(ROOT),'--watch-github','true','--poll-seconds',str(max(300,args.poll_seconds))],cwd=ROOT,stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True)
+   time.sleep(0.2)
+   if watcher.poll() is not None:
+    log.close();raise SystemExit(f'Repair watcher exited during startup ({watcher.returncode}); inspect {STATE}/repair-loop.log')
+  try:
+   while True:
+    try: cycle()
+    except Exception as exc:
+     with (STATE/'errors.log').open('a') as f:f.write(f'{datetime.datetime.now(datetime.timezone.utc).isoformat()} {exc!r}\n')
+    if args.once:break
+    time.sleep(max(60,args.interval))
+  finally:
+   if watcher:
+    watcher.send_signal(signal.SIGTERM)
+    try: watcher.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+     watcher.kill();watcher.wait()
+    log.close()
 if __name__=='__main__': main()

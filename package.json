@@ -22,7 +22,9 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "eta:signer-gateway": "tsx scripts/eta-signer-gateway.ts",
     "test:browser": "playwright test",
-    "test:browser:auth": "HV_AUTH_E2E=1 node scripts/recovery/auth-e2e-preflight.mjs && playwright test --project=chromium-authenticated"
+    "test:browser:auth": "HV_AUTH_E2E=1 node scripts/recovery/auth-e2e-preflight.mjs && playwright test --project=chromium-authenticated",
+    "test:recovery": "node --test scripts/recovery/incident-router.test.mjs scripts/recovery/repair-loop.test.mjs",
+    "recovery:repair-loop": "node scripts/recovery/repair-loop.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

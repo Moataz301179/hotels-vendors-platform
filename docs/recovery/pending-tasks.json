@@ -5,14 +5,14 @@
     {
       "id": "P0-CI",
       "title": "GitHub release CI green",
-      "state": "verified",
-      "evidence": "GitHub Actions run 41459198158"
+      "state": "pending",
+      "evidence": "Reopened: run 41459198158 belongs to older SHA 769cf7f8…; current PR #46 HEAD 2c1aa95262c45de6495ee621f36a460ef6a12596 has CI run 41490264163 failed."
     },
     {
       "id": "P0-DB",
       "title": "Isolated database schema and procurement integration tests",
-      "state": "verified",
-      "evidence": "6 integration tests and 20-table schema check"
+      "state": "pending",
+      "evidence": "Reopened: prior isolated DB evidence is not bound to the current candidate SHA; current procurement integration run is 5/6 with invoice creation returning 409 instead of 201."
     },
     {
       "id": "P0-NEON",
@@ -95,5 +95,6 @@
       "title": "Verify and repair Oracle/ERP CSV fallback, supplier/carrier/funder integrations and operational workflows",
       "state": "pending"
     }
-  ]
+  ],
+  "webProductionChecklist": "docs/recovery/web-production-deployment-checklist.md"
 }
