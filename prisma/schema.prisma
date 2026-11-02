@@ -2812,6 +2812,9 @@ model GoodsReceiptNote {
   receivedById      String?
   warehouseLocation String?
   deliveryNoteRef   String?
+  idempotencyKey    String?
+  idempotencyRequestHash String?
+  idempotencyOrderStatus String?
   vehiclePlate      String?
   notes             String?
   receivedAt        DateTime  @default(now())
@@ -2830,6 +2833,7 @@ model GoodsReceiptNote {
   tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   lineItems GrnLineItem[]
 
+  @@unique([tenantId, orderId, idempotencyKey], map: "GoodsReceiptNote_tenant_order_idempotency_key")
   @@index([tenantId])
   @@index([orderId])
   @@index([hotelId])
