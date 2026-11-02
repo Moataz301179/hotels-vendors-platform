@@ -71,16 +71,21 @@ function parseRows(content: string, requiredHeaders: string[]): Record<string, s
   }
   if (quoted) throw new Error('CSV_UNTERMINATED_QUOTE');
   if (cell.length || row.length) { row.push(cell); rows.push(row); }
-  const headers = rows.shift()?.map((header) => header.trim().toLowerCase()) ?? [];
+  const headers = rows.shift()?.map((header) => header.replace(/^\uFEFF/, '').trim().toLowerCase()) ?? [];
+  if (headers.length === 0 || headers.some((header) => header === '')) throw new Error('CSV_HEADER_INVALID');
+  if (new Set(headers).size !== headers.length) throw new Error('CSV_DUPLICATE_HEADER');
   if (requiredHeaders.some((header) => !headers.includes(header))) throw new Error('CSV_REQUIRED_HEADER_MISSING');
-  return rows.filter((values) => values.some((value) => value.trim() !== '')).map((values) =>
-    Object.fromEntries(headers.map((header, index) => [header, (values[index] ?? '').trim()])),
-  );
+  return rows.filter((values) => values.some((value) => value.trim() !== '')).map((values) => {
+    if (values.length !== headers.length) throw new Error('CSV_ROW_WIDTH_MISMATCH');
+    return Object.fromEntries(headers.map((header, index) => [header, (values[index] ?? '').trim()]));
+  });
 }
 
 function parseInteger(value: string, field: string): number {
-  if (!/^-?\d+$/.test(value)) throw new Error(`CSV_INVALID_INTEGER:${field}`);
-  return Number(value);
+  if (!/^\d+$/.test(value)) throw new Error(`CSV_INVALID_INTEGER:${field}`);
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) throw new Error(`CSV_INVALID_INTEGER:${field}`);
+  return parsed;
 }
 
 function csvCell(value: string | number): string {
