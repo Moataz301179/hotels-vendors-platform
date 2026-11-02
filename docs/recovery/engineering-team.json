@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "strategy": "parallel isolated diagnosis, evidence collection, single integration gate",
+  "agents": [
+    {"id":"auth-tenancy","specialty":"Clerk authentication, multi-tenant RBAC, organization onboarding and authorization","command":"npx vitest run tests/p0/auth-tenant-isolation.spec.ts", "risk":"high"},
+    {"id":"procurement","specialty":"RFQ, supplier quotes, PO, GRN, invoice, settlement, maker-checker","command":"npm run test:integration", "risk":"high"},
+    {"id":"quality","specialty":"regression, unit tests, root-cause isolation and repeatability","command":"npm test", "risk":"medium"},
+    {"id":"frontend","specialty":"click-first five-role portals, browser routing, onboarding, accessibility","command":"npx playwright test", "risk":"medium"},
+    {"id":"build-release","specialty":"TypeScript, Next.js build, runtime packaging, deployment readiness","command":"npm run build", "risk":"high"},
+    {"id":"data-integrity","specialty":"PostgreSQL/Prisma migrations, tenant data and immutable ledgers","command":"node scripts/verify-live-procurement-schema.mjs", "risk":"high"}
+  ],
+  "coordination": {
+    "branch":"release/nov02-verified",
+    "integration":"No independent agent may merge or deploy. Integrator must reconcile every diagnosis and verify full CI, E2E, Neon backup and production gate.",
+    "constraints":"Never expose secrets, bypass role checks, mutate production data during tests, or fabricate acceptance evidence.",
+    "resolution":"Capture reproducible failures, identify causal component, add regression test, repair on isolated branch, rerun targeted then global tests, update cumulative backlog with evidence."
+  }
+}

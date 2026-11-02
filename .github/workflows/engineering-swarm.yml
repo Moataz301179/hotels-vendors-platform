@@ -1,0 +1,63 @@
+name: HotelsVendors Parallel Engineering Diagnostics
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: hv-engineering-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  parallel-diagnostics:
+    strategy:
+      fail-fast: false
+      matrix:
+        track: [auth-tenancy, procurement, quality, frontend, build-release, data-integrity]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: sk_test_placeholder
+      SESSION_SECRET: ci-only-not-used-by-clerk
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+      REDIS_URL: redis://127.0.0.1:6379
+      HV_RELEASE_SMOKE: '1'
+      HV_EXPECT_NETWORK_LEDGER_IMMUTABILITY: '0'
+    services:
+      postgres:
+        image: postgres:16
+        env: {POSTGRES_USER: ci, POSTGRES_PASSWORD: ci, POSTGRES_DB: ci}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U ci -d ci'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+      - run: npx prisma db push --skip-generate
+      - if: matrix.track == 'frontend'
+        run: npx playwright install --with-deps chromium
+      - name: Run specialist diagnostic with isolated evidence
+        env:
+          TRACK: ${{ matrix.track }}
+        run: bash scripts/run-engineering-track.sh "$TRACK"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hv-engineering-${{ matrix.track }}
+          path: |
+            recovery-reports/
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
