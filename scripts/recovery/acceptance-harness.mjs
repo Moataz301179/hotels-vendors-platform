@@ -37,9 +37,17 @@ for (const [name, command] of checks) {
   }
   evidence.push({ name, command, status, exitCode, missing, output });
 }
-const pending = priority.groups.flatMap(group => group.tasks.map(id => ({ id, priority:group.priority, title:tasks.get(id).title, state:tasks.get(id).state, evidence:tasks.get(id).evidence ?? null }))).filter(x => x.state !== 'verified');
-const report = { generatedAt:new Date().toISOString(), mode:run?'execute':'inventory', head:spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim(), blockers:pending, checks:evidence, productionReady:pending.filter(x => x.id !== 'P0-DEPLOY').length === 0 && evidence.every(x => x.status === 'passed') };
+const pending = priority.groups.flatMap(group => group.tasks.map(id => ({ id, priority:group.priority, title:tasks.get(id).title, state:tasks.get(id).state, releaseScope:tasks.get(id).releaseScope ?? 'web', evidence:tasks.get(id).evidence ?? null }))).filter(x => x.state !== 'verified');
+const webPredeployBlockers = pending.filter(x => x.id !== 'P0-DEPLOY' && x.releaseScope !== 'mobile');
+const report = {
+  generatedAt:new Date().toISOString(), mode:run?'execute':'inventory',
+  head:spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim(),
+  blockers:pending, webPredeployBlockers, checks:evidence,
+  productionReady:webPredeployBlockers.length === 0 && evidence.every(x => x.status === 'passed'),
+  fullReleaseReady:pending.length === 0 && evidence.every(x => x.status === 'passed')
+};
 mkdirSync('recovery-reports', { recursive:true });
 writeFileSync('recovery-reports/acceptance-latest.json', JSON.stringify(report,null,2)+'\n');
-console.log(JSON.stringify({ productionReady:report.productionReady, blockers:pending.map(x=>x.id), checks:evidence.map(x=>({name:x.name,status:x.status,missing:x.missing})) }));
-if (args.has('--require-ready') && !report.productionReady) process.exitCode=1;
+console.log(JSON.stringify({ productionReady:report.productionReady, fullReleaseReady:report.fullReleaseReady, blockers:pending.map(x=>x.id), webPredeployBlockers:webPredeployBlockers.map(x=>x.id), checks:evidence.map(x=>({name:x.name,status:x.status,missing:x.missing})) }));
+if (args.has('--require-predeploy-ready') && !report.productionReady) process.exitCode=1;
+if (args.has('--require-ready') && !report.fullReleaseReady) process.exitCode=1;

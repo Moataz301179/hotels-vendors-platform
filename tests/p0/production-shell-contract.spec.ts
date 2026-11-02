@@ -77,9 +77,10 @@ describe("production shell and authorization contracts", () => {
 
   it("restores an immutable release identity when activation rolls back", () => {
     const deploy = readFileSync(join(root, ".github/workflows/deploy-production.yml"), "utf8");
-    expect(deploy).toContain('ACTIVE_RELEASE_ID="$(basename "$ACTIVE_RELEASE")"');
-    expect(deploy).toContain('ACTIVE_SOURCE_SHA="${ACTIVE_RELEASE_ID#github-}"');
+    expect(deploy).toContain('ACTIVE_RELEASE_ID="$(node -e \'process.stdout.write(JSON.parse(process.argv[1]).releaseId)\' "$ACTIVE_STATE")"');
+    expect(deploy).toContain('ACTIVE_SOURCE_SHA="$(node -e \'process.stdout.write(JSON.parse(process.argv[1]).sourceSha)\' "$ACTIVE_STATE")"');
     expect(deploy).toContain('HV_RELEASE_ID="$ACTIVE_RELEASE_ID" HV_SOURCE_SHA="$ACTIVE_SOURCE_SHA" PORT=3008');
+    expect(deploy).toContain("verify_process_identity predeploy");
     expect(deploy).toContain("Rollback did not restore the prior production release identity");
     expect(deploy).toContain("Active production process is unhealthy; restoring its immutable release before activation");
     expect(deploy).toContain("Active production process did not recover before activation");

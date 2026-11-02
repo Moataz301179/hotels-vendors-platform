@@ -82,3 +82,5 @@ mktemp(5792) MallocStackLogging: could not tag MSL-related memory as no_footprin
 
 # Generated recovery reports
 recovery-reports/
+.agent-runs/
+.agent-home/

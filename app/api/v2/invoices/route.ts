@@ -28,9 +28,19 @@ export async function POST(req: Request) {
   if (Math.abs(total - (subtotal + vatAmount)) > 0.01) {
     return NextResponse.json({ error: "Invoice total must equal subtotal plus the explicitly supplied VAT amount." }, { status: 400 });
   }
+  // The order belongs to the buyer tenant, while the authenticated supplier
+  // belongs to the supplier tenant. Scope supplier submissions through the
+  // server-resolved supplier relation, not the buyer-owned order tenantId.
   const order = await prisma.order.findFirst({
     where: actor.platformRole === "SUPPLIER"
-      ? { id: orderId, supplierId: actor.supplierId ?? "", tenantId: actor.tenantId, status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null }
+      ? {
+          id: orderId,
+          supplierId: actor.supplierId ?? "",
+          supplier: { id: actor.supplierId ?? "", tenantId: actor.tenantId },
+          status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] },
+          paymentGuaranteed: true,
+          deletedAt: null,
+        }
       : { id: orderId, tenantId: actor.tenantId, status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null },
     select: { id: true, tenantId: true, hotelId: true, supplierId: true },
   });
@@ -39,7 +49,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "INVOICE_ROLE_REQUIRED" }, { status: 403 });
   }
   try {
-    const invoice = await prisma.$transaction(async (tx): Promise<any> => {
+    const invoice = await prisma.$transaction(async (tx) => {
       const created = await tx.invoice.create({
         data: {
           invoiceNumber,
@@ -77,9 +87,11 @@ export async function POST(req: Request) {
       return created;
     });
     return NextResponse.json({ invoice, outcome: { invoice: "DRAFT", eta: invoice.etaStatus } }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[invoice] failed to record", error);
-    if (error?.code === "P2002") return NextResponse.json({ error: "Invoice number already exists." }, { status: 409 });
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
+      return NextResponse.json({ error: "Invoice number already exists." }, { status: 409 });
+    }
     return NextResponse.json({ error: "INVOICE_COULD_NOT_BE_RECORDED" }, { status: 500 });
   }
 }

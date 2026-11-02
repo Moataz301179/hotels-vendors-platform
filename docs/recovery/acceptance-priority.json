@@ -5,7 +5,8 @@
     {"priority": "P0-AUTHENTICATED-E2E", "tasks": ["P0-CLERK", "P0-ROLES", "P0-LIFECYCLE"]},
     {"priority": "P0-DATABASE-RESTORE", "tasks": ["P0-NEON", "P0-DB"]},
     {"priority": "P0-SECURITY-INTEGRITY", "tasks": ["P1-OPS", "P0-INTEGRATIONS", "P1-CATALOG"]},
-    {"priority": "P0-UX-DEVICE", "tasks": ["P0-UX", "P0-REDESIGN", "P0-ONBOARDING", "P1-MOBILE"]},
+    {"priority": "P0-UX", "tasks": ["P0-UX", "P0-REDESIGN", "P0-ONBOARDING"]},
+    {"priority": "P1-MOBILE-STORE", "tasks": ["P1-MOBILE"]},
     {"priority": "P0-RELEASE-RECONCILIATION", "tasks": ["P0-PR46-50", "P0-GROK", "P1-LEGACY", "P0-CI"]},
     {"priority": "P0-DEPLOYMENT", "tasks": ["P0-DEPLOY"]}
   ],

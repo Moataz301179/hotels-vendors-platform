@@ -126,6 +126,7 @@ jobs:
           tar -C . -rf hv-release.tar public
           tar -C . -rf hv-release.tar scripts/verify-live-procurement-schema.mjs
           tar -C . -rf hv-release.tar scripts/reconcile-nginx-csp.mjs
+          tar -C . -rf hv-release.tar scripts/recovery/verify-production-pm2-state.mjs
           tar -C . -rf hv-release.tar deploy/pm2/start-protected.sh
           gzip hv-release.tar
           mv hv-release.tar.gz hv-release.tgz
@@ -204,26 +205,22 @@ jobs:
           test -s "$ARCHIVE"
           test -s "$RUNTIME_ARCHIVE"
           test ! -e "$RELEASE"
-          ACTIVE_RELEASE="$(pm2 jlist | node -e '
-            const fs = require("fs");
-            const entry = JSON.parse(fs.readFileSync(0, "utf8"))
-              .find((entry) => entry.name === "hotels-vendors-production");
-            if (!entry?.pm2_env?.pm_cwd) process.exit(1);
-            process.stdout.write(entry.pm2_env.pm_cwd);
-          ')"
-          ACTIVE_EXEC="$(pm2 jlist | node -e '
-            const fs = require("fs");
-            const entry = JSON.parse(fs.readFileSync(0, "utf8"))
-              .find((entry) => entry.name === "hotels-vendors-production");
-            if (!entry?.pm2_env?.pm_exec_path) process.exit(1);
-            process.stdout.write(entry.pm2_env.pm_exec_path);
-          ')"
-          test -f "$ACTIVE_RELEASE/.env"
-          test -f "$ACTIVE_RELEASE/.runtime-env"
-          test "$ACTIVE_EXEC" = "$ACTIVE_RELEASE/deploy/pm2/start-protected.sh"
-          ACTIVE_RELEASE_ID="$(basename "$ACTIVE_RELEASE")"
-          ACTIVE_SOURCE_SHA="${ACTIVE_RELEASE_ID#github-}"
-          test "$ACTIVE_SOURCE_SHA" != "$ACTIVE_RELEASE_ID"
+          verify_process_identity() {
+            local phase="$1"
+            local expected_sha="${2:-}"
+            if [ -n "$expected_sha" ]; then
+              tar -xOf "$ARCHIVE" scripts/recovery/verify-production-pm2-state.mjs |
+                node --input-type=module - --phase "$phase" --release-root "$RELEASE_ROOT" --port 3008 --expected-sha "$expected_sha"
+            else
+              tar -xOf "$ARCHIVE" scripts/recovery/verify-production-pm2-state.mjs |
+                node --input-type=module - --phase "$phase" --release-root "$RELEASE_ROOT" --port 3008
+            fi
+          }
+          ACTIVE_STATE="$(verify_process_identity predeploy)"
+          ACTIVE_RELEASE="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).releaseDir)' "$ACTIVE_STATE")"
+          ACTIVE_RELEASE_ID="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).releaseId)' "$ACTIVE_STATE")"
+          ACTIVE_SOURCE_SHA="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).sourceSha)' "$ACTIVE_STATE")"
+          ACTIVE_EXEC="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).execPath)' "$ACTIVE_STATE")"
           # A candidate must never replace a process whose Nginx routing has
           # not been reconciled.  Historical evidence contains 3057/4000/3008
           # variants; this exact workflow can activate only the governed 3008
@@ -245,17 +242,7 @@ jobs:
             exit 1
           fi
           verify_active_release() {
-            ACTIVE_HEALTH="$(curl -fsS http://127.0.0.1:3008/api/health 2>/dev/null || true)"
-            node - "$ACTIVE_SOURCE_SHA" "$ACTIVE_HEALTH" <<'VERIFY_ACTIVE_HEALTH'
-            const [expectedSha, responseBody] = process.argv.slice(2);
-            const health = JSON.parse(responseBody);
-            if (health.ok !== true || health.database !== "ready" || health.authorization !== "configured") {
-              throw new Error("The active production process did not pass the health gate");
-            }
-            if (health.sourceCommit !== expectedSha || health.releaseId !== `github-${expectedSha}`) {
-              throw new Error("The active production process does not match its immutable release identity");
-            }
-          VERIFY_ACTIVE_HEALTH
+            verify_process_identity predeploy "$ACTIVE_SOURCE_SHA" >/dev/null
           }
           restore_active_release() {
             pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
@@ -280,9 +267,13 @@ jobs:
           mkdir -p "$RELEASE"
           tar -xzf "$ARCHIVE" -C "$RELEASE"
           rm -f "$ARCHIVE"
-          cp "$ACTIVE_RELEASE/.env" "$RELEASE/.env"
+          # The verified predecessor may store its full runtime configuration
+          # only in .runtime-env. Use that canonical protected file as the
+          # baseline for both candidate files; append this deployment's
+          # protected overrides exactly once below.
+          cp "$ACTIVE_RELEASE/.runtime-env" "$RELEASE/.env"
           chmod 600 "$RELEASE/.env"
-          cp "$ACTIVE_RELEASE/.env" "$RELEASE/.runtime-env"
+          cp "$ACTIVE_RELEASE/.runtime-env" "$RELEASE/.runtime-env"
           cat "$RUNTIME_ARCHIVE" >> "$RELEASE/.runtime-env"
           rm -f "$RUNTIME_ARCHIVE"
           chmod 600 "$RELEASE/.runtime-env"
@@ -348,6 +339,18 @@ jobs:
           }
           pm2 delete hotels-vendors-production >/dev/null 2>&1 || true
           if ! HV_RUNTIME_ENV_FILE="$RELEASE/.runtime-env" HV_RELEASE_ID="github-${GITHUB_SHA}" HV_SOURCE_SHA="$GITHUB_SHA" PORT=3008 NODE_ENV=production pm2 start "$RELEASE/deploy/pm2/start-protected.sh" --interpreter bash --name hotels-vendors-production --cwd "$RELEASE" --time >/dev/null; then
+            rollback
+            exit 1
+          fi
+          postactivation_state=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if postactivation_state="$(verify_process_identity postactivation "$GITHUB_SHA" 2>/dev/null)"; then
+              break
+            fi
+            sleep 1
+          done
+          if [ -z "$postactivation_state" ]; then
+            echo "Refusing activation: PM2 process, port 3008, health, and protected launcher identity did not agree" >&2
             rollback
             exit 1
           fi

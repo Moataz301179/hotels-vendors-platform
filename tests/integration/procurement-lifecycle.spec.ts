@@ -38,10 +38,12 @@ const ids = {
   approver: `it-approver-${run}`,
   receiver: `it-receiver-${run}`,
   supplierUser: `it-supplier-user-${run}`,
+  otherSupplierUser: `it-other-supplier-user-${run}`,
   admin: `it-admin-${run}`,
 };
 
 let supplierId = '';
+let otherSupplierId = '';
 let productId = '';
 let departmentId = '';
 
@@ -123,6 +125,8 @@ describe('procurement lifecycle against the isolated database', () => {
     await prisma.departmentCategoryAccess.create({ data: { departmentId, category: 'GUEST_SUPPLIES' } });
     const supplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Supplier ${run}`, taxId: `ST${run.slice(0, 19)}`, email: `supplier-${run}@example.test`, website: 'https://supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
     supplierId = supplier.id;
+    const otherSupplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Other supplier ${run}`, taxId: `OT${run.slice(0, 19)}`, email: `other-supplier-${run}@example.test`, website: 'https://other-supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
+    otherSupplierId = otherSupplier.id;
     const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Verified lifecycle product', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
     productId = product.id;
     await prisma.evidenceRecord.create({ data: { tenantId: ids.supplierTenant, entityId: product.id, entityName: 'PRODUCT', sourceUrl: 'https://supplier.example.test/products/lifecycle', sourceReference: 'integration fixture', provenanceClass: 'AUTHORIZED', status: 'RESOLVED' } });
@@ -132,6 +136,7 @@ describe('procurement lifecycle against the isolated database', () => {
       { id: ids.approver, email: `approver-${run}@example.test`, name: 'Lifecycle approver', role: 'GM', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, roleId: hotelRole.id },
       { id: ids.receiver, email: `receiver-${run}@example.test`, name: 'Lifecycle receiver', role: 'RECEIVING_CLERK', platformRole: 'HOTEL', tenantId: ids.hotelTenant, hotelId: hotel.id, roleId: hotelRole.id },
       { id: ids.supplierUser, email: `supplier-user-${run}@example.test`, name: 'Lifecycle supplier', role: 'CLERK', platformRole: 'SUPPLIER', tenantId: ids.supplierTenant, supplierId, roleId: supplierRole.id },
+      { id: ids.otherSupplierUser, email: `other-supplier-user-${run}@example.test`, name: 'Other lifecycle supplier', role: 'CLERK', platformRole: 'SUPPLIER', tenantId: ids.supplierTenant, supplierId: otherSupplierId, roleId: supplierRole.id },
       { id: ids.admin, email: `admin-${run}@example.test`, name: 'Lifecycle admin', role: 'OWNER', platformRole: 'ADMIN', tenantId: ids.platformTenant, roleId: adminRole.id },
     ] });
 
@@ -289,6 +294,18 @@ describe('procurement lifecycle against the isolated database', () => {
     await persistAcceptedEtaClearance(order.id);
     const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     expect(receiptResponse.status).toBe(201);
+
+    asActor({ id: ids.otherSupplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId: otherSupplierId });
+    const otherSupplierInvoiceNumber = `IT-INV-OTHER-${run.slice(0, 12)}`;
+    const otherSupplierInvoiceResponse = await submitInvoice(request('https://hotelsvendors.test/api/v2/invoices', {
+      invoiceNumber: otherSupplierInvoiceNumber,
+      orderId: order.id,
+      subtotal: 420,
+      vatAmount: 58.8,
+      total: 478.8,
+    }));
+    expect(otherSupplierInvoiceResponse.status).toBe(409);
+    await expect(prisma.invoice.count({ where: { orderId: order.id, invoiceNumber: otherSupplierInvoiceNumber } })).resolves.toBe(0);
 
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     const invoiceResponse = await submitInvoice(request('https://hotelsvendors.test/api/v2/invoices', {

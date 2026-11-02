@@ -135,6 +135,38 @@ flow on an approved local runner, capture `.auth/{hotel,supplier,carrier,funder,
 outside source control, then run `npm run test:browser:auth`. Do not use
 production credentials, fake sessions, or deploy.
 
+## Production PM2 predecessor validation — 2026-11-02
+
+### Verified in this isolated continuation
+
+- Source baseline: `a756248630b7725f9fddae34867a82e32565b278` on
+  `codex/web-priority-repairs-20261102`; work was performed in a separate
+  scratch worktree.
+- The deploy workflow now accepts `start-with-env.sh` only as the current
+  predeployment predecessor after checking one online canonical production
+  PM2 release, its full SHA-derived release directory, runtime files, exact
+  health identity, and that the expected PM2 PID owns port 3008.
+- Normal candidate activation still uses `start-protected.sh`; postactivation
+  now fails and rolls back unless that exact wrapper, requested SHA, health,
+  PM2 identity, and port ownership agree.
+- Added fixture regressions for the legacy predeployment case, protected
+  postactivation, duplicate processes, path/SHA/health mismatches, and wrong
+  or ambiguous port ownership.
+- Focused Vitest: 3 files / 19 tests passed. Node syntax check, extracted
+  remote Bash syntax check, and `git diff --check` passed.
+
+### Not performed
+
+- No remote workflow dispatch, production write, PM2 restart, migration,
+  Nginx change, or deployment was performed. CI for this new commit remains
+  pending.
+
+### Exact next action
+
+Review and push the isolated change through normal branch review, then require
+green CI on the resulting commit. Production deployment remains gated by the
+existing recovery acceptance and explicit Neon backup confirmation.
+
 ## Security identity-boundary repair — 2026-11-02
 
 ### Verified in this isolated continuation
