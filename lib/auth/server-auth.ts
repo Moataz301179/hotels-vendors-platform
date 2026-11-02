@@ -25,17 +25,25 @@ export const getCurrentUser = cache(async (): Promise<ServerUser | null> => {
   if (!userId) return null;
 
   const clerkUser = await currentUser();
-  const email = clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress;
+  const primaryEmail = clerkUser?.emailAddresses.find(
+    (address) => address.id === clerkUser.primaryEmailAddressId,
+  );
+  const email = primaryEmail?.emailAddress;
   if (!email) return null;
+  if (primaryEmail.verification?.status !== "verified") return null;
 
   const user = await prisma.user.findUnique({
     where: { email },
     select: {
       id: true, email: true, name: true, role: true, platformRole: true,
       tenantId: true, hotelId: true, supplierId: true, factoringCompanyId: true, canOverride: true,
+      clerkUserId: true, status: true, deletedAt: true,
     },
   });
-  return user as ServerUser | null;
+  if (!user || user.deletedAt || user.status !== "ACTIVE") return null;
+  // A legacy row may be unbound, but once bound it must belong to this Clerk subject.
+  if (user.clerkUserId && user.clerkUserId !== userId) return null;
+  return user as ServerUser;
 });
 
 export async function requireAuth(): Promise<ServerUser> {

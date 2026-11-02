@@ -134,3 +134,28 @@ Create the five real non-production Clerk sessions through the normal sign-in
 flow on an approved local runner, capture `.auth/{hotel,supplier,carrier,funder,admin}.json`
 outside source control, then run `npm run test:browser:auth`. Do not use
 production credentials, fake sessions, or deploy.
+
+## Security identity-boundary repair — 2026-11-02
+
+### Verified in this isolated continuation
+
+- Repaired `lib/auth/server-auth.ts`: legacy `getCurrentUser()` now requires
+  the Clerk primary email to be verified, rejects deleted/non-ACTIVE users, and
+  enforces a bound `clerkUserId` match before returning authorization context.
+- Added `tests/p0/server-auth-identity-boundary.spec.ts` covering subject
+  mismatch, deleted, suspended, pending, unverified-email, and valid-session
+  paths.
+- Focused Vitest: 3 files / 22 tests passed.
+- `npx tsc --noEmit` passed; `git diff --check` passed.
+
+### Not verified
+
+- No authenticated Clerk browser sessions or five-role tenant-isolation E2E was
+  run. Hermes desktop access was denied by the UI permission boundary, so it
+  supplied no project evidence.
+- No production data, credentials, deployment, or release-gate bypass was used.
+
+### Exact next action
+
+Run the existing authenticated browser suite on an approved isolated runner
+with five externally-created non-production Clerk storage states.
