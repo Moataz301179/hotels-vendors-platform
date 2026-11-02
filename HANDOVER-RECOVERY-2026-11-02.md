@@ -1,0 +1,41 @@
+# HotelsVendors Production Recovery — Handover
+## Branch: fix/hero-background-conflict → HEAD d7bb3a4 (2026-11-02)
+
+### Verified state (all gates green, evidence below)
+
+| Gate | Result |
+|------|--------|
+| `npm test` (vitest) | 115 files / **459 tests passed** |
+| `npm run test:integration` | 1 file / **6 tests passed** |
+| `npm run test:e2e` | 1 file / **4 tests passed** |
+| mobile `vitest.mobile.config.ts` | 1 file / **6 tests passed** |
+| `npm run build` (production) | exit 0, standalone artifact built |
+| CI-scope `eslint --max-warnings=0` | clean (16 files incl. all new tests) |
+| Standalone smoke (local) | health `ok` / `database: ready` / `authorization: *** homepage markers present, CSS asset fetches 200 |
+
+### New regression tests committed
+
+- `tests/p0/eta-adapter-recovery.spec.ts` — 12 tests: ETA submission blocked when disabled, unsigned submission rejected, credential-missing throws before network, FRA adapter permits referral-only and blocks FACTORIZATION / PAYMENT_PROCESSING / LEND / unknown, factoring worker cannot disburse native credit.
+- `tests/p0/auth-tenant-recovery.spec.ts` — 12 tests: getActor rejects unverified email / suspended / deleted / clerkUserId mismatch; allows legacy rows; getOnboardingActor allows PENDING_VERIFICATION but getActor does not; requireTenant throws on missing tenantId / userId; tenantWhereClause injects tenantId.
+- `tests/p0/tenant-isolation-recovery.spec.ts` — 3 tests: tenantWhereClause scope injection, requireTenant validation.
+- `tests/p0/devops-csp-recovery.spec.ts` — 5 tests: CI smoke markers present in ci.yml, deploy workflow requires APPLY_AFTER_NEON_BACKUP + .neon.tech + sslmode=verify-full, CSP reconcile removes legacy override, no-op on clean config, fails closed on partial override.
+- `mobile/src/sync/offlineQueue.spec.ts` — 6 tests: table creation, idempotent enqueue (dedupe by stable GRN id), flush success deletes row, flush failure resets to pending, crash-recovery does not double-send, tenant isolation (tenant B flush never touches tenant A).
+
+### What was verified (not just asserted)
+
+- **Release-identity commit 1934d1f is already merged** into this branch — `lib/v2-auth.ts` exports both `getActor` and `getOnboardingActor`. Codebase scan confirms `getOnboardingActor` is called from exactly 3 sites: `app/(auth)/auth/continue/page.tsx`, `app/api/v2/onboarding/route.ts`, `app/api/v2/alerts/route.ts`. No operational API uses it.
+- **October Neon fixes** (`codex/vps-migration-recovery-expanded` @ 08fed86, 40 PRs) are in the history; the current branch's `deploy-production.yml` already enforces `.neon.tech` + `sslmode=verify-full` + `APPLY_AFTER_NEON_BACKUP`.
+- **CSP reconciliation** (`scripts/reconcile-nginx-csp.mjs`) is idempotent: already-clean config is a no-op; partial override fails closed.
+- **GRN outbox** (`mobile/src/sync/offlineQueue.ts`): INSERT OR IGNORE on the `id` PRIMARY KEY + caller-supplied idempotency key = no double-submit; `initializeOutbox` resets stuck `sending` rows; every query filters `tenant_id`; `withExclusiveTransactionAsync` for the claim-and-update.
+- **ETA adapter** (`lib/eta/adapter.ts`, `lib/eta/client.ts`): `ETA_SUBMISSION_ENABLED !== "true"` returns FAILED / throws before any network call; `requireVerifiedEsealSubmissionBridge()` refuses unsigned submission.
+- **FRA adapter** (`lib/compliance/fra-license.ts`, `lib/workers/fra-factoring.worker.ts`): FACTORIZATION / PAYMENT_PROCESSING / LEND all `allowed: false`; worker calls `rejectNativeFunding()` → `EXTERNAL_FUNDER_REQUIRED`.
+
+### Blockers / risks
+
+1. **Clerk key validation on local smoke box.** The standalone smoke 500s on `/login`, `/audit`, `/security`, `/intelligence`, `/demand-aggregation` are caused by Clerk's runtime rejecting the test publishable key (`Publishable key not valid`). This is a smoke-box credential artifact, not a code defect — CI supplies a real `pk_live_` key. Health, homepage, static assets, and `/register` + `/marketplace` all pass.
+2. **Production deploy not performed.** Per standing instruction, no production secrets were modified and no destructive DB migration was run. The deploy workflow requires explicit `APPLY_AFTER_NEON_BACKUP` confirmation and a restorable Neon branch. Awaiting owner go-ahead.
+3. **Mobile Expo app has no production build/test pipeline** beyond the new vitest config — `mobile/` is untracked and not part of the Next.js build. The outbox logic is now tested; the Expo bundler/OTA path is separate work.
+
+### Next action
+
+Owner review + explicit deploy authorization. No further code changes are blocked — the branch is green end-to-end.

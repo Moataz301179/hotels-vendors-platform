@@ -1,0 +1,1 @@
+{"expo":{"name":"HOVIN","slug":"hovin-mobile","scheme":"hovin","plugins":["expo-router","expo-sqlite"],"ios":{"bundleIdentifier":"com.hotelsvendors.hovin"},"android":{"package":"com.hotelsvendors.hovin"}}}
