@@ -159,3 +159,61 @@ production credentials, fake sessions, or deploy.
 
 Run the existing authenticated browser suite on an approved isolated runner
 with five externally-created non-production Clerk storage states.
+
+## Autonomous repair continuation — 2026-11-02
+
+Source baseline: `2c1aa95262c45de6495ee621f36a460ef6a12596` on
+`release/nov02-verified`. The owner explicitly requested this existing branch;
+no branch switch, reset, cleanup, or reconciliation of existing artifacts occurred.
+The continuation commit containing this section records the repaired revision.
+
+### Changes and verified evidence
+
+- `lib/v2-auth.ts`: operational actor lookup no longer provisions or returns a
+  pending signup. Concurrent onboarding upserts cannot overwrite an existing
+  Clerk subject, and their returned identity/status is checked. New tenant slugs
+  hash the full Clerk subject rather than a collision-prone suffix. Tests cover
+  all five persisted roles and concurrent cross-identity takeover attempts.
+- Both recovery runners now invoke `npm run test:browser:auth`, preserving the
+  required local-environment and approved-storage-state preflight. Two new
+  executable regressions failed before this fix and passed afterward.
+- Restore tooling keeps connection credentials out of subprocess arguments,
+  withholds subprocess errors containing private SQL, clears inherited libpq
+  routing, disables psql startup files, validates PostgreSQL URLs/options, and
+  rejects a restore/migration target matching the active database. Integration
+  tests default to loopback targets; remote writes require a separately supplied
+  isolated target and confirmation. All Neon URLs remain conservatively denied.
+- Final `npx vitest run tests/p0 --reporter=dot`: **126 files / 508 tests passed**.
+- `npx tsc --noEmit --pretty false`, changed-file ESLint, and `git diff --check`
+  passed. Targeted auth, restore, and runner regressions also passed.
+- `npm run test:integration` failed before test execution because `DATABASE_URL`
+  is absent. No database integration success is claimed.
+- Auth preflight failed closed: `HV_AUTH_ENV=local` and all five approved role
+  storage states are missing. `node scripts/recovery-gate.mjs
+  --require-predeploy-ready` exited 1; 15 acceptance tasks remain open.
+
+### Blockers and limits
+
+The runner environment has no Clerk publishable/secret keys, isolated recovery
+URL/confirmation, Neon API credentials, or database URL. Existing isolated-dev
+logs report missing Clerk publishableKey. Older browser evidence targets an
+unverified server revision, so public-route 500s and live five-role tenant
+isolation are **not** claimed fixed. Shared public components require Clerk
+context; no synthetic signed-out state or authentication bypass was introduced.
+A readable approved backup artifact and verified branch/restore evidence have
+not been supplied. No production credential was read or changed, no database
+write/restore/migration or Neon API call was executed, and nothing was pushed or
+deployed. The existing controller report is inherited evidence and was not
+rewritten to imply a fresh full controller/build/browser cycle. No large build
+was rerun. Session evidence is in `recovery-reports/repair-session-latest.json`.
+
+### Exact next action
+
+On an approved isolated runner, supply development Clerk configuration and five
+real role storage states, start the application from the repaired revision, and
+run the guarded authenticated browser suite plus public-route smoke checks.
+Supply an approved readable backup and a distinct disposable non-production
+PostgreSQL target for restore/rehearsal. Isolated Neon writes still require a
+separately reviewed branch-identity safety mechanism; do not relax the existing
+Neon denial or reuse production. Keep P0-CLERK, P0-ROLES and P0-NEON pending
+until live acceptance evidence exists, then rerun the release gate.

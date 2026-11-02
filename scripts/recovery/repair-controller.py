@@ -17,7 +17,7 @@ COMMANDS = [
  ('integration', ['npm','run','test:integration'], ['DATABASE_URL']),
  ('build', ['npm','run','build'], []),
  ('browser-smoke', ['npx','playwright','test','--project=chromium'], []),
- ('authenticated-e2e', ['npx','playwright','test','--project=chromium-authenticated'], ['HV_AUTH_E2E','HV_AUTH_STATE_DIR']),
+ ('authenticated-e2e', ['npm','run','test:browser:auth'], ['HV_AUTH_E2E','HV_AUTH_STATE_DIR']),
  ('release-gate', ['node','scripts/recovery-gate.mjs','--require-predeploy-ready'], []),
 ]
 def cmd(args, timeout=900, env=None):

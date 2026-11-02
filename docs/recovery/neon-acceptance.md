@@ -29,3 +29,21 @@ against production.
 The 2026-11-02 `hv-vps` read-only inventory found historical local dumps but no
 current Neon branch proof. In particular, `hotelsvendors-neon-pre-reconcile-20261002.dump`
 was zero bytes. The pending task `P0-NEON` therefore remains open.
+
+Recovery command safety (2026-11-02): target URLs must use PostgreSQL and
+may only supply `sslmode`, `channel_binding`, and `connect_timeout` query
+options. Subprocesses receive connection fields through libpq environment
+variables, clear inherited libpq routing, disable psql startup files, and
+withhold command errors that might contain credentials or private SQL.
+Restore and migration rehearsal reject the active `DATABASE_URL` host, port,
+and database even if credentials or Neon pooling spelling differ. All Neon
+URLs remain conservatively blocked; an approved isolated Neon branch alone
+is not yet sufficient to enable writes through this tool.
+
+Database integration tests default to loopback PostgreSQL only. Remote targets
+require the exact dedicated `HV_RECOVERY_ISOLATED_DATABASE_URL` and
+`HV_RECOVERY_CONFIRM=I_UNDERSTAND_ISOLATED_ONLY`; the old
+`HV_INTEGRATION_ALLOW_REMOTE` flag does not authorize writes.
+No restore or migration was executed during this safety repair. P0-NEON
+remains pending until an operator supplies an approved distinct isolated
+target, a readable archive, and branch/restore verification evidence.

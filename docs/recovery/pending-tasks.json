@@ -17,17 +17,23 @@
     {
       "id": "P0-NEON",
       "title": "Validate restorable production Neon backup branch and migration rehearsal",
-      "state": "pending"
+      "state": "pending",
+      "blocker": "No isolated target, isolation confirmation, Neon API credentials or approved backup artifact supplied to this session. Restore and migration rehearsal were not executed; production writes remain forbidden.",
+      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
     },
     {
       "id": "P0-CLERK",
       "title": "Create isolated test identities and verify correct Clerk tenant and role provisioning",
-      "state": "pending"
+      "state": "pending",
+      "blocker": "Current runner has no Clerk publishable/secret key environment; isolated-dev evidence reports missing publishableKey. Supply an approved isolated Clerk instance and verify interactive/public routes against current source.",
+      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
     },
     {
       "id": "P0-ROLES",
       "title": "Browser E2E for Hotel, Supplier, Shipping, Factoring and Admin, including role isolation",
-      "state": "pending"
+      "state": "pending",
+      "blocker": "Auth preflight rejects missing HV_AUTH_ENV=local and all five approved storage states (.auth directory absent). Real role/tenant browser acceptance remains unverified; unit tests do not satisfy this task.",
+      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
     },
     {
       "id": "P0-LIFECYCLE",

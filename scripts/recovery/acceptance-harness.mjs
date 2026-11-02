@@ -15,7 +15,7 @@ const checks = [
   ['integration', ['npm', 'run', 'test:integration']],
   ['build', ['npm', 'run', 'build']],
   ['browser-smoke', ['npx', 'playwright', 'test', '--project=chromium']],
-  ['authenticated-e2e', ['npx', 'playwright', 'test', '--project=chromium-authenticated']],
+  ['authenticated-e2e', ['npm', 'run', 'test:browser:auth']],
   ['predeploy-gate', ['node', 'scripts/recovery-gate.mjs', '--require-predeploy-ready']],
 ];
 const required = ['DATABASE_URL', 'HV_AUTH_E2E', 'HV_AUTH_STATE_DIR'];

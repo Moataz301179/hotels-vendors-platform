@@ -66,17 +66,19 @@ export function validateBackupFile(file) {
 export function restoreBackupToIsolatedTarget(file, url, confirmation) {
   assertIsolatedTarget(url, confirmation);
   const archive = validateBackupFile(file);
+  assertDistinctTarget(url, process.env.DATABASE_URL);
   if (!archive.restorable) return { status: 'blocked', reason: archive.reason ?? 'Backup artifact failed integrity checks' };
+  const connection = isolatedConnection(url);
   try {
     if (/\.(dump|backup)(\.gz)?$/i.test(file)) {
-      execFileSync('pg_restore', ['--exit-on-error', '--dbname', url, file], { stdio: ['ignore', 'ignore', 'pipe'] });
+      execFileSync('pg_restore', ['--exit-on-error', '--dbname', connection.database, file], { env: connection.env, stdio: ['ignore', 'ignore', 'pipe'] });
     } else {
       const sql = archive.gzip ? gunzipSync(readFileSync(file)) : readFileSync(file);
-      execFileSync('psql', ['--dbname', url, '--set', 'ON_ERROR_STOP=1'], { input: sql, stdio: ['pipe', 'ignore', 'pipe'] });
+      execFileSync('psql', ['--no-psqlrc', '--dbname', connection.database, '--set', 'ON_ERROR_STOP=1'], { env: connection.env, input: sql, stdio: ['pipe', 'ignore', 'pipe'] });
     }
     return { status: 'verified', target: redactUrl(url), check: 'restore-command-completed' };
-  } catch (error) {
-    return { status: 'blocked', target: redactUrl(url), reason: error instanceof Error ? error.message : String(error) };
+  } catch {
+    return { status: 'blocked', target: redactUrl(url), reason: 'Restore command failed; command output is withheld because it may contain credentials or private SQL' };
   }
 }
 
@@ -86,11 +88,59 @@ export function hashFile(file) {
   return hash.digest('hex');
 }
 
+
+// Keep connection credentials out of argv and suppress inherited libpq routing.
+export function isolatedConnection(value) {
+  let url;
+  try { url = new URL(value); } catch { throw new Error('A valid PostgreSQL isolated target URL is required'); }
+  if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname || url.pathname.length < 2 || url.hash) {
+    throw new Error('A valid PostgreSQL isolated target URL is required');
+  }
+  const options = { sslmode: 'PGSSLMODE', channel_binding: 'PGCHANNELBINDING', connect_timeout: 'PGCONNECT_TIMEOUT' };
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('PG')));
+  try {
+    env.PGHOST = url.hostname;
+    env.PGPORT = url.port || '5432';
+    env.PGUSER = decodeURIComponent(url.username);
+    env.PGPASSWORD = decodeURIComponent(url.password);
+    env.PGDATABASE = decodeURIComponent(url.pathname.slice(1));
+    // A dbname that is itself a connection string can override the checked host.
+    if (/[=\s]/.test(env.PGDATABASE) || env.PGDATABASE.includes('://')) throw new Error();
+    for (const [key, value] of url.searchParams) {
+      if (!Object.hasOwn(options, key)) throw new Error();
+      env[options[key]] = value;
+    }
+  } catch { throw new Error('Unsupported isolated target database name or connection options'); }
+  return { database: env.PGDATABASE, env };
+}
+
 export function assertIsolatedTarget(url, confirmation) {
   if (confirmation !== 'I_UNDERSTAND_ISOLATED_ONLY') throw new Error('Migration rehearsal requires HV_RECOVERY_CONFIRM=I_UNDERSTAND_ISOLATED_ONLY');
   if (!url) throw new Error('Migration rehearsal requires HV_RECOVERY_ISOLATED_DATABASE_URL');
+  isolatedConnection(url);
   if (isProductionLookingDatabaseUrl(url)) throw new Error('Refusing production-looking database URL; provide a dedicated isolated target');
   return redactUrl(url);
+}
+
+export function assertDistinctTarget(target, source) {
+  if (!source) return;
+  const a = isolatedConnection(target).env;
+  const b = isolatedConnection(source).env;
+  const host = (value) => value.toLowerCase().replace('-pooler.', '.');
+  if (host(a.PGHOST) === host(b.PGHOST) && a.PGPORT === b.PGPORT && a.PGDATABASE === b.PGDATABASE) {
+    throw new Error('Refusing recovery target matching DATABASE_URL; supply a distinct isolated database');
+  }
+}
+
+export function assertIntegrationTarget(url, env = process.env) {
+  const connection = isolatedConnection(url);
+  if (isProductionLookingDatabaseUrl(url)) throw new Error('Refusing production-looking integration database');
+  if (!['localhost', '127.0.0.1', '[::1]'].includes(connection.env.PGHOST)) {
+    if (env.HV_RECOVERY_ISOLATED_DATABASE_URL !== url) {
+      throw new Error('Remote integration tests require a separately supplied HV_RECOVERY_ISOLATED_DATABASE_URL');
+    }
+    assertIsolatedTarget(url, env.HV_RECOVERY_CONFIRM);
+  }
 }
 
 export async function checkNeonApi() {
@@ -111,6 +161,7 @@ export async function checkNeonApi() {
 
 export function migrationRehearsalCommand(url, confirmation) {
   assertIsolatedTarget(url, confirmation);
+  assertDistinctTarget(url, process.env.DATABASE_URL);
   return { command: 'npx prisma migrate deploy', env: { DATABASE_URL: redactUrl(url) }, safety: 'isolated-target-only' };
 }
 

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import type { PlatformRole, User } from "@prisma/client";
@@ -52,6 +53,9 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
     return user;
   }
 
+  // Operational identity resolution must never create or return a pending account.
+  if (!allowPending) return null;
+
   // Signup role is onboarding intent only. After provisioning, DB platformRole is authoritative.
   // ADMIN can never be self-provisioned from Clerk metadata.
   const requestedRole = String(cu.unsafeMetadata?.platformRole || "HOTEL").toUpperCase();
@@ -59,7 +63,7 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
   // carriers and funders must be provisioned through controlled partner onboarding.
   const platformRole: PlatformRole = ["HOTEL", "SUPPLIER"].includes(requestedRole)
     ? requestedRole as PlatformRole : "HOTEL";
-  const slug = `hv-${userId.slice(-12).toLowerCase()}`;
+  const slug = `hv-${createHash("sha256").update(userId).digest("hex")}`;
   user = await prisma.$transaction(async tx => {
     const tenant = await tx.tenant.upsert({
       where: { slug }, update: {},
@@ -84,8 +88,13 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
         create: { roleId: role.id, permissionId: permission.id },
       });
     }
-    return tx.user.upsert({where:{email},update:{clerkUserId: userId},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,clerkUserId: userId,platformRole,tenantId:tenant.id,roleId:role.id,status:"PENDING_VERIFICATION"}});
+    return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,clerkUserId: userId,platformRole,tenantId:tenant.id,roleId:role.id,status:"PENDING_VERIFICATION"}});
   });
+  // Another request may have inserted this email after the initial lookup.
+  // Never rebind that identity, and apply the same checks to the upsert result.
+  if (user.clerkUserId !== userId || user.deletedAt) return null;
+  if (user.status === "PENDING_VERIFICATION") return user;
+  if (user.status !== "ACTIVE" || !isVerified) return null;
   return user;
 }
 
