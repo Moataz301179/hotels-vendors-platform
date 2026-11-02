@@ -7,7 +7,7 @@ export default defineConfig({
   reporter: 'list',
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'chromium', testIgnore: /authenticated\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
     ...(process.env.HV_AUTH_E2E === '1'
       ? [{ name: 'chromium-authenticated', testMatch: /authenticated\.spec\.ts/, use: { ...devices['Desktop Chrome'] } }]
       : []),
