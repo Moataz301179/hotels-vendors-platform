@@ -6,7 +6,7 @@ Run the probe from an operator workstation or a controlled recovery runner:
 node scripts/neon-recovery-acceptance.mjs --backup /path/to/backup.sql.gz > recovery-reports/neon-acceptance.json
 ```
 
-The probe is read-only. It checks that a non-empty SQL archive is readable (and
+The probe checks that a non-empty SQL archive is readable (and
 that a custom-format archive is inspectable by `pg_restore --list`), records a
 SHA-256 digest, and performs a Neon branch-list request only when
 `NEON_API_KEY` and `NEON_PROJECT_ID` are present. It never prints those values.
@@ -14,8 +14,11 @@ SHA-256 digest, and performs a Neon branch-list request only when
 `401` means the API key is invalid or expired. `403` means the key lacks project
 branch read permission. If API credentials are unavailable, use an owner-created
 Neon branch or a Neon Console export of branch metadata, then run the local
-archive check. That is evidence of existence only; restore remains unproven
-until the archive is restored into a non-production target.
+archive check. That is evidence of existence only; `restore.status` remains
+`blocked` until the archive is restored into a non-production target. To perform
+that explicitly, provide `HV_RECOVERY_ISOLATED_DATABASE_URL` and
+`HV_RECOVERY_CONFIRM=I_UNDERSTAND_ISOLATED_ONLY`; production-looking URLs are
+rejected and credentials are never printed.
 
 Migration rehearsal is deliberately separate and safety-gated. Before running
 `npx prisma migrate deploy`, set a dedicated isolated database URL and provide

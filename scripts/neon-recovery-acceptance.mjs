@@ -63,6 +63,23 @@ export function validateBackupFile(file) {
   return { ...result, restorable: true };
 }
 
+export function restoreBackupToIsolatedTarget(file, url, confirmation) {
+  assertIsolatedTarget(url, confirmation);
+  const archive = validateBackupFile(file);
+  if (!archive.restorable) return { status: 'blocked', reason: archive.reason ?? 'Backup artifact failed integrity checks' };
+  try {
+    if (/\.(dump|backup)(\.gz)?$/i.test(file)) {
+      execFileSync('pg_restore', ['--exit-on-error', '--dbname', url, file], { stdio: ['ignore', 'ignore', 'pipe'] });
+    } else {
+      const sql = archive.gzip ? gunzipSync(readFileSync(file)) : readFileSync(file);
+      execFileSync('psql', ['--dbname', url, '--set', 'ON_ERROR_STOP=1'], { input: sql, stdio: ['pipe', 'ignore', 'pipe'] });
+    }
+    return { status: 'verified', target: redactUrl(url), check: 'restore-command-completed' };
+  } catch (error) {
+    return { status: 'blocked', target: redactUrl(url), reason: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 export function hashFile(file) {
   const hash = createHash('sha256');
   hash.update(readFileSync(file));
@@ -103,13 +120,25 @@ async function main() {
   if (backup) {
     report.backup = validateBackupFile(backup);
     if (report.backup.restorable) report.backup.sha256 = hashFile(backup);
+    if (process.env.HV_RECOVERY_ISOLATED_DATABASE_URL || process.env.HV_RECOVERY_CONFIRM) {
+      try {
+        report.restore = restoreBackupToIsolatedTarget(backup, process.env.HV_RECOVERY_ISOLATED_DATABASE_URL, process.env.HV_RECOVERY_CONFIRM);
+      } catch (error) {
+        report.restore = { status: 'blocked', reason: error instanceof Error ? error.message : String(error) };
+      }
+    } else {
+      report.restore = { status: 'blocked', reason: 'No isolated target supplied; archive integrity is not restore proof' };
+    }
   }
-  else report.backup = { status: 'missing', reason: 'No backup artifact was found' };
+  else {
+    report.backup = { status: 'missing', reason: 'No backup artifact was found' };
+    report.restore = { status: 'blocked', reason: 'No backup artifact is available to restore' };
+  }
   if (process.env.HV_RECOVERY_ISOLATED_DATABASE_URL || process.env.HV_RECOVERY_CONFIRM) {
     report.migrationRehearsal = { status: 'not-run', target: redactUrl(process.env.HV_RECOVERY_ISOLATED_DATABASE_URL), reason: 'Safety-gated; invoke the isolated migration runner explicitly after review' };
   }
   console.log(JSON.stringify(report, null, 2));
-  if (!report.backup.restorable) process.exitCode = 1;
+  if (!report.backup.restorable || report.restore.status !== 'verified') process.exitCode = 1;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
