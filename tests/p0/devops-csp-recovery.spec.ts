@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-const REPO = "/Users/Moatazi/hotels-vendors-new";
+const REPO = process.cwd();
 const RECONCILE = `${REPO}/scripts/reconcile-nginx-csp.mjs`;
 
 function run(nodeScript: string, args: string[]) {
