@@ -11,6 +11,23 @@ function run(nodeScript: string, args: string[]) {
   return spawnSync("node", [nodeScript, ...args], { encoding: "utf8", timeout: 30000 });
 }
 
+describe("DevOps recovery — CI workflow contract", () => {
+  it("parses the CI workflow YAML and asserts the smoke-test homepage markers", () => {
+    const yaml = readFileSync(join(REPO, ".github/workflows/ci.yml"), "utf8");
+    expect(yaml).toContain("grep -Fq 'Run procurement like an operating system' /tmp/hv-home.html");
+    expect(yaml).toContain("grep -Fq 'Every handoff, one record' /tmp/hv-home.html");
+    expect(yaml).toContain("grep -Fq 'Sealed sourcing, approval authority' /tmp/hv-home.html");
+  });
+
+  it("parses the deploy workflow YAML and asserts the migration confirmation gate", () => {
+    const yaml = readFileSync(join(REPO, ".github/workflows/deploy-production.yml"), "utf8");
+    expect(yaml).toContain("production_migration_confirmation");
+    expect(yaml).toContain("APPLY_AFTER_NEON_BACKUP");
+    expect(yaml).toContain(".neon.tech");
+    expect(yaml).toContain("sslmode=verify-full");
+  });
+});
+
 describe("DevOps recovery — CSP reconciliation idempotency", () => {
   let dir: string;
   beforeEach(() => {
