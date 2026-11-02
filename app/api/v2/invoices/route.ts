@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   }
   const order = await prisma.order.findFirst({
     where: actor.platformRole === "SUPPLIER"
-      ? { id: orderId, supplierId: actor.supplierId ?? "", status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null }
+      ? { id: orderId, supplierId: actor.supplierId ?? "", tenantId: actor.tenantId, status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null }
       : { id: orderId, tenantId: actor.tenantId, status: { in: ["CONFIRMED", "IN_TRANSIT", "PARTIALLY_DELIVERED", "DELIVERED"] }, paymentGuaranteed: true, deletedAt: null },
     select: { id: true, tenantId: true, hotelId: true, supplierId: true },
   });

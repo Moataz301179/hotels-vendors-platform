@@ -26,6 +26,7 @@ import { POST as acceptQuote } from '@/app/api/v2/quotes/accept/route';
 import { POST as recordGuarantee } from '@/app/api/v2/orders/guarantee/route';
 import { PATCH as transitionOrder } from '@/app/api/v2/orders/route';
 import { POST as receiveOrder } from '@/app/api/v2/grn/route';
+import { POST as submitInvoice } from '@/app/api/v2/invoices/route';
 import { GET as listMarketplace } from '@/app/api/v2/marketplace/route';
 import { GET as listRoleCatalog, POST as submitCatalogItem } from '@/app/api/v2/catalog/route';
 import { PATCH as reviewCatalogItem } from '@/app/api/v2/admin/catalog-reviews/route';
@@ -291,10 +292,23 @@ describe('procurement lifecycle against the isolated database', () => {
     const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     expect(receiptResponse.status).toBe(201);
 
-    const [storedOrder, storedRfq, storedQuote, receipts, auditRecords] = await Promise.all([
+    asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
+    const invoiceResponse = await submitInvoice(request('https://hotelsvendors.test/api/v2/invoices', {
+      invoiceNumber: `IT-INV-${run.slice(0, 12)}`,
+      orderId: order.id,
+      subtotal: 420,
+      vatAmount: 58.8,
+      total: 478.8,
+    }));
+    expect(invoiceResponse.status).toBe(201);
+    const { invoice } = await invoiceResponse.json() as { invoice: { status: string; etaStatus: string; orderId: string } };
+    expect(invoice).toMatchObject({ status: 'DRAFT', etaStatus: 'PENDING', orderId: order.id });
+
+    const [storedOrder, storedRfq, storedQuote, storedInvoice, receipts, auditRecords] = await Promise.all([
       prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { items: true } }),
       prisma.rfqRequest.findUniqueOrThrow({ where: { id: rfq.id } }),
       prisma.procurementQuote.findUniqueOrThrow({ where: { id: quote.id } }),
+      prisma.invoice.findFirstOrThrow({ where: { orderId: order.id, invoiceNumber: `IT-INV-${run.slice(0, 12)}` } }),
       prisma.goodsReceiptNote.findMany({ where: { orderId: order.id, tenantId: ids.hotelTenant } }),
       prisma.auditLog.findMany({ where: { tenantId: ids.hotelTenant, entityId: order.id } }),
     ]);
@@ -303,6 +317,7 @@ describe('procurement lifecycle against the isolated database', () => {
     expect(storedOrder.status).toBe('DELIVERED');
     expect(storedOrder.paymentGuaranteed).toBe(true);
     expect(storedOrder.items[0]?.receivedQuantity).toBe(4);
+    expect(storedInvoice.paymentStatus).toBe('UNPAID');
     expect(receipts).toHaveLength(1);
     await expect(prisma.evidenceRecord.findMany({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', sourceUrl: 'https://supplier.example.test/receipts/lifecycle.jpg' } })).resolves.toHaveLength(1);
     await expect(prisma.auditLog.findFirst({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', actionType: 'CREATED' }, select: { changes: true } })).resolves.toMatchObject({ changes: expect.objectContaining({ orderId: order.id, evidenceRecordIds: expect.any(Array) }) });

@@ -31,4 +31,14 @@ describe("invoice date boundaries", () => {
     expect(response.status).toBe(400);
     expect(m.order).not.toHaveBeenCalled();
   });
+
+  it("scopes supplier invoice lookup by the authenticated supplier tenant", async () => {
+    m.order.mockResolvedValue(null);
+    const response = await POST(request({ invoiceNumber: "INV-TENANT", orderId: "order-1", subtotal: 100, vatAmount: 14, total: 114 }));
+    expect(response.status).toBe(409);
+    expect(m.order).toHaveBeenCalledWith({
+      where: expect.objectContaining({ supplierId: "supplier-1", tenantId: "supplier-tenant" }),
+      select: { id: true, tenantId: true, hotelId: true, supplierId: true },
+    });
+  });
 });

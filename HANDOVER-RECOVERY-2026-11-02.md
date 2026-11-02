@@ -40,6 +40,29 @@
 
 Owner review + explicit deploy authorization. No further code changes are blocked — the branch is green end-to-end.
 
+## Procurement lifecycle acceptance repair — 2026-11-02
+
+### Verified in this continuation
+
+- Repaired supplier invoice lookup to require both `supplierId` and the authenticated supplier `tenantId` in `app/api/v2/invoices/route.ts`.
+- Extended the isolated-database lifecycle test so the governed RFQ → quote → order/approval → dispatch → ETA-cleared GRN path is followed by route-created supplier invoice evidence (`DRAFT`, ETA `PENDING`, payment `UNPAID`).
+- Added mocked route-layer denial tests for cross-tenant supplier invoice lookup and carrier shipment order selection.
+- Focused boundary tests: 4 files / 19 tests passed.
+- Full local Vitest suite: 119 files / 469 tests passed.
+- TypeScript and `git diff --check` passed.
+
+### Not genuinely verified or implemented
+
+- The database lifecycle suite did not collect: `npm run test:integration` stopped at its safety guard because `DATABASE_URL` was not present. No isolated database pass is claimed.
+- Shipment creation is not connected to the procurement lifecycle in the integration test; only its tenant-denial route contract is mocked. The existing order transition remains the dispatch evidence.
+- Invoice route creation is implemented and tested, but ETA acceptance in the lifecycle still uses a direct disposable-database callback fixture. Hardware/eSeal submission remains fail-closed and is not live evidence.
+- Funding is an external-funder boundary, not a platform disbursement: `getPartnerOffers`, `submitFactoringInstruction`, and `fundThroughPartner` intentionally reject native funding when no verified partner connection is provisioned. No funder approval, payout, or supplier bank transfer was fabricated.
+- Settlement is implemented as worker/partner state handling, not as a tested public end-to-end route in this continuation. No settlement or paid invoice claim is made.
+
+### Exact next action
+
+Run `npm run test:integration` against a disposable isolated database with `DATABASE_URL` and the approved integration flags, then add a mocked external-funder webhook/worker acceptance fixture only if the owner authorizes that test surface. No production writes, deployment, or live funder activity performed.
+
 ## Repair-manager continuation — 2026-11-02
 
 ### Verified in this continuation
