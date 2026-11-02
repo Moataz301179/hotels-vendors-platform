@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
-import { registerAdapter, getAdapter, hasAdapter, type AdapterType } from "@/lib/integration/connectors";
+import { getAdapter, hasAdapter, type AdapterType } from "@/lib/integration/connectors";
 
 const connectorSchema = z.object({
   hotelId: z.string().min(1),

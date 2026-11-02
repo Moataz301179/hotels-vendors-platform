@@ -40,7 +40,8 @@ export class FileDropAdapter implements EinvoiceConnectorAdapter {
   }
 
   async healthCheck(): Promise<boolean> {
-    // In production: attempt lightweight connection test
-    return !!this.config.endpoint;
+    // A syntactically non-empty endpoint is only a configuration check; the
+    // hotel-specific transport probe remains an external acceptance gate.
+    return this.config.endpoint.trim().length > 0;
   }
 }

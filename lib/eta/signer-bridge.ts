@@ -7,6 +7,7 @@
  * the submission fails closed.
  */
 
+import { createHash } from "node:crypto";
 import type { SignRequest, SignResponse } from "./signer-gateway-contract";
 import { requestMac, validateSignResponse } from "./signer-gateway-contract";
 
@@ -66,7 +67,7 @@ export class LocalGatewayBridge implements SigningBridge {
   async sign(document: Buffer): Promise<CadesBesSignature> {
     const timestamp = String(Date.now());
     const nonce = `hv-${Math.random().toString(36).slice(2, 15)}-${Math.random().toString(36).slice(2, 15)}`;
-    const documentSha256 = Buffer.from(document).toString("hex").slice(0, 64).padEnd(64, "0");
+    const documentSha256 = createHash("sha256").update(document).digest("hex");
     const documentBase64 = document.toString("base64");
     const jobId = `hv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
