@@ -13,14 +13,14 @@ describe("production PM2 predecessor identity gate", () => {
   let protectedLauncher = "";
   let legacyLauncher = "";
 
-  function fixture(launcher: "start-protected.sh" | "start-with-env.sh" = "start-with-env.sh") {
+  function fixture(launcher: "start-protected.sh" | "start-with-env.sh" = "start-with-env.sh", { env = true, runtimeEnv = true } = {}) {
     root = mkdtempSync(join(tmpdir(), "hv-pm2-identity-"));
     cwd = join(root, `github-${sha}`);
     protectedLauncher = join(cwd, "deploy/pm2/start-protected.sh");
     legacyLauncher = join(cwd, "deploy/pm2/start-with-env.sh");
     mkdirSync(join(cwd, "deploy/pm2"), { recursive: true });
-    writeFileSync(join(cwd, ".env"), "");
-    writeFileSync(join(cwd, ".runtime-env"), "");
+    if (env) writeFileSync(join(cwd, ".env"), "");
+    if (runtimeEnv) writeFileSync(join(cwd, ".runtime-env"), "");
     writeFileSync(protectedLauncher, "#!/usr/bin/env bash\n");
     writeFileSync(legacyLauncher, "#!/usr/bin/env bash\n");
     return {
@@ -46,6 +46,24 @@ describe("production PM2 predecessor identity gate", () => {
   it("accepts the canonical legacy wrapper only as a healthy predeployment predecessor", () => {
     const state = validateProductionPm2State(fixture());
     expect(state).toMatchObject({ launcher: "start-with-env.sh", phase: "predeploy", sourceSha: sha, port: 3008 });
+  });
+
+  it("accepts a predecessor with protected runtime config even when legacy .env is absent", () => {
+    const state = validateProductionPm2State(fixture("start-with-env.sh", { env: false }));
+    expect(state).toMatchObject({ launcher: "start-with-env.sh", phase: "predeploy", sourceSha: sha });
+  });
+
+  it("rejects a predecessor without protected runtime config", () => {
+    expect(() => validateProductionPm2State(fixture("start-with-env.sh", { env: false, runtimeEnv: false })))
+      .toThrow("Production release is missing its runtime files or launcher");
+  });
+
+  it("requires both release config files after protected activation", () => {
+    expect(() => validateProductionPm2State({
+      ...fixture("start-protected.sh", { env: false }),
+      phase: "postactivation",
+      expectedSha: sha,
+    })).toThrow("Production release is missing its runtime files or launcher");
   });
 
   it("accepts a protected process before deployment and as the only postactivation wrapper", () => {
@@ -96,6 +114,9 @@ describe("production PM2 predecessor identity gate", () => {
     expect(workflow).toContain("verify_process_identity predeploy");
     expect(workflow).toContain('verify_process_identity postactivation "$GITHUB_SHA"');
     expect(workflow).toContain('pm2 start "$RELEASE/deploy/pm2/start-protected.sh"');
+    expect(workflow).toContain('cp "$ACTIVE_RELEASE/.runtime-env" "$RELEASE/.env"');
+    expect(workflow).toContain('cp "$ACTIVE_RELEASE/.runtime-env" "$RELEASE/.runtime-env"');
+    expect(workflow).toContain('cat "$RUNTIME_ARCHIVE" >> "$RELEASE/.runtime-env"');
     expect(workflow).not.toContain('test "$ACTIVE_EXEC" = "$ACTIVE_RELEASE/deploy/pm2/start-protected.sh"');
   });
 });

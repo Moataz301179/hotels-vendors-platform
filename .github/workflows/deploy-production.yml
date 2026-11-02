@@ -267,9 +267,13 @@ jobs:
           mkdir -p "$RELEASE"
           tar -xzf "$ARCHIVE" -C "$RELEASE"
           rm -f "$ARCHIVE"
-          cp "$ACTIVE_RELEASE/.env" "$RELEASE/.env"
+          # The verified predecessor may store its full runtime configuration
+          # only in .runtime-env. Use that canonical protected file as the
+          # baseline for both candidate files; append this deployment's
+          # protected overrides exactly once below.
+          cp "$ACTIVE_RELEASE/.runtime-env" "$RELEASE/.env"
           chmod 600 "$RELEASE/.env"
-          cp "$ACTIVE_RELEASE/.env" "$RELEASE/.runtime-env"
+          cp "$ACTIVE_RELEASE/.runtime-env" "$RELEASE/.runtime-env"
           cat "$RUNTIME_ARCHIVE" >> "$RELEASE/.runtime-env"
           rm -f "$RUNTIME_ARCHIVE"
           chmod 600 "$RELEASE/.runtime-env"

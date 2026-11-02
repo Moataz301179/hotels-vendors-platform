@@ -66,7 +66,9 @@ export function validateProductionPm2State({
       ? "Activated production process must use start-protected.sh"
       : "Production process uses an unrecognized launcher");
   }
-  if (!fileExists(join(cwd, ".env")) || !fileExists(join(cwd, ".runtime-env")) || !fileExists(execPath)) {
+  const hasEnv = fileExists(join(cwd, ".env"));
+  const hasRuntimeEnv = fileExists(join(cwd, ".runtime-env"));
+  if (!hasRuntimeEnv || !fileExists(execPath) || (phase === "postactivation" && !hasEnv)) {
     throw new Error("Production release is missing its runtime files or launcher");
   }
 
