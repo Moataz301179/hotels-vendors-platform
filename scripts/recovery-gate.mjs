@@ -16,4 +16,3 @@ const predeployOpen = open.filter(task => task.id !== 'P0-DEPLOY');
 if (process.argv.includes('--require-predeploy-ready') && predeployOpen.length) process.exitCode = 1;
 if (process.argv.includes('--require-ready') && open.length) process.exitCode = 1;
 
-if (process.argv.includes('--require-predeploy-ready') && open.some(task => task.id !== 'P0-DEPLOY')) process.exitCode = 1;
