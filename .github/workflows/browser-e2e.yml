@@ -1,3 +1,16 @@
+name: HotelsVendors Browser E2E
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: hv-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
   chromium:
     runs-on: ubuntu-latest
     timeout-minutes: 25
