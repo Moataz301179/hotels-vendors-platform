@@ -51,4 +51,12 @@ describe("hotel organization member provisioning", () => {
     expect(response.status).toBe(404);
     expect(m.update).not.toHaveBeenCalled();
   });
+
+  it("does not activate an already-active orphan user through provisioning", async () => {
+    m.user.mockResolvedValue({ id: "active-orphan", email: "active@hotel.test", tenantId: "other", platformRole: "HOTEL", status: "ACTIVE", hotelId: null, supplierId: null });
+    const response = await POST(request({ tenantId: "hotel-tenant", email: "active@hotel.test", role: "CLERK" }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "MEMBER_MUST_BE_PENDING_VERIFICATION" });
+    expect(m.update).not.toHaveBeenCalled();
+  });
 });

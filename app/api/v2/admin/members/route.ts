@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.toLowerCase();
   const member = await prisma.user.findFirst({ where: { email, deletedAt: null }, select: { id: true, tenantId: true, platformRole: true, status: true, hotelId: true, supplierId: true } });
   if (!member) return NextResponse.json({ error: "MEMBER_MUST_SIGN_IN_FIRST" }, { status: 404 });
+  if (member.status !== "PENDING_VERIFICATION") return NextResponse.json({ error: "MEMBER_MUST_BE_PENDING_VERIFICATION" }, { status: 409 });
   if (member.platformRole !== "HOTEL" || member.hotelId || member.supplierId) return NextResponse.json({ error: "MEMBER_CANNOT_BE_MOVED_FROM_AN_ACTIVE_WORKSPACE" }, { status: 409 });
   if (member.tenantId === targetTenant.id) return NextResponse.json({ error: "MEMBER_ALREADY_IN_ORGANIZATION" }, { status: 409 });
   const role = await prisma.role.upsert({ where: { tenantId_name: { tenantId: targetTenant.id, name: "HOTEL_MEMBER" } }, update: {}, create: { tenantId: targetTenant.id, name: "HOTEL_MEMBER" } });

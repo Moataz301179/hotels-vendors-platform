@@ -24,8 +24,10 @@ export function tenantWhereClause(
 ): Prisma.InputJsonObject {
   const tenantId = typeof ctx === "string" ? ctx : ctx.tenantId;
   return {
-    tenantId,
     ...additionalWhere,
+    // The authenticated context is authoritative. A caller-provided
+    // additional filter must never be able to widen or redirect the scope.
+    tenantId,
   } as Prisma.InputJsonObject;
 }
 
