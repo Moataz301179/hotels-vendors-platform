@@ -57,3 +57,23 @@ Owner review + explicit deploy authorization. No further code changes are blocke
 
 - Full Playwright browser execution was attempted but Chromium could not launch in the managed macOS environment: Chromium failed its Mach rendezvous bootstrap with `Permission denied`. This is not evidence of authenticated E2E success.
 - No Clerk identities, Neon backup/restore, production credentials, deployment, or live acceptance was performed.
+
+## Acceptance-auth continuation — 2026-11-02
+
+### Verified in this continuation
+
+- Strengthened `tests/browser/authenticated.spec.ts` into a ten-test, read-only authenticated contract: five role identities (`HOTEL`, `SUPPLIER`, `SHIPPING`, `FACTORING`, `ADMIN`) plus one tenant-boundary probe per role. The suite consumes only externally-created storage states from `HV_AUTH_STATE_DIR`; it does not create identities, mutate records, or accept credentials from source control.
+- Focused Vitest: `tests/p0/orders-tenant-scope.spec.ts` and `tests/p0/auth-tenant-recovery.spec.ts` passed, 13 tests total.
+- TypeScript, changed-file ESLint, and `git diff --check` passed.
+- `npm run test:browser:auth` reached the configured ten tests but could not launch Chromium: the managed macOS headless shell failed Mach rendezvous bootstrap with `Permission denied` before any storage state or application request was read.
+- Read-only `ssh hv-vps` environment check reported `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=absent` and `CLERK_SECRET_KEY=absent`; secret values were never printed.
+
+### Blockers / risks
+
+1. Authenticated browser acceptance remains unverified until a runner can launch Chromium and approved Clerk storage states exist under `HV_AUTH_STATE_DIR`.
+2. The local Hermes app was running but desktop access was not approved, so no Hermes progress context was used as project evidence.
+3. No production data, Clerk identities, deployment, or database changes were performed.
+
+### Next action
+
+Run `npm run test:browser:auth` on an approved browser runner with five externally-created non-production Clerk storage states. Treat the resulting role and tenant assertions as acceptance evidence only after the application base URL and database are explicitly identified.

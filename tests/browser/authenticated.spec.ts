@@ -14,6 +14,13 @@ import path from 'node:path';
  *   HV_AUTH_STATE_DIR=.auth playwright test --project=chromium-authenticated
  */
 const roles = ['hotel', 'supplier', 'carrier', 'funder', 'admin'] as const;
+const expectedPlatformRoles = {
+  hotel: 'HOTEL',
+  supplier: 'SUPPLIER',
+  carrier: 'SHIPPING',
+  funder: 'FACTORING',
+  admin: 'ADMIN',
+} as const;
 const stateDir = process.env.HV_AUTH_STATE_DIR ?? '.auth';
 const statePath = (role: (typeof roles)[number]) => path.resolve(stateDir, `${role}.json`);
 const configured = process.env.HV_AUTH_E2E === '1';
@@ -24,7 +31,7 @@ test.describe('authenticated role and tenant boundaries', () => {
   for (const role of roles) {
     test(`${role} can open its workspace and identity is authenticated`, async ({ browser }) => {
       const state = statePath(role);
-      expect(fs.existsSync(state), `Missing approved storage state: ${state}`).toBe(true);
+      expect(fs.statSync(state, { throwIfNoEntry: false })?.isFile(), `Missing approved storage state: ${state}`).toBe(true);
       const context = await browser.newContext({ storageState: state });
       const page = await context.newPage();
       const response = await page.goto('/dashboard');
@@ -32,23 +39,43 @@ test.describe('authenticated role and tenant boundaries', () => {
       await expect(page.locator('body')).not.toContainText('UNAUTHENTICATED');
       const identity = await page.request.get('/api/v2/me');
       expect(identity.status()).toBe(200);
-      expect((await identity.json()) as { user?: { platformRole?: string } }).toMatchObject({
-        user: { platformRole: expect.any(String) },
+      const identityBody = (await identity.json()) as { user?: { platformRole?: string; tenantId?: string } };
+      expect(identityBody).toMatchObject({
+        user: { platformRole: expectedPlatformRoles[role], tenantId: expect.any(String) },
       });
+      expect(identityBody.user?.tenantId).not.toBe('unrelated-tenant');
       await context.close();
     });
   }
 
-  test('hotel cannot read another tenant through the authenticated API', async ({ browser }) => {
-    const state = statePath('hotel');
-    expect(fs.existsSync(state), `Missing approved storage state: ${state}`).toBe(true);
-    const context = await browser.newContext({ storageState: state });
-    const response = await context.request.get('/api/v2/orders?tenantId=unrelated-tenant');
-    expect([200, 403]).toContain(response.status());
-    if (response.status() === 200) {
-      const body = (await response.json()) as { orders?: Array<{ tenantId?: string }> };
-      expect(body.orders?.some((order) => order.tenantId === 'unrelated-tenant')).toBe(false);
+  test.describe('read-only role and tenant boundaries', () => {
+    const probes = {
+      hotel: async (request: import('@playwright/test').APIRequestContext) => request.get('/api/v2/orders?tenantId=unrelated-tenant'),
+      supplier: async (request: import('@playwright/test').APIRequestContext) => request.get('/api/v2/orders?tenantId=unrelated-tenant'),
+      carrier: async (request: import('@playwright/test').APIRequestContext) => request.get('/api/v2/shipments'),
+      funder: async (request: import('@playwright/test').APIRequestContext) => request.get('/api/v2/funding'),
+      admin: async (request: import('@playwright/test').APIRequestContext) => request.get('/api/v2/audit?tenantId=unrelated-tenant'),
+    } as const;
+
+    for (const role of roles) {
+      test(`${role} read probe is authenticated and tenant-scoped`, async ({ browser }) => {
+        const state = statePath(role);
+        expect(fs.statSync(state, { throwIfNoEntry: false })?.isFile(), `Missing approved storage state: ${state}`).toBe(true);
+        const context = await browser.newContext({ storageState: state });
+        const identity = await context.request.get('/api/v2/me');
+        const identityBody = (await identity.json()) as { user?: { tenantId?: string } };
+        const tenantId = identityBody.user?.tenantId;
+        expect(tenantId).toEqual(expect.any(String));
+
+        const response = await probes[role](context.request);
+        expect([200, 403, 404]).toContain(response.status());
+        const body = (await response.json()) as Record<string, unknown>;
+        expect(JSON.stringify(body)).not.toContain('unrelated-tenant');
+        if (role === 'admin' && response.status() === 200) {
+          expect(body).toMatchObject({ platformTenantId: tenantId });
+        }
+        await context.close();
+      });
     }
-    await context.close();
   });
 });
