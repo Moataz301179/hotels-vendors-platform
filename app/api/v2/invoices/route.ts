@@ -13,11 +13,16 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const invoiceNumber = typeof body?.invoiceNumber === "string" ? body.invoiceNumber.trim() : "";
   const orderId = typeof body?.orderId === "string" ? body.orderId : "";
+  const issueDate = body?.issueDate === undefined ? new Date() : new Date(body.issueDate);
+  const dueDate = body?.dueDate === undefined ? undefined : new Date(body.dueDate);
   const subtotal = Number(body?.subtotal);
   const vatAmount = Number(body?.vatAmount ?? 0);
   const total = Number(body?.total);
-  if (!invoiceNumber || !orderId || !Number.isFinite(subtotal) || subtotal <= 0 || !Number.isFinite(vatAmount) || vatAmount < 0 || !Number.isFinite(total) || total <= 0) {
+  if (!invoiceNumber || !orderId || !Number.isFinite(issueDate.getTime()) || (dueDate && !Number.isFinite(dueDate.getTime())) || !Number.isFinite(subtotal) || subtotal <= 0 || !Number.isFinite(vatAmount) || vatAmount < 0 || !Number.isFinite(total) || total <= 0) {
     return NextResponse.json({ error: "Invoice number, order, subtotal, VAT amount and total are required." }, { status: 400 });
+  }
+  if (dueDate && dueDate < issueDate) {
+    return NextResponse.json({ error: "Invoice due date cannot be before its issue date." }, { status: 400 });
   }
   // Never infer or invent tax: the submitted commercial values must reconcile exactly.
   if (Math.abs(total - (subtotal + vatAmount)) > 0.01) {
@@ -38,8 +43,8 @@ export async function POST(req: Request) {
       const created = await tx.invoice.create({
         data: {
           invoiceNumber,
-          issueDate: body.issueDate ? new Date(body.issueDate) : new Date(),
-          dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+          issueDate,
+          dueDate,
           // ETA identity is written only by the official submission worker.
           // A client must never be able to self-declare a clearance UUID.
           status: "DRAFT",
