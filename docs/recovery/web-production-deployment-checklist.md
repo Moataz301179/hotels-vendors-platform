@@ -34,3 +34,7 @@ The existing recovery harness is an inventory/readiness gate. It does not edit c
 7. **Release gate:** production migrations, secret rotation, destructive changes, merges, and deployment stay behind explicit protected approvals, backup checks, rollback readiness, and live smoke evidence.
 
 Do not claim the loop is autonomous until failure-event triggers, repair execution, evidence-bound state transitions, retry limits, and protected approval gates are implemented and tested.
+
+## Separate mobile track
+
+See [the HOVIN Mobile iOS and Android production checklist](mobile-production-ios-android-checklist.md) for platform-specific release blockers and acceptance evidence. Device-level receipt behavior belongs to that track; this web checklist covers the API contract and deployment dependency.
