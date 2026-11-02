@@ -10,7 +10,7 @@ import path from 'node:path';
  * tokens, or production credentials from source control.
  *
  * Run with:
- *   HV_AUTH_E2E=1 HV_E2E_BASE_URL=http://127.0.0.1:3100 \
+ *   HV_AUTH_ENV=local HV_AUTH_E2E=1 HV_E2E_BASE_URL=http://127.0.0.1:3100 \
  *   HV_AUTH_STATE_DIR=.auth playwright test --project=chromium-authenticated
  */
 const roles = ['hotel', 'supplier', 'carrier', 'funder', 'admin'] as const;
@@ -23,7 +23,7 @@ const expectedPlatformRoles = {
 } as const;
 const stateDir = process.env.HV_AUTH_STATE_DIR ?? '.auth';
 const statePath = (role: (typeof roles)[number]) => path.resolve(stateDir, `${role}.json`);
-const configured = process.env.HV_AUTH_E2E === '1';
+const configured = process.env.HV_AUTH_E2E === '1' && process.env.HV_AUTH_ENV === 'local';
 
 test.describe('authenticated role and tenant boundaries', () => {
   test.skip(!configured, 'Set HV_AUTH_E2E=1 with approved Clerk storage states to run authenticated acceptance tests.');

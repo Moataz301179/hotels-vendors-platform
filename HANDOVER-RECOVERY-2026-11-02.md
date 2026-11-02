@@ -100,3 +100,37 @@ Run `npm run test:integration` against a disposable isolated database with `DATA
 ### Next action
 
 Run `npm run test:browser:auth` on an approved browser runner with five externally-created non-production Clerk storage states. Treat the resulting role and tenant assertions as acceptance evidence only after the application base URL and database are explicitly identified.
+
+## Authenticated E2E preflight repair — 2026-11-02
+
+### Verified in this isolated continuation
+
+- Added `scripts/recovery/auth-e2e-preflight.mjs` and wired it into
+  `npm run test:browser:auth`.
+- The preflight now fails closed unless `HV_AUTH_ENV=local`, the base URL is
+  local (or an explicitly approved isolated runner), and all five Playwright
+  storage states exist and parse as storage-state JSON. Production hostnames
+  are always rejected.
+- Added executable operator setup instructions in
+  `docs/recovery/authenticated-e2e-setup.md`; no credentials, tokens, or
+  storage states are stored in the repository.
+- Focused auth/tenant tests: 2 files / 13 tests passed. TypeScript and
+  `git diff --check` passed.
+- Preflight was executed without credentials or states and failed closed with
+  the expected missing-environment/state findings. No browser session or
+  application record was created or mutated.
+
+### Unresolved acceptance blocker
+
+- Five approved non-production Clerk storage states and a local disposable
+  runtime are still required. Authenticated browser execution remains
+  unverified until an approved runner supplies them. Hermes desktop access was
+  denied by the UI permission boundary, so no Hermes status is treated as
+  project evidence.
+
+### Exact next action
+
+Create the five real non-production Clerk sessions through the normal sign-in
+flow on an approved local runner, capture `.auth/{hotel,supplier,carrier,funder,admin}.json`
+outside source control, then run `npm run test:browser:auth`. Do not use
+production credentials, fake sessions, or deploy.
