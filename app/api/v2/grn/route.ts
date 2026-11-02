@@ -9,6 +9,33 @@ import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 
 const receivingRoles = ["OWNER", "REGIONAL_GM", "GM", "FINANCIAL_CONTROLLER", "RECEIVING_CLERK"];
 
+const idempotencyKeyPattern = /^[A-Za-z0-9][A-Za-z0-9._~-]{15,127}$/;
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, nested]) => [key, canonicalize(nested)]),
+    );
+  }
+  return value;
+}
+
+function receiptRequestHash(orderId: string, lines: unknown[], evidenceUrls: string[]) {
+  const canonicalLines = lines
+    .map(canonicalize)
+    .sort((left, right) => {
+      const leftId = left && typeof left === "object" && "orderItemId" in left ? String(left.orderItemId) : "";
+      const rightId = right && typeof right === "object" && "orderItemId" in right ? String(right.orderItemId) : "";
+      return leftId.localeCompare(rightId);
+    });
+  return createHash("sha256")
+    .update(JSON.stringify({ orderId, lines: canonicalLines, evidenceUrls: [...evidenceUrls].sort() }))
+    .digest("hex");
+}
+
 function receiptEvidenceUrls(value: unknown) {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > 8) return null;
@@ -43,13 +70,36 @@ export async function POST(req: Request) {
   }
   const evidenceUrls = receiptEvidenceUrls(body.evidenceUrls);
   if (!evidenceUrls) return NextResponse.json({ error: "Receipt evidence must contain up to eight secure HTTPS URLs." }, { status: 400 });
+  const rawIdempotencyKey = req.headers.get("Idempotency-Key");
+  const idempotencyKey = rawIdempotencyKey?.trim() || null;
+  if (rawIdempotencyKey !== null && (!idempotencyKey || !idempotencyKeyPattern.test(idempotencyKey))) {
+    return NextResponse.json({ error: "Idempotency-Key must be 16-128 safe characters." }, { status: 400 });
+  }
+  const idempotencyRequestHash = idempotencyKey
+    ? receiptRequestHash(body.orderId, body.lines as unknown[], evidenceUrls)
+    : null;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Serialize receipts for this order so simultaneous requests cannot over-receive.
       // pg_advisory_xact_lock returns void; execute it as a command rather
       // than asking Prisma to deserialize a result row.
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${body.orderId}, 0))`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actor.tenantId + ":" + body.orderId}, 0))`;
+      if (idempotencyKey && idempotencyRequestHash) {
+        const existing = await tx.goodsReceiptNote.findFirst({
+          where: { tenantId: actor.tenantId, orderId: body.orderId, idempotencyKey, deletedAt: null },
+          include: { lineItems: true },
+        });
+        if (existing) {
+          if (existing.idempotencyRequestHash !== idempotencyRequestHash) {
+            return { error: "IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST", status: 409 as const };
+          }
+          if (!existing.idempotencyOrderStatus) {
+            return { error: "IDEMPOTENCY_RESULT_INCOMPLETE", status: 409 as const };
+          }
+          return { grn: existing, orderStatus: existing.idempotencyOrderStatus, idempotentReplay: true };
+        }
+      }
       const order = await tx.order.findFirst({
         where: { id: body.orderId, tenantId: actor.tenantId, deletedAt: null },
         include: { items: { where: { deletedAt: null }, select: { id: true, productId: true, quantity: true, receivedQuantity: true } } },
@@ -101,6 +151,11 @@ export async function POST(req: Request) {
           receivedAt: now,
           inspectedAt: now,
           acceptedAt: checked.grnStatus === "REJECTED" ? null : now,
+          ...(idempotencyKey && idempotencyRequestHash ? {
+            idempotencyKey,
+            idempotencyRequestHash,
+            idempotencyOrderStatus: checked.orderStatus,
+          } : {}),
           lineItems: { create: checked.lines.map((line) => ({
             orderItemId: line.orderItemId,
             productId: line.productId,
@@ -170,10 +225,10 @@ export async function POST(req: Request) {
         payload: { grnNumber: grn.grnNumber, grnStatus: grn.status, orderStatus: checked.orderStatus, lineItemCount: grn.lineItems.length, evidenceRecordIds: evidence.map((record) => record.id) },
         auditLogId: grnAuditLogId,
       });
-      return { grn, orderStatus: checked.orderStatus };
+      return { grn, orderStatus: checked.orderStatus, idempotentReplay: false };
     });
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.status });
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(result, { status: result.idempotentReplay ? 200 : 201 });
   } catch {
     return NextResponse.json({ error: "RECEIPT_COULD_NOT_BE_RECORDED" }, { status: 500 });
   }
