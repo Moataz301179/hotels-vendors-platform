@@ -52,6 +52,10 @@ const db = {
     const list = ensureList();
     return list.filter((r) => r.tenant_id === tenantId && r.state === state).slice(0, 50);
   }),
+  getFirstAsync: vi.fn().mockImplementation(async (sql: string, id: string) => {
+    const list = ensureList();
+    return list.find((r) => r.id === id) ?? null;
+  }),
   withExclusiveTransactionAsync: vi.fn().mockImplementation(async (fn: (tx: typeof db) => Promise<void>) => {
     await fn(db);
   }),
@@ -79,6 +83,14 @@ describe("HOVIN offline GRN outbox", () => {
     await enqueueGrn(db as never, "tenant-a", "grn-1", { orderId: "o1" });
     const list = rows.get("hovin_outbox") ?? [];
     expect(list.filter((r) => r.id === "grn-1")).toHaveLength(1);
+  });
+
+  it("fails closed when a GRN id is already owned by another tenant", async () => {
+    await enqueueGrn(db as never, "tenant-a", "shared-grn", { orderId: "o1" });
+    await expect(enqueueGrn(db as never, "tenant-b", "shared-grn", { orderId: "o2" }))
+      .rejects.toThrow("GRN ID already belongs to another tenant");
+    expect(rows.get("hovin_outbox")).toHaveLength(1);
+    expect(rows.get("hovin_outbox")?.[0].tenant_id).toBe("tenant-a");
   });
 
   it("flushes successfully and deletes the row", async () => {

@@ -27,6 +27,16 @@ export async function enqueueGrn(db: SQLiteDatabase, tenantId: string, id: strin
   if (!tenantId || !id) throw new Error('Tenant and stable GRN ID are required');
   const json = JSON.stringify(payload);
   await db.withExclusiveTransactionAsync(async tx => {
+    // `id` is the client idempotency key, but legacy installs use it as the
+    // table primary key. Never let a same-id row from another tenant be
+    // silently swallowed by INSERT OR IGNORE.
+    const existing = await tx.getFirstAsync<{ tenant_id: string }>(
+      'SELECT tenant_id FROM hovin_outbox WHERE id = ?',
+      id,
+    );
+    if (existing && existing.tenant_id !== tenantId) {
+      throw new Error('GRN ID already belongs to another tenant');
+    }
     await tx.runAsync(
       'INSERT OR IGNORE INTO hovin_outbox(id, tenant_id, kind, payload) VALUES (?, ?, ?, ?)',
       id, tenantId, 'GRN', json,
