@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "policy": "Evidence-based, fail-closed; no production deployment on unverified requirements. Never mark a task verified from a passing unit test alone.",
+  "groups": [
+    {"priority": "P0-AUTHENTICATED-E2E", "tasks": ["P0-CLERK", "P0-ROLES", "P0-LIFECYCLE"]},
+    {"priority": "P0-DATABASE-RESTORE", "tasks": ["P0-NEON", "P0-DB"]},
+    {"priority": "P0-SECURITY-INTEGRITY", "tasks": ["P1-OPS", "P0-INTEGRATIONS", "P1-CATALOG"]},
+    {"priority": "P0-UX-DEVICE", "tasks": ["P0-UX", "P0-REDESIGN", "P0-ONBOARDING", "P1-MOBILE"]},
+    {"priority": "P0-RELEASE-RECONCILIATION", "tasks": ["P0-PR46-50", "P0-GROK", "P1-LEGACY", "P0-CI"]},
+    {"priority": "P0-DEPLOYMENT", "tasks": ["P0-DEPLOY"]}
+  ],
+  "mandatoryEvidence": ["real Clerk five-role identities", "tenant isolation and authorization denials", "authenticated browser transactions across all lifecycle stages", "restorable Neon production backup and isolated migration rehearsal", "funding/settlement ledger and audit", "carrier shipment and proof of delivery", "catalog provenance", "mobile offline GRN synchronization", "visual responsive UX and Virtual Shadow", "Oracle/CSV connector behavior", "CI build and regression tests", "PR46-50 and Grok backlog reconciliation", "protected-main release and live post-deployment smoke with rollback"]
+}
