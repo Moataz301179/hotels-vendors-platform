@@ -31,24 +31,33 @@ jobs:
             echo "Production deploys run only from refs/heads/main (got: $DEPLOY_REF)" >&2
             exit 1
           fi
-      - name: Require green CI build on this sha
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Require verified recovery acceptance before deployment
+        run: node scripts/recovery-gate.mjs --require-predeploy-ready
+      - name: Require green CI and Chromium browser E2E on this sha
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          for check in build chromium; do
           for i in $(seq 1 60); do
-            r="$(gh api "repos/$REPO/commits/$SHA/check-runs?check_name=build&per_page=50" \
+            r="$(gh api "repos/$REPO/commits/$SHA/check-runs?check_name=$check&per_page=50" \
               --jq '[.check_runs[] | select(.app.slug == "github-actions")] | sort_by(.started_at) | last | "\(.status // "missing") \(.conclusion // "none")"')"
-            echo "attempt $i: CI build on $SHA = $r"
+            echo "attempt $i: $check on $SHA = $r"
             case "$r" in
-              "completed success") exit 0 ;;
-              completed*) echo "::error::CI build on $SHA is not green ($r). Nothing deploys on red CI."; exit 1 ;;
+              "completed success") break ;;
+              completed*) echo "::error::Required check $check on $SHA is not green ($r). Nothing deploys on red CI."; exit 1 ;;
             esac
             sleep 30
           done
-          echo "::error::CI build on $SHA did not finish within 30 minutes."; exit 1
+          if [ "$r" = "completed success" ]; then continue; fi
+          echo "::error::Required check $check on $SHA did not finish within 30 minutes."; exit 1
+          done
   deploy:
     needs: require-main-ref
     if: github.ref == 'refs/heads/main'
