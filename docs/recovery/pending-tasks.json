@@ -5,14 +5,14 @@
     {
       "id": "P0-CI",
       "title": "GitHub release CI green",
-      "state": "pending",
-      "evidence": "Reopened: run 41459198158 belongs to older SHA 769cf7f8…; current PR #46 HEAD 2c1aa95262c45de6495ee621f36a460ef6a12596 has CI run 41490264163 failed."
+      "state": "verified",
+      "evidence": "Verified for PR #46 candidate release/nov02-verified at exact SHA 9650cbb6937d223a90ca8391eed0d0c84e06ae23. Required same-SHA checks passed: HotelsVendors CI run 41517273132 (build job; npm ci, Prisma generate/schema initialization, npm test, isolated procurement integration, transaction-flow lint, production build, standalone packaging and smoke test all succeeded); Parallel Engineering Diagnostics run 41517272970 (quality and build-release jobs succeeded, with all 6 diagnostic jobs green); Browser E2E run 41517273100 (chromium job, isolated database setup, production build/start, and Playwright smoke succeeded)."
     },
     {
       "id": "P0-DB",
       "title": "Isolated database schema and procurement integration tests",
-      "state": "pending",
-      "evidence": "Reopened: prior isolated DB evidence is not bound to the current candidate SHA; current procurement integration run is 5/6 with invoice creation returning 409 instead of 201."
+      "state": "verified",
+      "evidence": "Verified for PR #46 candidate release/nov02-verified at exact SHA 9650cbb6937d223a90ca8391eed0d0c84e06ae23. Required same-SHA checks passed: build in CI run 41517273132, procurement diagnostics in run 41517272970, and data-integrity diagnostics in run 41517272970. CI initialized disposable PostgreSQL and passed the procurement integration step; both database diagnostic jobs passed schema setup and their specialist checks. This verifies CI's isolated database projection only; production Neon backup and migration rehearsal remain P0-NEON pending."
     },
     {
       "id": "P0-NEON",
@@ -53,7 +53,8 @@
     {
       "id": "P1-MOBILE",
       "title": "Device-level mobile and offline GRN synchronization E2E",
-      "state": "pending"
+      "state": "pending",
+      "releaseScope": "mobile"
     },
     {
       "id": "P1-OPS",
