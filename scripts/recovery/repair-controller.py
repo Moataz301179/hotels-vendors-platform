@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Persistent, fail-closed repair controller. No model credits or production writes required."""
-import argparse, datetime, fcntl, json, os, pathlib, subprocess, time
+import argparse, datetime, fcntl, json, os, pathlib, subprocess, time, secrets
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 STATE = ROOT / '.agent-runs' / 'repair-controller'
 TASKS = [
@@ -20,9 +20,9 @@ COMMANDS = [
  ('authenticated-e2e', ['npx','playwright','test','--project=chromium-authenticated'], ['HV_AUTH_E2E','HV_AUTH_STATE_DIR']),
  ('release-gate', ['node','scripts/recovery-gate.mjs','--require-predeploy-ready'], []),
 ]
-def cmd(args, timeout=900):
+def cmd(args, timeout=900, env=None):
  try:
-  p=subprocess.run(args,cwd=ROOT, text=True,capture_output=True,timeout=timeout)
+  p=subprocess.run(args,cwd=ROOT, text=True,capture_output=True,timeout=timeout,env=env)
   return {'exit':p.returncode,'tail':(p.stdout+'\n'+p.stderr)[-3000:]}
  except (OSError,subprocess.TimeoutExpired) as exc: return {'exit':-1,'tail':str(exc)}
 def cycle():
@@ -34,7 +34,7 @@ def cycle():
  for name,command,prerequisites in COMMANDS:
   missing=[key for key in prerequisites if not os.getenv(key)]
   report['checks'][name]=({'status':'blocked','missing':missing} if missing else
-   (lambda result: {'status':'passed' if result['exit']==0 else 'failed',**result})(cmd(command)))
+   (lambda result: {'status':'passed' if result['exit']==0 else 'failed',**result})(cmd(command,env=({**os.environ,'SESSION_SECRET':os.environ.get('SESSION_SECRET') or 'local-build-only-'+secrets.token_hex(32)} if name=='build' else None))))
  report['deploymentReady']=all(t['state']=='verified' for t in manifest['tasks'] if t['id']!='P0-DEPLOY') and all(c['status']=='passed' for c in report['checks'].values())
  (STATE/'latest.json').write_text(json.dumps(report,indent=2)+'\n')
  with (STATE/'history.jsonl').open('a') as f: f.write(json.dumps({'timestamp':report['timestamp'],'head':report['head'],'checks':{k:v['status'] for k,v in report['checks'].items()},'deploymentReady':report['deploymentReady']})+'\n')
