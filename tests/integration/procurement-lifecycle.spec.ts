@@ -297,6 +297,10 @@ describe('procurement lifecycle against the isolated database', () => {
     const replayResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload, 'POST', receiptHeaders));
     expect(replayResponse.status).toBe(200);
     await expect(replayResponse.json()).resolves.toMatchObject({ grn: { id: firstReceipt.grn.id }, idempotentReplay: true });
+    const changedPayload = { ...receiptPayload, lines: [{ ...receiptPayload.lines[0], conditionNotes: 'Changed after receipt' }] };
+    const mismatchedReplay = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', changedPayload, 'POST', receiptHeaders));
+    expect(mismatchedReplay.status).toBe(409);
+    await expect(mismatchedReplay.json()).resolves.toEqual({ error: 'IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST' });
 
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     const invoiceResponse = await submitInvoice(request('https://hotelsvendors.test/api/v2/invoices', {
