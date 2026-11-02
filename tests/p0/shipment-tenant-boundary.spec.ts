@@ -30,4 +30,33 @@ describe("shipment tenant boundary", () => {
     });
     expect(m.shipment).not.toHaveBeenCalled();
   });
+
+  it("rejects malformed shipment measurements before querying orders", async () => {
+    const response = await POST(request({
+      corridor: "Cairo",
+      originHub: "A",
+      destinationHub: "B",
+      estimatedArrival: "not-a-date",
+      totalWeightKg: "NaN",
+    }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "estimatedArrival must be a valid date" });
+    expect(m.orders).not.toHaveBeenCalled();
+    expect(m.shipment).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate order ids before creating a shipment", async () => {
+    const response = await POST(request({
+      corridor: "Cairo",
+      originHub: "A",
+      destinationHub: "B",
+      orderIds: ["order-a", "order-a"],
+    }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "orderIds must not contain duplicates" });
+    expect(m.orders).not.toHaveBeenCalled();
+    expect(m.shipment).not.toHaveBeenCalled();
+  });
 });
