@@ -25,7 +25,12 @@ for (const [name, command] of checks) {
   let status = 'not_run', exitCode = null, output = '';
   if (missing.length) status = 'blocked_missing_environment';
   else if (run) {
-    const result = spawnSync(command[0], command.slice(1), { encoding:'utf8', timeout: 900000, maxBuffer: 4 * 1024 * 1024, env: process.env });
+    const env = { ...process.env };
+    // Keep production fail-closed in next.config.ts. The local acceptance
+    // harness gets an ephemeral build-only value instead of requiring a
+    // production credential or weakening the runtime requirement.
+    if (name === 'build' && !env.SESSION_SECRET) env.SESSION_SECRET = `local-build-only-${Date.now()}`;
+    const result = spawnSync(command[0], command.slice(1), { encoding:'utf8', timeout: 900000, maxBuffer: 4 * 1024 * 1024, env });
     exitCode = result.status;
     status = result.error || exitCode !== 0 ? 'failed' : 'passed';
     output = [result.stdout, result.stderr].filter(Boolean).join('\n').slice(-10000);
