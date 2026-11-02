@@ -48,9 +48,9 @@ let productId = '';
 let departmentId = '';
 
 let requestSequence = 0;
-const request = (url: string, body: unknown, method = 'POST') => new Request(url, {
+const request = (url: string, body: unknown, method = 'POST', extraHeaders: Record<string, string> = {}) => new Request(url, {
   method,
-  headers: { 'content-type': 'application/json', ...(url.endsWith('/api/v2/rfq') ? { 'x-idempotency-key': `integration-rfq-${run}-${++requestSequence}` } : {}) },
+  headers: { 'content-type': 'application/json', ...(url.endsWith('/api/v2/rfq') ? { 'x-idempotency-key': `integration-rfq-${run}-${++requestSequence}` } : {}), ...extraHeaders },
   body: JSON.stringify(body),
 });
 
@@ -284,13 +284,19 @@ describe('procurement lifecycle against the isolated database', () => {
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
     const receiptPayload = { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] };
-    const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
+    const receiptHeaders = { 'Idempotency-Key': randomUUID() };
+    const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload, 'POST', receiptHeaders));
     expect(blockedReceipt.status).toBe(409);
     await expect(blockedReceipt.json()).resolves.toEqual({ error: 'ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY' });
 
     await persistAcceptedEtaClearance(order.id);
-    const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
+    const receiptResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload, 'POST', receiptHeaders));
     expect(receiptResponse.status).toBe(201);
+    const firstReceipt = await receiptResponse.json() as { grn: { id: string }; idempotentReplay: boolean };
+    expect(firstReceipt.idempotentReplay).toBe(false);
+    const replayResponse = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload, 'POST', receiptHeaders));
+    expect(replayResponse.status).toBe(200);
+    await expect(replayResponse.json()).resolves.toMatchObject({ grn: { id: firstReceipt.grn.id }, idempotentReplay: true });
 
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     const invoiceResponse = await submitInvoice(request('https://hotelsvendors.test/api/v2/invoices', {
