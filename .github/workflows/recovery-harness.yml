@@ -3,16 +3,93 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: ['docs/recovery/**', 'scripts/recovery-gate.mjs', '.github/workflows/recovery-harness.yml']
+    paths: ['docs/recovery/**', 'scripts/recovery-gate.mjs', 'scripts/recovery/incident-router.mjs', 'scripts/recovery/incident-router.test.mjs', '.github/workflows/recovery-harness.yml']
+  workflow_run:
+    workflows:
+      - HotelsVendors CI
+      - HotelsVendors Parallel Engineering Diagnostics
+      - HotelsVendors Browser E2E
+    types: [completed]
   schedule:
     - cron: '17 */6 * * *'
 permissions:
   contents: read
 concurrency:
-  group: hv-recovery-${{ github.ref }}
+  group: ${{ github.event_name == 'workflow_run' && format('hv-recovery-run-{0}-{1}', github.event.workflow_run.id, github.event.workflow_run.run_attempt) || format('hv-recovery-{0}', github.ref) }}
   cancel-in-progress: true
 jobs:
+  route-incident:
+    if: github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      checks: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+      SOURCE_REPOSITORY_ID: ${{ github.event.workflow_run.head_repository.id }}
+      BASE_REPOSITORY_ID: ${{ github.event.repository.id }}
+    steps:
+      # workflow_run uses trusted default-branch code. Never checkout or execute
+      # the source workflow's PR commit in this privileged job.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Collect run metadata without downloading logs
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_SHA" =~ ^[a-fA-F0-9]{40}$ ]]
+          [[ "$BASE_REPOSITORY_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/jobs?per_page=100" > "$RUNNER_TEMP/hv-jobs.json"
+          if [ "$SOURCE_REPOSITORY_ID" = "$BASE_REPOSITORY_ID" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA/check-runs?per_page=100" > "$RUNNER_TEMP/hv-checks.json"
+          else
+            printf '{"check_runs":[]}' > "$RUNNER_TEMP/hv-checks.json"
+          fi
+      - name: Classify failures and bind evidence to the source SHA
+        id: route
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-reports
+          node scripts/recovery/incident-router.mjs \
+            --event "$GITHUB_EVENT_PATH" \
+            --jobs "$RUNNER_TEMP/hv-jobs.json" \
+            --checks "$RUNNER_TEMP/hv-checks.json" \
+            --output recovery-reports/incident-latest.json
+          count=$(node -e 'const r=require("./recovery-reports/incident-latest.json"); process.stdout.write(String(r.retry.retryJobIds.length))')
+          echo "retry_count=$count" >> "$GITHUB_OUTPUT"
+      - name: Retry timed-out jobs once, by job ID
+        if: steps.route.outputs.retry_count != '0'
+        run: |
+          set -euo pipefail
+          node -e 'const r=require("./recovery-reports/incident-latest.json"); for (const id of r.retry.retryJobIds) process.stdout.write(`${id}\n`)' \
+            | while IFS= read -r job_id; do
+                [[ "$job_id" =~ ^[0-9]+$ ]]
+                gh api --method POST "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id/rerun" >/dev/null
+                echo "Requested one targeted retry for timed-out job $job_id."
+              done
+      - name: Summarize and publish secret-free incident evidence
+        if: always()
+        run: |
+          if [ -f recovery-reports/incident-latest.json ]; then
+            node -e 'const r=require("./recovery-reports/incident-latest.json"); process.stdout.write(`### Recovery incident: run ${r.source.runId}, attempt ${r.source.runAttempt}\n\nSHA: \`${r.source.sha}\`\n\nNext phase: **${r.nextPhase}**\n\nNext gate: **${r.phaseProgression.nextGate}**\n\n`); for (const f of r.findings) process.stdout.write(`- **${f.severity} ${f.taskId}** (${f.phase}): ${f.failureCode}\n`); for (const [id,e] of Object.entries(r.taskEvidence)) process.stdout.write(`- Same-SHA evidence ${id}: ${e.state}\n`); process.stdout.write(`\nLogs captured: no. Canonical manifest/source/production changed: no.\n`)' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always() && hashFiles('recovery-reports/incident-latest.json') != ''
+        with:
+          name: hv-recovery-incident-${{ github.event.workflow_run.id }}-${{ github.event.workflow_run.run_attempt }}
+          path: recovery-reports/incident-latest.json
+          retention-days: 30
+
   inventory:
+    if: github.event_name != 'workflow_run'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
