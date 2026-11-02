@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "releaseBranch": "release/nov02-verified",
+  "tasks": [
+    {"id":"P0-CI","title":"GitHub release CI green","state":"verified","evidence":"GitHub Actions run 41459198158"},
+    {"id":"P0-DB","title":"Isolated database schema and procurement integration tests","state":"verified","evidence":"6 integration tests and 20-table schema check"},
+    {"id":"P0-NEON","title":"Validate restorable production Neon backup branch and migration rehearsal","state":"pending"},
+    {"id":"P0-CLERK","title":"Create isolated test identities and verify correct Clerk tenant and role provisioning","state":"pending"},
+    {"id":"P0-ROLES","title":"Browser E2E for Hotel, Supplier, Shipping, Factoring and Admin, including role isolation","state":"pending"},
+    {"id":"P0-LIFECYCLE","title":"Browser E2E RFQ to quote to PO to delivery to GRN to invoice to funding to settlement","state":"pending"},
+    {"id":"P0-UX","title":"Click-first application UX, onboarding, dashboards and visual regression approval","state":"pending"},
+    {"id":"P1-CATALOG","title":"Supplier provenance, product truth and catalog verification","state":"pending"},
+    {"id":"P1-MOBILE","title":"Device-level mobile and offline GRN synchronization E2E","state":"pending"},
+    {"id":"P1-OPS","title":"Audit logs, authority matrix, shipping, funding, security and SEO acceptance","state":"pending"},
+    {"id":"P0-DEPLOY","title":"Merge approved release and deploy to production with rollback and live smoke verification","state":"pending"},
+    {"id":"P1-LEGACY","title":"Reconcile six earlier pending tasks and previous P0/P1/P2 audit findings with evidence","state":"pending"}
+  ]
+}

@@ -1,0 +1,33 @@
+name: HotelsVendors Recovery Harness
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths: ['docs/recovery/**', 'scripts/recovery-gate.mjs', '.github/workflows/recovery-harness.yml']
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: hv-recovery-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate cumulative backlog and generate machine-readable report
+        run: node scripts/recovery-gate.mjs
+      - name: Publish report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hv-recovery-report
+          path: recovery-reports/latest.json
+          retention-days: 30
+      - name: Surface unresolved work
+        run: |
+          node -e 'const r=require("./recovery-reports/latest.json"); process.stdout.write(`### HotelsVendors recovery: ${r.verified}/${r.total} verified\\n\\n`); for(const t of r.open) process.stdout.write(`- ${t.id}: ${t.title} (${t.state})\\n`)' >> "$GITHUB_STEP_SUMMARY"
