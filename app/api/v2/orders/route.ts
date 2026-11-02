@@ -14,7 +14,9 @@ export async function GET(request:Request){
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:read');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_READ_PERMISSION_REQUIRED'},{status:403});throw error;}
  let tenants: {id:string;name:string}[]|undefined;
  let where:{supplierId?:string;tenantId?:string;deletedAt:null};
- if(user.platformRole==='SUPPLIER') where={supplierId:user.supplierId||'__unassigned__',deletedAt:null};
+ // Supplier IDs are not a substitute for tenant scope: a compromised or
+ // misconfigured identity must never widen this read across organizations.
+ if(user.platformRole==='SUPPLIER') where={supplierId:user.supplierId||'__unassigned__',tenantId:user.tenantId,deletedAt:null};
  else if(user.platformRole==='ADMIN'){
   const manageable=await managedHotelTenants(user.tenantId);
   if(!manageable)return NextResponse.json({error:'PLATFORM_TENANT_REQUIRED'},{status:403});

@@ -39,3 +39,21 @@
 ### Next action
 
 Owner review + explicit deploy authorization. No further code changes are blocked — the branch is green end-to-end.
+
+## Repair-manager continuation — 2026-11-02
+
+### Verified in this continuation
+
+- Added `tests/browser/authenticated.spec.ts` and an opt-in `chromium-authenticated` Playwright project. It requires externally-created Clerk storage states under `HV_AUTH_STATE_DIR`; no credentials or tokens are stored in the repository.
+- Added `npm run test:browser:auth` for the authenticated acceptance entry point.
+- Fixed a source defect in `app/api/v2/orders/route.ts`: supplier order reads now require both the supplier identity and the authenticated tenant ID.
+- Added `tests/p0/orders-tenant-scope.spec.ts` covering the repaired query boundary.
+- Focused Vitest: 2 files / 3 tests passed.
+- TypeScript passed.
+- ESLint passed for all changed source/config/test files.
+- `git diff --check` passed.
+
+### Still unverified
+
+- Full Playwright browser execution was attempted but Chromium could not launch in the managed macOS environment: Chromium failed its Mach rendezvous bootstrap with `Permission denied`. This is not evidence of authenticated E2E success.
+- No Clerk identities, Neon backup/restore, production credentials, deployment, or live acceptance was performed.
