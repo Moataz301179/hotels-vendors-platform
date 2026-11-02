@@ -33,6 +33,9 @@ def cycle():
   report['specialists'][role]={'tasks':ids,'open':[i for i in ids if known[i]['state']!='verified']}
  for name,command,prerequisites in COMMANDS:
   missing=[key for key in prerequisites if not os.getenv(key)]
+  if name=='build' and (ROOT/'.next'/'lock').exists():
+   report['checks'][name]={'status':'deferred','reason':'Next.js build lock exists; avoid concurrent build'}
+   continue
   report['checks'][name]=({'status':'blocked','missing':missing} if missing else
    (lambda result: {'status':'passed' if result['exit']==0 else 'failed',**result})(cmd(command,env=({**os.environ,'SESSION_SECRET':os.environ.get('SESSION_SECRET') or 'local-build-only-'+secrets.token_hex(32)} if name=='build' else None))))
  report['deploymentReady']=all(t['state']=='verified' for t in manifest['tasks'] if t['id']!='P0-DEPLOY') and all(c['status']=='passed' for c in report['checks'].values())
