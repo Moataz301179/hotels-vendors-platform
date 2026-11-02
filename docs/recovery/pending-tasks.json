@@ -18,8 +18,9 @@
       "id": "P0-NEON",
       "title": "Validate restorable production Neon backup branch and migration rehearsal",
       "state": "pending",
-      "blocker": "No isolated target, isolation confirmation, Neon API credentials or approved backup artifact supplied to this session. Restore and migration rehearsal were not executed; production writes remain forbidden.",
-      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
+      "blocker": "Backup and rehearsal clones are verified ready, and all 51 applied source checksums now match. Full clone command rehearsal and recovery acceptance remain pending.",
+      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)",
+      "evidence": "Verified production br-green-block-b5wfx1ft; backup br-sparkling-field-b5tpf9t4; rehearsal br-twilight-hall-b5bojjcv. Exact historical sources recovered; docs/recovery/applied-migration-checksums.json records all 51 applied SHA-256 values."
     },
     {
       "id": "P0-CLERK",

@@ -1,0 +1,3 @@
+-- Additive enum value migration (not applied to production DB until backup verified)
+-- EntityName: add CONSENT
+-- ActionType: add CONSENT_WITHDRAWN

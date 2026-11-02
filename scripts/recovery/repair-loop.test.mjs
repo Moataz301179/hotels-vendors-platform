@@ -8,6 +8,7 @@ import {
   buildRepairPrompt,
   classifyCodexFailure,
   cleanEnv,
+  safeCodexEnv,
   codexArgs,
   collectGithubIncident,
   isCanonicalOrigin,
@@ -420,4 +421,16 @@ test('unconfigured executor fails closed and records exact-SHA status', async ()
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
+});
+
+
+test('isolating repair HOME preserves the existing Codex authentication directory', () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'hv-codex-auth-home-'));
+  try {
+    const env = safeCodexEnv({ HOME: '/original-user-home', PATH: '/bin', OPENAI_API_KEY: 'never-forward' }, workspace);
+    assert.equal(env.HOME, join(workspace, '.agent-home'));
+    assert.equal(env.CODEX_HOME, '/original-user-home/.codex');
+    assert.equal(env.OPENAI_API_KEY, undefined);
+    assert.equal(safeCodexEnv({ HOME: '/original-user-home', CODEX_HOME: '/custom-codex-home' }, workspace).CODEX_HOME, '/custom-codex-home');
+  } finally { rmSync(workspace, { recursive: true, force: true }); }
 });

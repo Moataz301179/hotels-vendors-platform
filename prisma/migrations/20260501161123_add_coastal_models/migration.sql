@@ -3,8 +3,8 @@ CREATE TABLE "Cart" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "hotelId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Cart_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Cart_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -17,8 +17,8 @@ CREATE TABLE "CartItem" (
     "quantity" INTEGER NOT NULL,
     "unitPrice" REAL NOT NULL,
     "total" REAL NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "CartItem_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "CartItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -35,8 +35,8 @@ CREATE TABLE "FactoringCompany" (
     "maxFacility" REAL,
     "interestRate" REAL,
     "rate" REAL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateTable
@@ -49,7 +49,7 @@ CREATE TABLE "CreditTransaction" (
     "factoringCompanyId" TEXT,
     "orderId" TEXT,
     "invoiceId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "CreditTransaction_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "CreditTransaction_factoringCompanyId_fkey" FOREIGN KEY ("factoringCompanyId") REFERENCES "FactoringCompany" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -68,8 +68,8 @@ CREATE TABLE "LogisticsHub" (
     "operatingHours" TEXT,
     "contactPhone" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateTable
@@ -80,13 +80,13 @@ CREATE TABLE "Trip" (
     "driverName" TEXT,
     "driverPhone" TEXT,
     "vehiclePlate" TEXT,
-    "scheduledDate" DATETIME,
-    "departureDate" DATETIME,
-    "arrivalDate" DATETIME,
-    "completedAt" DATETIME,
+    "scheduledDate" TIMESTAMP,
+    "departureDate" TIMESTAMP,
+    "arrivalDate" TIMESTAMP,
+    "completedAt" TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'SCHEDULED',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Trip_hubId_fkey" FOREIGN KEY ("hubId") REFERENCES "LogisticsHub" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -98,15 +98,15 @@ CREATE TABLE "TripStop" (
     "orderId" TEXT,
     "stopOrder" INTEGER NOT NULL,
     "stopNumber" INTEGER,
-    "estimatedArrival" DATETIME,
-    "eta" DATETIME,
-    "actualArrival" DATETIME,
-    "arrivedAt" DATETIME,
+    "estimatedArrival" TIMESTAMP,
+    "eta" TIMESTAMP,
+    "actualArrival" TIMESTAMP,
+    "arrivedAt" TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "podPhotoUrl" TEXT,
     "signatureUrl" TEXT,
     "notes" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "TripStop_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "TripStop_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -120,8 +120,8 @@ CREATE TABLE "Outlet" (
     "managerName" TEXT,
     "managerPhone" TEXT,
     "operatingHours" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Outlet_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -130,7 +130,7 @@ CREATE TABLE "SupplierAudit" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "supplierId" TEXT NOT NULL,
     "auditorName" TEXT NOT NULL,
-    "auditDate" DATETIME NOT NULL,
+    "auditDate" TIMESTAMP NOT NULL,
     "score" INTEGER,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "coldChainCompliant" BOOLEAN,
@@ -139,7 +139,7 @@ CREATE TABLE "SupplierAudit" (
     "labTested" BOOLEAN,
     "reportUrl" TEXT,
     "notes" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "SupplierAudit_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -154,7 +154,7 @@ CREATE TABLE "Document" (
     "entityId" TEXT NOT NULL,
     "category" TEXT NOT NULL DEFAULT 'OTHER',
     "uploadedBy" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -167,10 +167,10 @@ CREATE TABLE "Payment" (
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "invoiceId" TEXT,
     "hotelId" TEXT NOT NULL,
-    "paidAt" DATETIME,
+    "paidAt" TIMESTAMP,
     "referenceCode" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Payment_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -184,10 +184,10 @@ CREATE TABLE "CreditFacility" (
     "utilized" REAL NOT NULL DEFAULT 0,
     "interestRate" REAL NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
-    "approvedAt" DATETIME,
-    "expiresAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "approvedAt" TIMESTAMP,
+    "expiresAt" TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "CreditFacility_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "CreditFacility_factoringCompanyId_fkey" FOREIGN KEY ("factoringCompanyId") REFERENCES "FactoringCompany" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -199,9 +199,9 @@ CREATE TABLE "ConsolidatedOrder" (
     "tripId" TEXT,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "totalValue" REAL NOT NULL DEFAULT 0,
-    "deliveryDate" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "deliveryDate" TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "ConsolidatedOrder_hubId_fkey" FOREIGN KEY ("hubId") REFERENCES "LogisticsHub" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "ConsolidatedOrder_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -221,9 +221,9 @@ CREATE TABLE "new_Invoice" (
     "vatAmount" REAL NOT NULL,
     "total" REAL NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'EGP',
-    "issueDate" DATETIME NOT NULL,
-    "dueDate" DATETIME,
-    "paidDate" DATETIME,
+    "issueDate" TIMESTAMP NOT NULL,
+    "dueDate" TIMESTAMP,
+    "paidDate" TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'DRAFT',
     "paymentStatus" TEXT NOT NULL DEFAULT 'UNPAID',
     "orderId" TEXT NOT NULL,
@@ -232,8 +232,8 @@ CREATE TABLE "new_Invoice" (
     "factoringStatus" TEXT NOT NULL DEFAULT 'NOT_FACTORABLE',
     "factoringCompanyId" TEXT,
     "factoringAmount" REAL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Invoice_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Invoice_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Invoice_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -252,7 +252,7 @@ CREATE TABLE "new_Order" (
     "vatAmount" REAL NOT NULL,
     "total" REAL NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'EGP',
-    "deliveryDate" DATETIME,
+    "deliveryDate" TIMESTAMP,
     "deliveryInstructions" TEXT,
     "hotelId" TEXT NOT NULL,
     "propertyId" TEXT,
@@ -260,8 +260,8 @@ CREATE TABLE "new_Order" (
     "supplierId" TEXT NOT NULL,
     "requesterId" TEXT NOT NULL,
     "etaSubmissionId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Order_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Order_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Order_outletId_fkey" FOREIGN KEY ("outletId") REFERENCES "Outlet" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
