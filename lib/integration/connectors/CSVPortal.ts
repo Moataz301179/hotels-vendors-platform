@@ -19,36 +19,71 @@ export class CsvPortalConnector {
   }
 
   parseInventoryCsv(content: string): { sku: string; name: string; stock: number; minThreshold: number }[] {
-    const lines = content.split('\n').slice(1); // skip header
-    return lines.filter((l) => l.trim()).map((line) => {
-      const [sku, name, stock, minThreshold] = line.split(',');
-      return { sku, name, stock: parseInt(stock), minThreshold: parseInt(minThreshold) };
-    });
+    return parseRows(content, ['sku', 'name', 'stock', 'min_threshold']).map((row) => ({
+      sku: row.sku,
+      name: row.name,
+      stock: parseInteger(row.stock, 'stock'),
+      minThreshold: parseInteger(row.min_threshold, 'min_threshold'),
+    }));
   }
 
   parseOrdersCsv(content: string): { poId: string; supplier: string; status: string; total: number }[] {
-    const lines = content.split('\n').slice(1);
-    return lines.filter((l) => l.trim()).map((line) => {
-      const [poId, supplier, status, total] = line.split(',');
-      return { poId, supplier, status, total: parseInt(total) };
-    });
+    return parseRows(content, ['po_id', 'supplier', 'status', 'total']).map((row) => ({
+      poId: row.po_id,
+      supplier: row.supplier,
+      status: row.status,
+      total: parseInteger(row.total, 'total'),
+    }));
   }
 
   generateReceivingCsv(receivingData: { poId: string; items: { sku: string; expected: number; received: number; condition: string }[] }[]): string {
-    let csv = 'po_id,sku,expected,received,condition\n';
+    const rows = ['po_id,sku,expected,received,condition'];
     for (const r of receivingData) {
       for (const item of r.items) {
-        csv += `${r.poId},${item.sku},${item.expected},${item.received},${item.condition}\n`;
+        rows.push([r.poId, item.sku, item.expected, item.received, item.condition].map(csvCell).join(','));
       }
     }
-    return csv;
+    return `${rows.join('\n')}\n`;
   }
 
   generateInvoiceCsv(invoiceData: { number: string; poId: string; total: number; vat: number }[]): string {
-    let csv = 'invoice_number,po_id,total,vat\n';
-    for (const inv of invoiceData) {
-      csv += `${inv.number},${inv.poId},${inv.total},${inv.vat}\n`;
-    }
-    return csv;
+    const rows = ['invoice_number,po_id,total,vat'];
+    for (const inv of invoiceData) rows.push([inv.number, inv.poId, inv.total, inv.vat].map(csvCell).join(','));
+    return `${rows.join('\n')}\n`;
   }
+}
+
+function parseRows(content: string, requiredHeaders: string[]): Record<string, string>[] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < content.length; i += 1) {
+    const char = content[i];
+    if (quoted) {
+      if (char === '"' && content[i + 1] === '"') { cell += '"'; i += 1; }
+      else if (char === '"') quoted = false;
+      else cell += char;
+    } else if (char === '"' && cell.length === 0) quoted = true;
+    else if (char === ',') { row.push(cell); cell = ''; }
+    else if (char === '\n') { row.push(cell.replace(/\r$/, '')); rows.push(row); row = []; cell = ''; }
+    else cell += char;
+  }
+  if (quoted) throw new Error('CSV_UNTERMINATED_QUOTE');
+  if (cell.length || row.length) { row.push(cell); rows.push(row); }
+  const headers = rows.shift()?.map((header) => header.trim().toLowerCase()) ?? [];
+  if (requiredHeaders.some((header) => !headers.includes(header))) throw new Error('CSV_REQUIRED_HEADER_MISSING');
+  return rows.filter((values) => values.some((value) => value.trim() !== '')).map((values) =>
+    Object.fromEntries(headers.map((header, index) => [header, (values[index] ?? '').trim()])),
+  );
+}
+
+function parseInteger(value: string, field: string): number {
+  if (!/^-?\d+$/.test(value)) throw new Error(`CSV_INVALID_INTEGER:${field}`);
+  return Number(value);
+}
+
+function csvCell(value: string | number): string {
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
