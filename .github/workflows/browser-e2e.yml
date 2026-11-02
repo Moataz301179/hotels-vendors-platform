@@ -1,0 +1,56 @@
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: sk_test_placeholder
+      SESSION_SECRET: ci-only-not-used-by-clerk
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+      HV_RELEASE_SMOKE: '1'
+      REDIS_URL: redis://127.0.0.1:6379
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U ci -d ci'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npx playwright install --with-deps chromium
+      - run: npx prisma generate
+      - run: npx prisma db push --skip-generate
+      - run: npm run build
+      - name: Start isolated application
+        run: |
+          PORT=3100 HOSTNAME=127.0.0.1 npm start >/tmp/hv-browser-app.log 2>&1 &
+          echo $! > /tmp/hv-browser-app.pid
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:3100/api/health >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/hv-browser-app.log
+          exit 1
+      - run: npx playwright test
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hv-browser-e2e-evidence
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14

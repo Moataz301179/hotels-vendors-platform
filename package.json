@@ -20,7 +20,8 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "eta:signer-gateway": "tsx scripts/eta-signer-gateway.ts"
+    "eta:signer-gateway": "tsx scripts/eta-signer-gateway.ts",
+    "test:browser": "playwright test"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
