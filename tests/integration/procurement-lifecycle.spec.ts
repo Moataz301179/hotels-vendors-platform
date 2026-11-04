@@ -29,6 +29,8 @@ import { POST as submitFundingReferral, PATCH as reconcileFundingReferral } from
 import { GET as listMarketplace } from '@/app/api/v2/marketplace/route';
 import { GET as listRoleCatalog, POST as submitCatalogItem } from '@/app/api/v2/catalog/route';
 import { PATCH as reviewCatalogItem } from '@/app/api/v2/admin/catalog-reviews/route';
+import { POST as assignCarrier, PATCH as respondToCarrierAssignment } from '@/app/api/v2/carrier-assignments/route';
+import { POST as createShipment, PATCH as transitionShipment } from '@/app/api/v2/shipments/route';
 
 const run = randomUUID().replaceAll('-', '');
 const ids = {
@@ -36,6 +38,7 @@ const ids = {
   hotelTenant: `it-hotel-${run}`,
   supplierTenant: `it-supplier-${run}`,
   funderTenant: `it-funder-${run}`,
+  carrierTenant: `it-carrier-${run}`,
   buyer: `it-buyer-${run}`,
   approver: `it-approver-${run}`,
   receiver: `it-receiver-${run}`,
@@ -43,6 +46,7 @@ const ids = {
   otherSupplierUser: `it-other-supplier-user-${run}`,
   admin: `it-admin-${run}`,
   funderUser: `it-funder-user-${run}`,
+  carrierUser: `it-carrier-user-${run}`,
 };
 
 let supplierId = '';
@@ -50,6 +54,7 @@ let otherSupplierId = '';
 let productId = '';
 let departmentId = '';
 let factoringCompanyId = '';
+let carrierProfileId = '';
 
 let requestSequence = 0;
 const request = (url: string, body: unknown, method = 'POST') => new Request(url, {
@@ -107,13 +112,15 @@ describe('procurement lifecycle against the isolated database', () => {
       { id: ids.hotelTenant, name: `Hotel ${run}`, slug: `it-hotel-${run}`, type: 'HOTEL_GROUP', status: 'ACTIVE', taxId: `H${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
       { id: ids.supplierTenant, name: `Supplier ${run}`, slug: `it-supplier-${run}`, type: 'SUPPLIER', status: 'ACTIVE', taxId: `S${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
       { id: ids.funderTenant, name: `Funder ${run}`, slug: `it-funder-${run}`, type: 'FACTORING_COMPANY', status: 'ACTIVE', taxId: `F${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
+      { id: ids.carrierTenant, name: `Carrier ${run}`, slug: `it-carrier-${run}`, type: 'SHIPPING_PROVIDER', status: 'ACTIVE', taxId: `C${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
     ] });
 
-    const [hotelRole, supplierRole, adminRole, funderRole] = await Promise.all([
+    const [hotelRole, supplierRole, adminRole, funderRole, carrierRole] = await Promise.all([
       prisma.role.create({ data: { name: `it-hotel-role-${run}`, tenantId: ids.hotelTenant } }),
       prisma.role.create({ data: { name: `it-supplier-role-${run}`, tenantId: ids.supplierTenant } }),
       prisma.role.create({ data: { name: `it-admin-role-${run}`, tenantId: ids.platformTenant } }),
       prisma.role.create({ data: { name: `it-funder-role-${run}`, tenantId: ids.funderTenant } }),
+      prisma.role.create({ data: { name: `it-carrier-role-${run}`, tenantId: ids.carrierTenant } }),
     ]);
 
     const permissions = await Promise.all([
@@ -157,7 +164,10 @@ describe('procurement lifecycle against the isolated database', () => {
       { id: ids.otherSupplierUser, email: `other-supplier-user-${run}@example.test`, name: 'Other lifecycle supplier', role: 'CLERK', platformRole: 'SUPPLIER', tenantId: ids.supplierTenant, supplierId: otherSupplierId, roleId: supplierRole.id },
       { id: ids.admin, email: `admin-${run}@example.test`, name: 'Lifecycle admin', role: 'OWNER', platformRole: 'ADMIN', tenantId: ids.platformTenant, roleId: adminRole.id },
       { id: ids.funderUser, email: `funder-${run}@example.test`, name: 'Lifecycle funder', role: 'OWNER', platformRole: 'FACTORING', tenantId: ids.funderTenant, factoringCompanyId, roleId: funderRole.id },
+      { id: ids.carrierUser, email: `carrier-${run}@example.test`, name: 'Lifecycle carrier', role: 'LOGISTICS_COORDINATOR', platformRole: 'SHIPPING', tenantId: ids.carrierTenant, roleId: carrierRole.id },
     ] });
+    const carrierProfile = await prisma.carrierProfile.create({ data: { userId: ids.carrierUser, tenantId: ids.carrierTenant, city: 'Cairo', governorate: 'Cairo', taxId: `CT${run.slice(0, 19)}`, zones: ['Cairo'], vehicleTypes: ['STANDARD'], status: 'VERIFIED', verifiedAt: new Date(), verifiedBy: ids.admin, documents: [] } });
+    carrierProfileId = carrierProfile.id;
 
     await prisma.procurementApprovalPolicy.create({ data: { tenantId: ids.hotelTenant, departmentId, primaryApproverId: ids.approver, createdById: ids.approver } });
     await prisma.authorityRule.create({ data: { tenantId: ids.hotelTenant, role: 'GM', name: `Lifecycle approval ${run}`, action: 'APPROVE', minValue: 0, maxValue: 10_000_000, priority: 100, isActive: true } });
@@ -301,11 +311,31 @@ describe('procurement lifecycle against the isolated database', () => {
 
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'CONFIRMED' }, 'PATCH'))).status).toBe(200);
+
+    asActor({ id: ids.approver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM' });
+    const assignmentResponse = await assignCarrier(request('https://hotelsvendors.test/api/v2/carrier-assignments', { orderId: order.id, carrierProfileId }));
+    expect(assignmentResponse.status).toBe(201);
+    const { assignment } = await assignmentResponse.json() as { assignment: { id: string } };
+
+    asActor({ id: ids.carrierUser, tenantId: ids.carrierTenant, platformRole: 'SHIPPING', role: 'LOGISTICS_COORDINATOR' });
+    expect((await respondToCarrierAssignment(request('https://hotelsvendors.test/api/v2/carrier-assignments', { id: assignment.id, status: 'ACCEPTED' }, 'PATCH'))).status).toBe(200);
+    const shipmentResponse = await createShipment(request('https://hotelsvendors.test/api/v2/shipments', { orderIds: [order.id], corridor: 'Cairo hotel delivery', truckType: 'STANDARD', originHub: 'Vendor dispatch', destinationHub: 'Hotel receiving' }));
+    expect(shipmentResponse.status).toBe(201);
+    const { shipment } = await shipmentResponse.json() as { shipment: { id: string } };
+    for (const transition of [
+      { status: 'PICKED_UP' },
+      { status: 'IN_TRANSIT' },
+      { status: 'DELIVERED', evidenceUrls: ['https://carrier.example.test/proof/lifecycle-delivery.jpg'] },
+    ]) {
+      expect((await transitionShipment(request('https://hotelsvendors.test/api/v2/shipments', { id: shipment.id, ...transition }, 'PATCH'))).status).toBe(200);
+    }
+
+    asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'IN_TRANSIT', estimatedDelivery: new Date(Date.now() + 86_400_000).toISOString() }, 'PATCH'))).status).toBe(200);
 
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
-    const receiptPayload = { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] };
+    const receiptPayload = { orderId: order.id, shipmentId: shipment.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] };
     const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     expect(blockedReceipt.status).toBe(409);
     await expect(blockedReceipt.json()).resolves.toEqual({ error: 'ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY' });
@@ -379,6 +409,8 @@ describe('procurement lifecycle against the isolated database', () => {
     expect(storedOrder.items[0]?.receivedQuantity).toBe(4);
     expect(storedInvoice.paymentStatus).toBe('UNPAID');
     expect(receipts).toHaveLength(1);
+    expect(receipts[0]?.shipmentId).toBe(shipment.id);
+    await expect(prisma.carrierOrderAssignment.findUniqueOrThrow({ where: { id: assignment.id }, select: { status: true, deliveredAt: true, deliveryEvidence: true } })).resolves.toMatchObject({ status: 'DELIVERED', deliveredAt: expect.any(Date), deliveryEvidence: ['https://carrier.example.test/proof/lifecycle-delivery.jpg'] });
     await expect(prisma.evidenceRecord.findMany({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', sourceUrl: 'https://supplier.example.test/receipts/lifecycle.jpg' } })).resolves.toHaveLength(1);
     await expect(prisma.auditLog.findFirst({ where: { tenantId: ids.hotelTenant, entityId: receipts[0]!.id, entityName: 'GOODS_RECEIPT_NOTE', actionType: 'CREATED' }, select: { changes: true } })).resolves.toMatchObject({ changes: expect.objectContaining({ orderId: order.id, evidenceRecordIds: expect.any(Array) }) });
     expect(auditRecords.length).toBeGreaterThanOrEqual(5);
