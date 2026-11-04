@@ -43,6 +43,9 @@ export async function POST(req: Request) {
   }
   const evidenceUrls = receiptEvidenceUrls(body.evidenceUrls);
   if (!evidenceUrls) return NextResponse.json({ error: "Receipt evidence must contain up to eight secure HTTPS URLs." }, { status: 400 });
+  if (body.shipmentId !== undefined && (typeof body.shipmentId !== "string" || body.shipmentId.length === 0)) {
+    return NextResponse.json({ error: "shipmentId must be a non-empty string when provided." }, { status: 400 });
+  }
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -57,6 +60,15 @@ export async function POST(req: Request) {
       if (!order) return { error: "ORDER_NOT_FOUND", status: 404 as const };
       if (!order.paymentGuaranteed || !["IN_TRANSIT", "PARTIALLY_DELIVERED"].includes(order.status)) {
         return { error: "ORDER_NOT_RECEIVABLE", status: 409 as const };
+      }
+      let shipmentId: string | null = null;
+      if (body.shipmentId) {
+        const shipment = await tx.shipment.findFirst({
+          where: { id: body.shipmentId, tenantId: order.tenantId, deletedAt: null, status: "DELIVERED", orderIds: { has: order.id } },
+          select: { id: true },
+        });
+        if (!shipment) return { error: "DELIVERED_SHIPMENT_REQUIRED", status: 409 as const };
+        shipmentId = shipment.id;
       }
 
       const priorRows = await tx.grnLineItem.findMany({
@@ -101,6 +113,7 @@ export async function POST(req: Request) {
           receivedAt: now,
           inspectedAt: now,
           acceptedAt: checked.grnStatus === "REJECTED" ? null : now,
+          shipmentId,
           lineItems: { create: checked.lines.map((line) => ({
             orderItemId: line.orderItemId,
             productId: line.productId,

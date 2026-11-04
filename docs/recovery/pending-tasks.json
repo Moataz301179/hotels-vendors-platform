@@ -51,7 +51,8 @@
       "id": "P1-MOBILE",
       "title": "Device-level mobile and offline GRN synchronization E2E",
       "state": "pending",
-      "releaseScope": "mobile"
+      "releaseScope": "mobile",
+      "releaseClass": "future"
     },
     {
       "id": "P1-OPS",
@@ -66,17 +67,20 @@
     {
       "id": "P1-LEGACY",
       "title": "Reconcile six earlier pending tasks and previous P0/P1/P2 audit findings with evidence",
-      "state": "pending"
+      "state": "pending",
+      "releaseClass": "future"
     },
     {
       "id": "P0-PR46-50",
       "title": "Reconcile PR 46 through 50 and preserve all overlapping changes; 47-50 not found in current repository",
-      "state": "pending"
+      "state": "verified",
+      "evidence": "Verified 2026-11-04: PR #46 is merged at 43b4b5f616c59cbd3a31c55291d296b8b0b3c3be. PR #47 remains open but is stale and incompatible with current main and must not be merged. PRs #48 through #50 do not exist in the canonical repository."
     },
     {
       "id": "P0-GROK",
       "title": "Recover and reconcile Grok bot session backlog and acceptance requirements without guessing missing instructions",
-      "state": "pending"
+      "state": "pending",
+      "releaseClass": "future"
     },
     {
       "id": "P0-REDESIGN",
@@ -91,7 +95,8 @@
     {
       "id": "P0-INTEGRATIONS",
       "title": "Verify and repair Oracle/ERP CSV fallback, supplier/carrier/funder integrations and operational workflows",
-      "state": "pending"
+      "state": "pending",
+      "releaseClass": "external"
     }
   ],
   "webProductionChecklist": "docs/recovery/web-production-deployment-checklist.md"

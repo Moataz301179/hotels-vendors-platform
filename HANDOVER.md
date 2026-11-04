@@ -112,3 +112,30 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   capture and the subsequent request; this is an authentication-harness issue,
   not permission bypass justification. No production deployment is authorized
   from this evidence.
+
+## Procurement-core release scope and carrier controls — 2026-11-04
+
+- Source workspace: `/Users/Moatazi/hotels-vendors-new`, canonical `main`, revision `c2dcf189`.
+- Added the versioned release boundary in `docs/recovery/release-scope-v1.json`.
+  Mandatory web gates remain fail-closed; explicitly future mobile/legacy work and
+  external integrations remain visible in the manifest but are not silently
+  counted as complete. Funding is limited to referral, eligibility, decision
+  status, and reconciliation records; no money movement is claimed.
+- Added carrier-order assignment controls, carrier acceptance, shipment binding,
+  ordered shipment state transitions, secure delivery evidence, and optional GRN
+  linkage to a delivered shipment. The migration is
+  `prisma/migrations/20261104223000_add_carrier_order_assignments`.
+- Catalog ingestion now requires supplier ownership and source provenance,
+  records deterministic evidence, starts new observations inactive, and rejects
+  cross-tenant SKU conflicts instead of publishing fabricated stock or offers.
+- Checks completed in this checkout: `prisma validate`, `tsc --noEmit`,
+  `git diff --check`, and the five recovery-gate tests all pass. The recovery
+  report still has mandatory open gates for lifecycle, UX, catalog, operations,
+  redesign, onboarding, and deployment.
+- Unresolved and not represented as done: funding/settlement product routes,
+  full carrier browser/integration acceptance, 94-record catalog provenance
+  review, visual owner approval, external ERP credentials, and production
+  deployment. No production dispatch was performed.
+- Next action: run the isolated carrier and full lifecycle acceptance against an
+  approved disposable Neon branch, then rerun the mandatory recovery gate. Keep
+  production deployment blocked until that report is green.

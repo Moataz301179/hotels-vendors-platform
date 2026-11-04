@@ -8,6 +8,12 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import {
+  catalogDedupeKey,
+  catalogEvidenceHash,
+  validateCatalogProvenance,
+  type CatalogSourceMetadata,
+} from "@/lib/catalog/provenance";
 import { ProductCategory } from "@prisma/client";
 
 /* ── 1. Scraper Engine interface ─────────────────────────────────────────── */
@@ -131,33 +137,121 @@ export function enrichProduct(raw: EnrichmentInput, supplierTenantId: string): E
 }
 
 /* ── 6. Idempotent DB upsert (by sku within tenant) ─────────────────────── */
-export async function upsertCatalog(products: EnrichedProduct[], supplierTenantId: string, sourceId: string, supplierId: string) {
-  let created = 0; let updated = 0;
+export async function upsertCatalog(
+  products: EnrichedProduct[],
+  supplierTenantId: string,
+  source: string | CatalogSourceMetadata,
+  supplierId: string,
+) {
+  const supplier = await prisma.supplier.findFirst({
+    where: { id: supplierId, tenantId: supplierTenantId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!supplier) throw new Error("CATALOG_SUPPLIER_OWNERSHIP_MISMATCH");
+
+  const provenance = validateCatalogProvenance(
+    typeof source === "string"
+      ? { sourceReference: source, observedAt: new Date() }
+      : source,
+  );
+
+  let created = 0; let updated = 0; let rejected = 0;
   for (const p of products) {
     try {
-      const existing = await prisma.product.findFirst({
-        where: { sku: p.sku, tenantId: supplierTenantId },
+      const sourceKey = catalogDedupeKey({
+        tenantId: supplierTenantId,
+        supplierId,
+        sku: p.sku,
+        sourceReference: provenance.sourceReference,
       });
-      if (existing) {
-        await prisma.product.update({
-          where: { id: existing.id },
-          data: { name: p.title, description: p.description, category: p.category as ProductCategory, unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined },
-        });
-        updated++;
-      } else {
-        await prisma.product.create({
-          data: {
-            sku: p.sku, name: p.title, description: p.description, category: p.category as ProductCategory,
-            unitOfMeasure: p.unit, unitPrice: p.unitPrice, images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined,
-            stockQuantity: 100,
-            tenantId: supplierTenantId, supplierId,
+      const observedFact = {
+        sku: p.sku,
+        name: p.title,
+        description: p.description,
+        category: p.category,
+        unitOfMeasure: p.unit,
+        unitPrice: p.unitPrice,
+        imageUrl: p.imageURL ?? null,
+        observedAt: provenance.observedAt.toISOString(),
+      };
+      const rawEvidenceHash = catalogEvidenceHash(observedFact);
+
+      const result = await prisma.$transaction(async (tx) => {
+        const existing = await tx.product.findUnique({ where: { sku: p.sku } });
+        if (existing && (existing.tenantId !== supplierTenantId || existing.supplierId !== supplierId)) {
+          throw new Error("CATALOG_SKU_OWNERSHIP_CONFLICT");
+        }
+
+        const product = existing
+          ? await tx.product.update({
+              where: { id: existing.id },
+              data: {
+                name: p.title,
+                description: p.description,
+                category: p.category as ProductCategory,
+                unitOfMeasure: p.unit,
+                unitPrice: p.unitPrice,
+                images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined,
+                source: "SUPPLIER_SYNC",
+                sourceProvider: provenance.sourceReference,
+                sourceKey,
+              },
+            })
+          : await tx.product.create({
+              data: {
+                sku: p.sku,
+                name: p.title,
+                description: p.description,
+                category: p.category as ProductCategory,
+                unitOfMeasure: p.unit,
+                unitPrice: p.unitPrice,
+                images: p.imageURL ? JSON.stringify([p.imageURL]) : undefined,
+                stockQuantity: 0,
+                status: "INACTIVE",
+                tenantId: supplierTenantId,
+                supplierId,
+                source: "SUPPLIER_SYNC",
+                sourceProvider: provenance.sourceReference,
+                sourceKey,
+              },
+            });
+
+        const evidence = await tx.evidenceRecord.findFirst({
+          where: {
+            tenantId: supplierTenantId,
+            entityId: product.id,
+            sourceReference: provenance.sourceReference,
+            rawEvidenceHash,
+            deletedAt: null,
           },
+          select: { id: true },
         });
-        created++;
-      }
-    } catch { /* skip unpersistable row */ }
+        if (!evidence) {
+          await tx.evidenceRecord.create({
+            data: {
+              tenantId: supplierTenantId,
+              entityId: product.id,
+              entityName: "PRODUCT",
+              sourceUrl: provenance.sourceUrl,
+              sourceReference: provenance.sourceReference,
+              rawEvidenceHash,
+              extractedFact: JSON.stringify(observedFact),
+              provenanceClass: "OBSERVED",
+              retrievalTimestamp: provenance.observedAt,
+              status: "PENDING",
+            },
+          });
+        }
+        return existing ? "updated" : "created";
+      });
+      if (result === "created") created += 1;
+      else updated += 1;
+    } catch {
+      // Reject this row without publishing a partial or cross-tenant record.
+      rejected += 1;
+    }
   }
-  return { created, updated, total: products.length };
+  return { created, updated, rejected, total: products.length };
 }
 
 function hash(s: string): number {

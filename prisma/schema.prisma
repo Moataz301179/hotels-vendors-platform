@@ -771,6 +771,7 @@ model Order {
   ReturnRequest               ReturnRequest[]
   tripStops                   TripStop[]
   goodsReceiptNotes           GoodsReceiptNote[]
+  carrierAssignments          CarrierOrderAssignment[]
   scheduledOrder              ScheduledOrder?            @relation(fields: [scheduledOrderId], references: [id])
 
   @@index([tenantId])
@@ -2428,17 +2429,17 @@ model ConsentRecord {
   deletedAt        DateTime?
   tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  legalBasis          ConsentLegalBasis @default(EXPLICIT_CONSENT)
+  legalBasisReference String?
+  processingPurposes  String            @default("NOT_SPECIFIED")
+  retentionPeriodDays Int?
+  hotelJurisdiction   String?
 
   @@unique([userId, consentType, partnerId])
   @@index([userId, status])
   @@index([partnerId, status])
   @@index([tenantId])
   @@index([deletedAt], map: "ConsentRecord_deleted_idx")
-  legalBasis          ConsentLegalBasis @default(EXPLICIT_CONSENT)
-  legalBasisReference String?
-  processingPurposes  String             @default("NOT_SPECIFIED")
-  retentionPeriodDays Int?
-  hotelJurisdiction   String?
 }
 
 /// Oliv credit facility — synced from Oliv via webhooks.
@@ -2823,18 +2824,21 @@ model GoodsReceiptNote {
   updatedAt         DateTime  @updatedAt
   uuid              String?   @unique(map: "GoodsReceiptNote_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt         DateTime?
+  shipmentId                   String?
 
   order     Order         @relation(fields: [orderId], references: [id])
   hotel     Hotel         @relation(fields: [hotelId], references: [id])
   supplier  Supplier      @relation(fields: [supplierId], references: [id])
   tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   lineItems GrnLineItem[]
+  shipment  Shipment?     @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([orderId])
   @@index([hotelId])
   @@index([status])
   @@index([deletedAt], map: "GRN_deleted_idx")
+  @@index([shipmentId])
 }
 
 model GrnLineItem {
@@ -3948,6 +3952,7 @@ model RfqRequest {
   quotes             ProcurementQuote[]
   contractBaseline   ContractRateBaseline? @relation(fields: [contractBaselineId], references: [id], onDelete: SetNull)
 
+  @@unique([tenantId, buyerId, idempotencyKey])
   @@index([buyerId])
   @@index([status])
   @@index([supplierId])
@@ -3956,7 +3961,6 @@ model RfqRequest {
   @@index([tenantId, catalogItemId])
   @@index([catalogStagingItemId])
   @@index([tenantId, buyerId, status])
-  @@unique([tenantId, buyerId, idempotencyKey])
 }
 
 /// Controlled category hierarchy for the supplier-neutral HoReCa master
@@ -4161,6 +4165,7 @@ model CarrierProfile {
   deletedAt             DateTime?
   tenant                Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderAssignments      CarrierOrderAssignment[]
 
   @@index([city])
   @@index([status])
@@ -4190,10 +4195,38 @@ model Shipment {
   updatedAt        DateTime  @updatedAt
   uuid             String?   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt        DateTime?
+  assignmentId      String?                 @unique
+  assignment        CarrierOrderAssignment? @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+  goodsReceiptNotes GoodsReceiptNote[]
 
   @@index([corridor])
   @@index([status])
   @@index([tenantId])
+}
+
+model CarrierOrderAssignment {
+  id               String         @id @default(cuid())
+  orderId          String         @unique
+  carrierProfileId String
+  hotelTenantId    String
+  carrierTenantId  String
+  status           String         @default("ASSIGNED")
+  assignedById     String
+  assignedAt       DateTime       @default(now())
+  respondedAt      DateTime?
+  deliveredAt      DateTime?
+  deliveryEvidence Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrierProfile   CarrierProfile @relation(fields: [carrierProfileId], references: [id], onDelete: Restrict)
+  shipments        Shipment[]
+
+  @@index([carrierTenantId, status])
+  @@index([hotelTenantId, status])
+  @@index([carrierProfileId])
+  @@index([deletedAt])
 }
 
 model CorridorRoute {

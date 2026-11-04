@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "release": "procurement-core-v1",
+  "authorizedAt": "2026-11-04",
+  "mandatory": [
+    "P0-CI", "P0-DB", "P0-NEON", "P0-CLERK", "P0-ROLES",
+    "P0-LIFECYCLE", "P0-UX", "P1-CATALOG", "P1-OPS",
+    "P0-REDESIGN", "P0-ONBOARDING", "P0-DEPLOY"
+  ],
+  "future": ["P1-MOBILE", "P1-LEGACY", "P0-GROK"],
+  "external": ["P0-INTEGRATIONS"],
+  "boundaries": {
+    "funding": "Referral, eligibility, decision-status and reconciliation records only. No money movement.",
+    "catalog": "Only provenance-reviewed records may be presented as verified. Ten thousand listings is a growth target, not a release gate.",
+    "integrations": "Unavailable Oracle, SAP and FTP credentials remain disabled and must not be represented as accepted live connections.",
+    "mobile": "Native store distribution is not part of the web procurement-core-v1 release."
+  }
+}

@@ -25,9 +25,9 @@ function runGate(tasks, args = ['--require-predeploy-ready']) {
   }
 }
 
-test('web predeploy gate ignores mobile-scoped work only, while full release remains blocked', () => {
+test('web predeploy gate ignores explicitly future-scoped work, while full release remains blocked', () => {
   const { result, report } = runGate([
-    { id: 'P1-MOBILE', title: 'Device acceptance', state: 'pending', releaseScope: 'mobile' },
+    { id: 'P1-MOBILE', title: 'Device acceptance', state: 'pending', releaseScope: 'mobile', releaseClass: 'future' },
     { id: 'P0-DEPLOY', title: 'Protected deploy', state: 'pending' }
   ]);
 
@@ -40,7 +40,7 @@ test('web predeploy gate ignores mobile-scoped work only, while full release rem
 
 test('any unverified web task still blocks web predeploy even when mobile is paused', () => {
   const { result, report } = runGate([
-    { id: 'P1-MOBILE', title: 'Device acceptance', state: 'pending', releaseScope: 'mobile' },
+    { id: 'P1-MOBILE', title: 'Device acceptance', state: 'pending', releaseScope: 'mobile', releaseClass: 'future' },
     { id: 'P0-CLERK', title: 'Authenticated roles', state: 'pending' },
     { id: 'P0-DEPLOY', title: 'Protected deploy', state: 'pending' }
   ]);
@@ -52,12 +52,22 @@ test('any unverified web task still blocks web predeploy even when mobile is pau
 
 test('full readiness gate continues to include mobile-scoped tasks', () => {
   const { result, report } = runGate([
-    { id: 'P1-MOBILE', title: 'Device acceptance', state: 'pending', releaseScope: 'mobile' }
+    { id: 'P1-MOBILE', title: 'Device acceptance', state: 'pending', releaseScope: 'mobile', releaseClass: 'future' }
   ], ['--require-ready']);
 
   assert.equal(result.status, 1);
   assert.equal(report.webPredeployReady, true);
   assert.equal(report.deploymentReady, false);
+});
+
+test('external credentials stay visible but do not block the authorized core release', () => {
+  const { result, report } = runGate([
+    { id: 'P0-INTEGRATIONS', title: 'Live ERP credentials', state: 'pending', releaseClass: 'external' },
+    { id: 'P0-DEPLOY', title: 'Protected deploy', state: 'pending' }
+  ]);
+  assert.equal(result.status, 0);
+  assert.deepEqual(report.webPredeployOpen, []);
+  assert.equal(report.open[0].releaseClass, 'external');
 });
 
 test('unknown release scopes fail closed instead of being excluded from web readiness', () => {
