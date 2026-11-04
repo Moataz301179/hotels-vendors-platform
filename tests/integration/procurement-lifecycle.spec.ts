@@ -87,6 +87,10 @@ async function persistAcceptedEtaClearance(orderId: string) {
 }
 
 describe('procurement lifecycle against the isolated database', () => {
+  // The production-shaped Neon rehearsal branch has materially higher network
+  // latency than the disposable local PostgreSQL CI service. Keep the test
+  // fail-closed, but give setup enough time to create its isolated fixture
+  // graph before lifecycle assertions begin.
   beforeAll(async () => {
     await prisma.tenant.createMany({ data: [
       { id: ids.platformTenant, name: `Platform ${run}`, slug: `it-platform-${run}`, type: 'PLATFORM', status: 'ACTIVE', taxId: `P${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
@@ -142,13 +146,13 @@ describe('procurement lifecycle against the isolated database', () => {
 
     await prisma.procurementApprovalPolicy.create({ data: { tenantId: ids.hotelTenant, departmentId, primaryApproverId: ids.approver, createdById: ids.approver } });
     await prisma.authorityRule.create({ data: { tenantId: ids.hotelTenant, role: 'GM', name: `Lifecycle approval ${run}`, action: 'APPROVE', minValue: 0, maxValue: 10_000_000, priority: 100, isActive: true } });
-  });
+  }, 90_000);
 
   afterAll(async () => {
     // The isolated database is disposable. Removing test tenants would cascade into
     // AuditLog, whose append-only trigger deliberately rejects DELETE operations.
     await prisma.$disconnect();
-  });
+  }, 90_000);
 
   it('blocks hotel sourcing until tax verification is complete', async () => {
     const beforeCount = await prisma.rfqRequest.count({ where: { tenantId: ids.hotelTenant } });
