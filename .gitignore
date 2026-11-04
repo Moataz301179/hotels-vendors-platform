@@ -15,6 +15,9 @@ tools.yaml
 
 # testing
 /coverage
+/test-results/
+/.auth/
+/.auth-testing/
 
 # next.js
 /.next/
@@ -22,6 +25,11 @@ tools.yaml
 
 # production
 /build
+
+# HOVIN generated runtime artifacts. Native source projects remain trackable.
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
 
 # misc
 .DS_Store
