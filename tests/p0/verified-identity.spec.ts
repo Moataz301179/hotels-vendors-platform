@@ -4,10 +4,11 @@ const m = vi.hoisted(() => ({
   auth: vi.fn(),
   current: vi.fn(),
   user: vi.fn(),
+  bind: vi.fn(),
   transaction: vi.fn(),
 }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: m.auth, currentUser: m.current }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: m.user }, $transaction: m.transaction } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: m.user, updateMany: m.bind }, $transaction: m.transaction } }));
 import { getActor, getOnboardingActor } from "@/lib/v2-auth";
 
 const verifiedClerkUser = (email: string, overrides: Record<string, unknown> = {}) => ({
@@ -21,6 +22,7 @@ describe("identity boundary: pending users and verified email", () => {
     vi.resetAllMocks();
     m.auth.mockResolvedValue({ userId: "clerk-user" });
     m.user.mockResolvedValue({ id: "u", platformRole: "SUPPLIER", tenantId: "own", status: "ACTIVE", deletedAt: null });
+    m.bind.mockResolvedValue({ count: 1 });
   });
 
   it("getActor rejects an ACTIVE user with an unverified primary email", async () => {
@@ -30,6 +32,7 @@ describe("identity boundary: pending users and verified email", () => {
   });
 
   it("getActor uses the verified primary email, not the first address or browser metadata", async () => {
+    m.user.mockResolvedValue({ id: "u", platformRole: "SUPPLIER", tenantId: "own", status: "ACTIVE", deletedAt: null, clerkUserId: "clerk-user" });
     m.current.mockResolvedValue({
       primaryEmailAddressId: "primary",
       unsafeMetadata: { platformRole: "ADMIN" },

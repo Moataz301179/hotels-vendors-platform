@@ -4,11 +4,12 @@ const m = vi.hoisted(() => ({
   auth: vi.fn(),
   current: vi.fn(),
   user: vi.fn(),
+  bind: vi.fn(),
   transaction: vi.fn(),
 }));
 
 vi.mock("@clerk/nextjs/server", () => ({ auth: m.auth, currentUser: m.current }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: m.user }, $transaction: m.transaction } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: m.user, updateMany: m.bind }, $transaction: m.transaction } }));
 vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: vi.fn() }));
 
 import { getActor, getOnboardingActor } from "@/lib/v2-auth";
@@ -26,6 +27,7 @@ describe("identity boundary recovery", () => {
   beforeEach(() => {
     m.auth.mockResolvedValue({ userId: "clerk-user" });
     m.user.mockResolvedValue({ id: "u", platformRole: "SUPPLIER", tenantId: "own", status: "ACTIVE", deletedAt: null });
+    m.bind.mockResolvedValue({ count: 1 });
   });
 
   it("getActor rejects an unverified primary email", async () => {
@@ -53,10 +55,37 @@ describe("identity boundary recovery", () => {
     expect(await getActor()).toBeNull();
   });
 
-  it("getActor allows a legacy row with no clerkUserId", async () => {
+  it("binds a verified public legacy row to its first Clerk subject", async () => {
     m.current.mockResolvedValue(verifiedClerkUser("a@example.com"));
-    m.user.mockResolvedValue({ id: "u", status: "ACTIVE", deletedAt: null, clerkUserId: null });
+    m.user.mockResolvedValue({ id: "u", platformRole: "SUPPLIER", status: "ACTIVE", deletedAt: null, clerkUserId: null });
     expect(await getActor()).toMatchObject({ id: "u" });
+    expect(m.bind).toHaveBeenCalledWith({ where: { id: "u", clerkUserId: null }, data: { clerkUserId: "clerk-user" } });
+  });
+
+  it("rejects a legacy public row when another concurrent session binds it first", async () => {
+    m.current.mockResolvedValue(verifiedClerkUser("a@example.com"));
+    m.user.mockResolvedValue({ id: "u", platformRole: "SUPPLIER", status: "ACTIVE", deletedAt: null, clerkUserId: null });
+    m.bind.mockResolvedValue({ count: 0 });
+    expect(await getActor()).toBeNull();
+  });
+
+  it("does not inherit an unbound Admin row by verified email alone", async () => {
+    m.current.mockResolvedValue(verifiedClerkUser("admin@example.com", { unsafeMetadata: { platformRole: "SUPPLIER" } }));
+    m.user.mockResolvedValue({ id: "legacy-admin", platformRole: "ADMIN", status: "ACTIVE", deletedAt: null, clerkUserId: null });
+    expect(await getActor()).toBeNull();
+    expect(await getOnboardingActor()).toBeNull();
+  });
+
+  it("rejects conflicting public signup intent on an unbound row", async () => {
+    m.current.mockResolvedValue(verifiedClerkUser("hotel@example.com", { unsafeMetadata: { platformRole: "SUPPLIER" } }));
+    m.user.mockResolvedValue({ id: "legacy-hotel", platformRole: "HOTEL", status: "ACTIVE", deletedAt: null, clerkUserId: null });
+    expect(await getActor()).toBeNull();
+  });
+
+  it("honors an explicitly bound Admin identity regardless of signup metadata", async () => {
+    m.current.mockResolvedValue(verifiedClerkUser("admin@example.com", { unsafeMetadata: { platformRole: "SUPPLIER" } }));
+    m.user.mockResolvedValue({ id: "bound-admin", platformRole: "ADMIN", status: "ACTIVE", deletedAt: null, clerkUserId: "clerk-user" });
+    expect(await getActor()).toMatchObject({ id: "bound-admin", platformRole: "ADMIN" });
   });
 
   it("getActor REJECTS a PENDING_VERIFICATION user", async () => {

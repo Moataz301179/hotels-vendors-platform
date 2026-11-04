@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ auth: vi.fn(), currentUser: vi.fn(), findUnique: vi.fn(), transaction: vi.fn(), tenant: vi.fn(), user: vi.fn() }));
+const m = vi.hoisted(() => ({ auth: vi.fn(), currentUser: vi.fn(), findUnique: vi.fn(), bind: vi.fn(), transaction: vi.fn(), tenant: vi.fn(), user: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ auth: m.auth, currentUser: m.currentUser }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: m.findUnique }, $transaction: m.transaction } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: m.findUnique, updateMany: m.bind }, $transaction: m.transaction } }));
 import { getActor, getOnboardingActor } from "@/lib/v2-auth";
 
 beforeEach(() => {
   vi.resetAllMocks();
   m.auth.mockResolvedValue({ userId: "user_alpha_same12345678" });
-  m.currentUser.mockResolvedValue({ primaryEmailAddressId: "primary", emailAddresses: [{ id: "primary", emailAddress: "signup@example.test", verification: { status: "verified" } }], unsafeMetadata: {} });
+  m.currentUser.mockResolvedValue({ primaryEmailAddressId: "primary", emailAddresses: [{ id: "primary", emailAddress: "signup@example.test", verification: { status: "verified" } }], unsafeMetadata: { platformRole: "HOTEL" } });
   m.findUnique.mockResolvedValue(null);
+  m.bind.mockResolvedValue({ count: 1 });
   m.tenant.mockResolvedValue({ id: "tenant-created" });
   m.user.mockResolvedValue({ id: "new", clerkUserId: "user_alpha_same12345678", status: "PENDING_VERIFICATION" });
   const upsert = vi.fn().mockResolvedValue({ id: "record" });
@@ -17,6 +18,12 @@ beforeEach(() => {
 });
 
 describe("onboarding identity provisioning boundary", () => {
+  it("does not silently provision a Hotel for a Clerk account with no role intent", async () => {
+    m.currentUser.mockResolvedValue({ primaryEmailAddressId: "primary", emailAddresses: [{ id: "primary", emailAddress: "signup@example.test", verification: { status: "verified" } }], unsafeMetadata: {} });
+    expect(await getOnboardingActor()).toBeNull();
+    expect(m.transaction).not.toHaveBeenCalled();
+  });
+
   it("never provisions or returns a pending identity from operational auth", async () => {
     expect(await getActor()).toBeNull();
     expect(m.transaction).not.toHaveBeenCalled();

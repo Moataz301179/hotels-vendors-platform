@@ -16,15 +16,15 @@ export default function HovinDownloadPage() {
         <div className="shell mobile-release-hero-grid">
           <div>
             <p className="eyebrow">HOVIN · mobile workspace</p>
-            <h1>Procurement work that travels with the property.</h1>
-            <p className="mobile-release-lead">Use HOVIN for receiving evidence, order follow-up and field approvals. This page is the single QR destination while store listings are being prepared.</p>
+            <h1>Receiving at the point of delivery.</h1>
+            <p className="mobile-release-lead">HOVIN is the field layer for checking delivered quantities, recording discrepancies and attaching receipt evidence against the order. Installation links appear here after a signed mobile release is verified.</p>
             <div className="mobile-release-actions"><Link href="/login" className="btn btn-blue">Use the web workspace</Link><Link href="/" className="btn btn-ghost">Back to HOTELSVENDORS</Link></div>
           </div>
           <div className="mobile-release-qr"><DownloadQR value="https://www.hotelsvendors.com/hovin" size={196} label="Scan from another device"/><span className="mobile-release-status">Release links are shown only when configured and verified.</span></div>
         </div>
       </section>
       <section className="mobile-release-options shell" aria-labelledby="mobile-release-options-title">
-        <div className="mobile-release-heading"><p className="eyebrow">Install options</p><h2 id="mobile-release-options-title">Choose your device.</h2><p>Do not install an unsigned or unverified build. If a platform link is not shown, use the web workspace until the signed release is published.</p></div>
+        <div className="mobile-release-heading"><p className="eyebrow">Release availability</p><h2 id="mobile-release-options-title">iOS and Android.</h2><p>Each installation link is shown only after its signed build and distribution path are verified.</p></div>
         <div className="mobile-release-cards">
           <article className="mobile-release-card"><span className="mobile-release-kicker">Android</span><h3>Android package</h3><p>{androidUrl ? "A signed Android package is available for download." : "No signed Android package has been published yet. The web workspace remains available."}</p>{androidUrl ? <a className="btn btn-blue" href={androidUrl}>Download Android app</a> : <span className="mobile-release-status">Not published</span>}</article>
           <article className="mobile-release-card"><span className="mobile-release-kicker">iOS</span><h3>iPhone and iPad</h3><p>{iosUrl ? "A verified iOS distribution link is available." : "No TestFlight or App Store link has been published yet. The web workspace remains available."}</p>{iosUrl ? <a className="btn btn-blue" href={iosUrl}>Open iOS release</a> : <span className="mobile-release-status">Not published</span>}</article>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Building2, ClipboardCheck, FileText, PackageCheck, ShieldCheck, Truck, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { SignOutButton, useAuth } from '@clerk/nextjs';
 import { requestJson } from '@/lib/v2-http';
 import { RoleAuditWidget } from '@/components/v2/role-audit-widget';
 import { roleDisplayName, type WorkspaceRole, workspaceRole } from '@/lib/dashboard/role-navigation';
@@ -31,8 +32,10 @@ function roleMetrics(role:WorkspaceRole,metrics:Metrics){
  return[{label:'Review queue',value:metrics.rfqs,href:'/admin',detail:'Governance indicators—not marketplace tasks.'},{label:'Audit-ready orders',value:metrics.orders,href:'/audit',detail:'Recorded transaction lifecycle activity.'}];
 }
 export default function Dashboard(){
+ const { isSignedIn }=useAuth();
  const[data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[profile,setProfile]=useState<{complete:boolean}|null>(null);
  useEffect(()=>{let active=true;Promise.all([requestJson<Data>('/api/v2/dashboard'),requestJson<{complete:boolean}>('/api/v2/onboarding')]).then(([dashboard,onboarding])=>{if(active){setData(dashboard);setProfile(onboarding)}}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'Unable to load your workspace.')});return()=>{active=false}},[]);
+ if(error==='UNAUTHENTICATED')return <div className="workspace-status" role="alert"><strong>{isSignedIn?'This account is not linked to an active workspace.':'Sign in to open your workspace.'}</strong><p>{isSignedIn?'Your Clerk session does not match an authorized organization role. Use the account assigned to your organization.':'Your organization records are available after sign in.'}</p>{isSignedIn?<SignOutButton redirectUrl="/login"><button className="btn btn-ghost" type="button">Switch account</button></SignOutButton>:<Link className="btn btn-blue" href="/login">Sign in</Link>}</div>;
  if(error)return <div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={()=>window.location.reload()}>Retry</button></div>;
  if(!data)return <p role="status" className="workspace-empty">Loading your role workspace…</p>;
  const role=workspaceRole(data.role)??'HOTEL',model=models[role],metrics=roleMetrics(role,data.metrics),scopedWorkspace=roleWorkspace(data.role,data.organizationRole),scopedActions=scopedWorkspace?.actions.map(action=>({title:action.title,detail:action.description,href:action.href,icon:iconForWorkspaceHref(action.href)})),primary=scopedActions?.[0]??model.primary,actions=scopedActions?.slice(1)??model.actions,journey=scopedActions?.map(action=>action.title)??model.journey,PrimaryIcon=iconFor(primary.icon);

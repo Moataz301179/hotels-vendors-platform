@@ -12,9 +12,9 @@ CREATE TABLE "new_User" (
     "platformRole" TEXT NOT NULL DEFAULT 'HOTEL',
     "hotelId" TEXT NOT NULL,
     "canOverride" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "lastActive" DATETIME,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
+    "lastActive" TIMESTAMP,
     CONSTRAINT "User_hotelId_fkey" FOREIGN KEY ("hotelId") REFERENCES "Hotel" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 INSERT INTO "new_User" ("canOverride", "createdAt", "email", "hotelId", "id", "lastActive", "name", "passwordHash", "phone", "role", "status", "updatedAt") SELECT "canOverride", "createdAt", "email", "hotelId", "id", "lastActive", "name", "passwordHash", "phone", "role", "status", "updatedAt" FROM "User";

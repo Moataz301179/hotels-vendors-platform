@@ -62,6 +62,12 @@ test.describe('authenticated role and tenant boundaries', () => {
         const state = statePath(role);
         expect(fs.statSync(state, { throwIfNoEntry: false })?.isFile(), `Missing approved storage state: ${state}`).toBe(true);
         const context = await browser.newContext({ storageState: state });
+        // Let Clerk complete its browser session handshake before issuing the
+        // API-only tenant probe. A fresh request context can otherwise miss the
+        // client session activation even when the stored state is valid.
+        const page = await context.newPage();
+        const pageResponse = await page.goto('/dashboard');
+        expect(pageResponse?.status()).toBe(200);
         const identity = await context.request.get('/api/v2/me');
         const identityBody = (await identity.json()) as { user?: { tenantId?: string } };
         const tenantId = identityBody.user?.tenantId;

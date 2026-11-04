@@ -28,11 +28,14 @@ export function buildClerkContentSecurityPolicy(publishableKey: string | undefin
     : "";
   const configuredClerkOrigins = [clerkOrigins, productionAccountsOrigin].filter(Boolean).join(" ");
 
+  const development = process.env.NODE_ENV === "development";
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${configuredClerkOrigins} https://challenges.cloudflare.com ${CLERK_PROTECT}`,
+    `script-src 'self' 'nonce-${nonce}' ${development ? "'unsafe-eval'" : "'strict-dynamic'"} ${configuredClerkOrigins} https://challenges.cloudflare.com ${CLERK_PROTECT}`,
     "worker-src 'self' blob:",
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    // Clerk's prebuilt components inject runtime CSS without our response nonce.
+    // Its documented CSP requires inline styles in production as well.
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     // Published supplier images are reviewed before activation and are loaded
     // directly by the browser. Keep the policy HTTPS-only: no server-side

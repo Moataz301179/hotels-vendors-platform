@@ -29,7 +29,7 @@ export default function Register() {
             <div className="hv-register-copy">
               <span className="hv-register-eyebrow">HOTELSVENDORS Procurement Network</span>
               <h1 id="register-title">A better way to work across hospitality supply.</h1>
-              <p>Choose your organization’s workspace to connect with verified demand, fulfill procurement, and coordinate the next step.</p>
+              <p>Register a hotel to manage purchasing, or register a vendor to respond to approved sourcing requests.</p>
             </div>
             <div className="hv-register-photo" role="img" aria-label="A bright, premium hotel suite overlooking the sea" />
           </div>
@@ -40,9 +40,9 @@ export default function Register() {
             <div className="hv-register-section-heading">
               <div>
                 <span className="hv-register-eyebrow">Get started</span>
-                <h2 id="workspace-title">Start with your role in procurement</h2>
+                <h2 id="workspace-title">Register your organization</h2>
               </div>
-              <p>Each workspace has role-specific onboarding and organization-scoped access.</p>
+              <p>Choose the organization type that matches your business.</p>
             </div>
             <div className="hv-register-layer" aria-labelledby="procurement-roles-title">
               <div className="hv-register-layer-heading">
@@ -59,13 +59,6 @@ export default function Register() {
                   </Link>
                 ))}
               </div>
-            </div>
-            <div className="hv-register-layer hv-register-partner-layer" aria-labelledby="network-roles-title">
-              <div className="hv-register-layer-heading">
-                <span className="hv-register-layer-index">02</span>
-                <div><h3 id="network-roles-title">Provisioned partner access</h3><p>Carriers and funders do not use public registration. Their organizations are provisioned after the relevant commercial and access review.</p></div>
-              </div>
-              <p className="hv-register-copy">If your organization has been invited as a carrier or funder, use the partner route or contact HOTELSVENDORS to verify access.</p>
             </div>
           </div>
         </section>

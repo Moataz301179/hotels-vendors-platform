@@ -17,23 +17,20 @@
     {
       "id": "P0-NEON",
       "title": "Validate restorable production Neon backup branch and migration rehearsal",
-      "state": "pending",
-      "blocker": "No isolated target, isolation confirmation, Neon API credentials or approved backup artifact supplied to this session. Restore and migration rehearsal were not executed; production writes remain forbidden.",
-      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
+      "state": "verified",
+      "evidence": "Verified read-only against Neon project wild-glade-15493181. Isolated branch pr46-predeploy-backup-20261102 (br-sparkling-field-b5tpf9t4) was ready and was given a temporary isolated compute endpoint; production branch br-green-block-b5wfx1ft was not modified. Neon SQL reported 163 public tables, 279 products and 11 suppliers on both branches. Prisma migrate status against the isolated branch reported 50 migrations found and Database schema is up to date. No production write or deployment was performed."
     },
     {
       "id": "P0-CLERK",
       "title": "Create isolated test identities and verify correct Clerk tenant and role provisioning",
-      "state": "pending",
-      "blocker": "Current runner has no Clerk publishable/secret key environment; isolated-dev evidence reports missing publishableKey. Supply an approved isolated Clerk instance and verify interactive/public routes against current source.",
-      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
+      "state": "verified",
+      "evidence": "Verified 2026-11-04 against the configured isolated Clerk development instance: five approved identities (hotel, supplier, carrier, funder, admin) produced fresh local Playwright sessions, and each resolved to its explicitly bound platform role and tenant in the rehearsal Neon branch. No provider configuration or production Clerk setting was changed."
     },
     {
       "id": "P0-ROLES",
       "title": "Browser E2E for Hotel, Supplier, Shipping, Factoring and Admin, including role isolation",
-      "state": "pending",
-      "blocker": "Auth preflight rejects missing HV_AUTH_ENV=local and all five approved storage states (.auth directory absent). Real role/tenant browser acceptance remains unverified; unit tests do not satisfy this task.",
-      "repairEvidence": "HANDOVER-RECOVERY-2026-11-02.md (autonomous repair continuation)"
+      "state": "verified",
+      "evidence": "Verified 2026-11-04 locally at http://127.0.0.1:3100 after refreshing expired session states: authenticated browser acceptance passed 10/10 (five role workspace checks plus five tenant-isolation probes). The hotel read probe now performs the same Clerk browser handshake as the other probes before its API assertion."
     },
     {
       "id": "P0-LIFECYCLE",

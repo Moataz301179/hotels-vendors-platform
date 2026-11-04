@@ -42,10 +42,24 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
     // another person's existing pending record by email alone. Legacy rows
     // created before Clerk binding (no clerkUserId) still match by email.
     if (user.clerkUserId && user.clerkUserId !== userId) return null;
-    // Legacy unbound rows (pre-Clerk, no clerkUserId): an unverified email
-    // must never claim another person's existing pending or active account.
-    // Verified ownership is required before any legacy row is returned.
-    if (!user.clerkUserId && !isVerified) return null;
+    // A verified email can recover only a public Hotel or Vendor legacy row.
+    // Admin and partner roles require an explicit Clerk subject binding; a
+    // new test identity must never inherit elevated access from an old email.
+    if (!user.clerkUserId) {
+      if (!isVerified || !["HOTEL", "SUPPLIER"].includes(user.platformRole)) return null;
+      const signupIntent = String(cu.unsafeMetadata?.platformRole || "").toUpperCase();
+      if (signupIntent && signupIntent !== user.platformRole) return null;
+
+      // Legacy public identities are bound at their first verified Clerk
+      // session. The conditional write is deliberate: concurrent sessions
+      // cannot replace a subject that has already claimed this account.
+      const bound = await prisma.user.updateMany({
+        where: { id: user.id, clerkUserId: null },
+        data: { clerkUserId: userId },
+      });
+      if (bound.count !== 1) return null;
+      user = { ...user, clerkUserId: userId };
+    }
     if (user.deletedAt) return null;
     if (user.status === "PENDING_VERIFICATION") return allowPending ? user : null;
     if (user.status !== "ACTIVE") return null;
@@ -58,11 +72,11 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
 
   // Signup role is onboarding intent only. After provisioning, DB platformRole is authoritative.
   // ADMIN can never be self-provisioned from Clerk metadata.
-  const requestedRole = String(cu.unsafeMetadata?.platformRole || "HOTEL").toUpperCase();
+  const requestedRole = String(cu.unsafeMetadata?.platformRole || "").toUpperCase();
   // Public Clerk metadata is user-editable. Only hotel and supplier are public signup roles;
   // carriers and funders must be provisioned through controlled partner onboarding.
-  const platformRole: PlatformRole = ["HOTEL", "SUPPLIER"].includes(requestedRole)
-    ? requestedRole as PlatformRole : "HOTEL";
+  if (!["HOTEL", "SUPPLIER"].includes(requestedRole)) return null;
+  const platformRole = requestedRole as PlatformRole;
   const slug = `hv-${createHash("sha256").update(userId).digest("hex")}`;
   user = await prisma.$transaction(async tx => {
     const tenant = await tx.tenant.upsert({

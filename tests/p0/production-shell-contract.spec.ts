@@ -54,7 +54,8 @@ describe("production shell and authorization contracts", () => {
     expect(stagingCsp).not.toContain("https://clerk.hotelsvendors.com");
     expect(proxy).toContain("clerkSecurityMiddleware(security.csp)(securedRequest, event)");
     expect(proxy).toContain("alignLoopbackRewrite(clerkResponse, securedRequest)");
-    expect(productionCsp).not.toContain("unsafe-inline");
+    expect(productionCsp.split("; ").find((directive) => directive.startsWith("style-src"))).toContain("'unsafe-inline'");
+    expect(productionCsp.split("; ").find((directive) => directive.startsWith("script-src"))).not.toContain("'unsafe-inline'");
     expect(productionCsp).not.toContain("unsafe-eval");
   });
 
@@ -100,7 +101,7 @@ describe("production shell and authorization contracts", () => {
 
   it("keeps /register on the role-selection entry flow rather than a raw Clerk widget", () => {
     const page = readFileSync(join(root, "app/(auth)/register/page.tsx"), "utf8");
-    expect(page).toContain("Start with your role in procurement");
+    expect(page).toContain("Register your organization");
     expect(page).toContain("/hotels/signup");
     expect(page).toContain("/suppliers/signup");
     expect(page).not.toContain("<SignUp");

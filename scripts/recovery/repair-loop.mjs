@@ -412,11 +412,13 @@ async function codexChatGPTPreflight(codexPath, workdir, env) {
   return { ok: false, reason: /token_revoked|refresh_token_invalidated|unauthorized|\b401\b|session ended|log in again/i.test(status) ? 'codex_auth_required' : 'codex_transport_unconfirmed' };
 }
 
-function safeCodexEnv(source, workspace) {
+export function safeCodexEnv(source, workspace) {
   const env = cleanEnv(source);
   env.HOME = join(workspace, '.agent-home');
   mkdirSync(env.HOME, { recursive: true });
-  if (source.CODEX_HOME) env.CODEX_HOME = source.CODEX_HOME;
+  // Preserve the existing Codex authentication directory by reference while
+  // keeping the repair workspace HOME isolated. Never copy credentials.
+  env.CODEX_HOME = source.CODEX_HOME || join(source.HOME || process.env.HOME || workspace, '.codex');
   // Do not let a paid API key silently override the ChatGPT login session.
   for (const key of ['OPENAI_API_KEY', 'OPENAI_BASE_URL', 'OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY']) delete env[key];
   return env;

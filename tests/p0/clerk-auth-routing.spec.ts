@@ -15,16 +15,18 @@ describe("Clerk authentication routing", () => {
 
   it("uses Clerk redirect OAuth flows and role-safe completion paths", () => {
     const signup = readFileSync(join(root, "components/v2/actor-signup.tsx"), "utf8");
-    const login = readFileSync(join(root, "app/(auth)/login/page.tsx"), "utf8");
+    const login = readFileSync(join(root, "app/(auth)/login/[[...rest]]/page.tsx"), "utf8");
+    const loginComponent = readFileSync(join(root, "components/v2/clerk-login.tsx"), "utf8");
     const completion = readFileSync(join(root, "app/(auth)/auth/continue/page.tsx"), "utf8");
 
     expect(signup).toContain('unsafeMetadata={{platformRole:role}}');
     expect(signup).toContain('forceRedirectUrl="/auth/continue"');
     expect(signup).toContain('oauthFlow="redirect"');
-    expect(login).toContain('forceRedirectUrl={continueUrl}');
-    expect(login).toContain('transferable={false}');
-    expect(login).toContain('withSignUp={false}');
-    expect(login).toContain('oauthFlow="redirect"');
+    expect(loginComponent).toContain('forceRedirectUrl={continueUrl}');
+    expect(loginComponent).toContain('transferable={false}');
+    expect(loginComponent).toContain('withSignUp={false}');
+    expect(loginComponent).toContain('oauthFlow="redirect"');
+    expect(loginComponent).toContain('SignOutButton');
     expect(completion).toContain('getOnboardingActor()');
     expect(completion).toContain('user.status === "PENDING_VERIFICATION"');
   });

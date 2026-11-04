@@ -39,3 +39,11 @@ HotelsVendors had ETA compliance monitoring but **no way for a hotel to connect 
 
 ## How to deploy this change
 Production deploy is guarded by `.github/workflows/deploy-production.yml`: it runs ONLY from `refs/heads/main` with a green CI build (`require-main-ref` gate). The PR is draft (#43); merge is authorized once CI passes. After merge to `main`, the deploy workflow runs manually (`workflow_dispatch`) — the user must confirm a restorable Neon production branch exists (`production_migration_confirmation: APPLY_AFTER_NEON_BACKUP`). The deploy job uses `pm2 delete` (not restart) and copies `.next/static` before PM2 start; rollback uses `pm2 delete` followed by restoring the previous `ACTIVE_RELEASE` from `/var/www/hv-releases` or `/var/www/hv-archive` (see `recover-vps-migration.yml`).
+
+## Mobile build verification — 2026-11-04
+- Canonical checkout: `/Users/Moatazi/hotels-vendors-new/mobile`.
+- Expo iOS native project generated and CocoaPods installed successfully.
+- Xcode 27.1 Release simulator build succeeded with `CODE_SIGNING_ALLOWED=NO`; the resulting `HOVIN.app` contains an embedded `main.jsbundle`.
+- iPhone 17 Pro simulator (iOS 26.5, UUID `3BE5D0B5-9F13-45D1-ACB0-E3CF3E965990`) booted successfully; the built app installed and `com.hotelsvendors.hovin` launched successfully.
+- The first Debug launch was intentionally non-bundled and showed Expo's expected “No script URL provided” screen. The Release build corrected this by embedding the JS bundle and is the valid packaged-runtime result.
+- Simulator screenshot was captured after launch. The host simulator displayed an Apple Account Verification prompt; this is simulator host state, not an app build failure. Physical-device, Apple signing, and store distribution remain separate acceptance gates.

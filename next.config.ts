@@ -12,6 +12,7 @@ if (!process.env.SESSION_SECRET) {
 }
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1"],
   output: "standalone",
   images: {
     remotePatterns: [
