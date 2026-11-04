@@ -61,7 +61,10 @@ export async function executeLLM(
   }
 
   const ollamaUrl = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
-  const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2:3b";
+  // Keep the model configurable for production, while matching the standard
+  // Ollama tag that is shipped by the local/VPS runtime. A missing model must
+  // remain an explicit provider-unavailable error, never a fabricated reply.
+  const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2:latest";
   const { temperature = 0.7, maxTokens = 1024, jsonMode = false, timeoutMs = 60000 } = options;
 
   try {
@@ -111,7 +114,7 @@ export async function executeLLMStream(
   options: RouterOptions
 ): Promise<ReadableStream> {
   const ollamaUrl = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
-  const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2:3b";
+  const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2:latest";
   const { temperature = 0.7, maxTokens = 1024 } = options;
 
   // Use /api/chat endpoint (more reliable than /api/generate on this Ollama setup)

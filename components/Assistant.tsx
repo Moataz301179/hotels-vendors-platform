@@ -43,6 +43,7 @@ export default function Assistant() {
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [typing, setTyping] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>();
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,17 +91,45 @@ export default function Assistant() {
     };
   }, [lang, t, router, user, cartCount]);
 
-  const send = (raw?: string) => {
+  const send = async (raw?: string) => {
     const text = (raw ?? input).trim();
-    if (!text) return;
+    if (!text || typing) return;
     setMsgs((m) => [...m, { id: seq++, from: "me", text }]);
     setInput("");
     setTyping(true);
-    window.setTimeout(() => {
+
+    // Keep deterministic navigation commands instant, but route procurement
+    // questions through the tenant-scoped assistant contract. This replaces
+    // the old timeout-only demo response with a real provider integration.
+    const q = text.toLowerCase();
+    const nav = NAV.find((n) => n.keys.some((k) => q.includes(k)));
+    const isNavigation = nav && (/\b(open|go|show|take|navigate|افتح|اذهب|اعرض)/.test(q) || q.split(/\s+/).length <= 3);
+    if (isNavigation) {
       const r = answer(text);
       setMsgs((m) => [...m, { id: seq++, from: "bot", text: r.text, items: r.items }]);
       setTyping(false);
-    }, 420);
+      return;
+    }
+
+    try {
+      const history = msgs
+        .filter((message): message is Msg & { from: "me" | "bot" } => message.from === "me" || message.from === "bot")
+        .slice(-20)
+        .map((message) => ({ role: message.from === "me" ? "user" : "assistant", content: message.text }));
+      const response = await fetch("/api/v2/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, messages: history, conversationId }),
+      });
+      const payload = await response.json().catch(() => ({})) as { text?: string; content?: string; conversationId?: string; error?: string };
+      if (!response.ok) throw new Error(payload.error || `Assistant request failed (${response.status})`);
+      if (payload.conversationId) setConversationId(payload.conversationId);
+      setMsgs((m) => [...m, { id: seq++, from: "bot", text: payload.text || payload.content || "The assistant returned no answer." }]);
+    } catch {
+      setMsgs((m) => [...m, { id: seq++, from: "bot", text: "The assistant is temporarily unavailable. Please retry shortly." }]);
+    } finally {
+      setTyping(false);
+    }
   };
 
   const suggestions = [
