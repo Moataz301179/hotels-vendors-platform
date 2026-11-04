@@ -1,3 +1,5 @@
+import { connectionUnavailable } from '../connection-contract';
+
 export class CsvPortalConnector {
   private config: { ftpHost: string; ftpUser: string; ftpPass: string; inboundDir: string; outboundDir: string };
 
@@ -6,16 +8,13 @@ export class CsvPortalConnector {
   }
 
   async downloadInbound(): Promise<{ filename: string; content: string }[]> {
-    // Simulate FTP download
-    return [
-      { filename: 'inventory_sync_20260919.csv', content: 'sku,name,stock,min_threshold\nFBN-1001,Coffee Beans,120,50\nHK-2001,Bath Towels,45,25' },
-      { filename: 'orders_export_20260919.csv', content: 'po_id,supplier,status,total\nPO-2026-001,s1,approved,24000' },
-    ];
+    return connectionUnavailable('CSV_PORTAL', 'inbound file transfer');
   }
 
   async uploadOutbound(filename: string, content: string) {
-    // Simulate FTP upload
-    return { filename, status: 'uploaded', bytes: content.length };
+    void filename;
+    void content;
+    return connectionUnavailable('CSV_PORTAL', 'outbound file transfer');
   }
 
   parseInventoryCsv(content: string): { sku: string; name: string; stock: number; minThreshold: number }[] {

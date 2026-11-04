@@ -4,6 +4,11 @@ import { CsvPortalConnector } from '@/lib/integration/connectors/CSVPortal';
 const connector = new CsvPortalConnector({ ftpHost: '', ftpUser: '', ftpPass: '', inboundDir: '', outboundDir: '' });
 
 describe('CSV portal integration boundary', () => {
+  it('fails closed instead of inventing FTP downloads or upload success', async () => {
+    await expect(connector.downloadInbound()).rejects.toMatchObject({ code: 'INTEGRATION_CONNECTION_UNAVAILABLE', provider: 'CSV_PORTAL' });
+    await expect(connector.uploadOutbound('receipts.csv', 'header\n')).rejects.toMatchObject({ code: 'INTEGRATION_CONNECTION_UNAVAILABLE', provider: 'CSV_PORTAL' });
+  });
+
   it('parses quoted commas, escaped quotes, and CRLF rows', () => {
     expect(connector.parseInventoryCsv('sku,name,stock,min_threshold\r\nA-1,"Beans, arabica",12,4\r\nB-2,"Bath ""towels""",8,2\r\n')).toEqual([
       { sku: 'A-1', name: 'Beans, arabica', stock: 12, minThreshold: 4 },

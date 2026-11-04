@@ -3,7 +3,7 @@
  * connection has completed an authenticated health check. This module is kept
  * deliberately small so every provider adapter exposes the same safe failure.
  */
-export type IntegrationProviderKey = "ORACLE_OPERA_CLOUD" | "SAP";
+export type IntegrationProviderKey = "ORACLE_OPERA_CLOUD" | "SAP" | "CSV_PORTAL";
 
 export class IntegrationConnectionUnavailableError extends Error {
   readonly code = "INTEGRATION_CONNECTION_UNAVAILABLE";
