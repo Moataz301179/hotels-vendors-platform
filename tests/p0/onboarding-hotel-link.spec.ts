@@ -6,6 +6,7 @@ const m = vi.hoisted(() => ({
   tenantUpdate: vi.fn(),
   hotelFind: vi.fn(),
   hotelCreate: vi.fn(),
+  factoringCreate: vi.fn(),
   userUpdate: vi.fn(),
   progressUpsert: vi.fn(),
   audit: vi.fn(),
@@ -34,6 +35,7 @@ describe("hotel onboarding", () => {
     m.transaction.mockImplementation((callback) => callback({
       tenant: { update: m.tenantUpdate },
       hotel: { create: m.hotelCreate },
+      factoringCompany: { create: m.factoringCreate },
       user: { update: m.userUpdate },
       onboardingProgress: { upsert: m.progressUpsert },
     }));
@@ -62,5 +64,25 @@ describe("hotel onboarding", () => {
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: "An organization with this tax ID or contact identity already exists." });
+  });
+
+  it("binds a factoring onboarding record back to its user", async () => {
+    m.actor.mockResolvedValue({ id: "funder-user", tenantId: "funder-tenant", platformRole: "FACTORING", email: "funder@example.test", status: "PENDING_VERIFICATION" });
+    m.factoringCreate.mockResolvedValue({ id: "funder-record" });
+    m.transaction.mockImplementation((callback) => callback({
+      tenant: { update: m.tenantUpdate },
+      factoringCompany: { create: m.factoringCreate },
+      user: { update: m.userUpdate },
+      onboardingProgress: { upsert: m.progressUpsert },
+    }));
+
+    const response = await POST(new Request("https://hotelsvendors.test/api/v2/onboarding", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Example Funder", taxId: "EG-FUNDER-123", city: "Cairo", governorate: "Cairo" }),
+    }));
+
+    expect(response.status).toBe(201);
+    expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "funder-user" }, data: { factoringCompanyId: "funder-record" } });
   });
 });

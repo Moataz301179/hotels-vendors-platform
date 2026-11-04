@@ -52,6 +52,7 @@ export async function POST(req: Request) {
       resource = await tx.carrierProfile.create({ data: { userId: u.id, tenantId: u.tenantId, city: b.city, governorate: b.governorate, address: b.address || undefined, taxId: b.taxId || undefined, vehicleCount: 1, zones: [], vehicleTypes: [], status: 'PENDING_VERIFICATION' } });
     } else {
       resource = await tx.factoringCompany.create({ data: { tenantId: u.tenantId, name: b.name, legalName: b.name, taxId: b.taxId, contactEmail: u.email, contactPhone: b.phone || undefined } });
+      await tx.user.update({ where: { id: u.id }, data: { factoringCompanyId: resource.id } });
     }
     const progress = await tx.onboardingProgress.upsert({ where: { userId: u.id }, create: { userId: u.id, tenantId: u.tenantId, platformRole: u.platformRole, overallStatus: 'COMPLETED', completedAt: new Date() }, update: { overallStatus: 'COMPLETED', completedAt: new Date() } });
     await appendAuditEntry({ entityName: 'ONBOARDING', entityId: resource.id, actionType: 'COMPLETED', tenantId: u.tenantId, actorId: u.id, actorRole: u.platformRole, changes: { actorType: u.platformRole, pendingVerification: u.status === 'PENDING_VERIFICATION' } }, tx);

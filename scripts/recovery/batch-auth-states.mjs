@@ -40,6 +40,13 @@ try {
     if (!cookieNames.some((name) => name === '__session' || name.startsWith('__session_'))) {
       throw new Error(`${role}: authenticated session cookie was not established`);
     }
+    // A cookie alone is insufficient evidence: Clerk may have created a
+    // session shell that has not completed the server-side handshake. Verify
+    // the exact authenticated API boundary before exporting the state.
+    const identity = await page.request.get(`${baseURL}/api/v2/me`);
+    if (identity.status() !== 200) {
+      throw new Error(`${role}: Clerk session did not authenticate /api/v2/me (HTTP ${identity.status()})`);
+    }
     await context.storageState({ path: path.join(stateDir, `${role}.json`) });
     console.log(`BATCH_AUTH_OK: ${role}`);
     await context.close();

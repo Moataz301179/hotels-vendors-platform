@@ -85,15 +85,34 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
     });
     const roleName = `${platformRole}_USER`;
     const role = await tx.role.upsert({where:{tenantId_name:{tenantId:tenant.id,name:roleName}},update:{},create:{name:roleName,tenantId:tenant.id}});
-    const permissionCodes = platformRole === "SUPPLIER" ? ["order:read", "quote:submit"] : ["order:read", "order:create"];
+    // A supplier must be able to read assigned RFQs, submit quotes, and then
+    // advance only its own approved orders through confirmation and dispatch.
+    // The lifecycle route still enforces supplier binding, payment guarantee,
+    // and the allowed state transition; these permissions do not grant access
+    // to another tenant's records.
+    const permissionCodes = platformRole === "SUPPLIER"
+      ? ["order:read", "quote:submit", "order:confirm", "order:update"]
+      : ["order:read", "order:create"];
     for (const code of permissionCodes) {
       const permission = await tx.permission.upsert({
         where: { code },
         update: {},
         create: {
           code,
-          name: code === "order:read" ? "View Orders" : code === "quote:submit" ? "Submit Supplier Quotes" : "Create Purchase Orders",
-          description: code === "order:read" ? "View assigned procurement requests, quotes, and orders" : code === "quote:submit" ? "Submit a fixed response to an explicitly granted RFQ" : "Create procurement orders from approved commercial terms",
+          name: ({
+            "order:read": "View Orders",
+            "order:create": "Create Purchase Orders",
+            "quote:submit": "Submit Supplier Quotes",
+            "order:confirm": "Confirm Approved Orders",
+            "order:update": "Update Delivery Status",
+          } as Record<string, string>)[code] ?? code,
+          description: ({
+            "order:read": "View assigned procurement requests, quotes, and orders",
+            "order:create": "Create procurement orders from approved commercial terms",
+            "quote:submit": "Submit a fixed response to an explicitly granted RFQ",
+            "order:confirm": "Confirm an order after the hotel records payment authority",
+            "order:update": "Record delivery progress for the bound supplier order",
+          } as Record<string, string>)[code] ?? "Organization-scoped procurement permission",
         },
       });
       await tx.rolePermission.upsert({

@@ -6,13 +6,15 @@ import { describe, expect, it } from 'vitest';
 
 const root = process.cwd();
 describe('recovery authenticated acceptance entrypoint', () => {
-  it('controller invokes the package entrypoint that enforces auth preflight', () => {
+  it('controller invokes the package entrypoint that refreshes and verifies auth state', () => {
     const output = execFileSync('python3', ['-c',
       'import runpy,json; m=runpy.run_path("scripts/recovery/repair-controller.py"); print(json.dumps(next(c[1] for c in m["COMMANDS"] if c[0]=="authenticated-e2e")))',
     ], { cwd: root, encoding: 'utf8' });
     expect(JSON.parse(output)).toEqual(['npm', 'run', 'test:browser:auth']);
     const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+    expect(pkg.scripts['test:browser:auth']).toContain('node scripts/recovery/batch-auth-states.mjs &&');
     expect(pkg.scripts['test:browser:auth']).toContain('node scripts/recovery/auth-e2e-preflight.mjs &&');
+    expect(pkg.scripts['test:browser:auth']).toContain('--workers=1');
   });
 
   it('acceptance inventory uses the same guarded entrypoint', () => {

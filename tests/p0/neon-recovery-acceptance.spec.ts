@@ -29,9 +29,11 @@ describe('Neon recovery acceptance safety', () => {
 
   it('refuses production-looking migration targets and missing confirmation', () => {
     expect(isProductionLookingDatabaseUrl('postgresql://user:pw@ep-prod.neon.tech/db')).toBe(true);
+    expect(isProductionLookingDatabaseUrl('postgresql://user:pw@ep-isolated-branch.neon.tech/db')).toBe(false);
     expect(() => assertIsolatedTarget('postgresql://user:pw@isolated.example/db', undefined)).toThrow('I_UNDERSTAND_ISOLATED_ONLY');
     expect(() => assertIsolatedTarget('postgresql://user:pw@prod.example/db', 'I_UNDERSTAND_ISOLATED_ONLY')).toThrow('production-looking');
     expect(assertIsolatedTarget('postgresql://user:pw@isolated.example/db', 'I_UNDERSTAND_ISOLATED_ONLY')).toBe('postgresql://isolated.example/db');
+    expect(assertIsolatedTarget('postgresql://user:pw@ep-isolated-branch.neon.tech/db', 'I_UNDERSTAND_ISOLATED_ONLY')).toBe('postgresql://ep-isolated-branch.neon.tech/db');
     expect(migrationRehearsalCommand('postgresql://user:pw@isolated.example/db', 'I_UNDERSTAND_ISOLATED_ONLY')).toMatchObject({ command: 'npx prisma migrate deploy', safety: 'isolated-target-only' });
   });
 });

@@ -19,7 +19,11 @@ export function redactUrl(value) {
 export function isProductionLookingDatabaseUrl(value) {
   if (!value) return false;
   const lower = value.toLowerCase();
-  return /production|prod|hotelsvendors\.com|187\.77\.181\.3|neon\.tech/.test(lower);
+  // A Neon hostname identifies the provider, not the environment. Remote
+  // recovery is separately guarded by an exact isolated-target URL and an
+  // explicit confirmation, so blocking every Neon endpoint made the approved
+  // isolated-branch path impossible to use.
+  return /production|prod|hotelsvendors\.com|187\.77\.181\.3/.test(lower);
 }
 
 export function chooseLatestBackup(root) {

@@ -27,6 +27,11 @@ print remote`,
 }
 
 describe("production activation shell syntax", () => {
+  // Ruby starts a fresh process to parse the checked-in workflow. On a busy
+  // native/mobile build host its cold start can exceed Vitest's 10s default;
+  // retain the syntax assertion while allowing a bounded, deterministic
+  // subprocess window rather than treating host contention as a deploy-shell
+  // failure.
   it("parses the exact YAML-rendered remote script before it can reach the VPS", () => {
     const remoteScript = activationRemoteScript();
     expect(remoteScript).toContain("verify_active_release()");
@@ -41,7 +46,7 @@ describe("production activation shell syntax", () => {
     });
     expect(syntax.error).toBeUndefined();
     expect(syntax.status, syntax.stderr).toBe(0);
-  });
+  }, 30_000);
 
   it("keeps the activation step in the checked-in workflow", () => {
     expect(readFileSync(workflowPath, "utf8")).toContain("- name: Activate release and verify");

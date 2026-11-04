@@ -36,9 +36,11 @@ options. Subprocesses receive connection fields through libpq environment
 variables, clear inherited libpq routing, disable psql startup files, and
 withhold command errors that might contain credentials or private SQL.
 Restore and migration rehearsal reject the active `DATABASE_URL` host, port,
-and database even if credentials or Neon pooling spelling differ. All Neon
-URLs remain conservatively blocked; an approved isolated Neon branch alone
-is not yet sufficient to enable writes through this tool.
+and database even if credentials or Neon pooling spelling differ. An approved
+isolated Neon branch may be used only through the explicit target and
+confirmation pair above. A generic `*.neon.tech` hostname is not treated as
+production by itself; production-looking names and known production hosts
+remain rejected.
 
 Database integration tests default to loopback PostgreSQL only. Remote targets
 require the exact dedicated `HV_RECOVERY_ISOLATED_DATABASE_URL` and
