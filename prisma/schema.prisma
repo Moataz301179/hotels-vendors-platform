@@ -1262,6 +1262,7 @@ model FactoringRequest {
   uuid                  String?                @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt             DateTime?
   requestedAmount       Decimal?               @db.Decimal(12, 2)
+  referralIdempotencyKey String?
   advanceRate           Decimal?               @db.Decimal(5, 4)
   discountRate          Decimal?               @db.Decimal(5, 4)
   membershipDiscount    Decimal?               @db.Decimal(5, 4)
@@ -1276,6 +1277,7 @@ model FactoringRequest {
   tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([deletedAt], map: "FactoringRequest_deleted_idx")
+  @@unique([tenantId, referralIdempotencyKey])
 }
 
 /// INVO subscription — Supplier pays flat monthly fee to be listed.

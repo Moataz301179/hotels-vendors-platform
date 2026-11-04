@@ -25,6 +25,7 @@ import { POST as recordGuarantee } from '@/app/api/v2/orders/guarantee/route';
 import { PATCH as transitionOrder } from '@/app/api/v2/orders/route';
 import { POST as receiveOrder } from '@/app/api/v2/grn/route';
 import { POST as submitInvoice } from '@/app/api/v2/invoices/route';
+import { POST as submitFundingReferral, PATCH as reconcileFundingReferral } from '@/app/api/v2/funding/route';
 import { GET as listMarketplace } from '@/app/api/v2/marketplace/route';
 import { GET as listRoleCatalog, POST as submitCatalogItem } from '@/app/api/v2/catalog/route';
 import { PATCH as reviewCatalogItem } from '@/app/api/v2/admin/catalog-reviews/route';
@@ -34,23 +35,32 @@ const ids = {
   platformTenant: `it-platform-${run}`,
   hotelTenant: `it-hotel-${run}`,
   supplierTenant: `it-supplier-${run}`,
+  funderTenant: `it-funder-${run}`,
   buyer: `it-buyer-${run}`,
   approver: `it-approver-${run}`,
   receiver: `it-receiver-${run}`,
   supplierUser: `it-supplier-user-${run}`,
   otherSupplierUser: `it-other-supplier-user-${run}`,
   admin: `it-admin-${run}`,
+  funderUser: `it-funder-user-${run}`,
 };
 
 let supplierId = '';
 let otherSupplierId = '';
 let productId = '';
 let departmentId = '';
+let factoringCompanyId = '';
 
 let requestSequence = 0;
 const request = (url: string, body: unknown, method = 'POST') => new Request(url, {
   method,
   headers: { 'content-type': 'application/json', ...(url.endsWith('/api/v2/rfq') ? { 'x-idempotency-key': `integration-rfq-${run}-${++requestSequence}` } : {}) },
+  body: JSON.stringify(body),
+});
+
+const fundingRequest = (body: unknown, method = 'POST') => new Request('https://hotelsvendors.test/api/v2/funding', {
+  method,
+  headers: { 'content-type': 'application/json', 'idempotency-key': `integration-funding-${run}` },
   body: JSON.stringify(body),
 });
 
@@ -96,12 +106,14 @@ describe('procurement lifecycle against the isolated database', () => {
       { id: ids.platformTenant, name: `Platform ${run}`, slug: `it-platform-${run}`, type: 'PLATFORM', status: 'ACTIVE', taxId: `P${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
       { id: ids.hotelTenant, name: `Hotel ${run}`, slug: `it-hotel-${run}`, type: 'HOTEL_GROUP', status: 'ACTIVE', taxId: `H${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
       { id: ids.supplierTenant, name: `Supplier ${run}`, slug: `it-supplier-${run}`, type: 'SUPPLIER', status: 'ACTIVE', taxId: `S${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
+      { id: ids.funderTenant, name: `Funder ${run}`, slug: `it-funder-${run}`, type: 'FACTORING_COMPANY', status: 'ACTIVE', taxId: `F${run.slice(0, 20)}`, verificationStatus: 'VERIFIED' },
     ] });
 
-    const [hotelRole, supplierRole, adminRole] = await Promise.all([
+    const [hotelRole, supplierRole, adminRole, funderRole] = await Promise.all([
       prisma.role.create({ data: { name: `it-hotel-role-${run}`, tenantId: ids.hotelTenant } }),
       prisma.role.create({ data: { name: `it-supplier-role-${run}`, tenantId: ids.supplierTenant } }),
       prisma.role.create({ data: { name: `it-admin-role-${run}`, tenantId: ids.platformTenant } }),
+      prisma.role.create({ data: { name: `it-funder-role-${run}`, tenantId: ids.funderTenant } }),
     ]);
 
     const permissions = await Promise.all([
@@ -133,6 +145,8 @@ describe('procurement lifecycle against the isolated database', () => {
     otherSupplierId = otherSupplier.id;
     const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Verified lifecycle product', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
     productId = product.id;
+    const factoringCompany = await prisma.factoringCompany.create({ data: { tenantId: ids.funderTenant, name: `Licensed funder ${run}`, taxId: `FT${run.slice(0, 19)}`, status: 'ACTIVE' } });
+    factoringCompanyId = factoringCompany.id;
     await prisma.evidenceRecord.create({ data: { tenantId: ids.supplierTenant, entityId: product.id, entityName: 'PRODUCT', sourceUrl: 'https://supplier.example.test/products/lifecycle', sourceReference: 'integration fixture', provenanceClass: 'AUTHORIZED', status: 'RESOLVED' } });
 
     await prisma.user.createMany({ data: [
@@ -142,6 +156,7 @@ describe('procurement lifecycle against the isolated database', () => {
       { id: ids.supplierUser, email: `supplier-user-${run}@example.test`, name: 'Lifecycle supplier', role: 'CLERK', platformRole: 'SUPPLIER', tenantId: ids.supplierTenant, supplierId, roleId: supplierRole.id },
       { id: ids.otherSupplierUser, email: `other-supplier-user-${run}@example.test`, name: 'Other lifecycle supplier', role: 'CLERK', platformRole: 'SUPPLIER', tenantId: ids.supplierTenant, supplierId: otherSupplierId, roleId: supplierRole.id },
       { id: ids.admin, email: `admin-${run}@example.test`, name: 'Lifecycle admin', role: 'OWNER', platformRole: 'ADMIN', tenantId: ids.platformTenant, roleId: adminRole.id },
+      { id: ids.funderUser, email: `funder-${run}@example.test`, name: 'Lifecycle funder', role: 'OWNER', platformRole: 'FACTORING', tenantId: ids.funderTenant, factoringCompanyId, roleId: funderRole.id },
     ] });
 
     await prisma.procurementApprovalPolicy.create({ data: { tenantId: ids.hotelTenant, departmentId, primaryApproverId: ids.approver, createdById: ids.approver } });
@@ -320,8 +335,34 @@ describe('procurement lifecycle against the isolated database', () => {
       total: 478.8,
     }));
     expect(invoiceResponse.status).toBe(201);
-    const { invoice } = await invoiceResponse.json() as { invoice: { status: string; etaStatus: string; orderId: string } };
+    const { invoice } = await invoiceResponse.json() as { invoice: { id: string; status: string; etaStatus: string; orderId: string } };
     expect(invoice).toMatchObject({ status: 'DRAFT', etaStatus: 'PENDING', orderId: order.id });
+
+    await prisma.invoice.update({
+      where: { id: invoice.id },
+      data: { status: 'VALIDATED', etaStatus: 'ACCEPTED', etaUuid: `eta-funding-${run}`, digitalSignature: `provider-signature-${run}` },
+    });
+    asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
+    const fundingResponse = await submitFundingReferral(fundingRequest({ invoiceId: invoice.id, factoringCompanyId, requestedAmount: 400 }));
+    expect(fundingResponse.status).toBe(201);
+    const { referral } = await fundingResponse.json() as { referral: { id: string } };
+    const replayResponse = await submitFundingReferral(fundingRequest({ invoiceId: invoice.id, factoringCompanyId, requestedAmount: 400 }));
+    expect(replayResponse.status).toBe(200);
+    await expect(replayResponse.json()).resolves.toMatchObject({ idempotentReplay: true, moneyMoved: false });
+
+    asActor({ id: ids.funderUser, tenantId: ids.funderTenant, platformRole: 'FACTORING', role: 'OWNER', factoringCompanyId });
+    for (const transition of [
+      { status: 'UNDER_REVIEW' },
+      { status: 'APPROVED' },
+      { status: 'DISBURSED', externalReference: `provider-disbursement-${run}` },
+      { status: 'SETTLED', externalReference: `provider-settlement-${run}` },
+    ]) {
+      const response = await reconcileFundingReferral(fundingRequest({ id: referral.id, ...transition }, 'PATCH'));
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toMatchObject({ updated: true, status: transition.status, moneyMoved: false });
+    }
+    await expect(prisma.factoringRequest.findUniqueOrThrow({ where: { id: referral.id }, select: { status: true, disbursedAt: true, settledAt: true } })).resolves.toMatchObject({ status: 'SETTLED', disbursedAt: expect.any(Date), settledAt: expect.any(Date) });
+    await expect(prisma.auditLog.findMany({ where: { tenantId: ids.hotelTenant, entityId: referral.id, entityName: 'FACTORING_REQUEST' } })).resolves.toHaveLength(5);
 
     const [storedOrder, storedRfq, storedQuote, storedInvoice, receipts, auditRecords] = await Promise.all([
       prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { items: true } }),

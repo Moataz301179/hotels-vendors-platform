@@ -139,3 +139,40 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
 - Next action: run the isolated carrier and full lifecycle acceptance against an
   approved disposable Neon branch, then rerun the mandatory recovery gate. Keep
   production deployment blocked until that report is green.
+
+## Provider-controlled funding lifecycle and exact-workspace acceptance — 2026-11-04
+
+- Source workspace: `/Users/Moatazi/hotels-vendors-new`, canonical `main`; the
+  feature commit is recorded after the changes below are committed. Existing
+  authentication states and generated test/mobile artifacts were preserved.
+- Implemented a persisted funding-referral state machine. A verified Vendor may
+  refer only its own accepted, delivered and GRN-backed ETA invoice to an active
+  external funder. The caller must provide a tenant-scoped idempotency key.
+  Duplicate equivalent requests replay safely; key reuse for a different
+  referral fails closed.
+- Only the assigned funder can advance its request through
+  `PENDING -> UNDER_REVIEW -> APPROVED -> DISBURSED -> SETTLED`, with the
+  supported rejection/default branches. Provider references are mandatory for
+  disbursement and reconciliation states, optimistic concurrency protects each
+  transition, and every mutation is audited. HOTELSVENDORS records provider
+  status and evidence only; it does not call a payout API or move money.
+- Added migration `20261104234500_add_funding_referral_idempotency` and applied
+  it, together with the earlier carrier assignment migration, only to the
+  independently identified disposable Neon rehearsal branch
+  `hv-auth-neon-rehearsal-20261103`. All 53 migrations applied successfully.
+- Real isolated-database acceptance passed 6/6 and now covers provenance review,
+  RFQ, Vendor quote, approval, order, delivery, GRN, ETA invoice, funding
+  referral, funder decision/disbursement/settlement records, and audit evidence.
+- Automated checks on the current uncommitted source passed: 130 Vitest files /
+  538 tests, Prisma validation and generation, TypeScript, production build,
+  16/16 public responsive browser checks, and 10/10 authenticated five-role
+  Clerk/tenant-boundary checks.
+- The recovery manifest remains fail-closed until this source is committed and
+  the exact commit passes the repository CI validators. No production workflow
+  was dispatched from local-only evidence. Catalog publication also remains
+  limited to genuinely supplier-owned, provenance-reviewed records; no target
+  count, price, stock, Vendor identity or commercial offer was fabricated.
+- Exact next action: commit and publish the preserved canonical `main` changes,
+  obtain same-SHA CI/browser evidence, advance only the gates recognized by that
+  evidence, then use the protected deployment workflow and verify the live SHA,
+  PM2 identity, health, authentication and procurement lifecycle.
