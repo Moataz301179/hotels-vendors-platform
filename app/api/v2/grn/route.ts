@@ -64,7 +64,13 @@ export async function POST(req: Request) {
       let shipmentId: string | null = null;
       if (body.shipmentId) {
         const shipment = await tx.shipment.findFirst({
-          where: { id: body.shipmentId, tenantId: order.tenantId, deletedAt: null, status: "DELIVERED", orderIds: { has: order.id } },
+          where: {
+            id: body.shipmentId,
+            deletedAt: null,
+            status: "DELIVERED",
+            orderIds: { has: order.id },
+            assignment: { hotelTenantId: order.tenantId, orderId: order.id, deletedAt: null },
+          },
           select: { id: true },
         });
         if (!shipment) return { error: "DELIVERED_SHIPMENT_REQUIRED", status: 409 as const };

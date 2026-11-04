@@ -51,6 +51,12 @@ test.describe('authenticated role and tenant boundaries', () => {
         user: { platformRole: expectedPlatformRoles[role], tenantId: expect.any(String) },
       });
       expect(identityBody.user?.tenantId).not.toBe('unrelated-tenant');
+      await page.setViewportSize({ width: 320, height: 844 });
+      const viewport = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth + 1);
       await context.close();
     });
   }

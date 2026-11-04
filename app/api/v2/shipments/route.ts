@@ -16,8 +16,6 @@ export async function POST(req:Request){
  const totalWeightKg=b.totalWeightKg===undefined?undefined:Number(b.totalWeightKg);
  if(totalWeightKg!==undefined&&(!Number.isFinite(totalWeightKg)||totalWeightKg<=0))return NextResponse.json({error:"totalWeightKg must be a positive number"},{status:400});
  if(orderIds.length!==1)return NextResponse.json({error:"One accepted carrier assignment is required per shipment"},{status:400});
- const orders=await prisma.order.findMany({where:{id:{in:orderIds},tenantId:u.tenantId,deletedAt:null},select:{id:true}});
- if(orders.length!==orderIds.length)return NextResponse.json({error:"One or more orders are outside your tenant or unavailable"},{status:403});
  const assignment=await prisma.carrierOrderAssignment.findFirst({where:{orderId:orderIds[0],carrierTenantId:u.tenantId,status:'ACCEPTED',deletedAt:null},select:{id:true,orderId:true}});
  if(!assignment)return NextResponse.json({error:"ACCEPTED_CARRIER_ASSIGNMENT_REQUIRED"},{status:403});
  const shipment=await prisma.shipment.create({data:{tenantId:u.tenantId,assignmentId:assignment.id,orderIds,corridor:String(b.corridor),truckType:String(b.truckType||"STANDARD"),vehicleNumber:b.vehicleNumber||undefined,driverName:b.driverName||undefined,driverMobile:b.driverMobile||undefined,originHub:String(b.originHub),destinationHub:String(b.destinationHub),estimatedArrival,totalWeightKg,orderCount:1,status:"PLANNED"}});
