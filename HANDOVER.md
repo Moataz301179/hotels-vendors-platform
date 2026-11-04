@@ -115,7 +115,7 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
 
 ## Procurement-core release scope and carrier controls — 2026-11-04
 
-- Source workspace: `/Users/Moatazi/hotels-vendors-new`, canonical `main`, revision `c2dcf189`.
+- Source workspace: `/Users/Moatazi/hotels-vendors-new`, canonical `main`, feature revision `83801ff9`.
 - Added the versioned release boundary in `docs/recovery/release-scope-v1.json`.
   Mandatory web gates remain fail-closed; explicitly future mobile/legacy work and
   external integrations remain visible in the manifest but are not silently
