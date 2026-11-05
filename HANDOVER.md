@@ -279,3 +279,15 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   with a process-only local validation `SESSION_SECRET` passed. The remaining
   P0 redesign scope is still open for all other role workspaces, marketplace,
   auth/onboarding, HOVIN, RTL, responsive review, and owner visual acceptance.
+
+## Redesign sequence: role-owned dashboard routing — 2026-11-05
+
+- Reworked the shared authenticated dashboard's role models so Hotel, Vendor,
+  Carrier, Funder and Administrator users receive different responsibility-led
+  action queues rather than the same generic task cards.
+- Administrator dashboard actions now open the correct mode inside the new
+  administration control plane. Hotel/Vendor/Carrier/Funder copy and sequencing
+  state what each actor may control and what remains outside its authority.
+- Verification: TypeScript, diff validation, mobile source-of-truth validation
+  and the optimized Next build completed locally. The unrelated concurrent
+  `DESIGN.md` edit was deliberately preserved and excluded from this change.

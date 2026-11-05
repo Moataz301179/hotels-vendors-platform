@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ClipboardCheck, DatabaseZap, FileSearch, ShieldCheck } from 'lucide-react';
 import { AdminClient } from '@/components/v2/admin-client';
 import { AdminControls } from '@/components/v2/admin-controls';
@@ -26,7 +27,11 @@ function Panel({ children, id, labelledBy }: { children: ReactNode; id: string; 
 }
 
 export function AdminCommandCenter() {
-  const [mode, setMode] = useState<WorkspaceMode>('health');
+  const searchParams = useSearchParams();
+  const requestedMode = searchParams.get('mode');
+  const initialMode = requestedMode && modes.some((item) => item.id === requestedMode) ? requestedMode as WorkspaceMode : 'health';
+  const [mode, setMode] = useState<WorkspaceMode>(initialMode);
+  useEffect(() => { setMode(initialMode); }, [initialMode]);
   const active = modes.find((item) => item.id === mode)!;
 
   return <div className="admin-command-center">
