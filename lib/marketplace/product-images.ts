@@ -31,7 +31,8 @@ const KEYWORD_MAP: Record<string, string> = {
   fish:      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80",
   seafood:      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80",
   sardine:      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80",
-  lobster:      "https://images.unsplash.com/photo-1553659971-f01207815844?w=600&q=80",
+  // Public lobster reference; the former image depicted a crab and was removed.
+  lobster:     "https://upload.wikimedia.org/wikipedia/commons/9/99/Canadian_Lobster.jpg",
 
   // ═══════════════════════════════════════════════════════════════
   //  PRODUCE & VEGETABLES
