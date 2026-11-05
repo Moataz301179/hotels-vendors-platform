@@ -265,3 +265,17 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
 - Verification: `npx tsc --noEmit`, `git diff --check`, and production build
   with a process-only local validation `SESSION_SECRET` all passed. No deploy
   was dispatched; `P0-REDESIGN` remains pending visual review.
+
+## Redesign sequence: administrator control plane — 2026-11-05
+
+- Replaced the administrator route's unstructured stack of raw forms with four
+  explicit work modes: Network health, Trust & access, Catalogue governance,
+  and Policy controls. Existing authorization and API contracts remain intact;
+  the redesign changes composition and review ergonomics, not control scope.
+- Registration review no longer uses browser `prompt` or `confirm` dialogs.
+  An administrator records the review rationale and optional tax-identity check
+  inline before an approval or rejection mutation is sent and audited.
+- Verification: `npx tsc --noEmit`, `git diff --check`, and production build
+  with a process-only local validation `SESSION_SECRET` passed. The remaining
+  P0 redesign scope is still open for all other role workspaces, marketplace,
+  auth/onboarding, HOVIN, RTL, responsive review, and owner visual acceptance.

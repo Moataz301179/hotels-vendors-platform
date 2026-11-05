@@ -28,7 +28,7 @@ export function AdminOperationsOverview() {
   }, []);
 
   return <section className="workspace-section" aria-labelledby="operations-overview-title">
-    <header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">Platform operations</div><h1 id="operations-overview-title">Control centre</h1><p className="workspace-page-lead muted">Review queues and recorded cash-status totals across the network. Figures are operational indicators, not a statutory revenue-recognition report.</p></div></header>
+    <header className="workspace-section-heading"><div><div className="eyebrow">Operational overview</div><h2 id="operations-overview-title">Network health</h2><p>Review queues and recorded settlement status across the network. These are operational indicators, not financial statements or automated funding decisions.</p></div></header>
     {error ? <div className="workspace-status" role="alert">{error}</div> : !summary ? <p role="status" className="workspace-empty">Loading platform operations…</p> : <>
       <div className="grid3">
         <Link href="#registration-review" className="card workspace-metric-card"><div className="eyebrow">Registration review</div><div className="metric">{summary.reviewQueues.pendingRegistrations}</div><small>Pending user registrations</small></Link>
