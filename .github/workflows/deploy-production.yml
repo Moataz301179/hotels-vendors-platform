@@ -202,18 +202,24 @@ jobs:
           RELEASE="$RELEASE_ROOT/github-${GITHUB_SHA}"
           ARCHIVE=/tmp/hv-release-${GITHUB_SHA}.tgz
           RUNTIME_ARCHIVE=/tmp/hv-runtime-${GITHUB_SHA}.env
+          VERIFIER=/tmp/hv-verify-pm2-${GITHUB_SHA}.mjs
           test -s "$ARCHIVE"
           test -s "$RUNTIME_ARCHIVE"
           test ! -e "$RELEASE"
+          # Keep the identity verifier available for post-activation checks and
+          # rollback. The release archive is intentionally removed after safe
+          # extraction, so reading it lazily here would make a real rollback
+          # depend on a file that no longer exists.
+          tar -xOf "$ARCHIVE" scripts/recovery/verify-production-pm2-state.mjs > "$VERIFIER"
+          test -s "$VERIFIER"
+          chmod 700 "$VERIFIER"
           verify_process_identity() {
             local phase="$1"
             local expected_sha="${2:-}"
             if [ -n "$expected_sha" ]; then
-              tar -xOf "$ARCHIVE" scripts/recovery/verify-production-pm2-state.mjs |
-                node --input-type=module - --phase "$phase" --release-root "$RELEASE_ROOT" --port 3008 --expected-sha "$expected_sha"
+              node "$VERIFIER" --phase "$phase" --release-root "$RELEASE_ROOT" --port 3008 --expected-sha "$expected_sha"
             else
-              tar -xOf "$ARCHIVE" scripts/recovery/verify-production-pm2-state.mjs |
-                node --input-type=module - --phase "$phase" --release-root "$RELEASE_ROOT" --port 3008
+              node "$VERIFIER" --phase "$phase" --release-root "$RELEASE_ROOT" --port 3008
             fi
           }
           ACTIVE_STATE="$(verify_process_identity predeploy)"
@@ -420,4 +426,5 @@ jobs:
             exit 1
           fi
           pm2 save
+          rm -f "$VERIFIER"
           REMOTE

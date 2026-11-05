@@ -36,6 +36,9 @@ describe("production activation shell syntax", () => {
     const remoteScript = activationRemoteScript();
     expect(remoteScript).toContain("verify_active_release()");
     expect(remoteScript).toContain("verify_process_identity()");
+    expect(remoteScript).toContain('VERIFIER=/tmp/hv-verify-pm2-${GITHUB_SHA}.mjs');
+    expect(remoteScript).toContain('tar -xOf "$ARCHIVE" scripts/recovery/verify-production-pm2-state.mjs > "$VERIFIER"');
+    expect(remoteScript).toContain('node "$VERIFIER" --phase "$phase"');
     expect(remoteScript).toContain('verify_process_identity predeploy "$ACTIVE_SOURCE_SHA"');
     expect(remoteScript).toContain('verify_process_identity postactivation "$GITHUB_SHA"');
     expect(remoteScript).toContain("VERIFY_PREFLIGHT_CSP");
