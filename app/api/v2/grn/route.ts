@@ -64,7 +64,17 @@ export async function POST(req: Request) {
       let shipmentId: string | null = null;
       if (body.shipmentId) {
         const shipment = await tx.shipment.findFirst({
-          where: { id: body.shipmentId, tenantId: order.tenantId, deletedAt: null, status: "DELIVERED", orderIds: { has: order.id } },
+          where: {
+            id: body.shipmentId,
+            deletedAt: null,
+            status: "DELIVERED",
+            orderIds: { has: order.id },
+            // The assignment must already be DELIVERED: the carrier flips it in the
+            // same transaction that marks the shipment DELIVERED. Requiring it here
+            // closes the gap if that coupling is ever relaxed, so a GRN can never be
+            // recorded against a shipment whose carrier assignment is still open.
+            assignment: { hotelTenantId: order.tenantId, orderId: order.id, status: "DELIVERED", deletedAt: null },
+          },
           select: { id: true },
         });
         if (!shipment) return { error: "DELIVERED_SHIPMENT_REQUIRED", status: 409 as const };
