@@ -234,3 +234,19 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   `npm run test:mobile-source` enforce this boundary. This resolves ownership,
   not mobile production readiness: controlled receiving, offline sync, secure
   evidence upload, signing, device, and store acceptance remain open.
+
+## Redesign sequence: shared chrome and semantic grade — 2026-11-05
+
+- Started the reopened redesign gate from the shared system rather than applying
+  route-level colour patches. Neutral ramps now remain visually neutral; ice
+  blue is reserved for actions and signals, not dark page surfaces.
+- Public header and footer use the same semantic charcoal surface, while the
+  sticky header preserves its transparent blur treatment. Public navigation now
+  describes workflows and network roles instead of generic platform labels.
+- The public hero keeps one title tone, uses the approved light operating
+  palette, and removes the prior dark-blue title emphasis. Local TypeScript,
+  source-integrity, and rendered homepage checks passed.
+- This is the first redesign slice, not visual acceptance. Remaining redesign
+  scope: homepage information architecture, marketplace/auth/onboarding,
+  task-specific role workspaces, mobile HOVIN receiving interface, RTL and
+  responsive/accessibility evidence.

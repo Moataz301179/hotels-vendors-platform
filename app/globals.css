@@ -10,13 +10,15 @@
   --paper-50:oklch(98.4% .006 103);
   --paper-100:oklch(96.4% .009 103);
   --paper-200:oklch(91.5% .01 235);
-  --slate-950:oklch(25.5% .018 245);
-  --slate-800:oklch(32% .02 245);
-  --slate-700:oklch(40% .018 240);
-  --slate-600:oklch(49.5% .018 240);
-  --slate-500:oklch(58% .016 238);
-  --slate-400:oklch(67% .014 235);
-  --slate-200:oklch(86.8% .012 235);
+  /* Neutrals remain neutral. Ice blue is reserved for signals and action, never
+     used as a dark page surface. */
+  --slate-950:oklch(25.5% .004 250);
+  --slate-800:oklch(32% .005 250);
+  --slate-700:oklch(40% .006 250);
+  --slate-600:oklch(49.5% .007 250);
+  --slate-500:oklch(58% .007 250);
+  --slate-400:oklch(67% .007 250);
+  --slate-200:oklch(86.8% .007 250);
   --ice-100:oklch(93% .04 250);
   --ice-300:oklch(80.5% .085 250);
   --cobalt-600:oklch(51.5% .12 250);
@@ -27,6 +29,7 @@
   --bg:var(--paper-100);--surface:var(--paper-50);--surface-raised:var(--paper-0);
   --ink:var(--slate-950);--muted:var(--slate-600);--line:var(--slate-200);
   --blue:var(--ice-300);--blue-strong:var(--cobalt-600);--charcoal:var(--slate-950);
+  --chrome:var(--slate-950);--chrome-text:var(--paper-0);--accent-wash:var(--ice-100);
   --green:var(--green-600);--danger:var(--red-600);--focus:var(--cobalt-600);
   /* Manrope gives operational titles a firmer, more legible business voice;
      Plus Jakarta Sans remains the quieter reading face for dense workflow data. */

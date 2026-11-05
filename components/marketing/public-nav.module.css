@@ -1,22 +1,22 @@
-.nav { position:sticky; top:0; z-index:50; background:#2f2f2feb; color:#fff; border-bottom:1px solid rgba(255,255,255,.16); font-family:var(--font-display),sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+.nav { position:sticky; top:0; z-index:50; background:color-mix(in oklch,var(--chrome) 94%,transparent); color:var(--chrome-text); border-bottom:1px solid rgba(255,255,255,.16); font-family:var(--font-display),sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
 .inner { max-width:1400px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:76px; padding:12px 32px; }
-.brand { display:flex; align-items:center; gap:10px; color:#fff; font-size:16px; font-weight:750; text-decoration:none; white-space:nowrap; }
-.brand :global(.hv-brand-lockup) { color:#fff; text-transform:uppercase; font-size:18px; letter-spacing:.04em; }
+.brand { display:flex; align-items:center; gap:10px; color:var(--chrome-text); font-size:16px; font-weight:750; text-decoration:none; white-space:nowrap; }
+.brand :global(.hv-brand-lockup) { color:var(--chrome-text); text-transform:uppercase; font-size:18px; letter-spacing:.04em; }
 .brand :global(.hv-brand-lockup small) { font-size:7px; letter-spacing:.16em; }
 .brand :global(.hv-brand-lockup > img) { filter:brightness(0) invert(1); }
 .wordmark { width:165px; height:auto; }
 .desktop,.actions { display:flex; align-items:center; gap:24px; }
-.desktop a,.signIn { color:#fff; font-size:14px; text-decoration:none; min-height:44px; display:flex; align-items:center; }
-.join { display:flex; align-items:center; min-height:44px; padding:10px 16px; border-radius:var(--radius-control); background:#95c4f5; color:#172534; border:1px solid #95c4f5; font-size:14px; font-weight:650; text-decoration:none; white-space:nowrap; }
-.join:hover { background:#276aa9; border-color:#276aa9; color:#fff; }
+.desktop a,.signIn { color:var(--chrome-text); font-size:14px; text-decoration:none; min-height:44px; display:flex; align-items:center; }
+.join { display:flex; align-items:center; min-height:44px; padding:10px 16px; border-radius:var(--radius-control); background:var(--blue); color:var(--ink); border:1px solid var(--blue); font-size:14px; font-weight:650; text-decoration:none; white-space:nowrap; }
+.join:hover { background:var(--paper-0); border-color:var(--paper-0); color:var(--ink); }
 .dropdown { position:relative; }
 .dropdown summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:6px; list-style:none; font-size:14px; }
 .dropdown summary::-webkit-details-marker { display:none; }
-.dropdownPanel { position:absolute; top:100%; left:0; min-width:240px; border:1px solid rgba(255,255,255,.16); border-radius:4px; background:#2f2f2f; padding:8px; box-shadow:0 8px 20px rgba(0,0,0,.25); }
+.dropdownPanel { position:absolute; top:100%; left:0; min-width:240px; border:1px solid rgba(255,255,255,.16); border-radius:4px; background:var(--chrome); padding:8px; box-shadow:0 8px 20px rgba(0,0,0,.25); }
 .dropdownPanel a { padding:12px; }
-.dropdownPanel a:hover,.mobile a:hover { background:var(--slate-600); }
+.dropdownPanel a:hover,.mobile a:hover { background:var(--slate-700); }
 .nav a:focus-visible,.nav button:focus-visible,.nav summary:focus-visible { outline:3px solid #fff; outline-offset:3px; }
-.toggle { display:none; min-width:44px; min-height:44px; align-items:center; justify-content:center; border:1px solid var(--slate-500); color:#fff; background:transparent; cursor:pointer; border-radius:var(--radius-control); }
+.toggle { display:none; min-width:44px; min-height:44px; align-items:center; justify-content:center; border:1px solid var(--slate-500); color:var(--chrome-text); background:transparent; cursor:pointer; border-radius:var(--radius-control); }
 .mobile { display:none; }
 @media(max-width:1150px) { .desktop,.actions { gap:12px; } .inner { padding-inline:20px; } .brand { font-size:14px; } }
 @media(max-width:900px) { .desktop,.language { display:none; } .toggle { display:flex; } .mobile { display:flex; flex-direction:column; padding:8px 18px 16px; border-top:1px solid var(--slate-500); max-height:calc(100dvh - 76px); overflow-y:auto; } .mobile a { color:#fff; font-size:15px; min-height:44px; padding:12px; text-decoration:none; } .inner { gap:10px; padding-inline:18px; } }

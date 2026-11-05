@@ -19,13 +19,13 @@ export function SiteNav() {
   const menuId = useId();
   const button = useRef<HTMLButtonElement>(null);
   const platform = [
-    { href: "/platform", label: "Product overview" },
-    { href: "/walkthrough", label: "Procurement workflow" },
-    { href: "/marketplace", label: "Reviewed catalogue" },
+    { href: "/platform", label: "How the network works" },
+    { href: "/walkthrough", label: "From requirement to receipt" },
+    { href: "/marketplace", label: "Explore sourcing areas" },
   ];
   const audiences = [
-    { href: "/hotels/join", label: "Hotels" },
-    { href: "/suppliers/join", label: "Vendors" },
+    { href: "/hotels/join", label: "For hotel teams" },
+    { href: "/suppliers/join", label: "For vendors" },
     { href: "/contact", label: "Partner access" },
   ];
   const company = [
@@ -36,7 +36,7 @@ export function SiteNav() {
   return <nav className={styles.nav} aria-label="Main navigation" onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
     <div className={styles.inner}>
       <Link href="/" className={styles.brand} aria-label="HOTELSVENDORS home"><Brand /></Link>
-      <div className={styles.desktop}><PublicDropdown title="Platform" links={platform}/><PublicDropdown title="Network" links={audiences}/><Link href="/getting-started">Getting started</Link>{company.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</div>
+      <div className={styles.desktop}><PublicDropdown title="How it works" links={platform}/><PublicDropdown title="Your network role" links={audiences}/><Link href="/getting-started">Start a workspace</Link>{company.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</div>
       <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join the network</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>
     {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/getting-started",label:"Getting started"},...company,{href:"/login",label:"Sign in"},{href:"/register",label:"Join the network"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
