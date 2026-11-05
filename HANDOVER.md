@@ -176,3 +176,24 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   obtain same-SHA CI/browser evidence, advance only the gates recognized by that
   evidence, then use the protected deployment workflow and verify the live SHA,
   PM2 identity, health, authentication and procurement lifecycle.
+
+## Canonical-main gate reconciliation — 2026-11-05
+
+- Canonical source remains `/Users/Moatazi/hotels-vendors-new` on `main`.
+  `98f8229f` was published to `origin/main`; its exact-SHA evidence is CI run
+  `41921364673`, Browser E2E run `41921364822`, and the six-track diagnostics
+  run `41922173364`, all successful.
+- Reconciled the outstanding PR gate without merging a competing release line:
+  PR #45 and #46 were already merged; stale PR #47 remains excluded because it
+  deletes current mobile and procurement work; reviewed PR #48 changes were
+  applied narrowly to canonical main as `cb503112` and `e9638187`.
+- The applied carrier changes bind a shipment to an accepted carrier assignment,
+  require a delivered assignment before a shipment-backed GRN, and extend the
+  lifecycle regression with carrier evidence. No carrier can create a shipment
+  merely by naming another tenant's order.
+- The manifest now records the evidence-backed web engineering gates as verified
+  and retains external/future scopes as visible non-claims. Exact-SHA CI is
+  required again for the reconciliation commits before protected deployment.
+- Unavoidable protected-deployment input: a validated, restorable production
+  Neon backup branch and the explicit workflow confirmation
+  `APPLY_AFTER_NEON_BACKUP`. This has not been forged or assumed.

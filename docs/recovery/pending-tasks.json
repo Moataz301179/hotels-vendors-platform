@@ -77,8 +77,8 @@
     {
       "id": "P0-PR46-50",
       "title": "Reconcile PR 45 through 48; PR 47 is a stale regression and must not be merged",
-      "state": "pending",
-      "evidence": "Re-checked 2026-11-05 against origin. PR #45 merged (squash c6d1ad06). PR #46 merged (43b4b5f6). PR #47 is open but regressive: a two-dot diff against current origin/main is 124 files changed, +212/-6162, deleting the mobile/android and mobile/ios native projects and reverting carrier-assignment, funding, v2-auth and schema work. It must not be merged. PR #48 is open at e0f6c587 (carrier assignment scoping, shipment lifecycle, GRN linkage) and has been reviewed and hardened. PRs #49 and #50 do not exist: origin exposes no refs/pull/49 or refs/pull/50. The earlier 'PRs #48 through #50 do not exist' note was written 2026-11-04 before PR #48 was opened and is superseded."
+      "state": "verified",
+      "evidence": "Reconciled 2026-11-05 on canonical main. PR #45 is merged (squash c6d1ad06) and PR #46 is merged (43b4b5f6). PR #47 remains open and was explicitly excluded because its two-dot diff deletes mobile native projects and reverts carrier-assignment, funding, v2-auth and schema work. PR #48's reviewed carrier assignment, shipment lifecycle, delivered-shipment GRN linkage and regression coverage were applied as commits cb503112 and e9638187 on canonical main, rather than merging its branch wholesale. PRs #49 and #50 do not exist in origin. Exact-sha CI is rerun after this reconciliation before deployment."
     },
     {
       "id": "P0-GROK",
