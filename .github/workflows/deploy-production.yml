@@ -312,8 +312,14 @@ jobs:
               .filter((line) => /^content-security-policy:/i.test(line));
             if (headers.length !== 1) throw new Error("Candidate application did not emit exactly one Content-Security-Policy header");
             const csp = headers[0].toLowerCase();
-            if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) throw new Error("Candidate application CSP contains an unsafe directive");
-            if (!/script-src[^;]*'nonce-/.test(csp)) throw new Error("Candidate application CSP is missing the application nonce");
+            const directive = (name) => csp.split(":").slice(1).join(":").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name} `));
+            const scriptSrc = directive("script-src");
+            if (!scriptSrc?.includes("'nonce-")) throw new Error("Candidate application CSP is missing the application nonce");
+            if (scriptSrc.includes("'unsafe-inline'") || scriptSrc.includes("'unsafe-eval'")) throw new Error("Candidate application CSP permits unsafe script execution");
+            // Clerk's documented prebuilt UI policy requires unsafe-inline for
+            // style-src. It does not permit script execution and is asserted
+            // here separately so a script-src regression cannot be hidden.
+            if (directive("style-src")?.includes("'unsafe-eval'")) throw new Error("Candidate application CSP permits unsafe style evaluation");
           VERIFY_PREFLIGHT_CSP
             then
               exit 1
@@ -389,8 +395,11 @@ jobs:
             .filter((line) => /^content-security-policy:/i.test(line));
           if (headers.length !== 1) throw new Error("Expected exactly one public Content-Security-Policy header");
           const csp = headers[0].toLowerCase();
-          if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) throw new Error("Public CSP still contains an unsafe directive");
-          if (!/script-src[^;]*'nonce-/.test(csp)) throw new Error("Public CSP is missing the application nonce");
+          const directive = (name) => csp.split(":").slice(1).join(":").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name} `));
+          const scriptSrc = directive("script-src");
+          if (!scriptSrc?.includes("'nonce-")) throw new Error("Public CSP is missing the application nonce");
+          if (scriptSrc.includes("'unsafe-inline'") || scriptSrc.includes("'unsafe-eval'")) throw new Error("Public CSP permits unsafe script execution");
+          if (directive("style-src")?.includes("'unsafe-eval'")) throw new Error("Public CSP permits unsafe style evaluation");
           VERIFY_CSP
           }
           # A graceful Nginx reload keeps old workers briefly alive. Do not
