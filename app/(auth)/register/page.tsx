@@ -27,9 +27,9 @@ export default function Register() {
         <section className="hv-register-intro" aria-labelledby="register-title">
           <div className="shell hv-register-intro-inner">
             <div className="hv-register-copy">
-              <span className="hv-register-eyebrow">HOTELSVENDORS Procurement Network</span>
-              <h1 id="register-title">A better way to work across hospitality supply.</h1>
-              <p>Register a hotel to manage purchasing, or register a vendor to respond to approved sourcing requests.</p>
+              <span className="hv-register-eyebrow">HotelsVendors · Egypt</span>
+              <h1 id="register-title">Put the right organization on the right side of the commercial record.</h1>
+              <p>Hotels create controlled demand and approvals. Vendors receive only the sourcing work they are eligible to fulfil.</p>
             </div>
             <div className="hv-register-photo" role="img" aria-label="A bright, premium hotel suite overlooking the sea" />
           </div>
@@ -40,14 +40,14 @@ export default function Register() {
             <div className="hv-register-section-heading">
               <div>
                 <span className="hv-register-eyebrow">Get started</span>
-                <h2 id="workspace-title">Register your organization</h2>
+                <h2 id="workspace-title">Choose your operating workspace</h2>
               </div>
-              <p>Choose the organization type that matches your business.</p>
+              <p>Public registration is limited to the two organizations that create and respond to procurement work.</p>
             </div>
             <div className="hv-register-layer" aria-labelledby="procurement-roles-title">
               <div className="hv-register-layer-heading">
                 <span className="hv-register-layer-index">01</span>
-                <div><h3 id="procurement-roles-title">Procurement workspaces</h3><p>For the buyers and vendors who create and fulfil purchasing demand.</p></div>
+                <div><h3 id="procurement-roles-title">Commercial workspaces</h3><p>One protected workflow connects the hotel requirement and the eligible Vendor response.</p></div>
               </div>
               <div className="hv-register-card-grid">
                 {workspaces.slice(0, 2).map(({ title, description, href, action, icon: Icon }) => (

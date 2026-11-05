@@ -291,3 +291,22 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
 - Verification: TypeScript, diff validation, mobile source-of-truth validation
   and the optimized Next build completed locally. The unrelated concurrent
   `DESIGN.md` edit was deliberately preserved and excluded from this change.
+
+## Redesign sequence: protected directory and organization entry — 2026-11-05
+
+- Replaced the public marketplace's generic image-card rail with a compact
+  hospitality sourcing map. It communicates real procurement areas without
+  treating incomplete catalogue data as a supplier offer, price, availability
+  or Vendor attribution.
+- Rewrote the directory empty/error states to preserve the same boundary and
+  route a hotel to a controlled requirement rather than fabricating catalogue
+  records. Existing provenance-filtered directory queries and role controls
+  remain unchanged.
+- Reframed public registration and both Hotel/Vendor Clerk entry shells around
+  actual authority: Hotels originate controlled demand and approvals; Vendors
+  own their references and RFQ responses. Public self-service remains limited
+  to those two organization types; privileged partner access is not exposed.
+- Verification before commit: `npx tsc --noEmit`, `git diff --check`, and
+  `npm run test:mobile-source` passed. The concurrent `DESIGN.md` edit remains
+  unmodified and excluded. This change is not deployed; P0-REDESIGN remains
+  pending responsive/browser validation and owner visual acceptance.
