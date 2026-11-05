@@ -324,3 +324,35 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   `npx vitest run tests/p0/shipment-tenant-boundary.spec.ts` passed. This is
   an un-deployed redesign slice; P0-REDESIGN still requires browser/responsive
   validation and owner visual acceptance.
+
+## Owner rejection: incremental authenticated-interface treatment — 2026-11-05
+
+- The owner rejected the current authenticated-interface direction as an
+  insufficient visual/content refinement. Do not continue with isolated copy,
+  card, or tab changes as a substitute for the required product redesign.
+- Required next layer: a cohesive authenticated SaaS operating shell with
+  role-specific command surfaces, clickable task templates, contextual action
+  controls, filters, record detail drawers, and role-appropriate navigation.
+  Preserve existing authorization, tenant isolation, lifecycle transitions and
+  provenance boundaries while replacing generic dashboards and manual-entry
+  dead ends.
+- The carrier workflow logic is preserved; the funding and application-shell
+  work is in progress. None of these slices constitutes visual acceptance.
+  P0-REDESIGN remains open and deployment remains blocked pending the complete
+  role workspace redesign, responsive/browser evidence and owner approval.
+
+## Authenticated SaaS shell and provider workspace foundation — 2026-11-05
+
+- Began the required system-level replacement: authenticated routes no longer
+  render the public marketing footer. The application now has a role-aware
+  workspace header, contextual primary action, audit entry point, and icon-led
+  role navigation. This is the shared shell for the role-specific templates;
+  it does not change authorization or tenant checks.
+- Replaced the funding table with a role-aware provider referral interface.
+  Funder actors can record only supported next lifecycle transitions and must
+  supply an external provider reference for disbursement, settlement or
+  default. No UI action initiates lending or a payout.
+- Local verification: `npx tsc --noEmit` and `git diff --check` passed. The
+  funding P0 suite previously passed 6/6 before the structural shell change;
+  run full browser/responsive acceptance after the remaining role templates
+  have replaced the legacy screens.

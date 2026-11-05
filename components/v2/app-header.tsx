@@ -1,5 +1,20 @@
 'use client';
+
 import Link from 'next/link';
+import { Bell, ChevronDown, Plus } from 'lucide-react';
 import { Brand } from '@/components/v2/brand';
 import { UserButton } from '@clerk/nextjs';
-export function AppHeader(){return <header className="app-top"><Link href="/" className="brand" aria-label="HOTELSVENDORS home"><Brand /></Link><nav className="app-top-links" aria-label="Workspace utilities"><Link href="/dashboard">Workspace</Link><Link href="/workspace/marketplace">Procurement network</Link><UserButton /></nav></header>}
+import { roleDisplayName } from '@/lib/dashboard/role-navigation';
+
+const primaryAction: Record<string, { href: string; label: string }> = {
+  HOTEL: { href: '/workspace/marketplace', label: 'New requirement' },
+  SUPPLIER: { href: '/suppliers', label: 'Catalogue action' },
+  SHIPPING: { href: '/carrier', label: 'Delivery tasks' },
+  FACTORING: { href: '/funding', label: 'Review referrals' },
+  ADMIN: { href: '/admin?mode=trust', label: 'Review access' },
+};
+
+export function AppHeader({ role }: { role: string }) {
+  const action = primaryAction[role] ?? { href: '/dashboard', label: 'Workspace' };
+  return <header className="app-top"><Link href="/dashboard" className="brand" aria-label="HotelsVendors workspace"><Brand /></Link><div className="app-top-context"><span>HotelsVendors</span><ChevronDown aria-hidden="true"/><strong>{roleDisplayName(role)} workspace</strong></div><nav className="app-top-links" aria-label="Workspace utilities"><Link href={action.href} className="app-top-primary"><Plus aria-hidden="true"/>{action.label}</Link><Link href="/audit" className="app-top-icon" aria-label="Open activity and audit trail"><Bell aria-hidden="true"/></Link><UserButton /></nav></header>;
+}

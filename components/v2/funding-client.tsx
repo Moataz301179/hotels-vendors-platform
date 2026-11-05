@@ -1,13 +1,58 @@
 'use client';
-import {useCallback,useEffect,useState} from 'react';
+
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import {requestJson} from '@/lib/v2-http';
-type FundingData={requests:Array<{id:string;status:string;requestedAmount:string|null;requestedAt:string;factoringCompanyId:string}>;companies:Array<{id:string;name:string;contactEmail:string|null}>;decisionBoundary:string};
-export function FundingClient(){
- const [data,setData]=useState<FundingData|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[tab,setTab]=useState<'requests'|'partners'>('requests');
- const load=useCallback(async()=>{setLoading(true);setError('');try{setData(await requestJson<FundingData>('/api/v2/funding'));}catch(e){setError(e instanceof Error?e.message:'Unable to load funding records.');}finally{setLoading(false)}},[]);
- useEffect(()=>{let cancelled=false;Promise.resolve().then(()=>{if(!cancelled)void load()});return()=>{cancelled=true}},[load]);
- return <><header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">Funding workspace</div><h1>Funding records</h1><p className="workspace-page-lead muted">Review requests and partner records connected to your organisation. External partners make their own financing decisions; this workspace does not submit or approve financing.</p></div><div className="workspace-page-actions"><Link href="/onboarding" className="btn btn-ghost">Review organisation profile</Link></div></header><p className="workspace-status">Institutional data-sharing feeds are not connected. Recorded partners below are not confirmation of a live lending integration. No HV credit score or automated funding decision is generated.</p><div className="workspace-tabs" role="tablist" aria-label="Funding records"><button role="tab" id="funding-requests-tab" aria-controls="funding-panel" aria-selected={tab==='requests'} onClick={()=>setTab('requests')}>Requests {data?`(${data.requests.length})`:''}</button><button role="tab" id="funding-partners-tab" aria-controls="funding-panel" aria-selected={tab==='partners'} onClick={()=>setTab('partners')}>Recorded partners {data?`(${data.companies.length})`:''}</button></div>
- {error&&<div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={load} disabled={loading}>Retry</button></div>}
- <section className="card workspace-table-wrap" role="tabpanel" id="funding-panel" aria-labelledby={`funding-${tab}-tab`} aria-busy={loading}>{loading?<p className="workspace-empty" role="status">Loading funding records…</p>:!data?null:tab==='requests'?data.requests.length?<table className="table"><thead><tr><th>Reference</th><th>Partner</th><th>Requested amount</th><th>Status</th><th>Requested</th></tr></thead><tbody>{data.requests.map(r=><tr key={r.id}><td>{r.id}</td><td>{data.companies.find(c=>c.id===r.factoringCompanyId)?.name??r.factoringCompanyId}</td><td>{r.requestedAmount===null?'Not recorded':`${Number(r.requestedAmount).toLocaleString('en-EG',{maximumFractionDigits:2})} EGP`}</td><td>{r.status.replaceAll('_',' ')}</td><td>{new Date(r.requestedAt).toLocaleDateString('en-GB')}</td></tr>)}</tbody></table>:<p className="workspace-empty">No funding requests are recorded for this organization.</p>:data.companies.length?<table className="table"><thead><tr><th>Partner</th><th>Contact</th></tr></thead><tbody>{data.companies.map(c=><tr key={c.id}><td>{c.name}</td><td>{c.contactEmail?<a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a>:'No contact recorded'}</td></tr>)}</tbody></table>:<p className="workspace-empty">No active funding partners are configured for this organization.</p>}</section><p className="muted">{data?.decisionBoundary??'External funders approve or reject financing. HOTELSVENDORS does not lend.'}</p></>;
+import { ArrowRight, CheckCircle2, FileCheck2, Landmark, ShieldCheck } from 'lucide-react';
+import { requestJson } from '@/lib/v2-http';
+
+export type FundingRole = 'HOTEL' | 'SUPPLIER' | 'FACTORING' | 'ADMIN';
+type FundingRequest = { id: string; status: string; requestedAmount: string | null; requestedAt: string; factoringCompanyId: string };
+type FundingData = { requests: FundingRequest[]; companies: Array<{ id: string; name: string }>; decisionBoundary: string };
+const NEXT: Record<string, Array<{ status: string; label: string }>> = { PENDING: [{ status: 'UNDER_REVIEW', label: 'Start provider review' }, { status: 'REJECTED', label: 'Record decline' }], UNDER_REVIEW: [{ status: 'APPROVED', label: 'Record approval' }, { status: 'REJECTED', label: 'Record decline' }], APPROVED: [{ status: 'DISBURSED', label: 'Record provider disbursement' }], DISBURSED: [{ status: 'SETTLED', label: 'Record provider settlement' }, { status: 'DEFAULTED', label: 'Record provider default' }] };
+const LABEL: Record<string, string> = { PENDING: 'Referral recorded', UNDER_REVIEW: 'Under provider review', APPROVED: 'Provider approved', REJECTED: 'Provider declined', DISBURSED: 'Provider reported disbursement', SETTLED: 'Provider reported settlement', DEFAULTED: 'Provider reported default' };
+
+export function FundingClient({ role }: { role: FundingRole }) {
+  const [data, setData] = useState<FundingData | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [action, setAction] = useState<{ request: FundingRequest; status: string } | null>(null);
+  const [externalReference, setExternalReference] = useState('');
+  const [reconciliationNote, setReconciliationNote] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true); setError('');
+    try { setData(await requestJson<FundingData>('/api/v2/funding')); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to load funding records.'); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  function chooseAction(request: FundingRequest, status: string) { setAction({ request, status }); setExternalReference(''); setReconciliationNote(''); setError(''); }
+  async function submitAction(event: FormEvent) {
+    event.preventDefault(); if (!action) return;
+    setBusy(true); setError('');
+    try {
+      await requestJson('/api/v2/funding', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: action.request.id, status: action.status, externalReference: externalReference || undefined, reconciliationNote: reconciliationNote || undefined }) });
+      setAction(null); await load();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to record the provider status.'); }
+    finally { setBusy(false); }
+  }
+
+  const title = role === 'FACTORING' ? 'Make the provider decision visible—without moving money.' : role === 'SUPPLIER' ? 'Track the referral after verified fulfilment.' : role === 'HOTEL' ? 'See referral status without surrendering commercial control.' : 'Govern the provider-controlled referral boundary.';
+  const detail = role === 'FACTORING' ? 'Record a provider-controlled review, decision and reconciliation reference for referrals released to your organization.' : 'HotelsVendors records authorized referral status only. An external provider owns underwriting, terms, disbursement and settlement.';
+  const needsReference = action && ['DISBURSED', 'SETTLED', 'DEFAULTED'].includes(action.status);
+
+  return <div className="funding-console">
+    <header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">{role === 'FACTORING' ? 'Funder workspace' : 'Funding referral records'}</div><h1>{title}</h1><p className="workspace-page-lead muted">{detail}</p></div><div className="workspace-page-actions">{role === 'FACTORING' ? <Link href="/funding/evidence" className="btn btn-blue">Review released evidence <ArrowRight aria-hidden="true"/></Link> : <Link href="/onboarding" className="btn btn-ghost">Organization profile</Link>}</div></header>
+    <section className="workspace-focus funding-boundary"><div><span className="eyebrow">External-provider boundary</span><h2>Referral and reconciliation records—not lending.</h2><p>HotelsVendors does not underwrite, approve credit, disburse or settle funds. Provider status is recorded only against released evidence and is fully auditable.</p></div><div className="funding-boundary-points"><span><ShieldCheck aria-hidden="true"/>Authorized evidence only</span><span><Landmark aria-hidden="true"/>Provider decision only</span><span><FileCheck2 aria-hidden="true"/>Reconciliation reference required</span></div></section>
+    {error && <div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={() => void load()} disabled={loading || busy}>Retry</button></div>}
+    {loading ? <p className="workspace-empty" role="status">Loading authorized funding records…</p> : <>
+      <section className="workspace-section" aria-labelledby="funding-records-title"><div className="workspace-section-heading"><div><span className="eyebrow">Referral queue</span><h2 id="funding-records-title">{role === 'FACTORING' ? 'Provider review queue' : 'Recorded referrals'}</h2><p>{role === 'FACTORING' ? 'Only your assigned external-provider referrals are visible.' : 'Status is evidence of a provider record, not a funding offer or payment.'}</p></div></div>
+        {data?.requests.length ? <div className="funding-request-list">{data.requests.map((request) => <article className="card funding-request-card" key={request.id}><CheckCircle2 aria-hidden="true"/><div><span className="workspace-status-chip is-neutral">{LABEL[request.status] ?? request.status}</span><h3>Referral {request.id.slice(-8)}</h3><p>{request.requestedAmount === null ? 'Amount is not recorded.' : `${Number(request.requestedAmount).toLocaleString('en-EG', { maximumFractionDigits: 2 })} EGP recorded`} · {new Date(request.requestedAt).toLocaleDateString('en-GB')}</p></div>{role === 'FACTORING' && NEXT[request.status]?.length ? <div className="funding-request-actions">{NEXT[request.status].map((option) => <button className={option.status === 'REJECTED' || option.status === 'DEFAULTED' ? 'btn btn-ghost' : 'btn btn-blue'} key={option.status} onClick={() => chooseAction(request, option.status)}>{option.label}</button>)}</div> : <span className="funding-record-note">{role === 'FACTORING' ? 'No further supported provider transition.' : 'Provider-controlled status'}</span>}</article>)}</div> : <p className="workspace-empty">No authorized funding referral is recorded for this workspace.</p>}
+      </section>
+      {role === 'FACTORING' && action ? <section className="card funding-decision-form" aria-labelledby="funding-decision-title"><div><span className="eyebrow">Provider status record</span><h2 id="funding-decision-title">{LABEL[action.status] ?? action.status}</h2><p className="muted">For referral {action.request.id.slice(-8)}. This records the provider’s status; it does not trigger money movement.</p></div><form className="workspace-form" onSubmit={submitAction}>{needsReference ? <label>External provider reference<input required maxLength={160} value={externalReference} onChange={(event) => setExternalReference(event.target.value)} placeholder="Provider decision or reconciliation reference"/></label> : null}<label>Provider note <span className="muted">(optional)</span><textarea maxLength={1000} value={reconciliationNote} onChange={(event) => setReconciliationNote(event.target.value)} placeholder="Record the provider context without adding private hotel or Vendor data."/></label><div className="workspace-form-actions"><button type="button" className="btn btn-ghost" onClick={() => setAction(null)}>Cancel</button><button className="btn btn-blue" disabled={busy}>{busy ? 'Recording…' : 'Record provider status'}</button></div></form></section> : null}
+      <p className="muted funding-decision-boundary">{data?.decisionBoundary ?? 'External funders approve, disburse and settle financing. HotelsVendors records the referral and provider-reported status only.'}</p>
+    </>}
+  </div>;
 }
