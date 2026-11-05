@@ -1,12 +1,12 @@
 # HOVIN Mobile Production Checklist — iOS and Android
 
-Status captured 2026-11-02 from read-only source review. This is a separate mobile release track from HotelsVendors web production. No store build, submission, or release was verified.
+Status updated 2026-11-05. This is a separate mobile release track from HotelsVendors web production. No store build, submission, or release is verified.
 
 ## Shared blockers
 
 | ID | Blocker | Status | Closure evidence |
 |---|---|---|---|
-| MOB-01 | Select and document one canonical mobile source. The standalone `Moataz301179/hotels-vendors-mobile` repo (Expo 57 / React Native 0.86.2 / React Navigation / Clerk Expo / EAS) and the nested `mobile/` app in platform PR #46 (Expo 54 / React Native 0.81.5 / Expo Router / SQLite) share `com.hotelsvendors.hovin` iOS/Android IDs but are different implementations. The nested app screen is currently a placeholder. | BLOCKED | Product/Grok requirements reconciled; canonical repository and commit recorded; no duplicate source can ship independently. |
+| MOB-01 | One canonical mobile source is recorded at `mobile/` in `Moataz301179/hotels-vendors-platform` on `main`. It owns HOVIN and `com.hotelsvendors.hovin`. The standalone `Moataz301179/hotels-vendors-mobile` repository is quarantined as legacy reference: it is a dirty Expo 57/React Navigation client using obsolete `/api/v1` and `com.hotelsvendors.app`. | VERIFIED | `docs/recovery/mobile-source-of-truth.json` plus `npm run test:mobile-source` pass. Only the canonical path may produce artifacts. |
 | MOB-02 | Build the controlled receiving flow: authorized PO only; item-level received, missing, and damaged quantities; photo evidence; receipt confirmation; employee/hotel/time audit. Hide prices and financing from receiving users. | PENDING | Device flow works end-to-end against a test backend and role/tenant access checks pass. |
 | MOB-03 | Complete offline draft and synchronization with stable receipt identity, safe retry, and server-side idempotency. The candidate offline queue tests use a fake in-memory DB; the GRN POST currently does not persist/use an idempotency key, so a retry after server commit can create a duplicate GRN. | BLOCKED | SQLite/device persistence and restart/reconnect tests pass; server deduplicates retries after a committed response is lost; cross-tenant access is denied. |
 | MOB-04 | Implement durable photo/evidence upload and match its URL contract to the GRN API. Current POST accepts existing HTTPS evidence URLs; no mobile upload flow or upload endpoint was verified. | BLOCKED | Upload contract exists, files persist securely, and proof is attached to the correct receipt line/GRN. |

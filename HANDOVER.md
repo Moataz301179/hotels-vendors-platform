@@ -219,3 +219,18 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   role interfaces do not satisfy the requested complete redesign. Do not treat
   this operational release as visual/design approval; keep redesign deployment
   blocked until an explicit redesigned-surface acceptance is recorded.
+
+## Mobile source-of-truth reconciliation — 2026-11-05
+
+- The duplicate mobile-source risk is resolved without deleting or merging any
+  work. Canonical HOVIN development and releases now originate only from
+  `mobile/` in this platform repository on `main`, identified as
+  `com.hotelsvendors.hovin` on iOS and Android.
+- The independent `Moataz301179/hotels-vendors-mobile` repository is explicitly
+  quarantined as a legacy reference. Its dirty Expo 57 client uses an obsolete
+  `/api/v1` contract and different `com.hotelsvendors.app` application identity;
+  it must not be built, submitted, or distributed.
+- `docs/recovery/mobile-source-of-truth.json` and
+  `npm run test:mobile-source` enforce this boundary. This resolves ownership,
+  not mobile production readiness: controlled receiving, offline sync, secure
+  evidence upload, signing, device, and store acceptance remain open.

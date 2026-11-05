@@ -1,26 +1,24 @@
-# Mobile source-integrity status — 2026-10-11
+# Mobile source-integrity status — 2026-11-05
 
 ## Verified facts
 
-- The previous iOS Simulator installation identified itself as `com.hotelsvendors.hovin` / `HOVIN`; it was not a release tied to the isolated web procurement branch.
-- The installed simulator application was removed before attempting a replacement. A current-source iOS Simulator build is in progress and must finish before an install can be considered valid.
-- The mobile checkout is independently dirty and contains an extensive HOVIN field/operations layer: its application entry, navigation, onboarding, authentication copy, and numerous screens retain that identity.
-- The current HOVIN source has Clerk Expo provider wiring and the mobile authentication store has been hardened separately, but that does not make the old product layer a HotelsVendors release.
+- The canonical HOVIN source is `mobile/` in this platform repository on `main`, with bundle/package identity `com.hotelsvendors.hovin`.
+- The standalone `Moataz301179/hotels-vendors-mobile` checkout is a separate dirty legacy reference. It has a different package identity (`com.hotelsvendors.app`) and an obsolete `/api/v1` client contract; it is not a release source.
+- `docs/recovery/mobile-source-of-truth.json` records the boundary and `npm run test:mobile-source` detects identity drift in the canonical app.
 
 ## Consequence
 
-The simulator's prior appearance cannot be used as mobile acceptance evidence. Reinstalling the same source without a deliberate legacy-layer replacement would reproduce mixed product identity and unsupported flows.
+Simulator output is not mobile production acceptance. The canonical app still requires the controlled-receiving, offline, evidence-upload, security, device, signing, and store gates in the production checklist.
 
 ## Required corrective sequence
 
-1. Establish a clean mobile release worktree and source commit instead of modifying the dirty mobile checkout in place.
-2. Remove or replace the HOVIN field/operations routes from the user-visible navigator; preserve only explicitly approved logistics capability after it is connected to the HotelsVendors procurement API.
-3. Define the current HotelsVendors role entry points: hotel buyer, verified supplier, administrator, and approved delivery/GRN operator.
-4. Rebuild the simulator bundle from that release commit, record the Git SHA and EAS project identity, then capture the actual login/onboarding/result screens.
-5. Only then perform a real-device Clerk authentication test after the physical device is connected and unlocked.
+1. Build the controlled receiving vertical slice in canonical `mobile/` against `/api/v2`.
+2. Define the mobile roles: authorized hotel receiver and assigned delivery/GRN operator; do not expose price, finance, or unrelated workspace controls.
+3. Add durable sync, secure evidence upload, and server idempotency proof before device testing.
+4. Build from a clean canonical commit, record the Git SHA and EAS project identity, then capture actual login/onboarding/receiving results.
+5. Complete real-device authentication, signing, and store distribution acceptance separately.
 
 ## Current blockers
 
-- EAS project identity conflict: configured project ID resolves to `invo`, while the app slug is `hovin`. It requires an explicit project-association decision; no destructive reassignment has been made.
-- Physical iPhone is offline, so no real-device authentication evidence exists.
-- No current-source iOS bundle exists until the running Xcode Simulator build completes successfully.
+- EAS project association, signing continuity, and real-device authentication evidence remain unverified.
+- Controlled receiving, durable offline sync, secure evidence upload, and exception/funding blocking are not yet implemented or accepted.

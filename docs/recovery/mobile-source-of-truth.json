@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-05",
+  "canonical": {
+    "repository": "Moataz301179/hotels-vendors-platform",
+    "branch": "main",
+    "path": "mobile",
+    "applicationName": "HOVIN",
+    "expoSlug": "hovin-mobile",
+    "iosBundleIdentifier": "com.hotelsvendors.hovin",
+    "androidPackage": "com.hotelsvendors.hovin",
+    "apiContract": "/api/v2"
+  },
+  "legacyReferences": [
+    {
+      "repository": "Moataz301179/hotels-vendors-mobile",
+      "classification": "legacy-reference-only",
+      "reason": "Independent dirty checkout, obsolete /api/v1 client contract, and a separate com.hotelsvendors.app package identity.",
+      "shippingPolicy": "Do not build, submit, or distribute from this repository. Preserve it unchanged until an explicitly reviewed migration or archival decision."
+    }
+  ],
+  "releaseRule": "Only the canonical path may produce HOVIN artifacts. Native release work must use a clean commit from the canonical platform repository and pass the mobile production checklist."
+}
