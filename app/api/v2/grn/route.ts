@@ -69,7 +69,11 @@ export async function POST(req: Request) {
             deletedAt: null,
             status: "DELIVERED",
             orderIds: { has: order.id },
-            assignment: { hotelTenantId: order.tenantId, orderId: order.id, deletedAt: null },
+            // The assignment must already be DELIVERED: the carrier flips it in the
+            // same transaction that marks the shipment DELIVERED. Requiring it here
+            // closes the gap if that coupling is ever relaxed, so a GRN can never be
+            // recorded against a shipment whose carrier assignment is still open.
+            assignment: { hotelTenantId: order.tenantId, orderId: order.id, status: "DELIVERED", deletedAt: null },
           },
           select: { id: true },
         });
