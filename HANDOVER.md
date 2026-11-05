@@ -310,3 +310,17 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   `npm run test:mobile-source` passed. The concurrent `DESIGN.md` edit remains
   unmodified and excluded. This change is not deployed; P0-REDESIGN remains
   pending responsive/browser validation and owner visual acceptance.
+
+## Redesign sequence: carrier assigned-work workspace — 2026-11-05
+
+- Removed the carrier screen's misleading free-form “new shipment plan” entry.
+  The real API already requires an accepted carrier assignment; the interface
+  now follows that same sequence: review hotel assignment, accept or decline,
+  then create one shipment plan bound to the accepted assignment and order.
+- The active movement list directs carriers to the controlled handoff record.
+  It does not expose unassigned orders, hotel-private commercial terms, or a
+  blank dispatch board.
+- Verification: `npx tsc --noEmit`, `git diff --check`, and
+  `npx vitest run tests/p0/shipment-tenant-boundary.spec.ts` passed. This is
+  an un-deployed redesign slice; P0-REDESIGN still requires browser/responsive
+  validation and owner visual acceptance.
