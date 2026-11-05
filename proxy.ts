@@ -17,6 +17,7 @@ const PUBLIC_PATHS = new Set([
   "/contact", "/become-supplier", "/social-media", "/offline", "/help", "/flow",
   "/financing/oliv", "/oliv/referral", "/factoring-service", "/api/health", "/api/v1/products",
   "/api/v1/contact", "/api/v1/cms/content", "/api/v1/leads/capture",
+  "/api/v1/oliv/click",
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/static", "/favicon", "/logo", "/videos", "/manifest.json", "/sw.js", "/robots.txt", "/sitemap", "/api/webhooks"];
 const CLERK_CONTEXT_PUBLIC_PATHS = new Set([
