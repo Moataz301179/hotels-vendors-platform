@@ -54,9 +54,9 @@ export default function MarketingPage() {
       <section className={heroStyles.hero}>
         <div className={`${styles.shell} ${heroStyles.heroShell}`}>
           <div>
-            <p className={styles.eyebrow}>Procurement network · Egypt</p>
-            <h1>Run procurement like an operating system.<em> Every handoff, one record.</em></h1>
-            <p className={styles.lead}>Sealed sourcing, approval authority, delivery evidence and ETA e-invoice intelligence — connected for hotels, suppliers, carriers and funders in the Egyptian market.</p>
+            <p className={styles.eyebrow}>Technology reimagined · Hospitality network · Egypt</p>
+            <h1>Technology reimagined for hotel procurement.<em> Every decision connected. Every handoff accountable.</em></h1>
+            <p className={styles.lead}>HotelsVendors turns fragmented sourcing, approval, delivery and receipt evidence into one protected operating record—so Egyptian hotel teams can control spend, qualify local supply and act with confidence.</p>
             <div className={styles.actions}>
               <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
               <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
