@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  Barcode,
   CheckCircle2,
   ClipboardCheck,
   FileCheck2,
@@ -30,22 +29,22 @@ const categories = [
 ];
 
 const actions = [
-  { number: "01", icon: PackageSearch, title: "Browse sourcing areas", body: "Choose a category with visual filters already applied.", href: "/marketplace", cta: "Open catalogue" },
-  { number: "02", icon: ClipboardCheck, title: "Build one requirement", body: "Select known items or add a controlled specification once.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace", cta: "Start a request" },
-  { number: "03", icon: FileCheck2, title: "Track an approved order", body: "Follow approval, delivery and receiving on the same record.", href: "/login?redirect_url=%2Forders", cta: "Open orders" },
+  { number: "01", icon: PackageSearch, title: "Frame the need", body: "Start with the property category, specification, quantity and timing.", href: "/marketplace", cta: "Explore sourcing areas" },
+  { number: "02", icon: ClipboardCheck, title: "Control the decision", body: "Route the requirement, terms and authority checks through one record.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace", cta: "Open a workspace" },
+  { number: "03", icon: FileCheck2, title: "Prove the handoff", body: "Keep order, delivery and receiving evidence connected after approval.", href: "/login?redirect_url=%2Forders", cta: "Follow an order" },
 ];
 
 const lifecycle = [
-  { icon: PackageSearch, label: "Discover", detail: "Visual category and product-reference selection", href: "/marketplace" },
-  { icon: ClipboardCheck, label: "Request", detail: "One structured need with quantity and timing", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace" },
-  { icon: ShieldCheck, label: "Approve", detail: "Authority and budget controls", href: "/login?redirect_url=%2Fdashboard" },
-  { icon: Truck, label: "Receive", detail: "Assigned handoff and receipt evidence", href: "/hovin" },
+  { icon: PackageSearch, label: "Define", detail: "A reusable product reference or a precise new requirement", href: "/marketplace" },
+  { icon: ClipboardCheck, label: "Source", detail: "A sealed request with a clear commercial context", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace" },
+  { icon: ShieldCheck, label: "Authorize", detail: "The accountable decision before a purchase order moves", href: "/login?redirect_url=%2Fdashboard" },
+  { icon: Truck, label: "Receive", detail: "Assigned delivery handoff and goods-receipt evidence", href: "/hovin" },
 ];
 
 const roleStarts = [
-  { icon: ShieldCheck, label: "Hotel team", detail: "Source, request, approve and receive in one operating record.", href: "/hotels/signup", action: "Register hotel" },
-  { icon: PackageSearch, label: "Vendor", detail: "Manage your catalogue, opportunities and fulfilment handoffs.", href: "/suppliers/signup", action: "Register vendor" },
-  { icon: ScanLine, label: "Field team", detail: "Open only assigned delivery handoffs on the mobile workflow.", href: "/hovin", action: "Explore HOVIN" },
+  { icon: ShieldCheck, label: "Hotel team", detail: "Control requirements, approvals, orders and the evidence behind each purchase.", href: "/hotels/signup", action: "Create hotel workspace" },
+  { icon: PackageSearch, label: "Vendor", detail: "Maintain owned catalogue evidence and respond to work allocated to your organization.", href: "/suppliers/signup", action: "Create vendor workspace" },
+  { icon: ScanLine, label: "Receiving operator", detail: "Use the assigned field handoff only when delivery evidence is ready to record.", href: "/hovin", action: "View HOVIN workflow" },
 ];
 
 export default function MarketingPage() {
@@ -73,17 +72,17 @@ export default function MarketingPage() {
 
       <section className={styles.section} aria-labelledby="operating-title">
         <div className={styles.shell}>
-          <Header eyebrow="How it moves" title="See the work at a glance, then enter at the right point." text="A visual operating path, with a direct action at every handoff." />
+          <Header eyebrow="One commercial record" title="The network carries context forward. The hotel keeps authority." text="A requirement does not disappear into a marketplace. It moves through an accountable record that connects the right organization at the right handoff." />
           <div className={styles.journeyBoard}>
             <figure className={styles.sceneImage}>
               <Image src="/hv-workspace-team.webp" alt="Hotel operations team using purchasing data while preparing hospitality supplies" fill sizes="(max-width: 850px) calc(100vw - 34px), 52vw" />
-              <figcaption>Source with operational context—not an empty form.</figcaption>
+              <figcaption>Start from what the property needs—not a generic catalogue search.</figcaption>
             </figure>
             <div className={styles.journeySteps}>
               {lifecycle.slice(0, 3).map(({ icon: Icon, label, detail, href }, index) => <Link href={href} className={styles.journeyStep} key={label}>
                 <span>{String(index + 1).padStart(2, "0")}</span><Icon size={23} aria-hidden="true" /><div><strong>{label}</strong><small>{detail}</small></div><ArrowRight size={16} aria-hidden="true" />
               </Link>)}
-              <div className={styles.journeySignal}><CheckCircle2 size={18} aria-hidden="true" /><span>Every next step belongs to an accountable role.</span></div>
+              <div className={styles.journeySignal}><CheckCircle2 size={18} aria-hidden="true" /><span>The hotel retains commercial authority at every decision point.</span></div>
             </div>
           </div>
         </div>
@@ -91,59 +90,37 @@ export default function MarketingPage() {
 
       <section className={`${styles.section} ${styles.categories}`} aria-labelledby="categories-title">
         <div className={styles.shell}>
-          <Header eyebrow="Sourcing areas" title="Start where the property operates." text="Every card opens the Marketplace with that exact sourcing area selected." />
+          <Header eyebrow="Hospitality sourcing map" title="Begin with the operating area behind the request." text="Browse public product references by hotel use. Private Vendor identity, terms and availability stay protected until the authorized workflow permits disclosure." />
           <div className={styles.categoryGrid}>
             {categories.map(({ title, body, image, alt, group, icon: Icon }) => <Link href={`/marketplace?category=${encodeURIComponent(group)}`} className={styles.categoryCard} key={title}>
               <figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure>
               <div className={styles.categoryBody}><span><Icon size={15} aria-hidden="true" /> Sourcing area</span><h3>{title}</h3><p>{body}</p><b>Open area <ArrowRight size={15} /></b></div>
             </Link>)}
           </div>
-          <div className={styles.requirement}><div><strong>Can’t find the exact item?</strong><p>Create a controlled requirement from the hotel workspace. Your specification, quantity and delivery context stay on one sourcing record.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Create a requirement <ArrowRight size={16} /></Link></div>
+          <div className={styles.requirement}><div><strong>Nothing suitable in the directory?</strong><p>Create a controlled requirement from the hotel workspace. Its specification, quantity and delivery context stay with the sourcing record rather than becoming an untracked request.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Create a requirement <ArrowRight size={16} /></Link></div>
         </div>
       </section>
 
       <section className={styles.controlSection} aria-labelledby="control-title">
         <div className={styles.shell}>
-          <Header eyebrow="Commercial control" title="A decision workspace, not another spreadsheet." text="The record carries the signals a team needs before an order moves forward." />
+          <Header eyebrow="Virtual Shadow · illustrative view" title="Turn operating evidence into a decision brief—not an automatic decision." text="Virtual Shadow connects permissioned records into signals for the people who own the action. It can surface a gap or pattern; commercial authority remains human and organization-scoped." />
           <div className={styles.controlBoard}>
             <div className={styles.controlNav}><span className={styles.navActive}><PackageSearch size={17} /> Requirement</span><span><ClipboardCheck size={17} /> Terms</span><span><ShieldCheck size={17} /> Approval</span><span><Truck size={17} /> Receipt</span></div>
             <div className={styles.controlCanvas}>
-              <div className={styles.controlSummary}><p>Current decision</p><strong>Review a controlled purchase requirement</strong><span>Product reference · quantity · delivery context</span></div>
-              <div className={styles.controlChecks}><article><span>Specification</span><b>Complete</b></article><article><span>Response window</span><b>Selected</b></article><article><span>Authority</span><b>Required</b></article></div>
-              <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.controlAction}>Open the secure workspace <ArrowRight size={16} /></Link>
+              <div className={styles.controlSummary}><p>Illustrative signal folio</p><strong>Review a controlled requirement before it advances.</strong><span>Requirement context · commercial response · authority record</span></div>
+              <div className={styles.controlChecks}><article><span>Evidence available</span><b>Review required</b></article><article><span>Commercial terms</span><b>Restricted</b></article><article><span>Next authority</span><b>Identified</b></article></div>
+              <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.controlAction}>Open your secure workspace <ArrowRight size={16} /></Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.engine}`} aria-labelledby="engine-title">
-        <div className={styles.shell}>
-          <Header eyebrow="Connected workflow" title="Choose a handoff. Open the correct tool." text="The interface should lead the operation forward rather than explain it in long text." />
-          <div className={styles.flowGrid}>
-            {lifecycle.map(({ icon: Icon, label, detail, href }, index) => <Link href={href} className={styles.flowCard} key={label}>
-              <span>{String(index + 1).padStart(2, "0")}</span><Icon size={25} aria-hidden="true" /><h3>{label}</h3><p>{detail}</p><b>Open <ArrowRight size={15} /></b>
-            </Link>)}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.outcomeSection} aria-labelledby="outcomes-title">
-        <div className={styles.shell}>
-          <Header eyebrow="Your next action" title="Enter the network through the work you need to do." text="No blank dashboard or confusing form is needed before the task is clear." />
-          <div className={styles.outcomeBoard}>
-            <div><PackageSearch size={24} aria-hidden="true" /><strong>Find a product reference</strong><span>Browse by sourcing area, image and product details.</span><Link href="/marketplace">Browse catalogue <ArrowRight size={16} /></Link></div>
-            <div><ClipboardCheck size={24} aria-hidden="true" /><strong>Send one controlled requirement</strong><span>Use the secure workspace for quantity, timing and delivery context.</span><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Open workspace <ArrowRight size={16} /></Link></div>
-            <div><Barcode size={24} aria-hidden="true" /><strong>Record a receiving handoff</strong><span>HOVIN opens only an assigned handoff for the responsible field role.</span><Link href="/hovin">Explore HOVIN <ArrowRight size={16} /></Link></div>
-          </div>
-        </div>
-      </section>
-
       <section className={styles.mobile} aria-labelledby="mobile-title"><div className={`${styles.shell} ${styles.mobileShell}`}>
-        <div className={styles.mobileIntro}><p className={styles.eyebrow}>HOVIN mobile workspace</p><h2 id="mobile-title">A field workflow built for taps, scans and explicit confirmation.</h2><p>HOVIN gives the receiving team a visual, assigned-handoff interface. The camera can identify an item; an authorized person still confirms the quantity and condition.</p><Link href="/hovin" className={styles.textLink}>Open the HOVIN overview <ArrowRight size={16} /></Link></div>
+        <div className={styles.mobileIntro}><p className={styles.eyebrow}>HOVIN receiving companion</p><h2 id="mobile-title">The receiving record belongs at the dock—not in a spreadsheet later.</h2><p>HOVIN is the controlled field companion for an assigned handoff. It helps the receiving operator capture what arrived, what did not, and the evidence an authorized hotel team needs to resolve the exception.</p><Link href="/hovin" className={styles.textLink}>See the HOVIN receiving model <ArrowRight size={16} /></Link></div>
         <HovinReceivingPreview />
       </div></section>
 
-      <section className={styles.close}><div className={styles.shell}><div className={styles.closeHeading}><p className={styles.eyebrow}>Start in the right place</p><h2>Choose your role. Start with a guided action.</h2><p>Hotels and Vendors can register directly. Carrier and funder access is controlled through partner onboarding.</p></div><div className={styles.roleStartGrid}>{roleStarts.map(({ icon: Icon, label, detail, href, action }) => <Link href={href} className={styles.roleStart} key={label}><Icon size={22} aria-hidden="true"/><div><span>{label}</span><p>{detail}</p></div><strong>{action}<ArrowRight size={15}/></strong></Link>)}</div><Link href="/getting-started" className={styles.textLink}>See guided onboarding <ArrowRight size={16} /></Link></div></section>
+      <section className={styles.close}><div className={styles.shell}><div className={styles.closeHeading}><p className={styles.eyebrow}>Enter the operating network</p><h2>Open a workspace that matches your responsibility.</h2><p>Hotels and Vendors can register directly. Carrier and funder access is provisioned only when the relevant organization and workflow are approved.</p></div><div className={styles.roleStartGrid}>{roleStarts.map(({ icon: Icon, label, detail, href, action }) => <Link href={href} className={styles.roleStart} key={label}><Icon size={22} aria-hidden="true"/><div><span>{label}</span><p>{detail}</p></div><strong>{action}<ArrowRight size={15}/></strong></Link>)}</div><Link href="/getting-started" className={styles.textLink}>See the guided onboarding path <ArrowRight size={16} /></Link></div></section>
     </main>
   );
 }

@@ -250,3 +250,18 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   scope: homepage information architecture, marketplace/auth/onboarding,
   task-specific role workspaces, mobile HOVIN receiving interface, RTL and
   responsive/accessibility evidence.
+
+## Redesign sequence: public information architecture — 2026-11-05
+
+- Reworked the public homepage around the actual operating model instead of
+  repeated generic feature grids. The path is now requirement framing,
+  controlled sourcing, organization authority, accountable handoff, then
+  role-specific entry.
+- The Virtual Shadow surface is explicitly labeled illustrative and describes
+  evidence-to-human-action behavior without claiming automatic commercial
+  decisions or live savings. The public catalogue explains its protected
+  identity/terms boundary, and HOVIN is described as a receiving companion,
+  not a generic mobile-app promotion.
+- Verification: `npx tsc --noEmit`, `git diff --check`, and production build
+  with a process-only local validation `SESSION_SECRET` all passed. No deploy
+  was dispatched; `P0-REDESIGN` remains pending visual review.
