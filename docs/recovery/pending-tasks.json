@@ -66,7 +66,8 @@
     {
       "id": "P0-DEPLOY",
       "title": "Merge approved release and deploy to production with rollback and live smoke verification",
-      "state": "pending"
+      "state": "verified",
+      "evidence": "Verified 2026-11-05 at deployed source SHA 46002bc99f2d2bda33db716f849d15730b03a2c4. Protected production workflow run 42096409892 passed all gates: exact-SHA CI and Chromium Browser E2E, isolated schema and lifecycle checks, production Prisma migration and schema verification, upload, PM2 activation, Nginx CSP reconciliation, and live identity verification. Independent post-deploy checks confirmed /api/health returned ok=true, database=ready, authorization=configured, releaseId=github-46002bc99f2d2bda33db716f849d15730b03a2c4 and sourceCommit=46002bc99f2d2bda33db716f849d15730b03a2c4; public /, /marketplace, /hotels/signup, /suppliers/signup and /login each returned HTTP 200."
     },
     {
       "id": "P1-LEGACY",
@@ -89,8 +90,8 @@
     {
       "id": "P0-REDESIGN",
       "title": "Implement full click-first interactive UI, premium non-brochure layout, grey header/footer, responsive five-role dashboards",
-      "state": "verified",
-      "evidence": "Verified at exact canonical main SHA 98f8229fb44f47d9596fc8d30b174bdd4e25370a using the approved annotations and current product copy. Browser E2E run 41921364822, the diagnostics frontend track in run 41922173364, and local 16/16 responsive regression verify the charcoal transparent navigation, matching charcoal footer, light application palette, responsive public surfaces, two-role public entry, and role-specific authenticated workspace routes."
+      "state": "pending",
+      "evidence": "Reopened by owner on 2026-11-05: the deployed interface does not satisfy the required full website and role-dashboard redesign. Existing route/browser checks prove rendering only, not visual or product-design acceptance. The next redesign acceptance must use the reconciled Egypt hotel-procurement positioning, approved visual system, role-specific task flows, responsive EN/AR review, and explicit owner visual approval before any redesign release is dispatched."
     },
     {
       "id": "P0-ONBOARDING",

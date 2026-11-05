@@ -197,3 +197,25 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
 - Unavoidable protected-deployment input: a validated, restorable production
   Neon backup branch and the explicit workflow confirmation
   `APPLY_AFTER_NEON_BACKUP`. This has not been forged or assumed.
+
+## Protected production deployment and redesign correction — 2026-11-05
+
+- Production deployment run `42096409892` completed successfully for source
+  `46002bc99f2d2bda33db716f849d15730b03a2c4`. It passed exact-SHA CI and
+  Chromium acceptance, isolated lifecycle/schema checks, production migration
+  verification, PM2 activation, Nginx CSP reconciliation, and live release
+  identity verification.
+- Independent live checks confirmed `https://www.hotelsvendors.com/api/health`
+  reported `ok=true`, `database=ready`, `authorization=configured`, and the
+  deployed source/release identity `46002bc99f2d2bda33db716f849d15730b03a2c4`.
+  Public `/`, `/marketplace`, `/hotels/signup`, `/suppliers/signup`, and
+  `/login` returned HTTP 200. The public CSP has a nonce-based `script-src`
+  without `unsafe-inline` or `unsafe-eval` script execution.
+- The deploy workflow itself was corrected in `004175b9` and `46002bc9`: it
+  distinguishes Clerk-required inline styles from unsafe script execution and
+  preserves the PM2 verifier through activation and rollback.
+- Product-design acceptance is separate from operational deployment. The owner
+  reopened `P0-REDESIGN` after this deployment because the current website and
+  role interfaces do not satisfy the requested complete redesign. Do not treat
+  this operational release as visual/design approval; keep redesign deployment
+  blocked until an explicit redesigned-surface acceptance is recorded.
