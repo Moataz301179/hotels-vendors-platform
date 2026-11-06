@@ -356,3 +356,28 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   funding P0 suite previously passed 6/6 before the structural shell change;
   run full browser/responsive acceptance after the remaining role templates
   have replaced the legacy screens.
+
+## Aggregator workbench and protected HOVIN handoff foundation — 2026-11-06
+
+- The current redesign branch treats HotelsVendors as a protected hospitality
+  aggregation network, not a public procurement marketplace. Public platform
+  and solution narratives now describe requirement framing, controlled
+  sourcing, distinct organization authority, receiving evidence and
+  provider-controlled referrals without representing a directory record as a
+  public offer.
+- The Hotel workspace now starts with guided operating requirements and moves
+  through reviewed references, sealed comparable responses and receipt
+  controls. The Vendor workspace uses authorized RFQ response and
+  provenance-led catalogue workbenches; it does not expose a public storefront
+  or invent capacity.
+- HOVIN now communicates the real receiving sequence. A protected
+  `GET /api/v2/mobile/receipts` foundation lists only receivable handoffs for
+  the authenticated Hotel tenant and existing order permissions. It excludes
+  supplier, commercial, invoice and source data. Native mobile Clerk session
+  transport is still required before the app can consume that protected route;
+  no unauthenticated bridge was introduced.
+- Validation at `616a42c1`: `npm test` (543 passing), `npx tsc --noEmit`,
+  `cd mobile && npm run typecheck`, and `git diff --check` passed. PR #49 is
+  open from `impl/sync-design-workspace` to `main`; it contains no deployment.
+  P0-REDESIGN remains pending complete responsive/browser review and owner
+  visual acceptance.
