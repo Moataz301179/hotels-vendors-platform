@@ -14,7 +14,7 @@ describe("public marketplace sourcing-area entry points", () => {
       "Furniture, fixtures & outdoor",
       "Hotel services",
     ]) {
-      expect(marketplacePage).toContain(`['${category}'`);
+      expect(marketplacePage).toContain(`title: '${category}'`);
     }
     expect(marketplacePage).toContain("encodeURIComponent(title)");
   });

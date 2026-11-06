@@ -71,10 +71,22 @@ export default function ReceivingHome() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>When a delivery is assigned</Text>
-          <WorkflowRow number="01" title="Review the order" detail="Only the assigned order and permitted receipt details are loaded." />
-          <WorkflowRow number="02" title="Confirm quantities" detail="The receiving role records observed quantities and condition against order lines." />
-          <WorkflowRow number="03" title="Keep proof with the receipt" detail="Evidence is attached to the receipt and sent to the protected GRN endpoint." />
+          <Text style={styles.sectionTitle}>Controlled receiving sequence</Text>
+          <WorkflowRow number="01" title="Assigned handoff" detail="A signed-in receiving role opens only the order assigned to its hotel." />
+          <WorkflowRow number="02" title="Line receipt" detail="Ordered, previously received and remaining quantities are checked line by line." />
+          <WorkflowRow number="03" title="Exception and condition" detail="A shortage, rejection or condition note belongs to the affected line; it is not silently netted away." />
+          <WorkflowRow number="04" title="Proof of delivery" detail="Receipt evidence is attached to the GRN record after the permitted receiving check." />
+        </View>
+
+        <View style={styles.controlSurface}>
+          <Text style={[styles.sectionTitle, styles.controlSurfaceTitle]}>Field controls</Text>
+          <Text style={styles.controlSurfaceText}>This device is ready to hold a protected receipt draft locally. The assignment, line items, exception reasons and proof links appear only after the HotelsVendors authenticated handoff is available.</Text>
+          <View style={styles.controlTags}>
+            <Text style={styles.controlTag}>ASSIGNMENT</Text>
+            <Text style={styles.controlTag}>LINE RECEIPT</Text>
+            <Text style={styles.controlTag}>EXCEPTION</Text>
+            <Text style={styles.controlTag}>POD</Text>
+          </View>
         </View>
 
         <View style={styles.outbox}>
@@ -130,6 +142,11 @@ const styles = StyleSheet.create({
   workflowTitle: { color: '#18252e', fontSize: 16, fontWeight: '700' },
   workflowDetail: { color: '#58707e', fontSize: 14, lineHeight: 20 },
   outbox: { gap: 8, padding: 18, backgroundColor: '#f0f4f5', borderWidth: 1, borderColor: '#d3dee1' },
+  controlSurface: { gap: 11, padding: 18, backgroundColor: '#eef5f8', borderWidth: 1, borderColor: '#b9d3e0' },
+  controlSurfaceTitle: { paddingVertical: 0, color: '#18252e' },
+  controlSurfaceText: { color: '#405b6a', fontSize: 14, lineHeight: 21 },
+  controlTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  controlTag: { paddingHorizontal: 8, paddingVertical: 5, color: '#28698d', borderWidth: 1, borderColor: '#a8cde0', backgroundColor: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: .8 },
   outboxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   outboxTitle: { color: '#18252e', fontSize: 16, fontWeight: '700' },
   outboxText: { color: '#1d5f84', fontSize: 14, fontWeight: '700' },
