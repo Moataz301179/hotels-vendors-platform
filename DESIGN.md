@@ -21,7 +21,7 @@ Defined centrally in app/globals.css using OKLCH graded ramps:
 - Neutral ramp: --slate-950, --slate-800, --slate-700, --slate-600, --slate-500, --slate-400, --slate-200.
 - Signal ramp: --ice-100, --ice-300, --cobalt-600, --cobalt-700.
 - Status ramps: --green-600 for positive/verified states; --red-600 for destructive/error states.
-- Semantic aliases: --bg, --surface, --surface-raised, --ink, --muted, --line, --blue, --blue-strong, --charcoal, --green, --danger and --focus.
+- Semantic aliases: --bg, --surface, --surface-raised, --ink, --muted, --line, --purple, -purple-strong, --charcoal, --green, --danger and --focus.
 Use the semantic aliases in components and graded tokens only when a deliberate shade is needed. Avoid near-duplicate hard-coded hex values. Do not use color alone to communicate status. Keep text contrast WCAG AA or better.
 
 ## Typography

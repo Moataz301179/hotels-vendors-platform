@@ -6,6 +6,29 @@
  * AUDIT 2026-08-11: Every URL verified live + subject-matched via local vision
  * (llava:7b). All dead/wrong-subject images removed. Entries without a verified
  * photo fall through to the (also verified) category pools or gradient.
+ *
+ * AUDIT 2026-11-05 (qwen3.5:9b vision, 105/105 unique URLs live + subject-checked):
+ * 91 MATCH / 9 MISMATCH / 4 UNCLEAR. Fixed: cucumber, lime, sesame, walnut, tuna,
+ * sardine, stationery, microphone, mixer, blender now point at vision-verified
+ * subject photos; added knife + tray. Dropped keyword mappings whose photo did not
+ * depict the subject (seed, jasmine, chamomile, fountain, energy, couscous, hvac,
+ * pump, pipe, fitting, compressor, bearing, gasket, lubricant, grease, cabinet).
+ * Removed 5 wrong-subject photos from the category pools (hk/lin x2/gra/eng).
+ * Unmatched products still resolve to a verified category-correct pool photo, or
+ * the category gradient when the pool is empty -- never a wrong-subject photo.
+ *
+ * AUDIT 2026-11-06 (qwen3.5:9b vision, 107/111 unique URLs live + subject-checked;
+ * 4 Wikimedia URLs were curl-429 rate-limited on first pass, re-fetched stable via
+ * Commons Special:FilePath). Fixed wrong-subject mappings: cucumber (was a gourd),
+ * tuna (was salmon), sardine (was salmon), herb (was lettuce), fabric/cotton/linen/
+ * silk/satin (was a sweatshirt flat-lay), microgreen (was a salad bowl), yogurt (was
+ * panna cotta), motor (was a car engine bay), lounge (was a poolside resort),
+ * minibar (was a poolside resort), pos/terminal (was a retail checkout scene),
+ * stationery (was a general-store interior). Dropped `valve` and `rental` (no
+ * verified subject photo). Replaced 1 wrong-subject IT pool photo (office people
+ * scene) with a verified server-rack photo. Wikimedia URLs now use the stable
+ * Commons Special:FilePath?width=800 form (direct upload.wikimedia.org paths are
+ * intermittently curl-429 rate-limited).
  */
 
 // ─── REAL UNSPLASH PHOTOGRAPHY ──────────────────────────────────────────────
@@ -25,19 +48,19 @@ const KEYWORD_MAP: Record<string, string> = {
   //  SEAFOOD
   // ═══════════════════════════════════════════════════════════════
   salmon:      "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=600&q=80",
-  tuna:      "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=600&q=80",
+  tuna:      "https://commons.wikimedia.org/wiki/Special:FilePath/Tuna%20Salad%20with%20sweet%20corn.jpg?width=800",
   shrimp:      "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&q=80",
   prawn:      "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&q=80",
   fish:      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80",
   seafood:      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80",
-  sardine:      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&q=80",
+  sardine:      "https://commons.wikimedia.org/wiki/Special:FilePath/Pacific%20sardine002.jpg?width=800",
   // Public lobster reference; the former image depicted a crab and was removed.
-  lobster:     "https://upload.wikimedia.org/wikipedia/commons/9/99/Canadian_Lobster.jpg",
+  lobster:     "https://commons.wikimedia.org/wiki/Special:FilePath/Canadian%20Lobster.jpg?width=800",
 
   // ═══════════════════════════════════════════════════════════════
   //  PRODUCE & VEGETABLES
   // ═══════════════════════════════════════════════════════════════
-  cucumber:      "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=600&q=80",
+  cucumber:      "https://commons.wikimedia.org/wiki/Special:FilePath/Sliced%20Cucumber.jpg?width=800",
   tomato:      "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=600&q=80",
   onion:      "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&q=80",
   potato:      "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&q=80",
@@ -45,7 +68,7 @@ const KEYWORD_MAP: Record<string, string> = {
   pepper:      "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&q=80",
   capsicum:      "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=600&q=80",
   lemon:      "https://images.unsplash.com/photo-1590502593747-42a996133562?w=600&q=80",
-  lime:      "https://images.unsplash.com/photo-1590502593747-42a996133562?w=600&q=80",
+  lime:      "https://commons.wikimedia.org/wiki/Special:FilePath/Lime%20-%20whole%20and%20halved.jpg?width=800",
   apple:      "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600&q=80",
   banana:      "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&q=80",
   watermelon:      "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&q=80",
@@ -54,8 +77,7 @@ const KEYWORD_MAP: Record<string, string> = {
   broccoli:      "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&q=80",
   spinach:      "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=600&q=80",
   egg:      "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=600&q=80",
-  microgreen:      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80",
-  couscous:      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80",
+  microgreen:      "https://commons.wikimedia.org/wiki/Special:FilePath/Microgreen_in_a_pot.jpg?width=800",
 
   // ═══════════════════════════════════════════════════════════════
   //  DRY GOODS & PANTRY
@@ -69,20 +91,17 @@ const KEYWORD_MAP: Record<string, string> = {
   spice:      "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=600&q=80",
   salt:      "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=600&q=80",
   almond:      "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=600&q=80",
-  seed:      "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=600&q=80",
-  sesame:      "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=600&q=80",
-  walnut:      "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=600&q=80",
-  herb:      "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=600&q=80",
+  sesame:      "https://commons.wikimedia.org/wiki/Special:FilePath/Sa%20white%20sesame%20seeds.jpg?width=800",
+  walnut:      "https://commons.wikimedia.org/wiki/Special:FilePath/Half%20a%20walnut%20with%20shell%20and%20kernel.jpg?width=800",
+  herb:      "https://commons.wikimedia.org/wiki/Special:FilePath/DFC%203942%20Tightly%20bundled%20bunches%20of%20fresh%20green%20herbs%20with%20tiny%20buds%20arranged%20in%20a%20circular%20pattern.jpg?width=800",
 
   // ═══════════════════════════════════════════════════════════════
   //  BEVERAGES
   // ═══════════════════════════════════════════════════════════════
   juice:      "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=600&q=80",
   water:      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=80",
-  fountain:      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=80",
   soda:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
   soft:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
-  energy:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
   milk:      "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600&q=80",
   wine:      "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&q=80",
   beer:      "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&q=80",
@@ -90,8 +109,6 @@ const KEYWORD_MAP: Record<string, string> = {
   whiskey:      "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=600&q=80",
   vodka:      "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=600&q=80",
   tea:      "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&q=80",
-  jasmine:      "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&q=80",
-  chamomile:      "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&q=80",
   cocktail:      "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&q=80",
   grapes:      "https://images.unsplash.com/photo-1596363505729-4190a9506133?w=600&q=80",
 
@@ -108,7 +125,7 @@ const KEYWORD_MAP: Record<string, string> = {
   biscuit:      "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80",
   chocolate:      "https://images.unsplash.com/photo-1511381939415-e44015466834?w=600&q=80",
   cocoa:      "https://images.unsplash.com/photo-1511381939415-e44015466834?w=600&q=80",
-  yogurt:      "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80",
+  yogurt:      "https://commons.wikimedia.org/wiki/Special:FilePath/Joghurt.jpg?width=800",
   cream:      "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80",
 
   // ═══════════════════════════════════════════════════════════════
@@ -130,11 +147,11 @@ const KEYWORD_MAP: Record<string, string> = {
   cushion:      "https://images.unsplash.com/photo-1629949009765-40fc74c9ec21?w=600&q=80",
   sheet:      "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80",
   bedding:      "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80",
-  fabric:      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
-  cotton:      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
-  linen:      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
-  silk:      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
-  satin:      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
+  fabric:      "https://commons.wikimedia.org/wiki/Special:FilePath/Linen%2C%20Texture%20(2242358989).jpg?width=800",
+  cotton:      "https://commons.wikimedia.org/wiki/Special:FilePath/Linen%2C%20Texture%20(2242358989).jpg?width=800",
+  linen:      "https://commons.wikimedia.org/wiki/Special:FilePath/Linen%2C%20Texture%20(2242358989).jpg?width=800",
+  silk:      "https://commons.wikimedia.org/wiki/Special:FilePath/Linen%2C%20Texture%20(2242358989).jpg?width=800",
+  satin:      "https://commons.wikimedia.org/wiki/Special:FilePath/Linen%2C%20Texture%20(2242358989).jpg?width=800",
 
   // ═══════════════════════════════════════════════════════════════
   //  GUEST AMENITIES & TOILETRIES
@@ -179,7 +196,7 @@ const KEYWORD_MAP: Record<string, string> = {
   keyboard:  "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&q=80",
   mouse:     "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&q=80",
   headset:   "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&q=80",
-  microphone:"https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&q=80",
+  microphone:"https://commons.wikimedia.org/wiki/Special:FilePath/AKG%20C214%20Condenser%20microphone.jpg?width=800",
   speaker:   "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
   sound:     "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
   smart:     "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
@@ -187,8 +204,8 @@ const KEYWORD_MAP: Record<string, string> = {
   voice:     "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
   ups:       "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
   battery:   "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
-  pos:       "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",
-  terminal:  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",
+  pos:       "https://commons.wikimedia.org/wiki/Special:FilePath/Ingenico_iCT250_payment_terminal_machine.jpg?width=800",
+  terminal:  "https://commons.wikimedia.org/wiki/Special:FilePath/Ingenico_iCT250_payment_terminal_machine.jpg?width=800",
 
   // ═══════════════════════════════════════════════════════════════
   //  SECURITY
@@ -211,17 +228,7 @@ const KEYWORD_MAP: Record<string, string> = {
   screw:       "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
   bolt:        "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
   nut_hardware:"https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
-  hvac:        "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  motor:       "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  pump:        "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  valve:       "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  pipe:        "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  fitting:     "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  compressor:  "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  bearing:     "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  gasket:      "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  lubricant:   "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
-  grease:      "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
+  motor:       "https://commons.wikimedia.org/wiki/Special:FilePath/Electric_motor_on_the_slewing_bearing_of_a_remote_controlled_yellow_Liebherr_tower_crane.jpg?width=800",
   panel:       "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
   switch:      "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
   breaker:     "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
@@ -237,10 +244,11 @@ const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
   //  KITCHEN & F&B EQUIPMENT
   // ═══════════════════════════════════════════════════════════════
-  mixer:      "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&q=80",
-  blender:    "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&q=80",
-  cabinet:    "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=600&q=80",
+  mixer:      "https://commons.wikimedia.org/wiki/Special:FilePath/KitchenAid%20Stand%20Mixer.jpg?width=800",
+  blender:    "https://commons.wikimedia.org/wiki/Special:FilePath/Pink%20portable%20blender.jpg?width=800",
   shelf:      "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=600&q=80",
+  knife:      "https://commons.wikimedia.org/wiki/Special:FilePath/Chef%27s%20knife.jpg?width=800",
+  tray:       "https://commons.wikimedia.org/wiki/Special:FilePath/Baking%20tray.jpg?width=800",
   chair:      "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?w=600&q=80",
   desk:       "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=600&q=80",
 
@@ -250,15 +258,14 @@ const KEYWORD_MAP: Record<string, string> = {
   bed:        "https://images.unsplash.com/photo-1505693314120-0d443867891c?w=600&q=80",
   sofa:       "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80",
   furniture:  "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&q=80",
-  lounge:     "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
-  minibar:    "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
-  rental:     "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
+  lounge:     "https://commons.wikimedia.org/wiki/Special:FilePath/Lobby_hall_with_couches_and_chandelier_at_The_Fullerton_Bay_Hotel_Singapore.jpg?width=800",
+  minibar:    "https://commons.wikimedia.org/wiki/Special:FilePath/Hotel_Eden%2C_Pokoj_Standart_minibar_%282%29.jpg?width=800",
 
   // ═══════════════════════════════════════════════════════════════
   //  OFFICE / OS&E
   // ═══════════════════════════════════════════════════════════════
   notebook:   "https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=80",
-  stationery: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80",
+  stationery: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=80",
   office:     "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=600&q=80",
 
   // ═══════════════════════════════════════════════════════════════
@@ -290,23 +297,18 @@ const CATEGORY_IMAGE_POOLS: Record<string, string[]> = {
     "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&q=80",
     "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=600&q=80",
     "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600&q=80",
-    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80",
     "https://images.unsplash.com/photo-1528740561666-dc2479dc08ab?w=600&q=80",
   ],
   lin: [
-    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80",
     "https://images.unsplash.com/photo-1629949009765-40fc74c9ec21?w=600&q=80",
-    "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
   ],
   eng: [
     "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
     "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=80",
-    "https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=600&q=80",
     "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80",
   ],
   gra: [
     "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-    "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&q=80",
   ],
   ffe: [
     "https://images.unsplash.com/photo-1505693314120-0d443867891c?w=600&q=80",
@@ -333,7 +335,7 @@ const CATEGORY_IMAGE_POOLS: Record<string, string[]> = {
   ],
   it: [
     "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80",
-    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/EFTA00002522_-_Cluttered_server_rack_filled_with_colorful_cables_and_networking_equipment.jpg?width=800",
     "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
     "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
     "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=600&q=80",

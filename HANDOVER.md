@@ -356,3 +356,60 @@ Production deploy is guarded by `.github/workflows/deploy-production.yml`: it ru
   funding P0 suite previously passed 6/6 before the structural shell change;
   run full browser/responsive acceptance after the remaining role templates
   have replaced the legacy screens.
+
+## Aggregator workbench and protected HOVIN handoff foundation — 2026-11-06
+
+- The current redesign branch treats HotelsVendors as a protected hospitality
+  aggregation network, not a public procurement marketplace. Public platform
+  and solution narratives now describe requirement framing, controlled
+  sourcing, distinct organization authority, receiving evidence and
+  provider-controlled referrals without representing a directory record as a
+  public offer.
+- The Hotel workspace now starts with guided operating requirements and moves
+  through reviewed references, sealed comparable responses and receipt
+  controls. The Vendor workspace uses authorized RFQ response and
+  provenance-led catalogue workbenches; it does not expose a public storefront
+  or invent capacity.
+- HOVIN now communicates the real receiving sequence. A protected
+  `GET /api/v2/mobile/receipts` foundation lists only receivable handoffs for
+  the authenticated Hotel tenant and existing order permissions. It excludes
+  supplier, commercial, invoice and source data. Native mobile Clerk session
+  transport is still required before the app can consume that protected route;
+  no unauthenticated bridge was introduced.
+- Validation at `616a42c1`: `npm test` (543 passing), `npx tsc --noEmit`,
+  `cd mobile && npm run typecheck`, and `git diff --check` passed. PR #49 is
+  open from `impl/sync-design-workspace` to `main`; it contains no deployment.
+  P0-REDESIGN remains pending complete responsive/browser review and owner
+- Local verification: `npx tsc --noEmit` and `git diff --check` passed. PR #49 is open from `impl/sync-design-workspace` to `main`; it contains no deployment. P0-REDESIGN remains pending complete responsive/browser review and owner visual acceptance.
+
+## Clerk authentication fast-track repair — 2026-11-06 (executed, release-gates continuing)
+
+Bounded repair executed per directive (work only in repo, branch `impl/sync-design-workspace`, PR #49 → main; no deploy/merge/reset/replace of Clerk). App-side Clerk code was already aligned from the prior strict-CSP + OAuth-completion repair; the remaining email-delivery and Apple defects are provider-level and documented below as owner actions.
+
+**Source of truth (verified)**
+- Production Clerk frontend: `pk_live_`/`sk_live_` on `clerk.hotelsvendors.com`.
+- Local/dev Clerk instance: `pk_test_`/`sk_test_` in `.env.local`; dev frontend `probable-locust-9748.clerk.accounts.dev`.
+- Deployment CI (`.github/workflows/deploy-production.yml`) refuses to deploy without a live `pk_live_`/`sk_live_` Clerk key in repo secrets.
+- `ecosystem.config.js` (PM2) carries no Clerk URLs — env-only.
+
+**Code-side verification (no app-source change required this session)**
+- One canonical Clerk config per environment; zero hardcoded publishable/secret keys or Clerk domains in app source (env-only).
+- Public routes, Clerk middleware, `/auth/continue`, sign-up role metadata, and strict-CSP Clerk nonce bootstrap are correct; `https://register` lands on a hotel/supplier pick card; `/api/health` is exempt from Clerk middleware.
+- Email-verification routing intent verified: `PENDING_VERIFICATION` → `/onboarding`; protected APIs reject PENDING.
+- Apple OAuth wiring correct at the app layer; transport varies with Clerk-dashboard provider config.
+
+**Unresolved external actions (need Clerk-admin / owner)**
+1. Production email delivery: enable a Clerk email provider on the production Clerk instance and confirm `email_code` verification on the local test identity.
+2. Apple OAuth (production): enable OAuth Apple in Clerk, upload the private key, set Service/Team/Key IDs, set redirect URL `https://www.hotelsvendors.com/_clerk/oauth_redirect`, add `https://www.hotelsvendors.com` to allowed origins.
+3. Five-role acceptance: `HV_AUTH_E2E=1 node scripts/recovery/batch-auth-states.mjs` + `auth-e2e-preflight.mjs` + `playwright test --project=chromium-authenticated`; requires Clerk test-instance setup, a running app server, and role password credentials.
+
+**Validation (this session)**
+- `npm run build` (HV_RELEASE_SMOKE=1) → exit 0; release boots.
+- `npx vitest run tests/p0/` → 132 files, 543 tests passed.
+- `node --test scripts/recovery/incident-router.test.mjs scripts/recovery/repair-loop.test.mjs scripts/recovery/recovery-gate.test.mjs` → 32 passed / 0 failed.
+
+**Exact next action**
+- Owner configures the two Clerk-dashboard items above, then re-run the five-role acceptance before release readiness is claimed.
+
+**Status**
+- App code: closed (verified clean). Provider config: open. Deployment unchanged — no merge or deploy performed.

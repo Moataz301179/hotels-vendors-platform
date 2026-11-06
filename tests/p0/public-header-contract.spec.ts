@@ -17,10 +17,10 @@ describe('public header contract', () => {
     expect(footer).toContain('Funder partner portal');
   });
 
-  it('uses the live curtain, blur, ice action, and cobalt hover tokens', () => {
-    expect(css).toContain('background:#2f2f2feb');
+  it('uses the dark translucent chrome, blur, and light action system', () => {
+    expect(css).toContain('background:color-mix(in oklch,var(--chrome) 94%,transparent)');
     expect(css).toContain('backdrop-filter:blur(14px)');
-    expect(css).toContain('background:#95c4f5');
-    expect(css).toContain('background:#276aa9');
+    expect(css).toContain('background:var(--blue)');
+    expect(css).toContain('background:var(--paper-0)');
   });
 });
