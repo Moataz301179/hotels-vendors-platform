@@ -8,6 +8,11 @@ export default defineConfig({
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [
     { name: 'chromium', testIgnore: /authenticated\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium-aggregator',
+      testMatch: /aggregator-redesign\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
     ...(process.env.HV_AUTH_E2E === '1'
       ? [{ name: 'chromium-authenticated', testMatch: /authenticated\.spec\.ts/, use: { ...devices['Desktop Chrome'] } }]
       : []),
