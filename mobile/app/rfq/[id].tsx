@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/expo';
 import { createHovinClient, resolveOrigin, HovinApiError, type MobileContextUser, type QuoteRecord, type RfqRecord } from '../../src/api/hovin';
 import { canAcceptQuote, formatMoney, quoteTotal, rfqTitle } from '../../src/workflow';
 import { isRTL, t, type Language } from '../../src/i18n';
-import { theme } from '../../theme';
+import { theme } from '../../src/theme';
 import { Card, Field, Header, PrimaryButton, Screen, StateView, StatusPill } from '../../src/components/ui';
 
 /**
@@ -18,7 +18,7 @@ export default function RfqDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isSignedIn, getToken } = useAuth();
-  const [lang, setLang] = useState<Language>('en');
+  const [lang] = useState<Language>('en');
   const rtl = isRTL(lang);
   const [user, setUser] = useState<MobileContextUser | null>(null);
   const [rfq, setRfq] = useState<RfqRecord | null>(null);
@@ -62,7 +62,9 @@ export default function RfqDetailScreen() {
   }, [api, id]);
 
   useEffect(() => {
-    if (isSignedIn) void load();
+    if (!isSignedIn) return;
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
   }, [isSignedIn, load]);
 
   const isSupplier = user?.platformRole === 'SUPPLIER';
@@ -152,7 +154,6 @@ export default function RfqDetailScreen() {
                     onPress={() => void acceptQuote(quote.id)}
                     disabled={!check.ok || submitting}
                     loading={submitting}
-                    rtl={rtl}
                   />
                 </Card>
               );
@@ -172,7 +173,7 @@ export default function RfqDetailScreen() {
             <Field label="Lead time (days)" value={leadTimeDays} onChangeText={setLeadTimeDays} keyboardType="number-pad" rtl={rtl} />
             <Field label="Notes" value={notes} onChangeText={setNotes} rtl={rtl} />
             {actionError ? <Text style={styles.error}>{actionError}</Text> : null}
-            <PrimaryButton label={submitting ? t(lang, 'sending') : t(lang, 'submitQuote')} onPress={() => void submitQuote()} loading={submitting} rtl={rtl} />
+            <PrimaryButton label={submitting ? t(lang, 'sending') : t(lang, 'submitQuote')} onPress={() => void submitQuote()} loading={submitting} />
           </Card>
         ) : null}
       </Screen>

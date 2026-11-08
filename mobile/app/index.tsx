@@ -1,12 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Image } from 'react-native';
 import { useAuth, useClerk, useUser } from '@clerk/expo';
 import { useHostedAuth } from '@clerk/expo/hosted-auth';
 
-import { createHovinClient, resolveOrigin, HovinApiError, type MobileContextUser } from '../src/api/hovin';
-import { deriveTasks, type Task } from '../src/workflow';
-import { isRTL, statusLabel, t, type Language } from '../src/i18n';
+import { createHovinClient, resolveOrigin, type MobileContextUser } from '../src/api/hovin';
+import { deriveTasks } from '../src/workflow';
+import { isRTL, t, type Language } from '../src/i18n';
 import { theme } from '../src/theme';
 import { Header, Screen, StateView, TaskCard } from '../src/components/ui';
 
@@ -65,13 +65,16 @@ export default function TaskHome() {
         setUnread(0);
       }
       setLoadState('ready');
-    } catch (error) {
+    } catch {
       setLoadState('error');
     }
   }, [api, isSignedIn]);
 
   useEffect(() => {
-    if (isSignedIn && isLoaded) void loadContext();
+    if (isSignedIn && isLoaded) {
+      const timer = setTimeout(() => void loadContext(), 0);
+      return () => clearTimeout(timer);
+    }
   }, [isLoaded, isSignedIn, loadContext]);
 
   const tasks = useMemo(() => {
@@ -120,6 +123,8 @@ export default function TaskHome() {
           <Text style={styles.context}>{t(lang, 'tagline')}</Text>
         </View>
         <View style={styles.hero}>
+          {/* eslint-disable-next-line @typescript-eslint/no-require-imports, jsx-a11y/alt-text */}
+          <Image accessibilityLabel="HOVIN logo" source={require('../assets/logo-hovin-blue.png')} style={styles.logo} />
           <Text style={styles.heroTitle}>{t(lang, 'yourWork')}</Text>
           <Text style={styles.body}>{t(lang, 'receivingHint')}</Text>
           <Pressable accessibilityRole="button" style={styles.primary} onPress={() => void authenticate()}>
@@ -185,8 +190,10 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.paper },
   brandBar: { gap: 4, padding: 20, backgroundColor: theme.header },
   brand: { color: theme.onDark, fontSize: 22, letterSpacing: 2.4 },
+  title: { color: theme.ink, fontSize: 22, lineHeight: 28 },
   context: { color: theme.onDarkMuted, fontSize: 12 },
   hero: { gap: 12, padding: 20, backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, borderRadius: 14 },
+  logo: { width: 120, height: 39, resizeMode: 'contain' },
   heroTitle: { color: theme.ink, fontSize: 26, lineHeight: 32 },
   body: { color: theme.muted, fontSize: 14, lineHeight: 20 },
   primary: { minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: theme.accent, paddingHorizontal: 18 },

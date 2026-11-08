@@ -3,6 +3,7 @@ import { tokenCache } from '@clerk/expo/token-cache';
 import { SplashScreen, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -32,16 +33,18 @@ export default function RootLayout() {
   }, []);
 
   if (!publishableKey) {
-    return <ConfigurationRequired />;
+    return <SafeAreaProvider><ConfigurationRequired /></SafeAreaProvider>;
   }
 
   return (
-    <ClerkProvider
-      publishableKey={publishableKey}
-      tokenCache={tokenCache}
-      __experimental_disableNativeClientSync
-    >
-      <Stack screenOptions={{ headerShown: false }} />
-    </ClerkProvider>
+    <SafeAreaProvider>
+      <ClerkProvider
+        publishableKey={publishableKey}
+        tokenCache={tokenCache}
+        __experimental_disableNativeClientSync
+      >
+        <Stack screenOptions={{ headerShown: false }} />
+      </ClerkProvider>
+    </SafeAreaProvider>
   );
 }

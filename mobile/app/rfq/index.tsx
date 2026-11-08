@@ -40,7 +40,9 @@ export default function RfqListScreen() {
   }, [api]);
 
   useEffect(() => {
-    if (isSignedIn) void load();
+    if (!isSignedIn) return;
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
   }, [isSignedIn, load]);
 
   return (

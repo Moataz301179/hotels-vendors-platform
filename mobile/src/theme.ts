@@ -47,7 +47,7 @@ export const radius = {
   lg: 14,
 } as const;
 
-export const type = {
+export const typography = {
   eyebrow: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase' as const },
   title: { fontSize: 24, lineHeight: 30 },
   section: { fontSize: 17, lineHeight: 22 },

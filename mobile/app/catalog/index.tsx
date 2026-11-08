@@ -21,7 +21,7 @@ type Mode = 'catalog' | 'unlisted';
 export default function CatalogScreen() {
   const router = useRouter();
   const { isSignedIn, getToken } = useAuth();
-  const [lang, setLang] = useState<Language>('en');
+  const [lang] = useState<Language>('en');
   const rtl = isRTL(lang);
   const [mode, setMode] = useState<Mode>('catalog');
   const [query, setQuery] = useState('');
@@ -59,15 +59,23 @@ export default function CatalogScreen() {
 
   useEffect(() => {
     if (!isSignedIn) return;
-    void loadProducts();
-    void (async () => {
-      try {
-        const ctx = await api?.context();
-        setTenantId(ctx?.user.tenantId ?? null);
-      } catch {
-        setTenantId(null);
-      }
-    })();
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      void loadProducts();
+      void (async () => {
+        try {
+          const ctx = await api?.context();
+          setTenantId(ctx?.user.tenantId ?? null);
+        } catch {
+          setTenantId(null);
+        }
+      })();
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [api, isSignedIn, loadProducts]);
 
   function resetForm() {
@@ -80,7 +88,7 @@ export default function CatalogScreen() {
     setDraftSaved(false);
   }
 
-  function buildInput(key: string): CreateRfqInput | { error: string } {
+  function buildInput(): CreateRfqInput | { error: string } {
     const parsedQuantity = Number(quantity);
     if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) return { error: 'QUANTITY_REQUIRED' };
     if (mode === 'unlisted' && (!itemName.trim() || !unitOfMeasure.trim())) return { error: 'ITEM_AND_UNIT_REQUIRED' };
@@ -99,7 +107,7 @@ export default function CatalogScreen() {
 
   async function submit() {
     if (!api) return;
-    const input = buildInput('');
+    const input = buildInput();
     if ('error' in input) {
       setError(input.error);
       return;
@@ -108,7 +116,7 @@ export default function CatalogScreen() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await api.createRfq(input, key);
+      await api.createRfq(input, key);
       resetForm();
       setSelected(null);
       router.push('/rfq');
@@ -154,7 +162,7 @@ export default function CatalogScreen() {
         {mode === 'catalog' ? (
           <>
             <Field label={t(lang, 'search')} value={query} onChangeText={setQuery} placeholder="SKU, name" rtl={rtl} />
-            <SecondaryButton label={t(lang, 'search')} onPress={() => void loadProducts()} rtl={rtl} />
+            <SecondaryButton label={t(lang, 'search')} onPress={() => void loadProducts()} />
             {loading ? <StateView kind="loading" title={t(lang, 'loading')} rtl={rtl} /> : null}
             {!loading && products.length === 0 && !error ? <StateView kind="empty" title={t(lang, 'empty')} rtl={rtl} /> : null}
             {error ? <StateView kind="error" title={t(lang, 'error')} message={error} rtl={rtl} onRetry={() => void loadProducts()} /> : null}
@@ -185,7 +193,7 @@ export default function CatalogScreen() {
           <Field label="Target price (EGP)" value={targetPrice} onChangeText={setTargetPrice} keyboardType="decimal-pad" rtl={rtl} />
           <Field label="Notes" value={notes} onChangeText={setNotes} rtl={rtl} />
           {draftSaved ? <Text style={styles.draftNote}>{t(lang, 'draftNotSent')}</Text> : null}
-          <PrimaryButton label={submitting ? t(lang, 'sending') : t(lang, 'createRfq')} onPress={() => void submit()} loading={submitting} rtl={rtl} />
+          <PrimaryButton label={submitting ? t(lang, 'sending') : t(lang, 'createRfq')} onPress={() => void submit()} loading={submitting} />
         </Card>
       </Screen>
     </View>

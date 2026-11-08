@@ -1,11 +1,12 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
-import { theme, radius, spacing, type } from '../theme';
+import type { ReactNode } from 'react';
+import { theme, radius, spacing, typography } from '../theme';
 
 export function rtlRow(rtl: boolean): ViewStyle {
   return { flexDirection: rtl ? 'row-reverse' : 'row' };
 }
 
-export function Screen({ children, scroll = true }: { children: React.ReactNode; scroll?: boolean }) {
+export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
   if (!scroll) {
     return <View style={styles.screen}>{children}</View>;
   }
@@ -28,7 +29,7 @@ export function Header({
   title: string;
   subtitle?: string;
   onBack?: () => void;
-  right?: React.ReactNode;
+  right?: ReactNode;
   rtl: boolean;
 }) {
   return (
@@ -95,13 +96,11 @@ export function PrimaryButton({
   onPress,
   disabled,
   loading,
-  rtl,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
-  rtl: boolean;
 }) {
   return (
     <Pressable
@@ -121,12 +120,10 @@ export function SecondaryButton({
   label,
   onPress,
   disabled,
-  rtl,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  rtl: boolean;
 }) {
   return (
     <Pressable
@@ -161,7 +158,7 @@ export function StateView({
       {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
       {onRetry ? (
         <View style={styles.stateAction}>
-          <SecondaryButton label={rtl ? 'إعادة المحاولة' : 'Retry'} onPress={onRetry} rtl={rtl} />
+          <SecondaryButton label={rtl ? 'إعادة المحاولة' : 'Retry'} onPress={onRetry} />
         </View>
       ) : null}
     </View>
@@ -234,7 +231,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  primaryText: { color: theme.accentInk, fontSize: type.action.fontSize },
+  primaryText: { color: theme.accentInk, fontSize: typography.action.fontSize },
   secondary: {
     minHeight: 44,
     paddingHorizontal: spacing.lg,
@@ -244,7 +241,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  secondaryText: { color: theme.ink, fontSize: type.action.fontSize },
+  secondaryText: { color: theme.ink, fontSize: typography.action.fontSize },
   disabled: { opacity: 0.5 },
   state: { gap: spacing.md, padding: spacing.xl, alignItems: 'center', backgroundColor: theme.card, borderRadius: radius.md, borderWidth: 1, borderColor: theme.border },
   stateTitle: { color: theme.ink, fontSize: 16, textAlign: 'center' },

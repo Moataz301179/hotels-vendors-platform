@@ -17,7 +17,7 @@ export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isSignedIn, getToken } = useAuth();
-  const [lang, setLang] = useState<Language>('en');
+  const [lang] = useState<Language>('en');
   const rtl = isRTL(lang);
   const [user, setUser] = useState<MobileContextUser | null>(null);
   const [order, setOrder] = useState<OrderRecord | null>(null);
@@ -48,7 +48,9 @@ export default function OrderDetailScreen() {
   }, [api, id]);
 
   useEffect(() => {
-    if (isSignedIn) void load();
+    if (!isSignedIn) return;
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
   }, [isSignedIn, load]);
 
   const action = useMemo(() => (order ? nextOrderAction(order, user) : null), [order, user]);
@@ -127,13 +129,12 @@ export default function OrderDetailScreen() {
                   <Field label="Estimated delivery (ISO date-time)" value={estimatedDelivery} onChangeText={setEstimatedDelivery} placeholder="2026-11-10T09:00" rtl={rtl} />
                 ) : null}
                 {action.labelKey === 'receive' ? (
-                  <PrimaryButton label={t(lang, 'receive')} onPress={() => router.push('/receiving')} rtl={rtl} />
+                  <PrimaryButton label={t(lang, 'receive')} onPress={() => router.push('/receiving')} />
                 ) : (
                   <PrimaryButton
                     label={t(lang, action.labelKey)}
                     onPress={() => void runAction()}
                     loading={submitting}
-                    rtl={rtl}
                   />
                 )}
                 {actionError ? <Text style={styles.error}>{actionError}</Text> : null}
