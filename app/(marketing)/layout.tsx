@@ -39,16 +39,40 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://www.hotelsvendors.com",
+    // Only languages with a real route may be declared. There is no /ar route,
+    // so declaring one would publish a broken hreflang set that Google ignores.
     languages: {
       "en": "/",
-      "ar": "/ar",
     },
   },
 };
 
 const JSON_LD = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.hotelsvendors.com/#website",
+      "url": "https://www.hotelsvendors.com",
+      "name": "HOTELSVENDORS",
+      "description":
+        "Hospitality procurement network connecting hotels, suppliers, carriers and external funders.",
+      "inLanguage": "en",
+      "publisher": { "@id": "https://www.hotelsvendors.com/#organization" },
+    },
+    {
+      "@type": "SearchAction",
+      "@id": "https://www.hotelsvendors.com/#searchaction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate":
+          "https://www.hotelsvendors.com/marketplace?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.hotelsvendors.com/#organization",
   "name": "HOTELSVENDORS",
   "legalName": "Restaurants for E-Marketing",
   "taxID": "704226146",
@@ -93,6 +117,8 @@ const JSON_LD = {
     "Reverse Factoring",
     "Hotel Supply Chain Management",
     "Coastal Logistics Egypt"
+  ]
+    }
   ]
 };
 
