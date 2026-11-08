@@ -337,7 +337,6 @@ describe('procurement lifecycle against the isolated database', () => {
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
     const receiptPayload = { orderId: order.id, shipmentId: shipment.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] };
-    const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     // Prove the receiving gate independently requires clearance.
     await prisma.invoice.deleteMany({ where: { orderId: order.id, etaStatus: 'ACCEPTED' } });
     const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
@@ -480,7 +479,6 @@ describe('procurement lifecycle against the isolated database', () => {
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
     const receiptPayload = { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 5, acceptedQuantity: 5, conditionNotes: 'Matched requirement received' }] };
-    const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     // Prove the receiving gate independently requires clearance.
     await prisma.invoice.deleteMany({ where: { orderId: order.id, etaStatus: 'ACCEPTED' } });
     const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
