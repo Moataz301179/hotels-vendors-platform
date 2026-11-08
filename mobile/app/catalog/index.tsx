@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '@clerk/expo';
+import { useHovinAuth } from '../../src/testAuth';
 import * as SQLite from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
 
@@ -20,7 +20,7 @@ type Mode = 'catalog' | 'unlisted';
  */
 export default function CatalogScreen() {
   const router = useRouter();
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken } = useHovinAuth();
   const [lang] = useState<Language>('en');
   const rtl = isRTL(lang);
   const [mode, setMode] = useState<Mode>('catalog');

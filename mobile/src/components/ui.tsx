@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 import type { ReactNode } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme, radius, spacing, typography } from '../theme';
 
 export function rtlRow(rtl: boolean): ViewStyle {
@@ -32,8 +33,9 @@ export function Header({
   right?: ReactNode;
   rtl: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
       <View style={[styles.headerRow, rtlRow(rtl), { alignItems: 'center' }]}>
         {onBack ? (
           <Pressable accessibilityRole="button" onPress={onBack} style={styles.headerBack}>

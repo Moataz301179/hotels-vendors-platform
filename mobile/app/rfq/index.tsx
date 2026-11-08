@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '@clerk/expo';
+import { useHovinAuth } from '../../src/testAuth';
 
 import { createHovinClient, resolveOrigin, HovinApiError, type RfqRecord } from '../../src/api/hovin';
 import { rfqTitle } from '../../src/workflow';
@@ -15,7 +15,7 @@ import { Header, Screen, StateView, StatusPill } from '../../src/components/ui';
  */
 export default function RfqListScreen() {
   const router = useRouter();
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken } = useHovinAuth();
   const [lang, setLang] = useState<Language>('en');
   const rtl = isRTL(lang);
   const [rfqs, setRfqs] = useState<RfqRecord[]>([]);

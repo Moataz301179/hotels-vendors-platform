@@ -7,7 +7,8 @@
 | Commit | Message | Note |
 |---|---|---|
 | `4bbb6159` | `feat(seo): technical SEO, structured data, investor presence and discovery profiles` | **Not authored by this workstream.** A concurrent session swept an earlier snapshot of the HOVIN prototype and docs into this commit. Content is present; message is unrelated. |
-| `ce4789e5` | `feat(hovin): mobile execution prototype (RFQ, quotes, orders, receiving)` | This workstream's final reviewable change set. |
+| `ce4789e5` | `feat(hovin): mobile execution prototype (RFQ, quotes, orders, receiving)` | Prototype change set. |
+| `192dfb7f` | `docs(hovin): add run report and workstream index` | Docs. |
 
 No push was made. No deploy, no production migration, no production data write.
 
@@ -22,16 +23,17 @@ No push was made. No deploy, no production migration, no production data write.
 - `mobile/src/i18n.ts` — English + Arabic dictionaries, RTL helper, status/notification labels.
 - `mobile/src/theme.ts` — light theme tokens extracted from the owner website reference.
 - `mobile/src/sync/drafts.ts` — durable SQLite drafts (`RFQ|QUOTE|RECEIPT`), tenant-scoped, separate from the GRN outbox.
-- `mobile/src/components/ui.tsx` — shared task/header/card/button/state primitives.
+- `mobile/src/components/ui.tsx` — shared task/header/card/button/state primitives; header now respects the safe-area inset.
+- `mobile/src/testAuth.ts` — **staging-only** auth shim (see §5). Inert in production.
 
 **Mobile screens**
 - `mobile/app/index.tsx` — role-appropriate task home (replaces the single receiving screen).
 - `mobile/app/catalog/index.tsx` — supplier-neutral catalog search → requirement/RFQ.
 - `mobile/app/rfq/index.tsx`, `mobile/app/rfq/[id].tsx` — hotel requirement list + anonymous quote comparison/accept; supplier granted-RFQ inbox + quote editor.
 - `mobile/app/orders/index.tsx`, `mobile/app/orders/[id].tsx` — orders list/detail, server-derived next action, dispatch date, conflict state.
-- `mobile/app/receiving/index.tsx` + `mobile/src/features/receiving/ReceivingScreen.tsx` — existing receiving flow preserved and re-homed.
+- `mobile/app/receiving/index.tsx` + `mobile/src/features/receiving/ReceivingScreen.tsx` — existing receiving flow preserved and re-homed; palette aligned to the light theme.
 - `mobile/app/notifications/index.tsx` — in-app notifications → authorized task.
-- `mobile/app/_layout.tsx` — SafeAreaProvider added; Clerk fail-closed config preserved.
+- `mobile/app/_layout.tsx` — SafeAreaProvider; Clerk fail-closed config; dev-only staging token bootstrap.
 - `mobile/assets/logo-hovin-blue.png` — approved logo, dot recolored from the original asset.
 
 **Docs**
@@ -49,6 +51,7 @@ No push was made. No deploy, no production migration, no production data write.
 | `cd mobile && npx vitest run` | **4 files, 39 tests passed** |
 | `cd /Users/Moatazi/hotels-vendors-new && npx tsc --noEmit` | **0 errors** (includes the new `app/api/v2/mobile/context` route) |
 | `npx eslint mobile/src mobile/app app/api/v2/mobile/context` | New files clean. The moved `ReceivingScreen.tsx` retains **3 pre-existing baseline errors** (`react-hooks/set-state-in-effect` ×2, `@typescript-eslint/no-require-imports` ×1) that were already present in the original `mobile/app/index.tsx`. |
+| `xcodebuild … -configuration Debug` (ad-hoc signed) | **BUILD SUCCEEDED**; keychain entitlements embedded (see §5). |
 
 ## 4. Visual evidence (extracted, not guessed)
 
@@ -58,21 +61,36 @@ Reference: `~/Desktop/hv-merge-desktop-view.png` (756×2200), sampled with Pillo
 - Logo source: `public/logo-hovin.png` — background `#212221`, letters `#FFFFFF`, dot `#FA5D24`.
 - Variant: `mobile/assets/logo-hovin-blue.png` — cropped to the wordmark from the original, **804 orange pixels recolored to `#276AA9`**, 0 orange remaining; lettering/spacing/shape/background unchanged.
 
-## 5. Test environment and device evidence
+## 5. Device run (real, isolated staging)
 
-- Unit/type environment only: Node + vitest + TypeScript.
-- **No device run was performed.** Producing the required phone screenshots and walkthrough needs a staging backend with isolated test data and compatible test authentication. The app must not reach production, and no production data may be written. This is the next gate.
+**Simulator:** iPhone (`3BE5D0B5-9F13-45D1-ACB0-E3CF3E965990`), app `com.hotelsvendors.hovin`, Expo SDK 54 / RN 0.81.5 debug build.
+
+**Backend:** isolated staging copy on `http://127.0.0.1:3002`, `DATABASE_URL` → local `hv_e2e` (fixture DB; **not** the dev DB, **not** Neon). No production data touched.
+
+**Two real blockers found and resolved:**
+1. **Keychain entitlements.** The first debug build was signed with `CODE_SIGNING_ALLOWED=NO`, so no entitlements were embedded and Clerk's secure store failed with `-34018`. Rebuilding ad-hoc (`CODE_SIGN_IDENTITY="-"`, `CODE_SIGNING_ALLOWED=YES`) embedded `application-identifier` + `keychain-access-groups`; the keychain error disappeared.
+2. **Wrong Clerk instance.** The staging backend was sourcing the root `~/.env.local` (Clerk instance `united-treefrog-223`), while the app uses `probable-locust-9748`. Its JWKS did not contain the token's `kid` → `401 jwk-kid-mismatch`. Restarting the staging backend against the repository's Clerk keys resolved it.
+
+**Staging auth shim (`mobile/src/testAuth.ts`).** The Clerk Backend API does not expose the device (client) token that the native Clerk SDK requires, so a backend-minted session token cannot activate the native session. For the isolated staging build only, the app mints a real Clerk session token from a local token server and activates a shim that supplies `isSignedIn`/`getToken`/`user`. The shim is inert unless `__DEV__` **and** `EXPO_PUBLIC_HOVIN_TEST_USER` are set; production builds never activate it, and the real Clerk flow is unchanged. The backend still authorizes every request against the real Clerk session and the real DB user.
+
+**Screens captured (real device, real staging data):**
+- Task home — "Your work" / "Lifecycle buyer"; NEXT ACTION: Receiving, Requirements, Orders, Notifications (badge 1); Sign out.
+- Catalog — supplier-neutral search + "New requirement" form.
+- Requirements/RFQ — 5 real requirements (Pending / Converted to order).
+- Orders — 2 real delivered orders with payment-guaranteed status.
+- Notifications — real "Staging requirement ready" notification.
+- Receiving — signed-in receiver, empty controlled-handoff queue, camera verification.
 
 ## 6. Remaining gaps (reported, not faked)
 
 1. **Push-token contract missing** — device notification → task navigation cannot be completed; only in-app polling exists.
 2. **Attachment/evidence upload contract missing** — photo/document capture cannot be attached to a GRN.
-3. **`/api/v2/mobile/context` not deployed** — the app falls back to minimum identity and shows all tasks for the platform role; the server still enforces every action.
-4. **ETA clearance is a hard gate** — the full dispatch/delivery journey requires an ETA-accepted, digitally signed invoice.
-5. **Device screenshots + recorded walkthrough pending** — needs staging + test auth approval.
-6. **Concurrent-commit caveat** — `4bbb6159` carries an unrelated message over an earlier snapshot; review the diff of `ce4789e5` for the final state.
+3. **ETA clearance is a hard gate** — the full dispatch/delivery journey requires an ETA-accepted, digitally signed invoice.
+4. **Staging-only auth shim** — the real Clerk hosted-auth flow is unchanged, but the device walkthrough used the shim; a production build must exercise the real flow before release.
+5. **Concurrent-commit caveat** — `4bbb6159` carries an unrelated message over an earlier snapshot; review the diff of `ce4789e5` for the final state.
+6. **Unrelated working-tree changes** — `app/(app)/onboarding`, `lib/oliv`, `prisma/schema.prisma`, etc. belong to a concurrent session and are **not** part of this workstream.
 
 ## 7. Next approval needed
 
 1. Approve the **product flow** (task home → RFQ → quote → order → receiving) and the **visual direction** (light theme + blue-dot logo).
-2. Approve a **staging environment and test authentication** so device screenshots, cross-tenant denial, authority denial, expired-session, double-submit/reconnect, offline draft recovery, and EN/AR RTL can be exercised and recorded.
+2. Approve the **scope for the real Clerk hosted-auth device test** (or accept the staging shim as the verification path) before any production release.

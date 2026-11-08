@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, Image } from 'react-native';
-import { useAuth, useClerk, useUser } from '@clerk/expo';
+import { useClerk } from '@clerk/expo';
+import { useHovinAuth, useHovinUser } from '../src/testAuth';
 import { useHostedAuth } from '@clerk/expo/hosted-auth';
 
 import { createHovinClient, resolveOrigin, type MobileContextUser } from '../src/api/hovin';
@@ -18,8 +19,8 @@ type LoadState = 'loading' | 'ready' | 'error';
  */
 export default function TaskHome() {
   const router = useRouter();
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { user } = useUser();
+  const { isLoaded, isSignedIn, getToken } = useHovinAuth();
+  const { user } = useHovinUser();
   const clerk = useClerk();
   const { startHostedAuth } = useHostedAuth();
   const [lang, setLang] = useState<Language>('en');
@@ -76,6 +77,15 @@ export default function TaskHome() {
       return () => clearTimeout(timer);
     }
   }, [isLoaded, isSignedIn, loadContext]);
+
+  // DEV ONLY: jump straight to a screen for staging screenshot capture.
+  useEffect(() => {
+    if (!__DEV__) return;
+    const route = process.env.EXPO_PUBLIC_HOVIN_TEST_ROUTE;
+    if (!route) return;
+    const timer = setTimeout(() => router.replace(route), 150);
+    return () => clearTimeout(timer);
+  }, [router]);
 
   const tasks = useMemo(() => {
     const derived = deriveTasks(context);

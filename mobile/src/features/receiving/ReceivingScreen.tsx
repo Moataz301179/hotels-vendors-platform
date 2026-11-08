@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useAuth, useClerk, useUser } from '@clerk/expo';
+import { useClerk } from '@clerk/expo';
+import { useHovinAuth, useHovinUser } from '../../testAuth';
 import { useHostedAuth } from '@clerk/expo/hosted-auth';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import * as SQLite from 'expo-sqlite';
@@ -32,8 +33,8 @@ export default function ReceivingHome() {
   const [authStartupError, setAuthStartupError] = useState<string | null>(null);
   const [retryingAuthStartup, setRetryingAuthStartup] = useState(false);
   const didRetryClerkStartup = useRef(false);
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { user } = useUser();
+  const { isLoaded, isSignedIn, getToken } = useHovinAuth();
+  const { user } = useHovinUser();
   const clerk = useClerk();
   const { signOut } = clerk;
   const { startHostedAuth } = useHostedAuth();
@@ -419,22 +420,22 @@ function StatusPill({ error }: { error: boolean }) {
 }
 
 const palette = {
-  canvas: '#101215',
-  surface: '#171B20',
-  elevated: '#1D2329',
-  inset: '#12161A',
-  border: '#303940',
-  borderStrong: '#44515A',
-  text: '#F2F4F5',
-  textSoft: '#B4BDC5',
-  textMuted: '#808B95',
-  accent: '#9BC9E9',
-  accentInk: '#10202C',
-  accentWash: '#1B2B36',
-  positive: '#A8D7C0',
-  positiveWash: '#18372D',
-  danger: '#F4B6B0',
-  dangerWash: '#402326',
+  canvas: '#F4F3ED',
+  surface: '#FFFFFF',
+  elevated: '#FFFFFF',
+  inset: '#F4F3ED',
+  border: '#E5E5E7',
+  borderStrong: '#C9C9CD',
+  text: '#212325',
+  textSoft: '#4A4B4D',
+  textMuted: '#6B6C6D',
+  accent: '#276AA9',
+  accentInk: '#FFFFFF',
+  accentWash: '#E8F0F8',
+  positive: '#1F7A4D',
+  positiveWash: '#E6F4EC',
+  danger: '#B3261E',
+  dangerWash: '#FDECEA',
 } as const;
 
 const styles = StyleSheet.create({

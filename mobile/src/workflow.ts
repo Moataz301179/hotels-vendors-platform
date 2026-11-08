@@ -16,7 +16,7 @@ function defaultRandomId(): string {
 export type Task = {
   id: 'receiving' | 'requirements' | 'quotes' | 'orders' | 'notifications';
   titleKey: 'receiving' | 'requirements' | 'quotes' | 'orders' | 'notifications';
-  hintKey: 'receivingHint' | 'requirementsHint' | 'quotesHint' | 'ordersHint';
+  hintKey: 'receivingHint' | 'requirementsHint' | 'quotesHint' | 'ordersHint' | 'notificationsHint';
   route: string;
   /** Server-derived capability. Never a client role assumption. */
   enabled: boolean;
@@ -36,7 +36,7 @@ export function deriveTasks(user: MobileContextUser | null): Task[] {
     return [
       { id: 'quotes', titleKey: 'quotes', hintKey: 'quotesHint', route: '/rfq', enabled: permissions.has('order:read') },
       { id: 'orders', titleKey: 'orders', hintKey: 'ordersHint', route: '/orders', enabled: permissions.has('order:read') },
-      { id: 'notifications', titleKey: 'notifications', hintKey: 'ordersHint', route: '/notifications', enabled: true },
+      { id: 'notifications', titleKey: 'notifications', hintKey: 'notificationsHint', route: '/notifications', enabled: true },
     ];
   }
 
@@ -44,7 +44,7 @@ export function deriveTasks(user: MobileContextUser | null): Task[] {
     { id: 'receiving', titleKey: 'receiving', hintKey: 'receivingHint', route: '/receiving', enabled: permissions.has('order:update') },
     { id: 'requirements', titleKey: 'requirements', hintKey: 'requirementsHint', route: '/rfq', enabled: permissions.has('order:create') },
     { id: 'orders', titleKey: 'orders', hintKey: 'ordersHint', route: '/orders', enabled: permissions.has('order:read') },
-    { id: 'notifications', titleKey: 'notifications', hintKey: 'ordersHint', route: '/notifications', enabled: true },
+    { id: 'notifications', titleKey: 'notifications', hintKey: 'notificationsHint', route: '/notifications', enabled: true },
   ];
 }
 

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '@clerk/expo';
+import { useHovinAuth } from '../../src/testAuth';
 
 import { createHovinClient, resolveOrigin, HovinApiError, type MobileContextUser, type QuoteRecord, type RfqRecord } from '../../src/api/hovin';
 import { canAcceptQuote, formatMoney, quoteTotal, rfqTitle } from '../../src/workflow';
@@ -17,7 +17,7 @@ import { Card, Field, Header, PrimaryButton, Screen, StateView, StatusPill } fro
 export default function RfqDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken } = useHovinAuth();
   const [lang] = useState<Language>('en');
   const rtl = isRTL(lang);
   const [user, setUser] = useState<MobileContextUser | null>(null);
