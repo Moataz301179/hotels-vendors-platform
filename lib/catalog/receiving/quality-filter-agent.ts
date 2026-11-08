@@ -59,7 +59,7 @@ export function runQualityFilterAgent(
   if (!observation.stockText) flags.push("STOCK_NOT_OBSERVED");
   if (!observation.images?.length) flags.push("PRODUCT_IMAGE_NOT_OBSERVED");
   if (!validHttpUrl(observation.productUrl)) flags.push("PRODUCT_DETAIL_URL_NOT_OBSERVED");
-  if (observation.attributes && !Object.keys(observation.attributes).length) flags.push("TECHNICAL_SPECIFICATIONS_NOT_OBSERVED");
+  if (!observation.attributes || !Object.keys(observation.attributes).length) flags.push("TECHNICAL_SPECIFICATIONS_NOT_OBSERVED");
 
   const productUrl = validHttpUrl(observation.productUrl);
   if (productUrl && sourceUrl && productUrl.hostname !== sourceUrl.hostname &&

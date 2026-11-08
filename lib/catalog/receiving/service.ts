@@ -227,7 +227,20 @@ export async function processReceivingBatch(prisma: PrismaClient, actor: Receivi
     };
   }
 
-  const seen = new Set<string>();
+  const previousKeys = await prisma.catalogReceivingRecord.findMany({
+    where: {
+      batchId: { not: batchId },
+      dedupeKey: { in: pending.map((row) => row.dedupeKey) },
+      deletedAt: null,
+      qualityStatus: "ACCEPTED",
+      batch: { tenantId: actor.tenantId },
+    },
+    select: { dedupeKey: true },
+    take: 5000,
+  });
+  // Duplicate checks span earlier batches in this tenant as well as the
+  // current upload, while the original raw row remains available for audit.
+  const seen = new Set<string>(previousKeys.map((row) => row.dedupeKey));
   const qualityOutcomes: Array<Record<string, unknown>> = [];
   const taxonomyOutcomes: Array<Record<string, unknown>> = [];
   for (const row of pending) {
