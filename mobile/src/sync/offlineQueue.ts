@@ -9,6 +9,11 @@ export type OutboxItem = {
   attempts: number;
 };
 
+export type OutboxSummary = {
+  queued: number;
+  lastSyncAt: number | null;
+};
+
 export async function initializeOutbox(db: SQLiteDatabase): Promise<void> {
   await db.execAsync(`CREATE TABLE IF NOT EXISTS hovin_outbox (
     id TEXT PRIMARY KEY NOT NULL,
@@ -18,9 +23,29 @@ export async function initializeOutbox(db: SQLiteDatabase): Promise<void> {
     attempts INTEGER NOT NULL DEFAULT 0,
     state TEXT NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'sending')),
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
-  ); CREATE INDEX IF NOT EXISTS hovin_outbox_pending ON hovin_outbox(tenant_id, state, created_at);`);
+  ); CREATE INDEX IF NOT EXISTS hovin_outbox_pending ON hovin_outbox(tenant_id, state, created_at);
+  CREATE TABLE IF NOT EXISTS hovin_device_state (
+    state_key TEXT PRIMARY KEY NOT NULL,
+    state_value TEXT NOT NULL
+  );`);
   // An interrupted send is retried with the same idempotency key.
   await db.runAsync("UPDATE hovin_outbox SET state = 'pending' WHERE state = 'sending'");
+}
+
+export async function getOutboxSummary(db: SQLiteDatabase, tenantId: string | null): Promise<OutboxSummary> {
+  const queued = tenantId
+    ? await db.getFirstAsync<{ total: number }>('SELECT COUNT(*) AS total FROM hovin_outbox WHERE tenant_id = ?', tenantId)
+    : await db.getFirstAsync<{ total: number }>('SELECT COUNT(*) AS total FROM hovin_outbox');
+  const lastSync = await db.getFirstAsync<{ state_value: string }>("SELECT state_value FROM hovin_device_state WHERE state_key = 'last_successful_sync_at'");
+  const parsed = lastSync ? Number(lastSync.state_value) : NaN;
+  return { queued: queued?.total ?? 0, lastSyncAt: Number.isFinite(parsed) ? parsed : null };
+}
+
+export async function recordSuccessfulSync(db: SQLiteDatabase): Promise<void> {
+  await db.runAsync(
+    "INSERT OR REPLACE INTO hovin_device_state(state_key, state_value) VALUES ('last_successful_sync_at', ?)",
+    String(Date.now()),
+  );
 }
 
 export async function enqueueGrn(db: SQLiteDatabase, tenantId: string, id: string, payload: unknown): Promise<void> {

@@ -96,7 +96,11 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ referral: existing, moneyMoved: false, idempotentReplay: true });
   }
-  if (invoice.factoringRequests) return NextResponse.json({ error: "FUNDING_REFERRAL_ALREADY_EXISTS" }, { status: 409 });
+  // Invoice.factoringRequests is a one-to-one relation (FactoringRequest?), not
+  // a list. A first referral is a null relation, not an empty array.
+  if (invoice.factoringRequests) {
+    return NextResponse.json({ error: "FUNDING_REFERRAL_ALREADY_EXISTS" }, { status: 409 });
+  }
 
   const invoiceTotal = Number(invoice.total ?? 0);
   const requestedAmount = body.requestedAmount === undefined ? invoiceTotal : Number(body.requestedAmount);

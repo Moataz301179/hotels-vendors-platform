@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, CheckCircle2, AlertTriangle, RefreshCw, FileText, TrendingUp } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, RefreshCw, FileText, TrendingUp } from 'lucide-react';
 import { requestJson } from '@/lib/v2-http';
 
 interface ImportRecord {
@@ -44,7 +44,6 @@ export function EtaConnectPanel() {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          hotelId: 'current',
           sourceType: form.sourceType,
           sourceReference: form.sourceReference,
           payloadSummary: {
@@ -54,7 +53,7 @@ export function EtaConnectPanel() {
           recordCount: 0,
         }),
       });
-      setMessage('E-invoice feed connection recorded. AI categorization will begin on next sync.');
+      setMessage('E-invoice intake request recorded. This is not confirmation that an ETA connection is active.');
       setForm({ sourceType: 'ETA_EINVOICE_FEED', sourceReference: '' });
       await load();
     } catch (e) {
@@ -70,8 +69,8 @@ export function EtaConnectPanel() {
     <div className="eta-connect-panel">
       <div className="workspace-section-heading">
         <div>
-          <span className="eyebrow">ETA E-Invoice Intelligence</span>
-          <h2>Connect your e-invoice feed</h2>
+          <span className="eyebrow">E-invoice intake</span>
+          <h2>Record an authorized import request</h2>
         </div>
       </div>
 
@@ -79,7 +78,8 @@ export function EtaConnectPanel() {
       {message && <div className="workspace-status" role="status"><CheckCircle2 size={16} /> {message}</div>}
 
       <div className="card" style={{ padding: 24, marginTop: 16 }}>
-        <h3 className="font-semibold mb-3">Connect a new feed</h3>
+        <h3 className="font-semibold mb-3">Submit a new import request</h3>
+        <p className="text-sm text-foreground-muted mb-4">Use this only for an organization-authorized source. Recording a request does not verify ETA registration, credentials, e-seal, or an active connection.</p>
         <form onSubmit={submit} className="workspace-form">
           <label>Source type
             <select value={form.sourceType} onChange={e => setForm({ ...form, sourceType: e.target.value })}>
@@ -91,18 +91,18 @@ export function EtaConnectPanel() {
           <label>Source reference
             <input required maxLength={160} value={form.sourceReference} placeholder="e.g. ETA-tenant-abc123" onChange={e => setForm({ ...form, sourceReference: e.target.value })} />
           </label>
-          <button type="submit" className="btn btn-blue" disabled={busy}>{busy ? 'Connecting…' : 'Connect feed'}</button>
+          <button type="submit" className="btn btn-blue" disabled={busy}>{busy ? 'Recording…' : 'Record import request'}</button>
         </form>
       </div>
 
       <div className="card" style={{ padding: 24, marginTop: 16 }}>
-        <h3 className="font-semibold mb-3">Connected feeds ({imports.length})</h3>
+        <h3 className="font-semibold mb-3">Recorded import requests ({imports.length})</h3>
         {imports.length === 0 ? (
-          <p className="workspace-empty">No e-invoice feeds connected yet. Connect your first feed above.</p>
+          <p className="workspace-empty">No import request is recorded yet. Recording one does not activate a connection.</p>
         ) : (
           <table className="table">
             <thead>
-              <tr><th>Source</th><th>Reference</th><th>Records</th><th>Status</th><th>Connected</th></tr>
+              <tr><th>Source</th><th>Reference</th><th>Records</th><th>Status</th><th>Recorded</th></tr>
             </thead>
             <tbody>
               {imports.map((imp) => (
@@ -120,12 +120,12 @@ export function EtaConnectPanel() {
       </div>
 
       <div className="card" style={{ padding: 24, marginTop: 16, background: 'var(--surface-raised)' }}>
-        <h3 className="font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> What happens after connection</h3>
+        <h3 className="font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> What happens after intake</h3>
         <ol className="text-sm text-foreground-secondary space-y-2 list-decimal list-inside">
-          <li>Your ETA e-invoice feed is connected with read-only access — we read filed invoices, nothing more.</li>
-          <li>AI categorizes every line by department, supplier, and product class into an interactive spend dashboard.</li>
-          <li>Price benchmarks are computed as (your price − market avg) × your actual annual quantity — provable EGP savings.</li>
-          <li>Savings findings become sealed-bid RFQs and live reverse auctions. No AI awards; every action is logged and audited.</li>
+          <li>An authorized organization submits a source reference and records the purpose for import.</li>
+          <li>HotelsVendors records the intake request as pending; this does not validate ETA credentials or establish a live government connection.</li>
+          <li>Only a separately verified and authorized source may be ingested for organization-scoped analysis.</li>
+          <li>Any future procurement insight remains reviewable; it does not create an automatic award or commercial commitment.</li>
         </ol>
       </div>
     </div>

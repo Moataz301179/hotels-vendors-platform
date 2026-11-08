@@ -56,7 +56,7 @@ export function ProductCard({
         fontFamily: HV_THEME.font.family,
       }}
     >
-      <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg mb-3 bg-gradient-to-br from-slate-800 to-slate-900">
+      <div className="relative w-full aspect-[16/10] overflow-hidden rounded-t-lg mb-3 bg-gradient-to-br from-var(--paper-200) to-var(--paper-100)">
           {/* Swipe image gallery - supports multiple product images */}
           <div className="w-full h-full relative">
             <img 
@@ -105,7 +105,7 @@ export function ProductCard({
           {onAddToCart && (
             <button
               onClick={() => onAddToCart(id, minOrderQty)}
-              className="text-xs px-3 py-1 rounded"
+              className="text-xs px-3 py-1 rounded bg-brass-600 text-paper-0 font-semibold"
               style={{ backgroundColor: HV_THEME.dark.accent.base, color: "#fff", fontWeight: 400 }}
             >
               Add to Cart

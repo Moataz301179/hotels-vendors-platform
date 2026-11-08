@@ -25,15 +25,15 @@ function routeFromPage(path: string): string {
 }
 
 describe("production shell and authorization contracts", () => {
-  it("renders the shared black footer in marketing, workspace, auth, and 404 layouts", () => {
+  it("uses the public footer on public shells and keeps the authenticated shell focused on work", () => {
     for (const path of [
       "app/(marketing)/layout.tsx",
-      "app/(app)/layout.tsx",
       "app/(auth)/layout.tsx",
       "app/not-found.tsx",
     ]) {
       expect(readFileSync(join(root, path), "utf8"), path).toContain("SiteFooter");
     }
+    expect(readFileSync(join(root, "app/(app)/layout.tsx"), "utf8")).not.toContain("SiteFooter");
   });
 
   it("allows Clerk API connections in the response CSP", () => {
@@ -101,7 +101,7 @@ describe("production shell and authorization contracts", () => {
 
   it("keeps /register on the role-selection entry flow rather than a raw Clerk widget", () => {
     const page = readFileSync(join(root, "app/(auth)/register/page.tsx"), "utf8");
-    expect(page).toContain("Register your organization");
+    expect(page).toContain("Choose your operating workspace");
     expect(page).toContain("/hotels/signup");
     expect(page).toContain("/suppliers/signup");
     expect(page).not.toContain("<SignUp");

@@ -1,11 +1,11 @@
 .carousel {
   position: relative;
   overflow: hidden;
-  border: 1px solid #d3dadd;
-  border-radius: 26px;
-  background: #FFFFFF;
-  color: #1D1D1F;
-  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:#FFFFFF;
+  color: var(--ink);
+  box-shadow: 0 22px 56px rgba(15, 20, 25, .10);
 }
 
 .imageFrame {
@@ -23,7 +23,7 @@
 .imageWash {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.6) 100%);
+  background:linear-gradient(180deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.6) 100%);
   pointer-events: none;
 }
 
@@ -44,7 +44,7 @@
   font-size: 12px;
   font-weight: 400;
   letter-spacing: .12em;
-  color: #6e7d85;
+  color: var(--muted);
 }
 
 .content {
@@ -53,9 +53,9 @@
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #245879;
+  color: var(--cobalt-700);
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 800;
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -66,13 +66,16 @@
   font-size: clamp(26px, 3.2vw, 44px);
   line-height: 1.03;
   letter-spacing: -.04em;
-  color: #000000;
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+  letter-spacing: -.025em;
 }
 
 .content > p:not(.eyebrow) {
   max-width: 56ch;
   margin: 14px 0 0;
-  color: #6e7d85;
+  color: var(--muted);
   line-height: 1.6;
 }
 
@@ -81,13 +84,13 @@
   align-items: center;
   gap: 8px;
   margin-top: 20px;
-  color: #245879;
-  font-weight: 400;
+  color: var(--cobalt-700);
+  font-weight: 700;
   text-decoration: none;
 }
 
 .action:hover {
-  color: #1a445a;
+  color: var(--cobalt-600);
 }
 
 .controls {
@@ -102,17 +105,17 @@
   width: 38px;
   height: 38px;
   place-items: center;
-  border: 1px solid #d3dadd;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: #FFFFFF;
-  color: #1D1D1F;
+  background:#FFFFFF;
+  color: var(--ink);
   cursor: pointer;
 }
 
 .controls button:hover,
 .controls button:focus-visible {
-  border-color: #245879;
-  background: #f7fbfc;
+  border-color: var(--cobalt-600);
+  background:var(--ice-100);
   outline: none;
 }
 
@@ -128,12 +131,12 @@
   height: 5px;
   border: 0;
   border-radius: 8px;
-  background: #d3dadd;
+  background:var(--line);
 }
 
 .dots button[aria-current="true"] {
   width: 44px;
-  background: #245879;
+  background:var(--cobalt-600);
 }
 
 @keyframes reveal {

@@ -1,0 +1,128 @@
+ M HANDOVER.md
+ M app/(app)/dashboard/page.tsx
+ M app/(app)/eta-compliance/page.tsx
+ M app/(marketing)/eta-connect/page.tsx
+ M app/(marketing)/home.css
+ M app/(marketing)/marketplace/page.tsx
+ M app/(marketing)/page.tsx
+ M app/(marketing)/public-home-hero.module.css
+ M app/(marketing)/public-home.module.css
+ M app/api/v2/assistant/route.ts
+ M app/api/v2/catalog/products/[productId]/images/[imageIndex]/route.ts
+ M app/api/v2/catalog/route.ts
+ M app/api/v2/funding/route.ts
+ M app/api/v2/hotel/e-invoices/ingest/route.ts
+ M app/api/v2/orders/route.ts
+ M app/globals.css
+ M app/layout.tsx
+ M components/AppShell.tsx
+ M components/Assistant.tsx
+ M components/PublicFooter.tsx
+ M components/PublicHeader.tsx
+ M components/ai-assistant/index.tsx
+ M components/marketing/hero-carousel.module.css
+ M components/marketing/hovin-receiving-preview.module.css
+ M components/marketing/marketplace-directory.module.css
+ M components/marketing/marketplace-directory.tsx
+ M components/marketing/procurement-flow-visualizer.module.css
+ M components/marketing/public-nav.module.css
+ M components/marketing/site-footer.tsx
+ M components/marketing/site-nav.tsx
+ M components/marketplace/product-card.tsx
+ M components/ui/container-scroll-animation.tsx
+ M components/ui/ui-primitives.tsx
+ M components/v2/app-header.tsx
+ M components/v2/eta-connect-panel.tsx
+ M components/v2/evidence-registry.module.css
+ M components/v2/funding-client.tsx
+ M components/v2/orders-client.tsx
+ M components/v2/procurement-console.tsx
+ M components/v2/vendor-workbench.module.css
+ M i18n/dictionaries.ts
+ M lib/dashboard/role-navigation.ts
+ M lib/dashboard/role-workspace.ts
+ M lib/directory/public-directory-profile.ts
+ M lib/fintech/fee-calculator.ts
+ M lib/marketplace/covers.ts
+ M lib/marketplace/product-images.ts
+ M mobile/app.json
+ M mobile/app/index.tsx
+ M mobile/ios/HOVIN.xcodeproj/project.pbxproj
+ M mobile/ios/HOVIN.xcodeproj/xcshareddata/xcschemes/HOVIN.xcscheme
+ M mobile/ios/HOVIN/HOVIN.entitlements
+ M mobile/ios/HOVIN/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png
+ M mobile/ios/HOVIN/Info.plist
+ M mobile/ios/HOVIN/PrivacyInfo.xcprivacy
+ M mobile/ios/HOVIN/SplashScreen.storyboard
+ M mobile/ios/Podfile
+ M mobile/ios/Podfile.lock
+ M mobile/ios/Podfile.properties.json
+ M mobile/package-lock.json
+ M mobile/package.json
+ M mobile/src/sync/offlineQueue.ts
+ M mobile/tsconfig.json
+ M package-lock.json
+ M package.json
+ M prisma/schema.prisma
+ M prisma/seed.ts
+ M tests/p0/assistant-contract.spec.ts
+ M tests/p0/funding-referral-lifecycle.spec.ts
+ M tests/p0/hotel-einvoice-ingest.spec.ts
+ M tests/p0/public-header-contract.spec.ts
+?? .auth-test/
+?? app/(app)/connections/
+?? app/api/v2/action-queue/
+?? app/api/v2/dashboard/trends/
+?? app/api/v2/hotels/
+?? app/api/v2/inventory/counts/[countId]/
+?? app/api/v2/orders/[orderId]/
+?? app/api/v2/search/
+?? components/v2/action-queue.tsx
+?? components/v2/command-palette.tsx
+?? components/v2/connections-center.tsx
+?? components/v2/fee-calculator.tsx
+?? components/v2/order-drawer.tsx
+?? components/v2/procurement-assistant.tsx
+?? components/v2/regulatory-connection-notice.tsx
+?? components/v2/saved-views.tsx
+?? components/v2/sparkline.tsx
+?? components/v2/workflow-chain.tsx
+?? data/catalog-images/
+?? data/catalog-import-results.json
+?? data/catalog-revert-results.json
+?? db-count.js
+?? docs/backups/
+?? docs/dry-run-catalog-import-20261107.md
+?? docs/hv-app-layer-spec.md
+?? docs/release-candidate-manifest.md
+?? lib/fintech/fee-math.ts
+?? lib/procurement/release-outbox.ts
+?? mobile/app/_layout.tsx
+?? mobile/assets/
+?? mobile/ios/HOVIN/Images.xcassets/HovinLaunchLogo.imageset/
+?? mobile/ios/HOVIN/Images.xcassets/HovinLaunchMark.imageset/
+?? mobile/plugins/
+?? mobile/scripts/
+?? mobile/src/api/
+?? prisma/migrations/20261106093000_add_grn_idempotency/
+?? public/eta-seal.png
+?? public/fonts/
+?? scripts/apply-integration-permission.mjs
+?? scripts/catalog-images-download.py
+?? scripts/catalog-import.js
+?? scripts/query-products.js
+?? scripts/revert-catalog-import-batch.mjs
+?? scripts/verify-connections-authority.mjs
+?? tests/p0/app-layer-command-surface.spec.ts
+?? tests/p0/assistant-honesty.spec.ts
+?? tests/p0/catalog-disclosure-boundary.spec.ts
+?? tests/p0/connections-authority.spec.ts
+?? tests/p0/eta-connect-copy-contract.spec.ts
+?? tests/p0/fee-calculator.spec.ts
+?? tests/p0/order-eta-gate.spec.ts
+?? tests/p0/physical-count-review-contract.spec.ts
+?? tests/p0/release-outbox-intent.spec.ts
+?? tests/p0/release-outbox-module.spec.ts
+?? tmp-check-profiles.js
+?? verify-k6.mjs
+?? verify-screenshots.cjs

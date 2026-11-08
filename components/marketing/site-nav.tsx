@@ -2,44 +2,29 @@
 
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Brand } from '@/components/v2/brand';
 import styles from "./public-nav.module.css";
 
-function PublicDropdown({ title, links }: { title: string; links: { href: string; label: string }[] }) {
-  const details = useRef<HTMLDetailsElement>(null);
-  return <details ref={details} className={styles.dropdown} onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); details.current?.removeAttribute("open"); details.current?.querySelector("summary")?.focus(); } }} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) details.current?.removeAttribute("open"); }}>
-    <summary>{title} <ChevronDown size={14} aria-hidden="true"/></summary>
-    <div className={styles.dropdownPanel}>{links.map(link => <Link key={link.href} href={link.href} onClick={() => details.current?.removeAttribute("open")}>{link.label}</Link>)}</div>
-  </details>;
-}
+const links = [
+  { href: "/platform", label: "How it works" },
+  { href: "/marketplace", label: "Catalogue" },
+  { href: "/solutions", label: "Market insights" },
+  { href: "/eta-connect", label: "E-invoicing" },
+  { href: "/solutions", label: "Partners" },
+];
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const button = useRef<HTMLButtonElement>(null);
-  const platform = [
-    { href: "/platform", label: "How the network works" },
-    { href: "/walkthrough", label: "From requirement to receipt" },
-    { href: "/marketplace", label: "Explore sourcing areas" },
-  ];
-  const audiences = [
-    { href: "/hotels/join", label: "For hotel teams" },
-    { href: "/suppliers/join", label: "For vendors" },
-    { href: "/contact", label: "Partner access" },
-  ];
-  const company = [
-    { href: "/about", label: "About" },
-    { href: "/support", label: "Help" },
-  ];
   function closeMenu() { setOpen(false); }
   return <nav className={styles.nav} aria-label="Main navigation" onKeyDown={e => { if (e.key === "Escape") { closeMenu(); button.current?.focus(); } }}>
     <div className={styles.inner}>
       <Link href="/" className={styles.brand} aria-label="HOTELSVENDORS home"><Brand /></Link>
-      <div className={styles.desktop}><PublicDropdown title="How it works" links={platform}/><PublicDropdown title="Your network role" links={audiences}/><Link href="/getting-started">Start a workspace</Link>{company.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</div>
+      <div className={styles.desktop}>{links.map(link => <Link key={link.label} href={link.href}>{link.label}</Link>)}</div>
       <div className={styles.actions}><Link href="/login" className={styles.signIn}>Sign in</Link><Link href="/register" className={styles.join}>Join the network</Link><button ref={button} type="button" className={styles.toggle} aria-controls={menuId} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button></div>
     </div>
-    {open && <div className={styles.mobile} id={menuId}>{[...platform,...audiences,{href:"/getting-started",label:"Getting started"},...company,{href:"/login",label:"Sign in"},{href:"/register",label:"Join the network"}].map(link => <Link key={link.href} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
+    {open && <div className={styles.mobile} id={menuId}>{[...links,{href:"/login",label:"Sign in"},{href:"/register",label:"Join the network"}].map(link => <Link key={link.href + link.label} href={link.href} onClick={closeMenu}>{link.label}</Link>)}</div>}
   </nav>;
 }
-

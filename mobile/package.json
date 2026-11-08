@@ -4,23 +4,32 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "node scripts/with-hv-public-env.mjs expo start",
     "typecheck": "tsc --noEmit",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "android": "node scripts/with-hv-public-env.mjs expo run:android",
+    "ios": "node scripts/with-hv-public-env.mjs expo run:ios",
+    "export:ios": "node scripts/with-hv-public-env.mjs expo export --platform ios --output-dir dist/ios"
   },
   "dependencies": {
+    "@clerk/expo": "^4.15.1",
     "expo": "~54.0.0",
+    "expo-auth-session": "~7.0.11",
+    "expo-build-properties": "~1.0.10",
+    "expo-camera": "~17.0.10",
+    "expo-crypto": "~15.0.9",
     "expo-linking": "~8.0.12",
     "expo-router": "~6.0.0",
+    "expo-secure-store": "~15.0.8",
     "expo-sqlite": "~16.0.0",
+    "expo-web-browser": "~15.0.11",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0"
   },
   "devDependencies": {
-    "typescript": "~5.9.2",
-    "@types/react": "~19.1.0"
+    "@types/react": "~19.1.0",
+    "typescript": "~5.9.2"
   }
 }

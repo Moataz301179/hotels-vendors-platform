@@ -3,9 +3,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Armchair, BedDouble, ChevronRight, ClipboardCheck, Search, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
 import { MarketplaceSelectionAction } from './marketplace-selection-action';
+import { getProductImage } from '@/lib/marketplace/product-images';
+
+// Approved category artwork for the public catalogue card. Used whenever a
+// record has no reviewed first-party product photograph, so no card renders as
+// an empty gradient block.
+const CATEGORY_ARTWORK: Record<string, string> = {
+  'Restaurants & bars': 'category-food-beverage.png',
+  'Housekeeping & laundry': 'category-housekeeping.png',
+  'Guest rooms & amenities': 'category-guest-supplies.png',
+  'Engineering & maintenance': 'category-engineering-ffe.png',
+  'Furniture, fixtures & outdoor': 'category-furniture-fixtures.jpg',
+  'Hotel services': 'hv-workspace-team.webp',
+  'Other operating needs': 'category-supplier-catalogue.png',
+};
 
 export type MarketplaceDirectoryEntry = {
   id: string;
@@ -38,10 +52,6 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
   const categories = useMemo(() => ['All', ...Array.from(new Set(entries.map(entry => taxonomyFor(entry).group))).sort()], [entries]);
   const selectedCategory = categories.includes(activeCategory) ? activeCategory : 'All';
   const subcategories = useMemo(() => ['All', ...Array.from(new Set(entries.filter(entry => selectedCategory === 'All' || taxonomyFor(entry).group === selectedCategory).map(entry => taxonomyFor(entry).subcategory))).sort()], [selectedCategory, entries]);
-  useEffect(() => {
-    const category = new URLSearchParams(window.location.search).get('category');
-    if (category && categories.includes(category)) setActiveCategory(category);
-  }, [categories, initialCategory]);
   const visibleEntries = useMemo(() => entries.filter(entry => {
     const taxonomy = taxonomyFor(entry);
     const matchesCategory = selectedCategory === 'All' || taxonomy.group === selectedCategory;
@@ -70,12 +80,26 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
       {visibleEntries.map(entry => {
         const taxonomy = taxonomyFor(entry);
         const Icon = taxonomy.icon;
+        // Category artwork is navigation only. For an unpictured record use the
+        // subject-matched visual resolver or an item-specific geometric fallback
+        // and label it clearly as illustrative—not supplier/product evidence.
+        const match = entry.image
+          ? { type: 'url' as const, src: entry.image, illustrative: false }
+          : getProductImage({ name: entry.name, category: entry.category ?? taxonomy.group });
+        // Empty records use the approved category artwork instead of a gradient.
+        const visual: { type: 'url'; src: string; illustrative: boolean } =
+          match.type === 'gradient'
+            ? { type: 'url', src: CATEGORY_ARTWORK[taxonomy.group] ?? 'category-supplier-catalogue.png', illustrative: true }
+            : { ...match, illustrative: entry.image ? false : true };
         return <article className={styles.card} key={entry.id}>
-          {entry.image ? <div className={styles.media}><Image src={entry.image} alt="" fill sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw" /></div> : <div className={styles.mediaFallback} aria-label={`${taxonomy.group} category artwork — product image pending source review`}>
-            <Icon size={56} aria-hidden={true}/>
-            <span>{taxonomy.group}</span>
-            <small>Product image pending review</small>
-          </div>}
+          <div className={styles.media}>
+            {visual.src.startsWith('http') ? (
+              <img key={visual.src} src={visual.src} alt={`Illustrative reference for ${entry.name}`} className={styles.mediaImg} />
+            ) : (
+              <Image src={`/` + visual.src} alt={entry.name} fill sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw" />
+            )}
+            {visual.illustrative ? <span className={styles.visualNote}>Illustrative reference</span> : null}
+          </div>
           <div className={styles.cardBody}>
             <div className={styles.taxonomy}><span><Icon size={16}/>{taxonomy.group}</span><small>{taxonomy.subcategory}</small></div>
             <p className={styles.itemType}>{entry.itemType === 'SERVICE' ? 'Service requirement' : 'Product requirement'}</p>
@@ -91,9 +115,5 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
       })}
     </div> : <div className={styles.empty}><h3>{selectedCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${selectedCategory} yet.`}</h3><p>{selectedCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{selectedCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
 
-    <div className={styles.requirement}>
-      <div><p className={styles.eyebrow}>Not in the directory?</p><h3>Start with the requirement—not a blank search.</h3><p>In the hotel workspace, select the operating category, quantity, delivery context and response window. Product Intelligence then reviews and routes it under the sealed procurement controls.</p></div>
-      <MarketplaceSelectionAction className={styles.workspaceAction} label="Open requirement workspace" />
-    </div>
   </section>;
 }

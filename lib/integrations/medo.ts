@@ -10,7 +10,7 @@ export interface MeDoConfig {
 
 export const medoConfig: MeDoConfig = {
   endpoint: "https://api.medo.dev/skills/get-latest-skill",
-  apiKeyRef: "sk_8h0pkvg0_7dn3woi3fyqeouwjmxj0ivw1l6rpj3q6", // EXPOSED — ROTATE IMMEDIATELY
+  apiKeyRef: "MEDO_API_KEY", // environment/vault reference only; never a credential
   enabled: false, // disabled: endpoint returns binary/unparseable content; no skill spec retrieved
 };
 

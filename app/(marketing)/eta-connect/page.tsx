@@ -1,34 +1,35 @@
 import Link from "next/link";
 import { ShieldCheck, ArrowRight, FileText, TrendingUp, CheckCircle2, Zap } from "lucide-react";
+import { RegulatoryConnectionNotice } from "@/components/v2/regulatory-connection-notice";
 
 export const metadata = {
   title: "Connect ETA E-Invoices | HOTELSVENDORS",
-  description: "Connect your Egyptian Tax Authority e-invoice feed to unlock AI-powered procurement analysis, spend categorization, and provable savings.",
+  description: "Prepare an organization-authorized Egyptian Tax Authority e-invoicing connection and retain clear control over invoice evidence.",
 };
 
 const steps = [
   {
     step: "01",
-    title: "Grant read-only access",
-    description: "Connect your official ETA e-invoice feed through a guided flow. The connection is read-only — we read the invoices you have already filed with the Tax Authority, and nothing more. No software to install, no firewall changes.",
+    title: "Authorize the organization",
+    description: "Start with the organization that owns the taxpayer credentials and authorization. The issuer's e-seal belongs to the party that signs the vendor invoice — a hotel buyer needs authorized ingest, not an issuer e-seal. HotelsVendors records the request and never treats it as a live ETA connection until those controls have been verified.",
     icon: ShieldCheck,
   },
   {
     step: "02",
-    title: "AI categorizes every line",
-    description: "Every invoice line is AI-categorized by department, supplier, and product class. Your entire year of procurement becomes an interactive, drillable spend dashboard.",
+    title: "Verify the source before analysis",
+    description: "Only an authorized and verified source can be accepted for organization-scoped analysis. Source status remains visible so an intake record is never confused with a connected feed.",
     icon: FileText,
   },
   {
     step: "03",
-    title: "Prove the savings",
-    description: "Every saving is (your current price − market benchmark) × your actual annual quantity, using prices you genuinely paid on government-validated invoices. Check each figure against your own records, line by line.",
+    title: "Review commercial evidence",
+    description: "Authorized teams review recorded invoice evidence, terms and delivery information before using it in a procurement decision. No inferred invoice status or automatic commercial action.",
     icon: TrendingUp,
   },
   {
     step: "04",
-    title: "Source with sealed RFQs",
-    description: "Turn proven savings into action. Launch sealed-bid RFQs, run live reverse auctions, and award purchase orders — every action is logged and audited.",
+    title: "Use controlled procurement workflows",
+    description: "A verified source can inform controlled sourcing, approvals and receiving evidence. It does not automatically create an award, credit decision or payment commitment.",
     icon: Zap,
   },
 ];
@@ -38,13 +39,19 @@ export default function EtaConnectPage() {
     <main className="hv-public-page">
       <section className="hv-public-hero">
         <div className="shell">
-          <span className="eyebrow">ETA E-Invoice Intelligence</span>
-          <h1>Your e-invoice feed <em>is</em> your price list.</h1>
-          <p className="lead">Connect your Egyptian Tax Authority e-invoice feed and turn every line item, invoice, and vendor into provable procurement savings. Government-validated data. Your data stays private to you.</p>
+          <span className="eyebrow">Organization-authorized e-invoicing</span>
+          <h1>Prepare your ETA connection with <em>clear control.</em></h1>
+          <p className="lead">Bring the right organization authorization into a controlled workflow. A hotel buyer needs authorized invoice ingest; the issuer&rsquo;s e-seal belongs to the vendor that signs the invoice. A recorded intake request is not presented as an active Egyptian Tax Authority connection.</p>
           <div className="hv-public-actions">
-            <Link href="/login?redirect_url=%2Feta-compliance" className="btn btn-blue">Connect ETA feed <ArrowRight size={16} /></Link>
+            <Link href="/login?redirect_url=%2Feta-compliance" className="btn btn-blue">Open organization controls <ArrowRight size={16} /></Link>
             <Link href="/solutions" className="btn btn-ghost">Learn more</Link>
           </div>
+        </div>
+      </section>
+
+      <section className="hv-public-section bg-surface-raised">
+        <div className="shell">
+          <RegulatoryConnectionNotice />
         </div>
       </section>
 
@@ -54,15 +61,31 @@ export default function EtaConnectPage() {
             <p className="eyebrow">How it works</p>
             <h2>Four steps from invoice to savings</h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-8">
-            {steps.map((s) => (
-              <article key={s.step} className="card p-6">
-                <span className="text-3xl font-bold text-accent-base/20">{s.step}</span>
-                <s.icon size={24} className="text-accent-base mt-3" />
-                <h3 className="text-lg font-semibold mt-3">{s.title}</h3>
-                <p className="text-sm text-foreground-muted mt-2">{s.description}</p>
-              </article>
-            ))}
+          <div className="eta-ui">
+            <div className="eta-ui-head">
+              <span className="eta-ui-dots"><i /><i /><i /></span>
+              <span className="eta-ui-title">Organization ETA controls</span>
+              <span className="eta-ui-badge">INTAKE RECORDED</span>
+            </div>
+            <div className="eta-ui-body">
+              {steps.map((s, index) => (
+                <div className={`eta-ui-step${index < 2 ? " is-done" : ""}`} key={s.step}>
+                  <div className="eta-ui-node"><s.icon size={15} aria-hidden="true" /></div>
+                  {index < steps.length - 1 && <span className="eta-ui-rail" aria-hidden="true" />}
+                  <div className="eta-ui-content">
+                    <div className="eta-ui-row">
+                      <h3>{s.title}</h3>
+                      <span className="eta-ui-chip">{index < 2 ? "Verified" : "Pending"}</span>
+                    </div>
+                    <p>{s.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="eta-ui-foot">
+              <span>Organization-scoped &middot; never described as a live connection until verified</span>
+              <Link href="/login?redirect_url=%2Feta-compliance" className="btn btn-blue">Open controls <ArrowRight size={15} /></Link>
+            </div>
           </div>
         </div>
       </section>
@@ -71,23 +94,29 @@ export default function EtaConnectPage() {
         <div className="shell">
           <div className="hv-public-section-heading">
             <p className="eyebrow">What you get</p>
-            <h2>Procurement intelligence from your own data</h2>
+            <h2>Organization-scoped evidence, once it is verified</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-3 mt-8">
-            <div className="card p-5">
-              <CheckCircle2 size={20} className="text-success mb-3" />
-              <h3 className="font-semibold">Spend categorization</h3>
-              <p className="text-sm text-foreground-muted mt-1">Every line item auto-categorized by department, supplier, and product class — no manual tagging.</p>
+          <div className="eta-ui">
+            <div className="eta-ui-head">
+              <span className="eta-ui-dots"><i /><i /><i /></span>
+              <span className="eta-ui-title">Organization evidence record</span>
+              <span className="eta-ui-badge">3 STATES</span>
             </div>
-            <div className="card p-5">
-              <CheckCircle2 size={20} className="text-success mb-3" />
-              <h3 className="font-semibold">Price benchmarking</h3>
-              <p className="text-sm text-foreground-muted mt-1">Compare what you pay against market averages, with provable EGP savings per line item.</p>
-            </div>
-            <div className="card p-5">
-              <CheckCircle2 size={20} className="text-success mb-3" />
-              <h3 className="font-semibold">Sealed sourcing</h3>
-              <p className="text-sm text-foreground-muted mt-1">Turn savings findings into sealed-bid RFQs and live reverse auctions — no AI awards, every action logged.</p>
+            <div className="eta-ui-states">
+              {[
+                { icon: CheckCircle2, title: 'Controlled intake', chip: 'Recorded', body: 'Keep the organization, authorization and source record visible before any analysis begins. A hotel buyer needs authorized ingest; the issuer’s e-seal belongs to the vendor that signs the invoice.' },
+                { icon: TrendingUp, title: 'Reviewable analysis', chip: 'Reviewable', body: 'Use verified commercial evidence in a reviewable workflow, not an opaque automatic decision.' },
+                { icon: ShieldCheck, title: 'Controlled sourcing', chip: 'Authorized', body: 'Move from validated evidence to authorized RFQs, approvals and receiving records with an audit trail.' },
+              ].map(({ icon: Icon, title, chip, body }) => (
+                <div className="eta-ui-state" key={title}>
+                  <div className="eta-ui-state-top">
+                    <span className="eta-ui-state-icon"><Icon size={15} aria-hidden="true" /></span>
+                    <span className="eta-ui-chip is-done">{chip}</span>
+                  </div>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -97,7 +126,7 @@ export default function EtaConnectPage() {
         <div className="shell text-center max-w-2xl mx-auto">
           <p className="eyebrow">Privacy</p>
           <h2 className="text-2xl font-semibold mt-2">Your data never leaves your organization.</h2>
-          <p className="text-foreground-muted mt-3">We never sell your data or share your cost and vendor information with anyone else. The ETA connection is read-only. You can revoke access at any time.</p>
+          <p className="text-foreground-muted mt-3">Your organization controls whether an authorized source is submitted for review. Until activation has been verified for that organization, HotelsVendors does not describe it as a live ETA connection.</p>
           <Link href="/login?redirect_url=%2Feta-compliance" className="btn btn-blue mt-6 inline-flex items-center gap-2">
             Get started <ArrowRight size={16} />
           </Link>

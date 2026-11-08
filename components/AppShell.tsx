@@ -97,7 +97,7 @@ function LangThemeControls({ compact }: { compact?: boolean }) {
     <div className="flex items-center gap-1">
       <button
         onClick={() => setLang(lang === "en" ? "ar" : "en")}
-        className="flex h-9 items-center gap-1.5 rounded px-2.5 text-[13px] font-medium text-ink-200 transition-colors hover:bg-white/10 hover:text-white"
+        className="flex h-9 items-center gap-1.5 rounded px-2.5 text-[13px] font-medium text-ink-600 transition-colors hover:bg-paper-100 hover:text-ink-950"
         aria-label="language"
       >
         <IcGlobe className="text-base" />
@@ -105,7 +105,7 @@ function LangThemeControls({ compact }: { compact?: boolean }) {
       </button>
       <button
         onClick={toggleTheme}
-        className="flex h-9 w-9 items-center justify-center rounded text-ink-200 transition-colors hover:bg-white/10 hover:text-white"
+        className="flex h-9 w-9 items-center justify-center rounded text-ink-600 transition-colors hover:bg-paper-100 hover:text-ink-950"
         aria-label="theme"
       >
         {theme === "dark" ? <IcSun className="text-base" /> : <IcMoon className="text-base" />}
@@ -126,10 +126,10 @@ export function ToastHost() {
           key={toast.id}
           className={`anim-rise pointer-events-auto flex items-start gap-2.5 rounded-lg border px-4 py-3 text-sm shadow-lg ${
             toast.tone === "ok"
-              ? "border-emerald-600/30 bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
+              ? "border-emerald-600/30 bg-emerald-50 text-emerald-900 bg-emerald-50 text-emerald-900"
               : toast.tone === "warn"
-                ? "border-amber-500/30 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-                : "border-red-600/30 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-200"
+                ? "border-amber-500/30 bg-amber-50 text-amber-900 bg-amber-50 text-amber-900"
+                : "border-red-600/30 bg-red-50 text-red-900 bg-red-50 text-red-900"
           }`}
         >
           <IcCheck className="mt-0.5 shrink-0" />
@@ -188,12 +188,12 @@ export default function AppShell({
   const items = navFor(user.role, cartCount);
 
   return (
-    <div className="sf-alt min-h-screen">
+    <div className="min-h-screen">
       {/* Top bar — black architectural surface */}
-      <header className="sf-ink sticky top-0 z-40 text-white shadow-md">
+      <header className="sticky top-0 z-40 text-white shadow-md bg-paper-100 border-b border-line">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6">
           <button
-            className="rounded p-2 text-ink-200 hover:bg-white/10 lg:hidden"
+            className="rounded p-2 text-muted hover:bg-paper-200 lg:hidden"
             onClick={() => setOpen(true)}
             aria-label={t("nav.menu")}
           >
@@ -203,7 +203,7 @@ export default function AppShell({
             <Logo className="h-8 w-8 text-white" />
             <div className="leading-none">
               <div className="text-[15px] font-bold tracking-tight">HOTELSVENDORS</div>
-              <div className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] text-ink-400 sm:block">
+              <div className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] text-muted sm:block">
                 {t("brand.tag")}
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function AppShell({
                   className={`relative flex h-16 items-center gap-1.5 px-3 text-[13px] font-medium transition-colors ${
                     isActive
                       ? "text-white after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-brass-400"
-                      : "text-ink-300 hover:text-white"
+                      : "text-ink-600 hover:text-ink-950"
                   }`}
                 >
                   {it.key === "nav.cart" ? <IcCart className="text-sm" /> : null}
@@ -237,7 +237,7 @@ export default function AppShell({
             {user.role !== "supplier_manager" && user.role !== "platform_admin" && user.role !== "partner_officer" && user.role !== "carrier" ? (
               <Link
                 href="/cart"
-                className="relative hidden h-9 w-9 items-center justify-center rounded text-ink-200 hover:bg-white/10 sm:flex"
+                className="relative hidden h-9 w-9 items-center justify-center rounded text-muted hover:bg-paper-200 sm:flex"
                 aria-label={t("nav.cart")}
               >
                 <IcCart className="text-lg" />
@@ -249,13 +249,13 @@ export default function AppShell({
               </Link>
             ) : null}
             <LangThemeControls />
-            <div className="hidden items-center gap-2.5 rounded bg-white/5 px-2.5 py-1.5 sm:flex">
+            <div className="hidden items-center gap-2.5 rounded bg-paper-100 px-2.5 py-1.5 sm:flex">
               <span className="flex h-7 w-7 items-center justify-center rounded bg-brass-500 text-[11px] font-bold text-white">
                 {initials(user.name)}
               </span>
               <div className="leading-tight">
                 <div className="text-[12px] font-semibold">{user.name}</div>
-                <div className="text-[10px] text-ink-400">{t(`role.${user.role}`)}</div>
+                <div className="text-[10px] text-muted">{t(`role.${user.role}`)}</div>
               </div>
             </div>
             <button
@@ -284,9 +284,9 @@ export default function AppShell({
                 <IcX className="text-lg" />
               </button>
             </div>
-            <div className="mb-4 rounded bg-white/5 px-3 py-2.5">
+            <div className="mb-4 rounded bg-paper-100 px-3 py-2.5">
               <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-ink-400">{t(`role.${user.role}`)}</div>
+              <div className="text-xs text-muted">{t(`role.${user.role}`)}</div>
             </div>
             <nav className="flex-1 overflow-y-auto" aria-label="mobile">
               {items.map((it) => (
@@ -295,7 +295,7 @@ export default function AppShell({
                   href={it.href}
                   onClick={() => setOpen(false)}
                   className={`flex items-center justify-between rounded px-3 py-3 text-sm font-medium ${
-                    active === it.href ? "bg-brass-500/15 text-brass-300" : "text-ink-200 hover:bg-white/5"
+                    active === it.href ? "bg-brass-500/15 text-brass-700" : "text-ink-600 hover:bg-paper-100"
                   }`}
                 >
                   {t(it.key)}
@@ -307,7 +307,7 @@ export default function AppShell({
             </nav>
             <button
               onClick={logout}
-              className="mt-3 flex items-center gap-2 rounded border border-white/15 px-3 py-3 text-sm font-medium text-ink-200 hover:bg-white/5"
+              className="mt-3 flex items-center gap-2 rounded border border-line px-3 py-3 text-sm font-medium text-ink-600 hover:bg-paper-100"
             >
               <IcOut className="text-base" />
               {t("nav.signOut")}
@@ -318,8 +318,8 @@ export default function AppShell({
 
       <main className="shell main-pad min-h-[calc(100vh-4rem)]">{children}</main>
 
-      <footer className="sf-page border-t border-line py-6 dark:border-linedark">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 text-xs text-ink-400 sm:px-6">
+      <footer className="sf-page border-t border-line py-6">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-2 px-4 text-xs text-muted sm:px-6">
           <span>HOTELSVENDORS — {t("home.footK")}</span>
           <span>{t("home.rights")}</span>
         </div>

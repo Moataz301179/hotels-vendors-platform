@@ -11,7 +11,7 @@
 .eyebrow,
 .itemType {
   margin: 0;
-  color: #426f91;
+  color: #2f6fb0;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -39,8 +39,8 @@
   flex: none;
   padding: 14px 16px;
   border: 1px solid var(--line);
-  background: var(--surface-raised);
-  color: #46667f;
+  background:var(--surface-raised);
+  color: #2f6fb0;
   font-size: 12px;
 }
 .count strong {
@@ -62,7 +62,7 @@
   max-width: 580px;
   min-height: 48px;
   padding: 0 13px;
-  background: var(--surface-raised);
+  background:var(--surface-raised);
   border: 1px solid var(--line);
 }
 .search input {
@@ -71,7 +71,7 @@
   padding: 0;
   border: 0;
   outline: 0;
-  background: transparent;
+  background:transparent;
 }
 .filters,
 .subfilters {
@@ -88,15 +88,15 @@
   padding: 0 13px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--surface-raised);
+  background:var(--surface-raised);
   color: #586771;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
 .filters button[aria-pressed="true"] {
-  background: #1e4f78;
-  border-color: #1e4f78;
+  background:#245c96;
+  border-color: #245c96;
   color: #fff;
 }
 .subfilters {
@@ -107,9 +107,9 @@
   font-size: 11px;
 }
 .subfilters button[aria-pressed="true"] {
-  border-color: #7199b7;
-  background: #e7f0f6;
-  color: #184d78;
+  border-color: #2f6fb0;
+  background:#e7f0f6;
+  color: #245c96;
 }
 .grid {
   display: grid;
@@ -123,13 +123,14 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: var(--surface-raised);
+  background:var(--surface-raised);
   box-shadow: 0 6px 18px rgba(23, 36, 46, 0.035);
 }
 .media {
   position: relative;
   height: 184px;
-  background: #e9f0f1;
+  width: 100%;
+  background:var(--paper-200);
   overflow: hidden;
 }
 .media img {
@@ -137,6 +138,26 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.mediaImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.visualNote {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background:rgba(20, 30, 38, 0.78);
+  color: #f7fafc;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .mediaFallback {
   position: relative;
@@ -148,8 +169,8 @@
   gap: 8px;
   overflow: hidden;
   padding: 22px;
-  background: linear-gradient(135deg, #eaf3f1 0%, #d8e8ec 48%, #b9d4df 100%);
-  color: #1d516f;
+  background:linear-gradient(135deg, #eaf3f1 0%, #d8e8ec 48%, #b9d4df 100%);
+  color: #245c96;
 }
 .mediaFallback:before {
   position: absolute;
@@ -177,15 +198,15 @@
   position: relative;
   z-index: 1;
 }
-.mediaFallback span {
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.visualInitials {
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+  color: rgba(255, 255, 255, 0.72);
 }
 .mediaFallback small {
   max-width: 170px;
-  color: #58768a;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 10px;
   font-weight: 700;
   line-height: 1.35;
@@ -208,7 +229,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #245f93;
+  color: #245c96;
   font-size: 12px;
   font-weight: 800;
 }
@@ -280,7 +301,7 @@
   min-height: 44px;
   margin-top: auto;
   padding-top: 17px;
-  color: #245f93;
+  color: #245c96;
   font-size: 13px;
   font-weight: 800;
 }
@@ -308,58 +329,20 @@
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line, #c9ccca);
-  background: #f7f7f5;
+  background:#f7f7f5;
   color: var(--ink, #1d2730);
   padding: 11px 14px;
   font-weight: 700;
   cursor: pointer;
 }
 .action:hover {
-  color: #123f66;
-}
-.requirement {
-  display: flex;
-  justify-content: space-between;
-  gap: 32px;
-  align-items: center;
-  margin-top: 42px;
-  padding: 30px;
-  background: #1c2c37;
-  color: #fff;
-}
-.requirement h3 {
-  margin: 8px 0;
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 34px);
-  letter-spacing: -0.04em;
-}
-.requirement p:not(.eyebrow) {
-  max-width: 750px;
-  margin: 0;
-  color: #ccd6dc;
-  font-size: 13px;
-  line-height: 1.75;
-}
-.requirement .eyebrow {
-  color: #a9cae4;
-}
-.requirement a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: none;
-  min-height: 44px;
-  padding: 0 16px;
-  background: #d8ebff;
-  color: #173149;
-  font-size: 12px;
-  font-weight: 800;
+  color: #245c96;
 }
 .empty {
   margin-top: 28px;
   padding: 42px;
   border: 1px dashed #bdcbd2;
-  background: #f8faf9;
+  background:var(--paper-0);
 }
 .empty h3 {
   margin: 0 0 8px;
@@ -371,9 +354,9 @@
 .empty button {
   min-height: 42px;
   padding: 0 14px;
-  border: 1px solid #8daec8;
-  background: #fff;
-  color: #245f93;
+  border: 1px solid #2f6fb0;
+  background:#fff;
+  color: #245c96;
   font-weight: 800;
   cursor: pointer;
 }

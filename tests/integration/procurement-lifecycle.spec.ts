@@ -146,11 +146,11 @@ describe('procurement lifecycle against the isolated database', () => {
     const department = await prisma.department.create({ data: { tenantId: ids.hotelTenant, name: 'Lifecycle procurement', code: `IT-${run.slice(0, 12)}` } });
     departmentId = department.id;
     await prisma.departmentCategoryAccess.create({ data: { departmentId, category: 'GUEST_SUPPLIES' } });
-    const supplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Supplier ${run}`, taxId: `ST${run.slice(0, 19)}`, email: `supplier-${run}@example.test`, website: 'https://supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
+    const supplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: 'Nile Hospitality Supplies', taxId: `ST${run.slice(0, 19)}`, email: `supplier-${run}@example.test`, website: 'https://supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
     supplierId = supplier.id;
-    const otherSupplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: `Other supplier ${run}`, taxId: `OT${run.slice(0, 19)}`, email: `other-supplier-${run}@example.test`, website: 'https://other-supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
+    const otherSupplier = await prisma.supplier.create({ data: { tenantId: ids.supplierTenant, name: 'Cairo Linen Company', taxId: `OT${run.slice(0, 19)}`, email: `other-supplier-${run}@example.test`, website: 'https://other-supplier.example.test', city: 'Cairo', governorate: 'Cairo', status: 'ACTIVE', isVerified: true } });
     otherSupplierId = otherSupplier.id;
-    const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Verified lifecycle product', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
+    const product = await prisma.product.create({ data: { tenantId: ids.supplierTenant, supplierId, sku: `IT-${run}`, name: 'Hotel-grade bath towels', category: 'GUEST_SUPPLIES', status: 'ACTIVE', source: 'MANUAL', sourceProvider: 'SUPPLIER_SUBMISSION', sourceKey: 'https://supplier.example.test/products/lifecycle', images: JSON.stringify([{ url: 'https://supplier.example.test/images/lifecycle.jpg', sourceUrl: 'https://supplier.example.test/products/lifecycle' }]) } });
     productId = product.id;
     const factoringCompany = await prisma.factoringCompany.create({ data: { tenantId: ids.funderTenant, name: `Licensed funder ${run}`, taxId: `FT${run.slice(0, 19)}`, status: 'ACTIVE' } });
     factoringCompanyId = factoringCompany.id;
@@ -247,7 +247,7 @@ describe('procurement lifecycle against the isolated database', () => {
   it('moves a supplier-owned product from submission through review into a hotel RFQ', async () => {
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     const submittedResponse = await submitCatalogItem(request('https://hotelsvendors.test/api/v2/catalog', {
-      name: 'Reviewed lifecycle towel',
+      name: 'Cotton banquet napkin',
       sku: `REVIEWED-${run}`,
       category: 'GUEST_SUPPLIES',
       unitOfMeasure: 'piece',
@@ -330,12 +330,15 @@ describe('procurement lifecycle against the isolated database', () => {
       expect((await transitionShipment(request('https://hotelsvendors.test/api/v2/shipments', { id: shipment.id, ...transition }, 'PATCH'))).status).toBe(200);
     }
 
+    await persistAcceptedEtaClearance(order.id);
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'IN_TRANSIT', estimatedDelivery: new Date(Date.now() + 86_400_000).toISOString() }, 'PATCH'))).status).toBe(200);
 
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
     const receiptPayload = { orderId: order.id, shipmentId: shipment.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 4, acceptedQuantity: 4, conditionNotes: 'Accepted at receiving dock' }], evidenceUrls: ['https://supplier.example.test/receipts/lifecycle.jpg'] };
+    // Prove the receiving gate independently requires clearance.
+    await prisma.invoice.deleteMany({ where: { orderId: order.id, etaStatus: 'ACCEPTED' } });
     const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     expect(blockedReceipt.status).toBe(409);
     await expect(blockedReceipt.json()).resolves.toEqual({ error: 'ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY' });
@@ -469,12 +472,15 @@ describe('procurement lifecycle against the isolated database', () => {
     expect((await recordGuarantee(request('https://hotelsvendors.test/api/v2/orders/guarantee', { orderId: order.id, tenantId: ids.hotelTenant, method: 'DIRECT', etaValidated: false }))).status).toBe(201);
     asActor({ id: ids.approver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'GM' });
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'APPROVED' }, 'PATCH'))).status).toBe(200);
+    await persistAcceptedEtaClearance(order.id);
     asActor({ id: ids.supplierUser, tenantId: ids.supplierTenant, platformRole: 'SUPPLIER', role: 'CLERK', supplierId });
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'CONFIRMED' }, 'PATCH'))).status).toBe(200);
     expect((await transitionOrder(request('https://hotelsvendors.test/api/v2/orders', { id: order.id, status: 'IN_TRANSIT', estimatedDelivery: new Date(Date.now() + 86_400_000).toISOString() }, 'PATCH'))).status).toBe(200);
     const line = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id }, select: { id: true, productId: true } });
     asActor({ id: ids.receiver, tenantId: ids.hotelTenant, platformRole: 'HOTEL', role: 'RECEIVING_CLERK' });
     const receiptPayload = { orderId: order.id, lines: [{ orderItemId: line.id, productId: line.productId, receivedQuantity: 5, acceptedQuantity: 5, conditionNotes: 'Matched requirement received' }] };
+    // Prove the receiving gate independently requires clearance.
+    await prisma.invoice.deleteMany({ where: { orderId: order.id, etaStatus: 'ACCEPTED' } });
     const blockedReceipt = await receiveOrder(request('https://hotelsvendors.test/api/v2/grn', receiptPayload));
     expect(blockedReceipt.status).toBe(409);
     await expect(blockedReceipt.json()).resolves.toEqual({ error: 'ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY' });

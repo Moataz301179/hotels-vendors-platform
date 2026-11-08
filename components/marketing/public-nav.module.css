@@ -1,14 +1,17 @@
-.nav { position:sticky; top:0; z-index:50; background:color-mix(in oklch,var(--chrome) 94%,transparent); color:var(--chrome-text); border-bottom:1px solid rgba(255,255,255,.16); font-family:var(--font-display),sans-serif; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
-.inner { max-width:1400px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:76px; padding:12px 32px; }
+.nav { position:sticky; top:0; z-index:50; background:var(--chrome); color:var(--chrome-text); border-bottom:1px solid rgba(255,255,255,.16); font-family:var(--font-display),sans-serif; }
+.inner { max-width:1400px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:68px; padding:10px 32px; }
 .brand { display:flex; align-items:center; gap:10px; color:var(--chrome-text); font-size:16px; font-weight:750; text-decoration:none; white-space:nowrap; }
 .brand :global(.hv-brand-lockup) { color:var(--chrome-text); text-transform:uppercase; font-size:18px; letter-spacing:.04em; }
 .brand :global(.hv-brand-lockup small) { font-size:7px; letter-spacing:.16em; }
 .brand :global(.hv-brand-lockup > img) { filter:brightness(0) invert(1); }
 .wordmark { width:165px; height:auto; }
-.desktop,.actions { display:flex; align-items:center; gap:24px; }
-.desktop a,.signIn { color:var(--chrome-text); font-size:14px; text-decoration:none; min-height:44px; display:flex; align-items:center; }
-.join { display:flex; align-items:center; min-height:44px; padding:10px 16px; border-radius:var(--radius-control); background:var(--blue); color:var(--ink); border:1px solid var(--blue); font-size:14px; font-weight:650; text-decoration:none; white-space:nowrap; }
-.join:hover { background:var(--paper-0); border-color:var(--paper-0); color:var(--ink); }
+.desktop,.actions { display:flex; align-items:center; gap:22px; }
+.desktop a { color:#c9d2d8; font-size:13.5px; text-decoration:none; min-height:44px; display:flex; align-items:center; transition:color .16s; }
+.desktop a:hover { color:#fff; }
+.signIn { display:flex; align-items:center; min-height:40px; padding:8px 15px; border-radius:9px; background:#fff; color:var(--charcoal); font-size:13.5px; font-weight:650; text-decoration:none; transition:background .16s; }
+.signIn:hover { background:var(--paper-100); }
+.join { display:flex; align-items:center; min-height:40px; padding:8px 15px; border-radius:9px; background:var(--blue); color:#fff; border:1px solid var(--blue); font-size:13.5px; font-weight:650; text-decoration:none; white-space:nowrap; transition:background .16s,border-color .16s; }
+.join:hover { background:var(--blue-strong); border-color:var(--blue-strong); color:#fff; }
 .dropdown { position:relative; }
 .dropdown summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:6px; list-style:none; font-size:14px; }
 .dropdown summary::-webkit-details-marker { display:none; }

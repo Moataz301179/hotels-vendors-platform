@@ -112,21 +112,24 @@ export default function Assistant() {
     }
 
     try {
-      const history = msgs
-        .filter((message): message is Msg & { from: "me" | "bot" } => message.from === "me" || message.from === "bot")
-        .slice(-20)
-        .map((message) => ({ role: message.from === "me" ? "user" : "assistant", content: message.text }));
+      // Only "user" turns are accepted by the server; assistant turns are
+      // reconstructed server-side from the persisted conversation.
+      const safeHistory = msgs
+        .filter((message): message is Msg & { from: "me" | "bot"; text: string } => message.from === "me" && typeof message.text === "string")
+        .slice(-5)
+        .map((message) => sanitizeMessages([{ role: "user", content: message.text }]).messages[0]);
+
       const response = await fetch("/api/v2/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, messages: history, conversationId }),
+        body: JSON.stringify({ question: text, messages: safeHistory, conversationId }),
       });
       const payload = await response.json().catch(() => ({})) as { text?: string; content?: string; conversationId?: string; error?: string };
       if (!response.ok) throw new Error(payload.error || `Assistant request failed (${response.status})`);
       if (payload.conversationId) setConversationId(payload.conversationId);
-      setMsgs((m) => [...m, { id: seq++, from: "bot", text: payload.text || payload.content || "The assistant returned no answer." }]);
+      setMsgs((m) => [...m, { id: seq++, from: "bot", text: payload.text || payload.content || "The AI AGENT returned no answer." }]);
     } catch {
-      setMsgs((m) => [...m, { id: seq++, from: "bot", text: "The assistant is temporarily unavailable. Please retry shortly." }]);
+      setMsgs((m) => [...m, { id: seq++, from: "bot", text: "The AI AGENT is temporarily unavailable. Please retry shortly." }]);
     } finally {
       setTyping(false);
     }
@@ -145,7 +148,7 @@ export default function Assistant() {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? t("assistant.close") : t("assistant.open")}
         aria-expanded={open}
-        className="fixed bottom-5 end-5 z-[55] flex h-14 w-14 items-center justify-center rounded-full bg-ink-950 text-brass-300 shadow-2xl ring-1 ring-white/15 transition-transform hover:scale-105 dark:bg-white dark:text-brass-600 dark:ring-black/10"
+        className="fixed bottom-5 end-5 z-[55] flex h-14 w-14 items-center justify-center rounded-full bg-ink-950 text-brass-300 shadow-2xl ring-1 ring-white/15 transition-transform hover:scale-105 bg-paper-0 text-brass-700 ring-paper-200"
       >
         {open ? <IcX className="text-2xl" /> : <IcSpark className="text-2xl" />}
         {!open && cartCount > 0 ? (
@@ -159,10 +162,10 @@ export default function Assistant() {
         <div
           role="dialog"
           aria-label={t("assistant.title")}
-          className="anim-rise fixed bottom-24 end-4 z-[56] flex w-[calc(100%-2rem)] max-w-sm flex-col overflow-hidden rounded-xl border border-line bg-white shadow-2xl dark:border-linedark dark:bg-ink-900 sm:end-5"
+          className="anim-rise fixed bottom-24 end-4 z-[56] flex w-[calc(100%-2rem)] max-w-sm flex-col overflow-hidden rounded-xl border border-line bg-white shadow-2xl border-line bg-paper-50 sm:end-5"
           style={{ height: "min(560px, 72vh)" }}
         >
-          <div className="flex items-start gap-3 bg-ink-950 px-4 py-3.5 text-white dark:bg-black">
+          <div className="flex items-start gap-3 bg-ink-950 px-4 py-3.5 text-white bg-paper-0">
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brass-500/20 text-brass-300">
               <IcSpark className="text-lg" />
             </span>
@@ -181,8 +184,8 @@ export default function Assistant() {
                 <div
                   className={`max-w-[85%] rounded-lg px-3.5 py-2.5 text-[13px] leading-relaxed ${
                     m.from === "me"
-                      ? "bg-ink-950 text-white dark:bg-white dark:text-ink-950"
-                      : "bg-fog-100 text-ink-800 dark:bg-ink-800 dark:text-ink-100"
+                      ? "bg-ink-950 text-white bg-paper-0 text-ink-950"
+                      : "bg-fog-100 text-ink-800 bg-paper-200 text-ink-800"
                   }`}
                 >
                   {m.text}
@@ -193,13 +196,13 @@ export default function Assistant() {
                           <Link
                             href={it.href ?? "#"}
                             onClick={() => setOpen(false)}
-                            className="flex items-center justify-between gap-3 rounded border border-line bg-white px-2.5 py-2 text-[12px] font-medium transition-colors hover:border-brass-500 dark:border-linedark dark:bg-ink-900 dark:hover:border-brass-500"
+                            className="flex items-center justify-between gap-3 rounded border border-line bg-white px-2.5 py-2 text-[12px] font-medium transition-colors hover:border-brass-500 border-line bg-paper-50 hover:border-brass-500"
                           >
                             <span className="min-w-0">
                               <span className="block truncate">{it.label}</span>
-                              {it.meta ? <span className="block truncate text-[11px] font-normal text-ink-500 dark:text-ink-400">{it.meta}</span> : null}
+                              {it.meta ? <span className="block truncate text-[11px] font-normal text-ink-500 text-ink-600">{it.meta}</span> : null}
                             </span>
-                            <IcArrow className="shrink-0 text-sm text-brass-600 dark:text-brass-400 rtl:-scale-x-100" />
+                            <IcArrow className="shrink-0 text-sm text-brass-600 text-brass-700 rtl:-scale-x-100" />
                           </Link>
                         </li>
                       ))}
@@ -210,7 +213,7 @@ export default function Assistant() {
             ))}
             {typing ? (
               <div className="flex justify-start">
-                <div className="flex gap-1 rounded-lg bg-fog-100 px-3.5 py-3 dark:bg-ink-800">
+                <div className="flex gap-1 rounded-lg bg-fog-100 px-3.5 py-3 bg-paper-200">
                   {[0, 1, 2].map((i) => (
                     <span key={i} className="pulse-dot h-1.5 w-1.5 rounded-full bg-ink-400" style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
@@ -221,13 +224,13 @@ export default function Assistant() {
           </div>
 
           {msgs.length <= 1 ? (
-            <div className="flex flex-wrap gap-1.5 border-t border-line px-4 py-2.5 dark:border-linedark">
+            <div className="flex flex-wrap gap-1.5 border-t border-line px-4 py-2.5 border-line">
               <span className="self-center text-[11px] font-semibold text-ink-400">{t("assistant.suggest")}</span>
               {suggestions.map((s) => (
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="rounded-full border border-line px-2.5 py-1 text-[11px] font-medium text-ink-600 transition-colors hover:border-brass-500 hover:text-brass-700 dark:border-linedark dark:text-ink-300 dark:hover:text-brass-300"
+                  className="rounded-full border border-line px-2.5 py-1 text-[11px] font-medium text-ink-600 transition-colors hover:border-brass-500 hover:text-brass-700 border-line"
                 >
                   {s}
                 </button>
@@ -240,24 +243,24 @@ export default function Assistant() {
               e.preventDefault();
               send();
             }}
-            className="flex items-center gap-2 border-t border-line px-3 py-3 dark:border-linedark"
+            className="flex items-center gap-2 border-t border-line px-3 py-3 border-line"
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t("assistant.ph")}
               aria-label={t("assistant.ph")}
-              className="h-10 min-w-0 flex-1 rounded border border-line bg-transparent px-3 text-[13px] outline-none focus:border-brass-500 dark:border-linedark"
+              className="h-10 min-w-0 flex-1 rounded border border-line bg-transparent px-3 text-[13px] outline-none focus:border-brass-500 border-line"
             />
             <button
               type="submit"
-              className="flex h-10 shrink-0 items-center gap-1.5 rounded bg-ink-950 px-3 text-[13px] font-semibold text-white dark:bg-white dark:text-ink-950"
+              className="flex h-10 shrink-0 items-center gap-1.5 rounded bg-ink-950 px-3 text-[13px] font-semibold text-white bg-paper-0 text-ink-950"
             >
               {t("assistant.send")}
               <IcArrow className="text-sm rtl:-scale-x-100" />
             </button>
           </form>
-          <div className="border-t border-line px-4 py-2 text-[10px] text-ink-400 dark:border-linedark">
+          <div className="border-t border-line px-4 py-2 text-[10px] text-ink-400 border-line">
             {t("assistant.local")}
           </div>
         </div>

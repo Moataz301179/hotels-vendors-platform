@@ -1,181 +1,82 @@
 /**
- * Platform Fee Calculator — Centralized fee logic with idempotency
- * Hotels Vendors
+ * Platform Fee Calculator — server write path.
  *
- * Revenue streams (aligned with COO strategy):
- *   1. TRANSACTION FEE: 2.5% (CORE) / 2.0% (PREMIER) / 1.5% (COASTAL)
- *   2. FACTORING REFERRAL: 0.5% flat on invoice value
- *   3. DOCUMENT PROCESSING: EGP 5 per ETA-compliant document
+ * All arithmetic lives in `lib/fintech/fee-math.ts` (pure, client-safe).
+ * This module only persists a calculated fee and is permission-gated:
+ * calculating a fee is never an approval, and no mutation happens without
+ * the caller already holding `invoice:update`.
  *
  * ⚠️  Platform fee is deducted BEFORE factoring partner fee (G10: Hub-Revenue Priority).
  * ⚠️  HotelsVendors does NOT hold cash. Fees are invoiced separately.
  */
 
-import type { HotelTier } from "@prisma/client";
+import {
+  calculateFullFeeBreakdown,
+  calculatePlatformFee,
+  fromCents,
+  transactionRateBps,
+  type FeeBreakdown,
+  type HotelTier,
+} from "./fee-math";
 
-// ─────────────────────────────────────────
-// FEE TYPES
-// ─────────────────────────────────────────
+export * from "./fee-math";
 
-export type FeeType = "TRANSACTION" | "FACTORING_REFERRAL" | "DOCUMENT_PROCESSING";
-
-export interface FeeCalculationResult {
-  feeType: FeeType;
-  amount: number;
-  rate: number;
-  baseAmount: number;
-  breakdown: string;
-  currency: string;
+export interface ApplyFeesArgs {
+  invoiceId: string;
+  hotelTier: HotelTier;
+  documentCount?: number;
+  /** Tenant that must own the invoice; a mismatch is refused before any write. */
+  tenantId: string;
+  /**
+   * Reference to traceable owner authorization for the applied rate.
+   * Without it the write is REFUSED — the internal Decision Log is a summary
+   * label, not authorization, so no live fee may be posted.
+   */
+  authorizationEvidence?: string;
+  /** Caller must already hold this permission; enforced before any write. */
+  requirePermission: (permission: string) => Promise<void> | void;
 }
 
-export interface FeeBreakdown {
-  transactionFee: FeeCalculationResult;
-  factoringReferralFee: FeeCalculationResult;
-  documentProcessingFee: FeeCalculationResult;
-  totalPlatformFees: number;
-}
-
-// ─────────────────────────────────────────
-// TIER-BASED RATE TABLE
-// ─────────────────────────────────────────
-
-const TRANSACTION_RATES: Record<HotelTier, number> = {
-  CORE: 0.025,      // 2.5%
-  PREMIER: 0.020,   // 2.0%
-  COASTAL: 0.015,   // 1.5%
-};
-
-const FACTORING_REFERRAL_RATE = 0.005; // 0.5% flat
-const DOCUMENT_PROCESSING_FEE = 5.0;   // EGP 5 per document
-
-// ─────────────────────────────────────────
-// CORE CALCULATOR
-// ─────────────────────────────────────────
-
-/**
- * Calculate a single platform fee.
- *
- * @param invoiceTotal — The invoice gross amount in EGP
- * @param hotelTier — CORE | PREMIER | COASTAL (determines transaction fee rate)
- * @param feeType — The type of fee to calculate
- * @returns Fee calculation with amount, rate, and human-readable breakdown
- */
-export function calculatePlatformFee(
-  invoiceTotal: number,
-  hotelTier: HotelTier,
-  feeType: FeeType
-): FeeCalculationResult {
-  const currency = "EGP";
-
-  switch (feeType) {
-    case "TRANSACTION": {
-      const rate = TRANSACTION_RATES[hotelTier];
-      const amount = Math.round(invoiceTotal * rate * 100) / 100;
-      return {
-        feeType,
-        amount,
-        rate,
-        baseAmount: invoiceTotal,
-        breakdown: `Transaction fee: ${rate * 100}% of EGP ${invoiceTotal.toLocaleString()} (${hotelTier} tier) = EGP ${amount.toLocaleString()}`,
-        currency,
-      };
-    }
-
-    case "FACTORING_REFERRAL": {
-      const amount = Math.round(invoiceTotal * FACTORING_REFERRAL_RATE * 100) / 100;
-      return {
-        feeType,
-        amount,
-        rate: FACTORING_REFERRAL_RATE,
-        baseAmount: invoiceTotal,
-        breakdown: `Factoring referral: ${FACTORING_REFERRAL_RATE * 100}% of EGP ${invoiceTotal.toLocaleString()} = EGP ${amount.toLocaleString()}`,
-        currency,
-      };
-    }
-
-    case "DOCUMENT_PROCESSING": {
-      const quantity = Math.max(1, Math.ceil(invoiceTotal / invoiceTotal)); // 1 document per invoice
-      const amount = DOCUMENT_PROCESSING_FEE * quantity;
-      return {
-        feeType,
-        amount,
-        rate: 0, // Flat fee, not percentage
-        baseAmount: invoiceTotal,
-        breakdown: `Document processing: EGP ${DOCUMENT_PROCESSING_FEE} × ${quantity} document(s) = EGP ${amount.toLocaleString()}`,
-        currency,
-      };
-    }
+export class FeeApplicationBlockedError extends Error {
+  constructor() {
+    super("Fee application is blocked: no traceable owner authorization for the rate.");
+    this.name = "FeeApplicationBlockedError";
   }
 }
 
 /**
- * Calculate all platform fees for an invoice.
- * Returns the complete fee breakdown with total.
- */
-export function calculateFullFeeBreakdown(
-  invoiceTotal: number,
-  hotelTier: HotelTier,
-  documentCount: number = 1
-): FeeBreakdown {
-  const transactionFee = calculatePlatformFee(invoiceTotal, hotelTier, "TRANSACTION");
-  const factoringReferralFee = calculatePlatformFee(invoiceTotal, hotelTier, "FACTORING_REFERRAL");
-
-  // Override document processing for multiple documents
-  const docFeeRate = DOCUMENT_PROCESSING_FEE;
-  const docAmount = docFeeRate * documentCount;
-  const documentProcessingFee: FeeCalculationResult = {
-    feeType: "DOCUMENT_PROCESSING",
-    amount: docAmount,
-    rate: 0,
-    baseAmount: invoiceTotal,
-    breakdown: `Document processing: EGP ${docFeeRate} × ${documentCount} document(s) = EGP ${docAmount.toLocaleString()}`,
-    currency: "EGP",
-  };
-
-  const totalPlatformFees =
-    transactionFee.amount + factoringReferralFee.amount + documentProcessingFee.amount;
-
-  return {
-    transactionFee,
-    factoringReferralFee,
-    documentProcessingFee,
-    totalPlatformFees: Math.round(totalPlatformFees * 100) / 100,
-  };
-}
-
-// ─────────────────────────────────────────
-// IDEMPOTENT FEE APPLICATION
-// ─────────────────────────────────────────
-
-/**
- * Calculate and apply platform fees to an invoice record.
- * Uses the invoice ID as idempotency key — calling twice with the same
- * invoice ID returns the same fee without double-charging.
+ * Calculate and persist platform fees for an invoice, idempotently.
  *
- * Returns the fee breakdown that was applied (or already applied).
+ * Guards, in order: permission, then record ownership/tenant. A generic
+ * `invoice:update` check alone is not sufficient — the invoice must belong to
+ * the caller's tenant or no mutation occurs.
  */
-export async function applyPlatformFees(
-  invoiceId: string,
-  hotelTier: HotelTier,
-  documentCount: number = 1
-): Promise<FeeBreakdown & { alreadyApplied: boolean }> {
+export async function applyPlatformFees(args: ApplyFeesArgs): Promise<
+  FeeBreakdown & { alreadyApplied: boolean }
+> {
+  const { invoiceId, hotelTier, documentCount = 1, tenantId, authorizationEvidence, requirePermission } = args;
+
+  // Permission is enforced before the tenant-scoped lookup.
+  await requirePermission("invoice:update");
+
+  // No live fee may be posted without traceable owner authorization for the rate.
+  if (!authorizationEvidence || authorizationEvidence.trim().length === 0) {
+    throw new FeeApplicationBlockedError();
+  }
+
   const { prisma } = await import("@/lib/prisma");
 
-  // Check if fees already applied (idempotent)
-  const existing = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
+  const existing = await prisma.invoice.findFirst({
+    where: { id: invoiceId, tenantId, deletedAt: null },
     select: { platformFee: true, platformFeeRate: true, total: true },
   });
 
-  if (!existing) {
-    throw new Error(`Invoice ${invoiceId} not found`);
-  }
+  if (!existing) throw new Error(`Invoice ${invoiceId} not found in tenant ${tenantId}`);
 
   const platformFee = Number(existing.platformFee);
-  const platformFeeRate = Number(existing.platformFeeRate ?? 0.025);
+  const platformFeeRate = Number(existing.platformFeeRate ?? transactionRateBps("CORE") / 10_000);
   const invoiceTotal = Number(existing.total);
 
-  // If platformFee already set and > 0, return existing breakdown
   if (platformFee > 0) {
     return {
       transactionFee: {
@@ -185,41 +86,35 @@ export async function applyPlatformFees(
         baseAmount: invoiceTotal,
         breakdown: `Already applied: EGP ${platformFee.toLocaleString()}`,
         currency: "EGP",
+        basis: "approved-tier-structure",
       },
       factoringReferralFee: calculatePlatformFee(invoiceTotal, hotelTier, "FACTORING_REFERRAL"),
       documentProcessingFee: {
         feeType: "DOCUMENT_PROCESSING",
-        amount: DOCUMENT_PROCESSING_FEE * documentCount,
+        amount: fromCents(BigInt(500) * BigInt(documentCount)),
         rate: 0,
         baseAmount: invoiceTotal,
-        breakdown: `Document processing: EGP ${DOCUMENT_PROCESSING_FEE} × ${documentCount}`,
+        breakdown: `Document processing (hypothetical flat fee): EGP 5.00 × ${documentCount}`,
         currency: "EGP",
+        basis: "hypothetical",
       },
-      totalPlatformFees: platformFee,
+      claimedRateTotal: platformFee,
+      hypotheticalTotal: fromCents(BigInt(500) * BigInt(documentCount)) + calculatePlatformFee(invoiceTotal, hotelTier, "FACTORING_REFERRAL").amount,
+      illustrativeTotal: platformFee,
+      chargeable: false,
       alreadyApplied: true,
     };
   }
 
-  // Calculate and persist
   const breakdown = calculateFullFeeBreakdown(invoiceTotal, hotelTier, documentCount);
 
   await prisma.invoice.update({
     where: { id: invoiceId },
     data: {
-      platformFee: breakdown.totalPlatformFees,
-      platformFeeRate: TRANSACTION_RATES[hotelTier],
+      platformFee: breakdown.claimedRateTotal,
+      platformFeeRate: transactionRateBps(hotelTier) / 10_000,
     },
   });
 
   return { ...breakdown, alreadyApplied: false };
 }
-
-// ─────────────────────────────────────────
-// RATE TABLE EXPORT (for admin dashboards)
-// ─────────────────────────────────────────
-
-export const FEE_RATE_TABLE = {
-  transaction: TRANSACTION_RATES,
-  factoringReferral: FACTORING_REFERRAL_RATE,
-  documentProcessing: DOCUMENT_PROCESSING_FEE,
-} as const;

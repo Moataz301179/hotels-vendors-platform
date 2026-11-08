@@ -12,6 +12,9 @@ export const en = {
     admin: "Platform Admin", tenants: "Tenants", users: "Users & Roles",
     rules: "Authority Rules", audit: "Audit Log", overview: "Overview",
     signIn: "Sign in", signOut: "Sign out", menu: "Menu", close: "Close menu",
+    howItWorks: "How it works", catalogue: "Catalogue", marketInsights: "Market insights",
+    eInvoicing: "E-invoicing", forVendors: "For Vendors", logisticsPartners: "Logistics partners",
+    financePartners: "Finance partners", joinNetwork: "Join the network",
   },
 
   role: {
@@ -551,6 +554,9 @@ export const ar: Dict = {
     admin: "إدارة المنصة", tenants: "المستأجرون", users: "المستخدمون والأدوار",
     rules: "قواعد الصلاحيات", audit: "سجل التدقيق", overview: "نظرة عامة",
     signIn: "تسجيل الدخول", signOut: "تسجيل الخروج", menu: "القائمة", close: "إغلاق القائمة",
+    howItWorks: "كيف يعمل", catalogue: "الكتالوج", marketInsights: "رؤى السوق",
+    eInvoicing: "الفوترة الإلكترونية", forVendors: "للموردين", logisticsPartners: "شركاء اللوجستيات",
+    financePartners: "شركاء التمويل", joinNetwork: "انضم إلى الشبكة",
   },
 
   role: {

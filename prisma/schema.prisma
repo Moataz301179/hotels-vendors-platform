@@ -2829,6 +2829,9 @@ model GoodsReceiptNote {
   uuid              String?   @unique(map: "GoodsReceiptNote_uuid_uniq") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deletedAt         DateTime?
   shipmentId                   String?
+  /// Client-supplied retry key for a single receiving submission. Optional so
+  /// existing browser receipts remain compatible; HOVIN always supplies one.
+  idempotencyKey               String?
 
   order     Order         @relation(fields: [orderId], references: [id])
   hotel     Hotel         @relation(fields: [hotelId], references: [id])
@@ -2843,6 +2846,7 @@ model GoodsReceiptNote {
   @@index([status])
   @@index([deletedAt], map: "GRN_deleted_idx")
   @@index([shipmentId])
+  @@unique([tenantId, idempotencyKey], map: "GoodsReceiptNote_tenantId_idempotencyKey_key")
 }
 
 model GrnLineItem {
@@ -3612,6 +3616,7 @@ enum EntityName {
   SUPPLIER_LIST_INGESTION
   CONNECTED_SUPPLIER_PRICE_COMPARISON
   HOTEL_CONNECTOR
+  OLIV_ONBOARDING
 }
 
 enum NotificationChannel {

@@ -94,4 +94,39 @@ describe("hotel e-invoice ingestion boundaries", () => {
     expect(response.status).toBe(200);
     expect(m.importList.mock.calls[0][0].where).toMatchObject({ tenantId: "tenant", hotelId: "hotel-1" });
   });
+
+  it("ignores a caller-supplied hotelId and resolves the authenticated hotel (TST-SEC-001)", async () => {
+    m.actor.mockResolvedValue({ ...actor, hotelId: "hotel-authenticated" });
+    m.hotel.mockResolvedValue({ id: "hotel-authenticated", status: "ACTIVE" });
+
+    const response = await ingestPost(request({
+      hotelId: "hotel-b",
+      sourceType: "API",
+      sourceReference: "ref-scope",
+      payloadSummary,
+      recordCount: 1,
+    }));
+
+    expect(response.status).toBe(201);
+    // The server must look up the authenticated hotel, never the caller's value.
+    expect(m.hotel.mock.calls[0][0].where).toEqual({ id: "hotel-authenticated", tenantId: "tenant", deletedAt: null });
+    expect(m.importCreate.mock.calls[0][0].data).toMatchObject({ hotelId: "hotel-authenticated", status: "PENDING" });
+  });
+
+  it("does not aim an ingest at a hotel outside the authenticated tenant", async () => {
+    m.actor.mockResolvedValue({ ...actor, hotelId: "hotel-other-tenant" });
+    m.hotel.mockResolvedValue(null);
+
+    const response = await ingestPost(request({
+      hotelId: "hotel-b",
+      sourceType: "API",
+      sourceReference: "ref-cross",
+      payloadSummary,
+      recordCount: 1,
+    }));
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "HOTEL_NOT_FOUND" });
+    expect(m.importCreate).not.toHaveBeenCalled();
+  });
 });
