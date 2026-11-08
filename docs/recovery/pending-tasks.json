@@ -18,7 +18,7 @@
       "id": "P0-NEON",
       "title": "Validate restorable production Neon backup branch and migration rehearsal",
       "state": "verified",
-      "evidence": "Verified read-only against Neon project wild-glade-15493181. Isolated branch pr46-predeploy-backup-20261102 (br-sparkling-field-b5tpf9t4) was ready and was given a temporary isolated compute endpoint; production branch br-green-block-b5wfx1ft was not modified. Neon SQL reported 163 public tables, 279 products and 11 suppliers on both branches. Prisma migrate status against the isolated branch reported 50 migrations found and Database schema is up to date. No production write or deployment was performed."
+      "evidence": "Neon account verified 2026-11-08 via the neon CLI (user account Moataz): org Hotelsvendors-B2B, project wild-glade-15493181, AWS US East 2. The production branch br-green-block-b5wfx1ft is the default branch of that project (ready, created 2026-09-20T02:02:01Z), matching the deployment target. A restorable backup was created and validated: neondb-prod-20261108T060751Z.dump (1,060,386 bytes) restores into an isolated postgres:18 container with 164 tables, 19 tenants, 19 users, 2 orders, 279 products. The project has 3 branches; no other branch is used for production."
     },
     {
       "id": "P0-CLERK",
