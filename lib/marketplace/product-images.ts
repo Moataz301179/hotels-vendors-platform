@@ -262,6 +262,23 @@ const IMG_LINT_ROLLER =
 const IMG_PAPER_TOWEL =
   "https://commons.wikimedia.org/wiki/Special:FilePath/Paper%20towel.png?width=800";
 
+// Verified 2026-11-08 (qwen3.5:9b): two bottles of refined sunflower oil -- a
+// neutral cooking-oil product photo. Needed because the `oil` keyword's
+// olive-oil bottle (with olives) was a different oil than the sunflower,
+// canola and corn oil products that also matched it.
+const IMG_SUNFLOWER_OIL =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Bottle%201%20liter%20Sunflower%20refined%20oil.jpg?width=800";
+// Verified 2026-11-08 (qwen3.5:9b): a clear rectangular plastic food container
+// with lid. Replaces the glass-container photo for plastic-container products
+// ("Plastic Containers (1L, 100pc)") -- a material mismatch.
+const IMG_PLASTIC_CONTAINER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Rectangular%20plastic%20food%20containers.JPG?width=800";
+// Verified 2026-11-08 (qwen3.5:9b): a cooked tuna steak on a plate (corn, peas).
+// Needed because "Tuna Steak Sashimi Grade" matched the `steak` keyword and
+// showed a beef steak -- a different species.
+const IMG_TUNA_STEAK =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Ahi%20tuna%20steak%2C%20corn%2C%20peas%20-%20Massachusetts.jpg?width=800";
+
 const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
   //  MEATS & POULTRY
@@ -275,6 +292,10 @@ const KEYWORD_MAP: Record<string, string> = {
   //  SEAFOOD
   // ═══════════════════════════════════════════════════════════════
   salmon:      "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=600&q=80",
+  // `tuna_steak` added 2026-11-08: "Tuna Steak Sashimi Grade" matched the
+  // `steak` keyword (beef steak photo) -- a different species. It now resolves
+  // to a verified tuna steak photo.
+  tuna_steak:  IMG_TUNA_STEAK,
   tuna:      "https://commons.wikimedia.org/wiki/Special:FilePath/Tuna%20Salad%20with%20sweet%20corn.jpg?width=800",
   shrimp:      "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&q=80",
   prawn:      "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&q=80",
@@ -313,6 +334,12 @@ const KEYWORD_MAP: Record<string, string> = {
   rice:      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80",
   flour:      "https://images.unsplash.com/photo-1627485937980-221c88ac04f9?w=600&q=80",
   bran:      "https://images.unsplash.com/photo-1627485937980-221c88ac04f9?w=600&q=80",
+  // `sunflower`/`canola`/`corn` added 2026-11-08: the shared `oil` image is an
+  // olive-oil bottle with olives, which is a different oil than these products
+  // name. They now resolve to a verified neutral cooking-oil bottle photo.
+  sunflower:      IMG_SUNFLOWER_OIL,
+  canola:      IMG_SUNFLOWER_OIL,
+  corn:      IMG_SUNFLOWER_OIL,
   oil:      "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80",
   olive:      "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80",
   spice:      "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=600&q=80",
@@ -410,8 +437,10 @@ const KEYWORD_MAP: Record<string, string> = {
   //  POOL & SPA
   // ═══════════════════════════════════════════════════════════════
   pool:      "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80",
-  chlorine:  "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80",
-  ph:        "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80",
+  // `chlorine`/`ph` removed 2026-11-08: both pointed at the swimming-pool
+  // photo, which is the environment, not the product. "Chlorine Granules 45kg"
+  // and "pH Plus 25kg" are pool chemicals with no verified product photo, so
+  // they now fall through to the category gradient instead of a wrong subject.
   skimmer:   "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80",
   net:       "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80",
   hose:      "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80",
@@ -520,6 +549,11 @@ const KEYWORD_MAP: Record<string, string> = {
   // pan" and "Commercial food storage container" fell through to the Food &
   // Beverage category artwork (a general food photograph).
   gastronorm: IMG_GASTRONORM,
+  // `plastic_container` added 2026-11-08: the shared `container` photo is glass,
+  // which is the wrong material for "Plastic Containers (1L, 100pc)". It now
+  // resolves to a verified plastic-container photo; glass/general containers
+  // still use `container`.
+  plastic_container: IMG_PLASTIC_CONTAINER,
   container:  IMG_FOOD_CONTAINER,
   // `kitchen_roll` added 2026-11-08: "Hayat Production / Kitchen Roll Ex.1000"
   // matched the `roll` keyword and showed a photo of bread loaves. A kitchen
@@ -758,6 +792,10 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   gel: stems("hair", "hand", "nail", "shave", "floor", "tile", "fruit", "fruity", "dessert", "jelly", "gelatin", "pudding", "sweet", "cake", "snack", "candy", "rau", "thach", "thạch", "laundry", "detergent", "ariel", "washing"),
   // net: pool skimmer net vs internet/network
   net: stems("internet", "network", "web", "mesh", "wifi", "lan", "ethernet", "firewall"),
+  // pool: a swimming pool vs pool EQUIPMENT/CHEMICALS. "Pool Chair" must show a
+  // chair; "Chlorine Granules"/"pH Plus" are chemicals with no verified photo
+  // and must fall through to the gradient, not the pool scene.
+  pool: stems("chair", "test", "kit", "strip", "chemical", "granule", "chlorine", "ph", "phosphate", "alkalinity", "acid", "soda", "ash"),
   // card: a hotel KEY CARD vs paper/business/status cards or an access-card
   // READER (an electronic device, not a key card). "Room Cleaning Status
   // Cards" and "Key Card Encoder"/"System Upgrade" (devices/services) fall through.
@@ -779,7 +817,7 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   // "Water Glasses (Crystal)" must not show a water bottle.
   water: stems("heater", "boiler", "filter", "softener", "pump", "tank", "dispenser", "bottleless", "ionizer", "purifier", "glass", "glasses", "cup", "cups", "mug", "jug", "carafe", "tumbler"),
   // oil: cooking oil vs engine/motor oil or oil-preserved food
-  oil: stems("engine", "motor", "lubricant", "hydraulic", "gear", "transmission", "crankcase", "anchovy", "anchovies", "sardine", "sardines", "fish", "massage"),
+  oil: stems("engine", "motor", "lubricant", "hydraulic", "gear", "transmission", "crankcase", "anchovy", "anchovies", "sardine", "sardines", "fish", "massage", "sunflower", "canola", "corn", "seed", "vegetable", "groundnut", "palm", "rapeseed", "soya", "soy"),
   // battery: battery vs car/vehicle battery
   battery: stems("car", "vehicle", "auto", "truck", "boat", "motorcycle", "marine"),
   // towel: towel vs towel rail/warmer/paper towel
@@ -812,12 +850,16 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   sesame: stems("oil"),
   // meat: generic meat vs a named species ("Dark Meat Chicken" is chicken)
   meat: stems("chicken", "turkey", "duck", "lamb", "beef", "pork", "fish", "seafood", "mince", "minced", "veal", "goat", "mutton"),
+  // steak: beef steak vs a named fish steak ("Tuna Steak Sashimi Grade" is tuna)
+  steak: stems("tuna", "salmon", "fish", "seafood", "sashimi", "swordfish", "marlin", "mackerel"),
   // herb: fresh herbs vs herb-flavoured prepared food
   herb: stems("bread", "naan", "roti", "food", "dish", "sauce", "soup", "seasoning", "spice", "mix", "marinade", "chicken", "meat", "fish", "rice", "pasta", "snack", "chip", "butter", "oil", "salt", "pepper", "garlic"),
   // onion: onion vs onion-flavoured snacks/seasoning
   onion: stems("twist", "chip", "crisp", "snack", "bread", "roll", "dip", "sauce", "soup", "seasoning", "powder", "salt", "garlic", "ring"),
   // potato: potato vs potato crisps/chips
   potato: stems("crisp", "crisps", "chip", "chips", "snack", "candy", "sweet"),
+  // corn: corn (oil) vs corn-based foods (flakes, starch, syrup, flour)
+  corn: stems("flakes", "cereal", "sweet", "popcorn", "starch", "syrup", "flour", "chip", "cornmeal", "tortilla"),
   // tomato: fresh tomato vs tomato paste/sauce ("diced tomatoes in juice" is
   // still tomatoes, so "juice" is intentionally NOT guarded here)
   tomato: stems("paste", "sauce", "ketchup", "soup", "pizza", "salsa", "marinara", "napoletana", "sun-dried", "sundried"),
