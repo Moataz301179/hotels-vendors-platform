@@ -77,6 +77,7 @@ model Tenant {
   PaymentTerm                 PaymentTerm[]
   paymentTransactions         PaymentTransaction[]
   products                    Product[]
+  catalogReceivingBatches     CatalogReceivingBatch[]
   productSeasonalities        ProductSeasonality[]
   promoCodes                  PromoCode[]
   properties                  Property[]
@@ -661,6 +662,7 @@ model DirectoryCandidate {
   deletedAt         DateTime?
   source            DirectorySource   @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   profile           DirectoryProfile?
+  receivingRecords  CatalogReceivingRecord[]
 
   @@index([sourceId])
   @@index([reviewStatus])
@@ -4743,4 +4745,143 @@ enum ConsentLegalBasis {
   LEGAL_OBLIGATION
   VITAL_INTERESTS
   PUBLIC_TASK
+}
+
+
+enum CatalogReceivingBatchStatus {
+  RECEIVED
+  PROCESSING
+  READY_FOR_EXPORT
+  EXPORTED
+  PARTIAL
+  FAILED
+}
+
+enum CatalogReceivingQualityStatus {
+  PENDING
+  ACCEPTED
+  REVIEW_REQUIRED
+  REJECTED
+  DUPLICATE
+}
+
+enum CatalogReceivingTaxonomyStatus {
+  PENDING
+  MAPPED
+  REVIEW_REQUIRED
+}
+
+enum CatalogSubagentStage {
+  QUALITY_FILTER
+  HOSPITALITY_TAXONOMY
+}
+
+enum CatalogSubagentRunStatus {
+  COMPLETED
+  FAILED
+}
+
+/// Raw market intake. Supplier identity and observed commercial terms stay
+/// here, behind administrator authorization; this is never a buyer catalog.
+model CatalogReceivingBatch {
+  id                     String                       @id @default(cuid())
+  tenantId               String
+  sourceName             String
+  sourceUrl              String
+  sourceType             String
+  sourcePermissionStatus String                       @default("PERMISSION_UNKNOWN")
+  sourcePermissionNote   String?
+  sourceObservedAt       DateTime
+  payloadChecksum        String
+  status                 CatalogReceivingBatchStatus  @default(RECEIVED)
+  receivedById           String
+  recordCount            Int                          @default(0)
+  acceptedCount          Int                          @default(0)
+  rejectedCount          Int                          @default(0)
+  exportedCount          Int                          @default(0)
+  receivedAt             DateTime                     @default(now())
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  deletedAt              DateTime?
+  tenant                 Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  records                CatalogReceivingRecord[]
+  agentRuns              CatalogAgentRun[]
+
+  @@unique([tenantId, payloadChecksum])
+  @@index([tenantId, status, receivedAt])
+  @@index([sourceUrl])
+  @@index([deletedAt])
+}
+
+/// One immutable product observation from a market source. The raw supplier,
+/// source page, image URLs and observed price are retained for admin-only RFQ
+/// research. Exported directory candidates deliberately omit those fields.
+model CatalogReceivingRecord {
+  id                       String                           @id @default(cuid())
+  batchId                  String
+  sourceRecordKey          String?
+  dedupeKey                String
+  productUrl               String?
+  rawSupplierName          String?
+  rawSupplierWebsite       String?
+  rawProductName           String
+  rawProductDescription    String?
+  rawCategory              String?
+  rawSku                   String?
+  rawBrand                 String?
+  rawPackSize              String?
+  rawUnitOfMeasure         String?
+  rawPurchaseUnit          String?
+  observedPrice            Decimal?                         @db.Decimal(14, 2)
+  observedCurrency         String                            @default("EGP")
+  rawStockText             String?
+  imageUrls                String[]                          @default([])
+  rawPayload               Json
+  qualityStatus            CatalogReceivingQualityStatus     @default(PENDING)
+  taxonomyStatus           CatalogReceivingTaxonomyStatus    @default(PENDING)
+  qualityOutput            Json?
+  taxonomyOutput           Json?
+  normalizedName           String?
+  normalizedDescription    String?
+  mappedCategoryCode       String?
+  mappedSubcategoryCode    String?
+  normalizedUnitOfMeasure  String?
+  normalizedPurchaseUnit   String?
+  normalizedSpecifications Json?
+  directoryCandidateId     String?
+  receivedAt               DateTime                          @default(now())
+  processedAt              DateTime?
+  exportedAt               DateTime?
+  createdAt                DateTime                          @default(now())
+  updatedAt                DateTime                          @updatedAt
+  deletedAt                DateTime?
+  batch                    CatalogReceivingBatch             @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  directoryCandidate       DirectoryCandidate?               @relation(fields: [directoryCandidateId], references: [id], onDelete: SetNull)
+
+  @@index([batchId, qualityStatus, taxonomyStatus])
+  @@index([dedupeKey, receivedAt])
+  @@index([directoryCandidateId])
+  @@index([rawSupplierName])
+  @@index([deletedAt])
+}
+
+/// Auditable execution record for each of the two catalog subagents.
+model CatalogAgentRun {
+  id             String                    @id @default(cuid())
+  batchId        String
+  stage          CatalogSubagentStage
+  status         CatalogSubagentRunStatus  @default(COMPLETED)
+  engineVersion  String
+  inputCount     Int                       @default(0)
+  acceptedCount  Int                       @default(0)
+  rejectedCount  Int                       @default(0)
+  reviewCount    Int                       @default(0)
+  output         Json
+  requestedById  String
+  startedAt      DateTime                  @default(now())
+  completedAt    DateTime                  @default(now())
+  createdAt      DateTime                  @default(now())
+  batch          CatalogReceivingBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId, stage, createdAt])
 }
