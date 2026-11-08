@@ -13,6 +13,24 @@ type Candidate = {
   source: { sourceUrl: string; permissionStatus: 'PERMISSION_UNKNOWN' | 'PERMITTED' | 'RESTRICTED' };
 };
 
+type SupplierLead = {
+  observationId: string;
+  supplierName: string | null;
+  supplierWebsite: string | null;
+  productName: string;
+  sku: string | null;
+  brand: string | null;
+  packSize: string | null;
+  unitOfMeasure: string | null;
+  lastObservedPrice: string | null;
+  currency: string;
+  stockText: string | null;
+  productUrl: string | null;
+  sourceName: string;
+  sourceUrl: string;
+  observedAt: string;
+  imageRightsStatus: string;
+};
 type Draft = {
   reviewNote: string;
   publicName: string;
@@ -35,6 +53,8 @@ export function DirectoryCandidateReview() {
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [supplierLeads, setSupplierLeads] = useState<Record<string, SupplierLead[]>>({});
+  const [supplierBusy, setSupplierBusy] = useState<string | null>(null);
 
   const load = async () => {
     const response = await requestJson<{ candidates: Candidate[] }>('/api/v2/admin/directory/candidates');
@@ -46,6 +66,17 @@ export function DirectoryCandidateReview() {
   }, []);
 
   const draftFor = (candidateId: string) => drafts[candidateId] ?? emptyDraft();
+  const loadSupplierLeads = async (candidateId: string) => {
+    setSupplierBusy(candidateId);
+    try {
+      const result = await requestJson<{ supplierLeads: SupplierLead[] }>('/api/v2/admin/catalog-receiving/supplier-matches?candidateId=' + encodeURIComponent(candidateId));
+      setSupplierLeads((current) => ({ ...current, [candidateId]: result.supplierLeads }));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to load supplier research leads.');
+    } finally {
+      setSupplierBusy(null);
+    }
+  };
   const update = (candidateId: string, field: Exclude<keyof Draft, 'publicImages'>, value: string) => {
     setDrafts((current) => ({ ...current, [candidateId]: { ...draftFor(candidateId), [field]: value } }));
   };
@@ -107,7 +138,23 @@ export function DirectoryCandidateReview() {
           <label>Reviewer-authored public description<textarea required minLength={10} maxLength={2000} value={draft.publicDescription} onChange={(event) => update(candidate.id, 'publicDescription', event.target.value)} placeholder="Neutral hospitality specification; never paste source or Vendor text." /></label>
           <label>Review note<textarea required minLength={10} maxLength={1000} value={draft.reviewNote} onChange={(event) => update(candidate.id, 'reviewNote', event.target.value)} placeholder="Record the permission and anonymity review decision." /></label>
         </div>
-        <div className="workspace-source-actions"><button className="btn btn-blue" disabled={disabled || candidate.source.permissionStatus !== 'PERMITTED'} onClick={() => void decide(candidate.id, 'APPROVE')}>Publish anonymous reference</button><button className="btn btn-ghost" disabled={disabled} onClick={() => void decide(candidate.id, 'REJECT')}>Reject candidate</button></div>
+        <div className="workspace-source-actions">
+          <button className="btn btn-ghost" disabled={supplierBusy === candidate.id} onClick={() => void loadSupplierLeads(candidate.id)}>{supplierBusy === candidate.id ? 'Loading supplier leads…' : 'View supplier leads (admin only)'}</button>
+          <button className="btn btn-blue" disabled={disabled || candidate.source.permissionStatus !== 'PERMITTED'} onClick={() => void decide(candidate.id, 'APPROVE')}>Publish anonymous reference</button>
+          <button className="btn btn-ghost" disabled={disabled} onClick={() => void decide(candidate.id, 'REJECT')}>Reject candidate</button>
+        </div>
+        {supplierLeads[candidate.id] && <div style={{ overflowX: 'auto', marginTop: 14 }}>
+          <strong>Internal RFQ sourcing leads · {supplierLeads[candidate.id].length}</strong>
+          <table className="table"><thead><tr><th>Supplier</th><th>Observed pack</th><th>Last observed price</th><th>Evidence</th></tr></thead><tbody>
+            {supplierLeads[candidate.id].map((lead) => <tr key={lead.observationId}>
+              <td><strong>{lead.supplierName || 'Supplier not identified'}</strong><br /><small>{lead.supplierWebsite || ''}</small></td>
+              <td>{lead.packSize || 'Not observed'} · {lead.unitOfMeasure || 'Unit unknown'}{lead.sku ? ' · SKU ' + lead.sku : ''}</td>
+              <td>{lead.lastObservedPrice === null ? 'Not observed' : Number(lead.lastObservedPrice).toLocaleString() + ' ' + lead.currency}</td>
+              <td>{lead.productUrl ? <a href={lead.productUrl} target="_blank" rel="noreferrer">Product page</a> : <a href={lead.sourceUrl} target="_blank" rel="noreferrer">Catalog source</a>}<br /><small>{new Date(lead.observedAt).toLocaleDateString('en-GB')}</small></td>
+            </tr>)}
+            {!supplierLeads[candidate.id].length && <tr><td colSpan={4}>No supplier observations are linked to this candidate yet.</td></tr>}
+          </tbody></table>
+        </div>}
       </article>;
     })}</div>}
     {message ? <p className="workspace-status" role="status">{message}</p> : null}
