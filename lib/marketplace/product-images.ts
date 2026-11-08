@@ -142,6 +142,39 @@
  * card+status/sign/cleaning/encoder/system/upgrade, key+card.
  * Verified: `npx tsc --noEmit -p tsconfig.json` clean; 25/25 targeted resolver
  * assertions pass (wrong subjects -> gradient, correct subjects kept).
+ *
+ * AUDIT 2026-11-08 (qwen3.5:9b; independent re-run over 372 catalog SKUs from
+ * the seed catalog, the rfq catalog and the import results, plus a re-check of
+ * every unique resolved image). Found and fixed the following wrong-subject
+ * resolutions that the earlier passes missed:
+ *   luggage/baggage   "Foldable luggage rack in public bus of Singapore" is a
+ *                     fold-down TRANSIT bus rack, not a hotel product -> verified
+ *                     hotel luggage cart (brass frame, red-carpet deck). A
+ *                     luggage RACK is now guarded away to the gradient.
+ *   lint roller       matched `roll` -> a photo of bread loaves -> verified
+ *                     lint-roller photo (+ `roll`/`roller` guards).
+ *   Kitchen Roll      matched `roll` -> bread -> verified paper-towel roll
+ *                     (+ `roll` guard, new `kitchen_roll` keyword).
+ *   shower towel      matched `shower` -> toiletry bottles -> verified towels
+ *                     (+ `shower` guard now skips "towel").
+ *   Small Shower Scrubber  matched `shower` -> toiletry bottles -> gradient
+ *                     (+ `shower` guard now skips scrubber/scrub/brush/sponge).
+ *   Ariel Gel (3.60 L)  a LAUNDRY gel matched `gel` -> toiletry bottles ->
+ *                     gradient (+ `gel` guard now skips laundry/detergent/ariel).
+ *   Feba Soap yellow lemon  matched `lemon` -> lemons -> verified soap photo
+ *                     (+ `lemon` guard now skips "soap").
+ *   Painted Metal Trash Bin  matched `paint` -> a paint roller -> gradient
+ *                     (+ `paint` guard now skips bin/trash/painted).
+ *   Door Access Card Reader  matched `card` -> a hotel key card -> gradient
+ *                     (+ `card` guard now skips reader/access/door).
+ *   Cotton Bathrobe   matched `cotton` -> a flat fabric texture -> gradient
+ *                     (+ `cotton` guard now skips robe/bathrobe).
+ *   Machine Air Fresh Matic with Spray  matched `spray` -> a spray bottle ->
+ *                     gradient (+ new `spray` guard for machine/matic/dispenser).
+ * Borderline-but-accepted (same subject family, no change): chicken bouillon
+ * cubes -> cooked chicken dish; tuna -> tuna salad bowl; wine glass -> wine
+ * toast; frozen fish -> cooked salmon; plastic containers -> glass food
+ * containers; black nitrile gloves -> a blue nitrile glove.
  */
 
 // ─── REAL UNSPLASH PHOTOGRAPHY ──────────────────────────────────────────────
@@ -211,6 +244,23 @@ const IMG_FOOD_CONTAINER =
 // key-card / RFID-card products.
 const IMG_KEY_CARD =
   "https://commons.wikimedia.org/wiki/Special:FilePath/Hotel%20Room%20Magnetic%20Stripe%20Key%20Card%20-%20Sheraton%20(43777103072).jpg?width=800";
+
+// Verified 2026-11-08 (qwen3.5:9b): a classic hotel luggage cart (polished
+// metal frame, red-carpeted deck, wheels) standing in a hotel hallway. Replaces
+// the former "Foldable luggage rack in public bus of Singapore" photo, which a
+// re-check showed to be a fold-down TRANSIT bus luggage rack -- the wrong
+// subject for hotel luggage products. A folding luggage RACK now falls through
+// to the gradient (no verified hotel rack photo exists).
+const IMG_HOTEL_LUGGAGE_CART =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/LakeCityFLAug2008HollidayInnLuggageCart.jpg?width=800";
+// Verified 2026-11-08 (qwen3.5:9b): a lint roller (adhesive roll on a handle).
+// Needed because "lint roller" matched the `roll` keyword and showed bread.
+const IMG_LINT_ROLLER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Lint%20Roller%20(30942436745).jpg?width=800";
+// Verified 2026-11-08 (qwen3.5:9b): a kitchen paper-towel roll on a holder.
+// Needed because "Kitchen Roll" matched the `roll` keyword and showed bread.
+const IMG_PAPER_TOWEL =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Paper%20towel.png?width=800";
 
 const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
@@ -323,6 +373,9 @@ const KEYWORD_MAP: Record<string, string> = {
   // `mop` added 2026-11-07: "Commercial mop head and handle" fell through to the
   // Housekeeping category artwork (a housekeeping storage photo).
   mop:          IMG_MOP,
+  // `lint` added 2026-11-08: "lint roller" matched the `roll` keyword and showed
+  // a photo of bread loaves. A lint roller is a sticky adhesive tool, not bread.
+  lint:         IMG_LINT_ROLLER,
   spray:        "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600&q=80",
 
   // ═══════════════════════════════════════════════════════════════
@@ -468,6 +521,10 @@ const KEYWORD_MAP: Record<string, string> = {
   // Beverage category artwork (a general food photograph).
   gastronorm: IMG_GASTRONORM,
   container:  IMG_FOOD_CONTAINER,
+  // `kitchen_roll` added 2026-11-08: "Hayat Production / Kitchen Roll Ex.1000"
+  // matched the `roll` keyword and showed a photo of bread loaves. A kitchen
+  // roll is a paper-towel roll, not bread.
+  kitchen_roll: IMG_PAPER_TOWEL,
   chair:      "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?w=600&q=80",
   desk:       "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=600&q=80",
 
@@ -481,8 +538,11 @@ const KEYWORD_MAP: Record<string, string> = {
   minibar:    "https://commons.wikimedia.org/wiki/Special:FilePath/Hotel_Eden%2C_Pokoj_Standart_minibar_%282%29.jpg?width=800",
   // `luggage`/`baggage` added 2026-11-07: "Guest-room folding luggage rack"
   // fell through to the Furniture category artwork (a hotel lobby photo).
-  luggage:    IMG_FOLDING_LUGGAGE_RACK,
-  baggage:    IMG_FOLDING_LUGGAGE_RACK,
+  // Replaced 2026-11-08: the former photo was a fold-down TRANSIT bus luggage
+  // rack, not a hotel product. It now points at a verified hotel luggage cart;
+  // a luggage RACK (a different product) is guarded away to the gradient.
+  luggage:    IMG_HOTEL_LUGGAGE_CART,
+  baggage:    IMG_HOTEL_LUGGAGE_CART,
 
   // ═══════════════════════════════════════════════════════════════
   //  OFFICE / OS&E
@@ -661,6 +721,9 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   // must not show spray bottles; "Glass Cleaner" (a chemical) still shows them.
   clean: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam", "card", "sign", "status"),
   cleaner: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam", "card", "sign", "status"),
+  // spray: a spray BOTTLE vs a spray MACHINE/dispenser. "Machine Air Fresh
+  // Matic with Spray" is a machine, not a hand-held spray bottle.
+  spray: stems("machine", "matic", "dispenser"),
   // maintenance: generic tools vs HVAC/heating/cooling maintenance.
   // "Preventive HVAC maintenance service" must resolve to the HVAC unit photo,
   // not the power-drill photograph.
@@ -671,9 +734,11 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   // minibar: a minibar FRIDGE vs a minibar SNACK PACK (a snack box is not a
   // fridge). "MiniBar Snack Pack" must fall through to the gradient.
   minibar: stems("snack"),
-  // luggage/baggage: a luggage RACK vs luggage TAGS (a tag is not a rack).
-  luggage: stems("tag", "label", "strap"),
-  baggage: stems("tag", "label", "strap"),
+  // luggage/baggage: a luggage RACK vs luggage TAGS or a luggage CART/trolley.
+  // "Hotel Luggage Rack" must fall through to the gradient (no verified hotel
+  // rack photo); "Bellman black luggage cart" resolves to the hotel cart photo.
+  luggage: stems("tag", "label", "strap", "rack"),
+  baggage: stems("tag", "label", "strap", "rack"),
   // led: an LED ceiling panel vs an LED BULB/LAMP (a bulb is not a panel).
   led: stems("bulb", "lamp", "spotlight", "spot", "mr16", "gu10"),
   // panel: electrical distribution panel vs LED/light/control panel
@@ -681,19 +746,22 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   // sheet: bedding vs paper/tissue. "Facial Tissues (100 sheets)" must not show
   // a made bed.
   sheet: stems("paper", "a4", "printer", "print", "document", "drawing", "metal", "plastic", "vinyl", "film", "glass", "tissue", "facial", "napkin", "handkerchief"),
-  // roll: bread roll vs paper/towel/foil roll, spring/egg roll, or fruit roll-up
-  roll: stems("paper", "towel", "toilet", "foil", "cling", "wrap", "film", "tape", "baking", "pastry", "dough", "spring", "egg", "vegetable", "rice", "seaweed", "shrimp", "fruit"),
+  // roll: bread roll vs paper/towel/foil roll, spring/egg roll, fruit roll-up,
+  // a lint ROLLER, or a kitchen (paper) ROLL.
+  roll: stems("paper", "towel", "toilet", "foil", "cling", "wrap", "film", "tape", "baking", "pastry", "dough", "spring", "egg", "vegetable", "rice", "seaweed", "shrimp", "fruit", "lint", "kitchen"),
   // bath: toiletry vs bath towel/robe/mat
   bath: stems("towel", "robe", "mat", "curtain", "linen"),
   // smart: smart lock vs smart TV/display/thermostat
   smart: stems("tv", "television", "display", "screen", "monitor", "speaker", "door", "lock", "locker", "tag", "thermostat", "temperature", "climate", "heating", "cooling", "hvac", "purifier"),
-  // gel: toiletry gel vs fruit/dessert GELATIN
-  gel: stems("hair", "hand", "nail", "shave", "floor", "tile", "fruit", "fruity", "dessert", "jelly", "gelatin", "pudding", "sweet", "cake", "snack", "candy", "rau", "thach", "thạch"),
+  // gel: toiletry gel vs fruit/dessert GELATIN or a LAUNDRY/detergent gel.
+  // "Ariel Gel (3.60 L)" is a laundry gel and must not show toiletry bottles.
+  gel: stems("hair", "hand", "nail", "shave", "floor", "tile", "fruit", "fruity", "dessert", "jelly", "gelatin", "pudding", "sweet", "cake", "snack", "candy", "rau", "thach", "thạch", "laundry", "detergent", "ariel", "washing"),
   // net: pool skimmer net vs internet/network
   net: stems("internet", "network", "web", "mesh", "wifi", "lan", "ethernet", "firewall"),
-  // card: a hotel KEY CARD vs paper/business/status cards. "Room Cleaning Status
+  // card: a hotel KEY CARD vs paper/business/status cards or an access-card
+  // READER (an electronic device, not a key card). "Room Cleaning Status
   // Cards" and "Key Card Encoder"/"System Upgrade" (devices/services) fall through.
-  card: stems("paper", "business", "greeting", "post", "cardboard", "id", "credit", "debit", "gift", "loyalty", "membership", "name", "status", "sign", "cleaning", "clean", "encoder", "system", "upgrade"),
+  card: stems("paper", "business", "greeting", "post", "cardboard", "id", "credit", "debit", "gift", "loyalty", "membership", "name", "status", "sign", "cleaning", "clean", "encoder", "system", "upgrade", "reader", "access", "door"),
   // key: door key vs keyboard/keypad/keychain. "Key Card ..." is a key card,
   // not a door key/lock -> fall through.
   key: stems("board", "pad", "chain", "tag", "fob", "code", "cable", "switch", "cabinet", "card"),
@@ -702,7 +770,7 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   display: stems("paper", "print", "stand", "card", "board", "retail", "shop", "advertising"),
   monitor: stems("paper", "print", "guard", "protection", "display"),
   // cotton/linen/fabric/silk/satin: textile vs pad/bud/softener/towel
-  cotton: stems("pad", "bud", "swab", "ball", "tissue", "wool", "towel", "cloth", "linen"),
+  cotton: stems("pad", "bud", "swab", "ball", "tissue", "wool", "towel", "cloth", "linen", "robe", "bathrobe"),
   linen: stems("pad", "bud", "towel", "cloth", "tissue", "ball", "napkin", "tablecloth", "sheet", "duvet", "pillow"),
   fabric: stems("pad", "bud", "softener", "towel", "cloth", "tissue", "ball", "upholstery", "sofa", "curtain"),
   silk: stems("pad", "bud", "pillow", "cloth", "scarf", "robe"),
@@ -716,8 +784,10 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   battery: stems("car", "vehicle", "auto", "truck", "boat", "motorcycle", "marine"),
   // towel: towel vs towel rail/warmer/paper towel
   towel: stems("rail", "warmer", "holder", "rack", "hook", "paper", "dispenser", "toilet"),
-  // shower: shower gel/amenity vs shower CAP (a disposable cap, not a toiletry)
-  shower: stems("cap"),
+  // shower: shower gel/amenity vs a shower CAP, a shower TOWEL, or a shower
+  // SCRUBBER/brush (cleaning tools, not toiletries). "shower towel 140x70"
+  // must show towels; "Small Shower Scrubber" must fall through.
+  shower: stems("cap", "towel", "scrubber", "scrub", "brush", "sponge"),
   // ── BAKERY & PANTRY ──────────────────────────────────────────────────────
   // bread/bun: bread vs bread-flavoured snacks ("Bread & Butter Chips")
   bread: stems("chip", "chips", "crisp", "crisps", "snack", "crumb", "crumbs", "pudding"),
@@ -765,9 +835,10 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   pasta: stems("sauce", "adobo", "achiote", "seasoning", "paste"),
   // juice: juice vs juice drink/smoothie
   juice: stems("smoothie", "cocktail", "slush", "ice"),
-  // lemon/lime: the fruit vs a lemon/lime DRINK
-  lemon: stems("juice", "juie", "drink", "sparkling", "beverage", "soda", "water", "flavor", "flavour", "tea", "candy", "sweet", "sour"),
-  lime: stems("juice", "juie", "drink", "sparkling", "beverage", "soda", "water", "flavor", "flavour", "tea", "candy", "sweet", "sour"),
+  // lemon/lime: the fruit vs a lemon/lime DRINK or a lemon-scented SOAP.
+  // "Feba Soap yellow lemon" must show soap, not lemons.
+  lemon: stems("juice", "juie", "drink", "sparkling", "beverage", "soda", "water", "flavor", "flavour", "tea", "candy", "sweet", "sour", "soap"),
+  lime: stems("juice", "juie", "drink", "sparkling", "beverage", "soda", "water", "flavor", "flavour", "tea", "candy", "sweet", "sour", "soap"),
   // watermelon: the fruit vs a watermelon drink/candy
   watermelon: stems("drink", "soft", "carbonated", "flavor", "flavour", "soda", "candy", "sweet", "gum", "twist", "pack", "juice"),
   // strawberry: the fruit vs a strawberry-flavoured food
@@ -780,9 +851,9 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   cocktail: stems("vegetable", "fruit", "juice", "drink", "v8"),
   // wifi: a Wi-Fi ROUTER vs a Wi-Fi thermostat/lock/camera
   wifi: stems("thermostat", "temperature", "climate", "heating", "cooling", "hvac", "purifier", "lock", "door", "camera", "speaker", "tv", "plug", "light"),
-  // paint/roller: paint vs a painting/artwork
-  paint: stems("painting", "art", "artwork", "frame", "framed", "canvas", "poster", "print", "picture", "photo", "wallpaper"),
-  roller: stems("painting", "art", "artwork", "frame", "framed", "canvas", "poster", "print", "picture", "photo", "wallpaper", "hair"),
+  // paint/roller: paint vs a painting/artwork, or a lint ROLLER (a sticky tool).
+  paint: stems("painting", "art", "artwork", "frame", "framed", "canvas", "poster", "print", "picture", "photo", "wallpaper", "bin", "trash", "painted"),
+  roller: stems("painting", "art", "artwork", "frame", "framed", "canvas", "poster", "print", "picture", "photo", "wallpaper", "hair", "lint"),
   // ── SECURITY / IT / PRODUCE ──────────────────────────────────────────────
   // fire: fire safety vs a "fire"-flavoured candy/gum
   fire: stems("gum", "candy", "sweet", "snack", "flavor", "flavour", "mint", "breath", "dentyne", "fireball", "jolly", "rancher"),
