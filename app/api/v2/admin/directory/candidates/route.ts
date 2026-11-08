@@ -47,7 +47,7 @@ const reviewSchema = z.object({
   publicPurchaseUnit: optionalPublicText(1, 160),
   publicDescription: optionalPublicText(10, 2000),
   publicAttributes: z.record(z.string(), z.unknown()).default({}),
-  publicImages: z.array(z.string().url()).max(8).default([]),
+  publicImages: z.array(z.string().regex(/^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/)).max(8).default([]),
   publicSearchTerms: z.array(z.string().trim().min(1).max(160)).max(40).default([]),
 });
 
