@@ -3614,6 +3614,8 @@ enum EntityName {
   SUPPLIER_LIST_INGESTION
   CONNECTED_SUPPLIER_PRICE_COMPARISON
   HOTEL_CONNECTOR
+  OLIV_ONBOARDING
+  CATALOG_DOCK
 }
 
 enum NotificationChannel {
@@ -4456,6 +4458,7 @@ enum ProductSource {
   ECOMMERCE
   DROPSHIP
   MANUAL
+  CATALOG_REFERENCE
 }
 
 model EvidenceRecord {

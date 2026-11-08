@@ -5,11 +5,21 @@ import { prisma } from '@/lib/prisma';
 import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 import { MarketplaceSelectionAction } from '@/components/marketing/marketplace-selection-action';
 import { publicDirectoryFields, publicDirectorySpecifications, publicDirectoryText } from '@/lib/directory/public-directory-profile';
+import { researchedCatalogPreview } from '@/lib/catalog/researched-preview';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MarketplaceReferencePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const preview = researchedCatalogPreview(id);
+  if (preview) return <main className="hv-public-page hv-marketplace-reference"><section className="hv-public-section"><div className="shell">
+    <Link href="/marketplace" className="hv-public-text-link"><ArrowLeft size={16}/> Back to catalogue</Link>
+    <div className="hv-reference-layout"><div className="hv-reference-media"><img src={preview.image} alt={preview.name}/></div><div className="hv-reference-summary">
+      <span className="eyebrow">Researched preview · supplier unconfirmed · draft</span><h1>{preview.name}</h1><p>{preview.description}</p>
+      <dl className="hv-reference-specs"><div><dt>Category</dt><dd>{preview.sourceCategory} · {preview.subcategory}</dd></div><div><dt>Pack / unit</dt><dd>{preview.packSize ?? preview.unitOfMeasure ?? 'Not stated by source'}</dd></div>{Object.entries(preview.specifications).slice(0,5).map(([key,value])=><div key={key}><dt>{key.replaceAll('_',' ')}</dt><dd>{Array.isArray(value)?value.join(', '):String(value)}</dd></div>)}</dl>
+      <button className="btn btn-blue" disabled>Not transactable — supplier confirmation required</button><p className="hv-market-footnote"><ClipboardCheck size={14}/> The source identity and evidence are retained for authorized administrators. Buyer-facing supplier identity, availability, pricing and private terms remain hidden.</p>
+    </div></div>
+  </div></section></main>;
   const entry = await prisma.directoryProfile.findFirst({
     where: { ...publicMarketplaceDirectoryProfileWhere, id },
     select: {

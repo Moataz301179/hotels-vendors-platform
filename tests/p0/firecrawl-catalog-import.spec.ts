@@ -1,32 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Firecrawl catalogue import contract.
+ * Firecrawl catalogue import contract — dock edition.
  *
+ * Raw crawled records land in the catalog raw dock, never in the product table.
  * Proves:
  * - Permission is enforced before any query runs.
- * - Re-running the same page updates records instead of duplicating them.
- * - Imported records are INACTIVE and never promoted to ACTIVE.
- * - Provenance (source URL, provider, observed-at) is preserved.
+ * - Nothing is written to Product by the import.
+ * - Each record becomes a staged dock item carrying its private attribution.
+ * - A repeated identical run is idempotent (no duplicate dock items).
  * - The audit entry states explicitly that nothing is customer-facing.
+ * - No supplier stub is created: the dock is supplier-neutral by design.
  */
 
 const m = vi.hoisted(() => ({
-  supplierFindFirst: vi.fn(),
-  supplierCreate: vi.fn(),
-  productFindUnique: vi.fn(),
-  productCreate: vi.fn(),
-  productUpdate: vi.fn(),
-  auditLogCreate: vi.fn(),
+  batchFindUnique: vi.fn(),
+  batchCreate: vi.fn(),
+  batchUpdate: vi.fn(),
+  taxonomyUpsert: vi.fn(),
+  itemFindFirst: vi.fn(),
+  itemCreate: vi.fn(),
   hasPermission: vi.fn(),
+  appendAuditEntry: vi.fn(),
+  transaction: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/rbac", () => ({ hasPermission: m.hasPermission }));
+vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.appendAuditEntry }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    supplier: { findFirst: m.supplierFindFirst, create: m.supplierCreate },
-    product: { findUnique: m.productFindUnique, create: m.productCreate, update: m.productUpdate },
-    auditLog: { create: m.auditLogCreate },
+    catalogImportBatch: {
+      findUnique: m.batchFindUnique,
+      create: m.batchCreate,
+      update: m.batchUpdate,
+    },
+    catalogTaxonomy: { upsert: m.taxonomyUpsert },
+    catalogStagingItem: { findFirst: m.itemFindFirst, create: m.itemCreate },
+    $transaction: m.transaction,
   },
 }));
 
@@ -59,11 +69,21 @@ describe("Firecrawl catalogue import", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     m.hasPermission.mockResolvedValue(true);
-    m.supplierFindFirst.mockResolvedValue({ id: "supplier-1" });
-    m.productFindUnique.mockResolvedValue(null);
-    m.productCreate.mockResolvedValue({ id: "product-1" });
-    m.productUpdate.mockResolvedValue({ id: "product-1" });
-    m.auditLogCreate.mockResolvedValue({});
+    m.batchFindUnique.mockResolvedValue(null);
+    m.batchCreate.mockResolvedValue({ id: "batch-1" });
+    m.batchUpdate.mockResolvedValue({});
+    m.taxonomyUpsert.mockResolvedValue({ id: "tax-1" });
+    m.itemFindFirst.mockResolvedValue(null);
+    m.itemCreate.mockResolvedValue({ id: "item-1" });
+    m.appendAuditEntry.mockResolvedValue(undefined);
+    // The dock intake is atomic: every write happens inside the transaction.
+    m.transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        catalogImportBatch: { create: m.batchCreate, update: m.batchUpdate },
+        catalogTaxonomy: { upsert: m.taxonomyUpsert },
+        catalogStagingItem: { findFirst: m.itemFindFirst, create: m.itemCreate },
+      }),
+    );
   });
 
   it("denies an unauthorized caller before touching the database", async () => {
@@ -71,84 +91,90 @@ describe("Firecrawl catalogue import", () => {
     await expect(
       importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] }),
     ).rejects.toThrow("Permission denied: product:create");
-    expect(m.productCreate).not.toHaveBeenCalled();
-    expect(m.productFindUnique).not.toHaveBeenCalled();
+    expect(m.batchCreate).not.toHaveBeenCalled();
+    expect(m.itemCreate).not.toHaveBeenCalled();
   });
 
-  it("imports as INACTIVE — never customer-facing", async () => {
+  it("lands records in the raw dock and never writes a product", async () => {
     const outcome = await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    expect(m.productCreate).toHaveBeenCalledTimes(1);
-    const payload = m.productCreate.mock.calls[0][0].data;
-    expect(payload.status).toBe("INACTIVE");
-    expect(payload.source).toBe("ECOMMERCE");
-    expect(payload.sourceProvider).toBe("firecrawl");
+    expect(m.itemCreate).toHaveBeenCalledTimes(1);
     expect(outcome.summary.recordsImported).toBe(1);
+    // The import must not touch the product table at all.
+    const prisma = (await import("../../lib/prisma")).prisma as unknown as Record<string, unknown>;
+    expect(prisma.product).toBeUndefined();
   });
 
-  it("updates on re-run instead of duplicating", async () => {
-    m.productFindUnique.mockResolvedValue({ id: "product-1" });
+  it("stages each record as a dock item with private attribution", async () => {
+    await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
+    const payload = m.itemCreate.mock.calls[0][0].data;
+    expect(payload.itemName).toBe("Nescaf\u00e9 Classic 200g");
+    expect(payload.status).toBe("STAGED");
+    // Attribution stays in the dock, privately.
+    expect(payload.attributionSource).toBe("https://supplier.example.com/p/1");
+    expect(payload.sourceRecordKey).toBe(record().sourceHash);
+    // The observed price is retained privately for later reconciliation.
+    expect(payload.estimatedPriceEgp).toBe(285.5);
+  });
+
+  it("is idempotent: a repeated identical run creates no second dock item", async () => {
+    m.batchFindUnique.mockResolvedValue({ id: "batch-existing" });
     const outcome = await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    expect(m.productUpdate).toHaveBeenCalledTimes(1);
-    expect(m.productCreate).not.toHaveBeenCalled();
-    expect(outcome.summary.recordsUpdated).toBe(1);
-    expect(outcome.summary.recordsImported).toBe(0);
+    expect(m.itemCreate).not.toHaveBeenCalled();
+    expect(outcome.summary.duplicatesSkipped).toBe(1);
   });
 
-  it("never promotes a record to ACTIVE on re-run", async () => {
-    m.productFindUnique.mockResolvedValue({ id: "product-1" });
+  it("re-run of an existing batch does not duplicate staged items", async () => {
+    m.itemFindFirst.mockResolvedValue({ id: "item-existing" });
     await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    expect(m.productUpdate.mock.calls[0][0].data.status).toBe("INACTIVE");
+    expect(m.itemCreate).not.toHaveBeenCalled();
   });
 
-  it("preserves provenance in the specs payload", async () => {
-    await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    const payload = m.productCreate.mock.calls[0][0].data;
-    const specs = JSON.parse(payload.specs);
-    expect(specs.provider).toBe("firecrawl");
-    expect(specs.sourceUrl).toBe("https://supplier.example.com/p/1");
-    expect(specs.observedAt).toBe("2026-11-08T00:00:00.000Z");
-    expect(specs.unverified).toBe(true);
+  it("keeps the observed price out of the buyer-facing catalog projection", async () => {
+    const { buyerSafeFields } = await import("../../lib/catalog/buyer-safe-catalog");
+    const safe = buyerSafeFields({
+      itemName: "Nescaf\u00e9 Classic 200g",
+      technicalSpecs: { provider: "firecrawl", sourceUrl: "https://x", grind: "fine" },
+      imageUrls: ["https://cdn.example.com/coffee.jpg"],
+    });
+    expect(safe.name).toBe("Nescaf\u00e9 Classic 200g");
+    expect(safe.specs).not.toContain("sourceUrl");
+    expect(safe.specs).toContain("grind");
+    // No price field exists on the buyer-safe projection at all.
+    expect(JSON.stringify(safe)).not.toContain("285");
   });
 
-  it("imports quote-only records without a price, flagged for quotation", async () => {
+  it("imports quote-only records without a price", async () => {
     const outcome = await importCatalogRecords({
       tenantId: "tenant-1",
       actor,
       records: [record({ price: null })],
     });
-    expect(m.productCreate).toHaveBeenCalledTimes(1);
-    const payload = m.productCreate.mock.calls[0][0].data;
-    expect(payload.unitPrice).toBeNull();
-    expect(payload.pricingMode).toBe("RFQ");
-    expect(JSON.parse(payload.specs).requestForQuote).toBe(true);
+    const payload = m.itemCreate.mock.calls[0][0].data;
+    expect(payload.estimatedPriceEgp).toBeNull();
     expect(outcome.summary.quoteOnly).toBe(1);
     expect(outcome.summary.rejected).toHaveLength(0);
   });
 
-  it("maps scraped categories onto the HV vocabulary", async () => {
-    await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record({ category: "Beverages" })] });
-    expect(m.productCreate.mock.calls[0][0].data.category).toBe("F_AND_B");
-  });
-
-  it("uses a stable sku derived from the source hash", async () => {
-    await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    expect(m.productCreate.mock.calls[0][0].data.sku).toMatch(/^FC-[0-9a-f]{12}$/);
+  it("refuses synthetic records at the dock instead of storing them", async () => {
+    const outcome = await importCatalogRecords({
+      tenantId: "tenant-1",
+      actor,
+      records: [record({ name: "Verified lifecycle product" })],
+    });
+    expect(m.itemCreate).not.toHaveBeenCalled();
+    expect(outcome.summary.rejected.length).toBeGreaterThan(0);
   });
 
   it("records an audit entry that states nothing is customer-facing", async () => {
     await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    const changes = m.auditLogCreate.mock.calls[0][0].data.changes;
-    expect(changes.provider).toBe("firecrawl");
-    expect(changes.customerFacing).toBe(false);
-    expect(changes.imported).toBe(1);
+    const changes = m.appendAuditEntry.mock.calls[0][0].changes;
+    expect(changes.promotedToCatalog).toBe(0);
+    expect(changes.staged).toBe(1);
   });
 
-  it("creates an unverified supplier stub when none is supplied", async () => {
-    m.supplierFindFirst.mockResolvedValue(null);
-    m.supplierCreate.mockResolvedValue({ id: "supplier-new" });
+  it("creates no supplier stub: the dock is supplier-neutral by design", async () => {
+    const prisma = (await import("../../lib/prisma")).prisma as unknown as Record<string, unknown>;
+    expect(prisma.supplier).toBeUndefined();
     await importCatalogRecords({ tenantId: "tenant-1", actor, records: [record()] });
-    const payload = m.supplierCreate.mock.calls[0][0].data;
-    expect(payload.isVerified).toBe(false);
-    expect(payload.status).toBe("PENDING");
   });
 });

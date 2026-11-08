@@ -13,6 +13,8 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { receiveRawListings, type RawListingInput } from "@/lib/catalog/raw-dock";
+import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 import { hasPermission } from "@/lib/auth/rbac";
 import {
   FIRECRAWL_PROVIDER,
@@ -72,36 +74,11 @@ export async function importCatalogRecords(options: ImportOptions): Promise<Impo
   const { unique, duplicates } = dedupeRecords(options.records.slice(0, IMPORT_MAX_RECORDS));
   summary.duplicatesSkipped = duplicates;
 
-  // Resolve or create the supplier stub. Never mark it verified.
-  let supplierId = options.supplierId;
-  const sourceLabel = `${tenantId.slice(0, 8)}-${Date.now().toString(36)}`;
-  if (!supplierId) {
-    const existing = await prisma.supplier.findFirst({
-      where: { tenantId, status: "ACTIVE", isVerified: true },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-    if (existing) supplierId = existing.id;
-  }
-  if (!supplierId) {
-    const created = await prisma.supplier.create({
-      data: {
-        tenantId,
-        name: `Firecrawl source ${sourceLabel}`,
-        taxId: `FC-${tenantId.slice(0, 8)}`,
-        city: "Unspecified",
-        governorate: "Unspecified",
-        email: `firecrawl-${tenantId.slice(0, 8)}@unverified.hotelsvendors.local`,
-        status: "PENDING",
-        isVerified: false,
-      },
-      select: { id: true },
-    });
-    supplierId = created.id;
-  }
-
   const sample: Array<{ name: string; sourceUrl: string; price: number | null; status: string }> = [];
 
+  // Land every importable record in the raw dock in a single batch. The dock
+  // is the only destination: nothing here writes to the product table.
+  const dockListings: RawListingInput[] = [];
   for (const record of unique) {
     const check = isImportable(record);
     if (!check.ok) {
@@ -111,93 +88,71 @@ export async function importCatalogRecords(options: ImportOptions): Promise<Impo
     summary.recordsNormalized += 1;
     if (isQuoteOnly(record)) summary.quoteOnly += 1;
 
-    const sku = `FC-${record.sourceHash.slice(0, 12)}`;
     const quoteOnly = isQuoteOnly(record);
-    const category = mapCategory(record.category);
-    // Provenance is preserved in `specs` because the Product model has no
-    // dedicated sourceUrl/sourceHash columns.
-    const specs = JSON.stringify({
-      provider: FIRECRAWL_PROVIDER,
-      sourceUrl: record.sourceUrl,
-      sourceHash: record.sourceHash,
-      observedAt: record.sourceObservedAt,
-      priceOnPage: record.price,
-      currency: record.currency,
-      // Quote-only products are valid: no price was observed on the page, so
-      // the item must be quoted rather than priced.
-      requestForQuote: quoteOnly,
-      unverified: true,
+    dockListings.push({
+      itemName: record.name,
+      categoryCode: mapCategory(record.category),
+      technicalSpecs: {
+        provider: FIRECRAWL_PROVIDER,
+        sourceUrl: record.sourceUrl,
+        sourceHash: record.sourceHash,
+        observedAt: record.sourceObservedAt,
+        priceOnPage: record.price,
+        currency: record.currency,
+        requestForQuote: quoteOnly,
+        unverified: true,
+      },
+      imageUrls: record.imageUrl ? [record.imageUrl] : [],
+      imageRightsStatus: "UNVERIFIED",
+      estimatedPriceEgp: quoteOnly ? undefined : (record.price ?? undefined),
+      sourceRecordKey: record.sourceHash,
+      attributionSource: record.sourceUrl,
+      sourceObservedAt: new Date(record.sourceObservedAt),
     });
-
-    const existing = await prisma.product.findUnique({
-      where: { sku },
-      select: { id: true },
-    });
-
-    if (existing) {
-      await prisma.product.update({
-        where: { id: existing.id },
-        data: {
-          name: record.name,
-          unitPrice: record.price,
-          images: record.imageUrl,
-          specs,
-          sourceProvider: FIRECRAWL_PROVIDER,
-          sourceKey: record.sourceUrl,
-          source: "ECOMMERCE",
-          // Re-running never promotes a record to customer-facing.
-          status: "INACTIVE",
-        },
-      });
-      summary.recordsUpdated += 1;
-    } else {
-      await prisma.product.create({
-        data: {
-          tenantId,
-          supplierId,
-          sku,
-          name: record.name,
-          unitPrice: record.price,
-          images: record.imageUrl,
-          category,
-          specs,
-          source: "ECOMMERCE",
-          sourceProvider: FIRECRAWL_PROVIDER,
-          sourceKey: record.sourceUrl,
-          ...(quoteOnly ? { pricingMode: "RFQ" } : {}),
-          status: "INACTIVE",
-        },
-      });
-      summary.recordsImported += 1;
-    }
 
     sample.push({
       name: record.name,
       sourceUrl: record.sourceUrl,
       price: record.price,
-      status: quoteOnly ? "INACTIVE (unverified, quote-only)" : "INACTIVE (unverified)",
+      status: quoteOnly ? "STAGED (unverified, quote-only)" : "STAGED (unverified)",
     });
   }
 
-  await prisma.auditLog.create({
-    data: {
+  if (dockListings.length) {
+    const dock = await receiveRawListings({
       tenantId,
-      entityId: "catalog:firecrawl-import",
-      entityName: "PRODUCT",
       actorId: actor.id,
-      actorRole: actor.platformRole,
-      actionType: "CREATE",
-      changes: {
-        provider: FIRECRAWL_PROVIDER,
-        extracted: summary.recordsExtracted,
-        imported: summary.recordsImported,
-        updated: summary.recordsUpdated,
-        duplicatesSkipped: summary.duplicatesSkipped,
-        rejected: summary.rejected.length,
-        quoteOnly: unique.filter(isQuoteOnly).length,
-        // Explicit: nothing here is customer-facing yet.
-        customerFacing: false,
-      },
+      sourceName: FIRECRAWL_PROVIDER,
+      attributionSource: FIRECRAWL_PROVIDER,
+      accessPolicy: "SCRAPED_UNVERIFIED",
+      listings: dockListings,
+    });
+    summary.recordsImported += dock.staged;
+    summary.recordsUpdated += dock.duplicates;
+    summary.duplicatesSkipped += dock.duplicates;
+    for (const r of dock.rejections) {
+      summary.rejected.push({ name: r.itemName, reason: r.reason });
+    }
+  }
+
+  await appendAuditEntry({
+    entityName: "CATALOG_DOCK",
+    entityId: "catalog:firecrawl-import",
+    actionType: "CREATE",
+    tenantId,
+    actorId: actor.id,
+    actorRole: actor.platformRole,
+    changes: {
+      provider: FIRECRAWL_PROVIDER,
+      extracted: summary.recordsExtracted,
+      imported: summary.recordsImported,
+      updated: summary.recordsUpdated,
+      duplicatesSkipped: summary.duplicatesSkipped,
+      rejected: summary.rejected.length,
+      quoteOnly: unique.filter(isQuoteOnly).length,
+      // Explicit: raw records land in the dock; nothing is customer-facing.
+      customerFacing: false,
+      promotedToCatalog: 0,
     },
   });
 

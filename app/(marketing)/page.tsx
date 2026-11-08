@@ -14,8 +14,7 @@ import {
   Truck,
 } from "lucide-react";
 
-import { HovinReceivingPreview } from "@/components/marketing/hovin-receiving-preview";
-import { HeroCarousel } from "@/components/marketing/hero-carousel";
+import { researchedCatalogPreviews } from "@/lib/catalog/researched-preview";
 import heroStyles from "./public-home-hero.module.css";
 import styles from "./public-home.module.css";
 
@@ -48,6 +47,7 @@ const roleStarts = [
 ];
 
 export default function MarketingPage() {
+  const previewCount = researchedCatalogPreviews().length;
   return (
     <main className={styles.home}>
       <section className={heroStyles.hero}>
@@ -58,9 +58,10 @@ export default function MarketingPage() {
               <h1>Technology reimagined for hotel procurement.<em> Every decision connected. Every handoff accountable.</em></h1>
               <p className={styles.lead}>HotelsVendors turns fragmented sourcing, approval, delivery and receipt evidence into one protected operating record—so Egyptian hotel teams can control spend and qualify local supply with confidence.</p>
               <div className={styles.actions}>
-                <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
-                <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
+                <Link href="/marketplace" className={styles.primary}>Search the catalogue <ArrowRight size={17} /></Link>
+                <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.secondary}>Create an RFQ</Link>
               </div>
+              <div className={styles.taskDock} aria-label="Primary procurement actions">{actions.map(({number,icon:Icon,title,body,href,cta})=><Link key={number} href={href} className={styles.taskTile}><span>{number}</span><Icon size={18}/><div><strong>{title}</strong><small>{body}</small></div><b>{cta}<ArrowRight size={14}/></b></Link>)}</div>
             </div>
             <figure className={styles.heroVisual}>
               <Image src="/hero-clean.jpeg" alt="Luxury hotel suite with a private balcony opening onto the sea" fill sizes="(max-width: 950px) calc(100vw - 48px), 44vw" />
@@ -70,23 +71,13 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      <section className={styles.carouselSection} aria-labelledby="journeys-title">
+      <section className={`${styles.section} ${styles.categories}`} aria-labelledby="operations-title">
         <div className={styles.shell}>
-          <Header eyebrow="Sourcing journeys" title="Every operating area, one accountable path." text="Move from a visual product reference to a controlled requirement, an authorized decision and a verified receiving handoff." />
-          <HeroCarousel />
-        </div>
-      </section>
-
-      <section className={`${styles.section} ${styles.categories}`} aria-labelledby="categories-title">
-        <div className={styles.shell}>
-          <Header eyebrow="Hospitality sourcing map" title="Begin with the operating area behind the request." text="Browse public product references by hotel use. Private Vendor identity, terms and availability stay protected until the authorized workflow permits disclosure." />
-          <div className={styles.categoryGrid}>
-            {categories.map(({ title, body, image, alt, group, icon: Icon }) => <Link href={`/marketplace?category=${encodeURIComponent(group)}`} className={styles.categoryCard} key={title}>
-              <figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure>
-              <div className={styles.categoryBody}><span><Icon size={15} aria-hidden="true" /> Sourcing area</span><h3>{title}</h3><p>{body}</p><b>Open area <ArrowRight size={15} /></b></div>
-            </Link>)}
+          <Header eyebrow="Operational entry point" title="Start work—not another presentation." text="The public surface now routes directly into catalogue discovery, controlled sourcing and receiving. Detailed explanations remain available under How it works." />
+          <div className={styles.controlBoard}>
+            <div className={styles.controlNav}><span className={styles.navActive}>Catalogue</span><span>RFQ</span><span>Approval</span><span>Receiving</span></div>
+            <div className={styles.controlCanvas}><div className={styles.controlSummary}><p>Egyptian-market pilot</p><strong>{previewCount} sourced product references</strong><span>Food & beverage · Housekeeping & cleaning · Guest amenities</span></div><div className={styles.controlChecks}><article><span>Product evidence</span><b>Source recorded</b></article><article><span>Supplier status</span><b>Preview / unconfirmed</b></article><article><span>Transactions</span><b>Server blocked</b></article></div><Link href="/marketplace" className={styles.controlAction}>Open catalogue <ArrowRight size={15}/></Link></div>
           </div>
-          <div className={styles.requirement}><div><strong>Nothing suitable in the directory?</strong><p>Create a controlled requirement from the hotel workspace. Its specification, quantity and delivery context stay with the sourcing record rather than becoming an untracked request.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Create a requirement <ArrowRight size={16} /></Link></div>
         </div>
       </section>
 
@@ -94,7 +85,6 @@ export default function MarketingPage() {
     </main>
   );
 }
-
 function Header({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
   return <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>{eyebrow}</p><h2>{title}</h2></div><p>{text}</p></div>;
 }

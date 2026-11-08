@@ -29,6 +29,9 @@ export type MarketplaceDirectoryEntry = {
   unitOfMeasure: string | null;
   image: string | null;
   description: string | null;
+  packSize?: string | null;
+  previewStatus?: 'RESEARCHED_PREVIEW';
+  transactionEligible?: boolean;
 };
 
 type Taxonomy = { group: string; subcategory: string; icon: ComponentType<{ size?: number; 'aria-hidden'?: boolean }> };
@@ -98,17 +101,17 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
             ) : (
               <Image src={`/` + visual.src} alt={entry.name} fill sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw" />
             )}
-            {visual.illustrative ? <span className={styles.visualNote}>Illustrative reference</span> : null}
+            {entry.previewStatus ? <span className={styles.visualNote}>Researched preview · unconfirmed</span> : visual.illustrative ? <span className={styles.visualNote}>Illustrative reference</span> : null}
           </div>
           <div className={styles.cardBody}>
             <div className={styles.taxonomy}><span><Icon size={16}/>{taxonomy.group}</span><small>{taxonomy.subcategory}</small></div>
-            <p className={styles.itemType}>{entry.itemType === 'SERVICE' ? 'Service requirement' : 'Product requirement'}</p>
+            <p className={styles.itemType}>{entry.previewStatus ? 'Researched product preview' : entry.itemType === 'SERVICE' ? 'Service requirement' : 'Product requirement'}</p>
             <h3>{entry.name}</h3>
             <p className={styles.description}>{entry.description ?? 'A reviewed requirement record ready to be specified in the procurement workspace.'}</p>
-            <dl className={styles.facts}><div><dt>Unit</dt><dd>{entry.unitOfMeasure ?? 'Set in requirement'}</dd></div><div><dt>Commercial terms</dt><dd>Set through controlled RFQ</dd></div></dl>
+            <dl className={styles.facts}><div><dt>Pack / unit</dt><dd>{entry.packSize ?? entry.unitOfMeasure ?? 'Not stated'}</dd></div><div><dt>Status</dt><dd>{entry.previewStatus ? 'Supplier confirmation required' : 'Controlled RFQ'}</dd></div></dl>
             <div className={styles.actions}>
               <Link className={styles.detailAction} href={`/marketplace/${entry.id}`}>View specification <ChevronRight size={17} aria-hidden="true"/></Link>
-              <MarketplaceSelectionAction className={styles.action} itemId={entry.id} category={taxonomy.group} subcategory={taxonomy.subcategory} query={query} />
+              {entry.transactionEligible === false ? <button className={styles.action} type="button" disabled title="Supplier confirmation is required before this product can transact">Not transactable</button> : <MarketplaceSelectionAction className={styles.action} itemId={entry.id} category={taxonomy.group} subcategory={taxonomy.subcategory} query={query} />}
             </div>
           </div>
         </article>;
