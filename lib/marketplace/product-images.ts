@@ -128,6 +128,20 @@
  * table from 27 to 62 entries so prepared/brand/flavour names never win over the
  * actual subject. Verified: `npx tsc --noEmit -p tsconfig.json` clean; 55/55
  * targeted resolver cases pass (20 wrong-subject -> gradient, 35 correct kept).
+ *
+ * AUDIT 2026-11-08 (qwen3.5:9b vision over 279 catalog SKUs + 405 directory
+ * profiles; all 53 unique resolved images downloaded and subject-checked).
+ * Fixed wrong-subject mappings found in that run:
+ *   led            Arri SkyPanel studio/film light on a stand (NOT a ceiling
+ *                  panel) -> verified rectangular LED ceiling light panel
+ *   gastronorm     technical size diagram (not a photo of pans) -> verified
+ *                  stainless-steel gastronorm containers
+ *   card / rfid    smart door lock -> verified hotel key card (Sheraton)
+ * Added guards: hvac+filter, minibar+snack, luggage/baggage+tag, led+bulb/lamp,
+ * oil+massage, milk+coconut, clean/cleaner+card/sign/status,
+ * card+status/sign/cleaning/encoder/system/upgrade, key+card.
+ * Verified: `npx tsc --noEmit -p tsconfig.json` clean; 25/25 targeted resolver
+ * assertions pass (wrong subjects -> gradient, correct subjects kept).
  */
 
 // ─── REAL UNSPLASH PHOTOGRAPHY ──────────────────────────────────────────────
@@ -185,13 +199,18 @@ const IMG_DOOR_CLOSER =
 const IMG_FOLDING_LUGGAGE_RACK =
   "https://commons.wikimedia.org/wiki/Special:FilePath/Foldable%20luggage%20rack%20in%20public%20bus%20of%20Singapore.jpg?width=800";
 const IMG_LED_PANEL =
-  "https://commons.wikimedia.org/wiki/Special:FilePath/Arri%20SkyPanel%20X%20LED%20Light%20Panel.jpg?width=800";
+  "https://commons.wikimedia.org/wiki/Special:FilePath/White%20Ceiling%20Light.jpg?width=800";
 const IMG_GASTRONORM =
-  "https://commons.wikimedia.org/wiki/Special:FilePath/Gastronorms.png?width=800";
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Gastron%C3%A1doby%20(kovov%C3%A9%20a%20plastov%C3%A9).jpg?width=800";
 const IMG_MOP =
   "https://commons.wikimedia.org/wiki/Special:FilePath/Mop%20and%20bucket%2C%207-Eleven.jpg?width=800";
 const IMG_FOOD_CONTAINER =
   "https://commons.wikimedia.org/wiki/Special:FilePath/Glass%20food%20storage%20container%20with%20Easy%20Find%20Lids.jpg?width=800";
+// Verified 2026-11-08 (qwen3.5:9b): a hotel key card (Sheraton) on a wooden
+// surface. Replaces the smart-door-lock photo, which was the wrong subject for
+// key-card / RFID-card products.
+const IMG_KEY_CARD =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Hotel%20Room%20Magnetic%20Stripe%20Key%20Card%20-%20Sheraton%20(43777103072).jpg?width=800";
 
 const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
@@ -385,8 +404,8 @@ const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
   lock:   "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
   key:    "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
-  card:   "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
-  rfid:   "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
+  card:   IMG_KEY_CARD,
+  rfid:   IMG_KEY_CARD,
   camera: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=600&q=80",
   cctv:   "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=600&q=80",
   // `extinguisher` added 2026-11-07 (verified fire extinguishers). The former
@@ -640,12 +659,23 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   // clean/cleaner: general cleaning CHEMICALS vs cleaning EQUIPMENT/cloths.
   // "Vacuum Cleaner" must not show spray bottles; "Microfiber cleaning cloth"
   // must not show spray bottles; "Glass Cleaner" (a chemical) still shows them.
-  clean: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam"),
-  cleaner: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam"),
+  clean: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam", "card", "sign", "status"),
+  cleaner: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam", "card", "sign", "status"),
   // maintenance: generic tools vs HVAC/heating/cooling maintenance.
   // "Preventive HVAC maintenance service" must resolve to the HVAC unit photo,
   // not the power-drill photograph.
   maintenance: stems("hvac", "ventilation", "heating", "cooling"),
+  // hvac: an outdoor HVAC condenser unit vs an HVAC air FILTER (a filter is not
+  // a condenser unit). "HVAC Air Filter" must fall through to the gradient.
+  hvac: stems("filter"),
+  // minibar: a minibar FRIDGE vs a minibar SNACK PACK (a snack box is not a
+  // fridge). "MiniBar Snack Pack" must fall through to the gradient.
+  minibar: stems("snack"),
+  // luggage/baggage: a luggage RACK vs luggage TAGS (a tag is not a rack).
+  luggage: stems("tag", "label", "strap"),
+  baggage: stems("tag", "label", "strap"),
+  // led: an LED ceiling panel vs an LED BULB/LAMP (a bulb is not a panel).
+  led: stems("bulb", "lamp", "spotlight", "spot", "mr16", "gu10"),
   // panel: electrical distribution panel vs LED/light/control panel
   panel: stems("led", "light", "lighting", "ceiling", "lcd", "display", "touch", "solar", "acoustic", "wall", "switch", "control", "breaker"),
   // sheet: bedding vs paper/tissue. "Facial Tissues (100 sheets)" must not show
@@ -661,10 +691,12 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   gel: stems("hair", "hand", "nail", "shave", "floor", "tile", "fruit", "fruity", "dessert", "jelly", "gelatin", "pudding", "sweet", "cake", "snack", "candy", "rau", "thach", "thạch"),
   // net: pool skimmer net vs internet/network
   net: stems("internet", "network", "web", "mesh", "wifi", "lan", "ethernet", "firewall"),
-  // card: key card vs paper/business card
-  card: stems("paper", "business", "greeting", "post", "cardboard", "id", "credit", "debit", "gift", "loyalty", "membership", "name"),
-  // key: door key vs keyboard/keypad/keychain
-  key: stems("board", "pad", "chain", "tag", "fob", "code", "cable", "switch", "cabinet"),
+  // card: a hotel KEY CARD vs paper/business/status cards. "Room Cleaning Status
+  // Cards" and "Key Card Encoder"/"System Upgrade" (devices/services) fall through.
+  card: stems("paper", "business", "greeting", "post", "cardboard", "id", "credit", "debit", "gift", "loyalty", "membership", "name", "status", "sign", "cleaning", "clean", "encoder", "system", "upgrade"),
+  // key: door key vs keyboard/keypad/keychain. "Key Card ..." is a key card,
+  // not a door key/lock -> fall through.
+  key: stems("board", "pad", "chain", "tag", "fob", "code", "cable", "switch", "cabinet", "card"),
   // screen/display/monitor: display vs paper/protection
   screen: stems("paper", "print", "protection", "guard", "filter", "mesh", "door", "window", "protector"),
   display: stems("paper", "print", "stand", "card", "board", "retail", "shop", "advertising"),
@@ -679,7 +711,7 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   // "Water Glasses (Crystal)" must not show a water bottle.
   water: stems("heater", "boiler", "filter", "softener", "pump", "tank", "dispenser", "bottleless", "ionizer", "purifier", "glass", "glasses", "cup", "cups", "mug", "jug", "carafe", "tumbler"),
   // oil: cooking oil vs engine/motor oil or oil-preserved food
-  oil: stems("engine", "motor", "lubricant", "hydraulic", "gear", "transmission", "crankcase", "anchovy", "anchovies", "sardine", "sardines", "fish"),
+  oil: stems("engine", "motor", "lubricant", "hydraulic", "gear", "transmission", "crankcase", "anchovy", "anchovies", "sardine", "sardines", "fish", "massage"),
   // battery: battery vs car/vehicle battery
   battery: stems("car", "vehicle", "auto", "truck", "boat", "motorcycle", "marine"),
   // towel: towel vs towel rail/warmer/paper towel
@@ -701,7 +733,7 @@ const KEYWORD_GUARDS: Record<string, RegExp> = {
   soft: stems("softener", "fabric", "laundry", "detergent", "conditioner", "rinse", "cheese", "roll", "bread", "bun", "grain", "wheat", "seed", "baked", "bake", "oatmeal", "bar", "square", "granola", "cereal", "snack", "drink", "soda", "sparkling", "carbonated"),
   // milk: milk vs milk chocolate / yogurt / cheese
   // milk: milk vs milk chocolate / yogurt / cheese / milk balls
-  milk: stems("chocolate", "cocoa", "candy", "yogurt", "yoghurt", "cheese", "ball", "balls", "malted", "sweet"),
+  milk: stems("chocolate", "cocoa", "candy", "yogurt", "yoghurt", "cheese", "ball", "balls", "malted", "sweet", "coconut"),
   // butter: butter vs butter-flavoured bakery / peanut butter / popcorn
   butter: stems("croissant", "bread", "bun", "pastry", "cake", "cookie", "biscuit", "dough", "bakery", "cereal", "peanut", "chip", "chocolate", "bar", "mix", "cracker", "snack", "popcorn"),
   // salt: salt vs salted snacks / seasonings / sauces

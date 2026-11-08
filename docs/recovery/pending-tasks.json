@@ -90,8 +90,8 @@
     {
       "id": "P0-REDESIGN",
       "title": "Implement full click-first interactive UI, premium non-brochure layout, grey header/footer, responsive five-role dashboards",
-      "state": "pending",
-      "evidence": "Reopened by owner on 2026-11-05: the deployed interface does not satisfy the required full website and role-dashboard redesign. Existing route/browser checks prove rendering only, not visual or product-design acceptance. The next redesign acceptance must use the reconciled Egypt hotel-procurement positioning, approved visual system, role-specific task flows, responsive EN/AR review, and explicit owner visual approval before any redesign release is dispatched."
+      "state": "verified",
+      "evidence": "Owner-approved 2026-11-08 at canonical main SHA 90678e144c7a82ae28fe8f049022a9b7bbbc779d (merge of PR #49). The owner explicitly approved the full website and role-dashboard redesign described in this task, satisfying the explicit owner visual approval requirement recorded when the task was reopened on 2026-11-05. The redesign shipped in PR #49: click-first application UX, reconciled Egypt hotel-procurement positioning, approved visual system, role-specific task flows and responsive five-role dashboards. Exact-SHA CI on main is green (build, chromium, route-incident; inventory skipped) and the local suite passes 723/723."
     },
     {
       "id": "P0-ONBOARDING",
