@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
   const candidate = await prisma.directoryCandidate.findFirst({
     where: { id: candidateId, deletedAt: null },
-    select: { id: true, name: true, normalizedName: true, category: true, tenantId: undefined as never },
+    select: { id: true, name: true, normalizedName: true, category: true },
   }).catch(() => null);
   if (!candidate) {
     // DirectoryCandidate is a platform-owned private review table. Do not
