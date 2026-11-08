@@ -423,7 +423,8 @@ export async function exportReceivingBatchToDirectory(prisma: PrismaClient, acto
     const source = await tx.directorySource.upsert({
       where: { sourceUrl: batch.sourceUrl },
       update: {
-        sourceType: "PUBLIC_CATALOG_OBSERVATION",
+        // Preserve an already-cleared source type. Re-import must not revoke
+        // a prior permission decision or downgrade a vendor-authorized feed.
         observedAt: batch.sourceObservedAt,
         lastAttemptAt: new Date(),
         lastSuccessAt: new Date(),

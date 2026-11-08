@@ -106,12 +106,15 @@ function observedPackUnit(record: RawCatalogObservation): string | null {
   const match = /\b(kg|kilograms?|g|grams?|ml|millilit(?:er|re)s?|lit(?:er|re)s?|pieces?|pcs?|packs?|cases?|cartons?|rolls?|sets?|pairs?|boxes?)\b/i.exec(pack);
   return match ? normalizeUnit(match[1]) : null;
 }
-function buildDescription(root: string, subcategory: string, packSize: string | null, unit: string | null): string {
-  const family = titleCase(subcategory);
-  const bits = ["Hospitality " + family.toLocaleLowerCase("en") + " reference in " + titleCase(root).toLocaleLowerCase("en") + "."];
+function buildDescription(record: RawCatalogObservation, root: string, subcategory: string, normalizedName: string, packSize: string | null, unit: string | null): string {
+  // Retain the observed description for administrator review and rewriting;
+  // do not replace a real product description with a generic AI sentence.
+  const observed = clean(record.description).replace(/https?:\/\/\S+/gi, "").replace(/\s+/g, " ").trim();
+  if (observed) return observed.slice(0, 1500);
+  const bits = [normalizedName + "."];
   if (packSize) bits.push("Observed pack specification: " + packSize + ".");
   if (unit) bits.push("Observed unit: " + unit + ".");
-  bits.push("Supplier, price, stock and offer terms are stored separately from this buyer-facing reference.");
+  bits.push("Hospitality category: " + titleCase(root) + " / " + titleCase(subcategory) + ".");
   return bits.join(" ");
 }
 
@@ -144,7 +147,7 @@ export function runHospitalityTaxonomyAgent(record: RawCatalogObservation): Taxo
     categoryCode: matched.root,
     subcategoryCode: matched.sub,
     normalizedName,
-    normalizedDescription: buildDescription(matched.root, matched.sub, clean(record.packSize) || null, unit),
+    normalizedDescription: buildDescription(record, matched.root, matched.sub, normalizedName, clean(record.packSize) || null, unit),
     unitOfMeasure: unit,
     purchaseUnit,
     specifications: specs,

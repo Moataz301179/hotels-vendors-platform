@@ -9,6 +9,7 @@ type Candidate = {
   name: string;
   category: string;
   images: string[];
+  description: string | null;
   source: { sourceUrl: string; permissionStatus: 'PERMISSION_UNKNOWN' | 'PERMITTED' | 'RESTRICTED' };
 };
 
@@ -85,7 +86,7 @@ export function DirectoryCandidateReview() {
       const draft = draftFor(candidate.id);
       const disabled = busy === candidate.id;
       return <article key={candidate.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 18 }}>
-        <div><strong>Private source candidate: {candidate.name}</strong><p className="muted">{candidate.itemType.toLowerCase()} · source permission {candidate.source.permissionStatus.replaceAll('_', ' ').toLowerCase()} · {sourceHost(candidate.source.sourceUrl)}</p></div>
+        <div><strong>Private source candidate: {candidate.name}</strong><p className="muted">{candidate.itemType.toLowerCase()} · source permission {candidate.source.permissionStatus.replaceAll('_', ' ').toLowerCase()} · {sourceHost(candidate.source.sourceUrl)}</p>{candidate.description && <p className="muted"><strong>Observed description (admin-only; rewrite before publication):</strong> {candidate.description}</p>}</div>
         <div className="workspace-form">
           {candidate.images.length > 0 && <div>
             <strong>Quality-approved product images</strong>

@@ -27,9 +27,25 @@ describe("catalog receiving subagents", () => {
     expect(result.status).toBe("ACCEPTED");
     expect(result.flags).toContain("PRICE_NOT_OBSERVED");
   });
-  it("holds category pages and off-site detail links for review instead of exporting them", () => {
-    expect(runQualityFilterAgent(observation({ productUrl: "https://supplier.example/catalog/cleaning", sku: undefined })).status).toBe("REVIEW_REQUIRED");
-    expect(runQualityFilterAgent(observation({ productUrl: "https://other.example/product/1" })).status).toBe("REVIEW_REQUIRED");
+  it("does not require a product-detail URL or same-site URL when a product identity is present", () => {
+    const categoryPageObservation = runQualityFilterAgent(observation({ productUrl: undefined, sku: undefined, unitPrice: null, images: [] }));
+    expect(categoryPageObservation.status).toBe("ACCEPTED");
+    expect(categoryPageObservation.flags).toContain("PRODUCT_DETAIL_URL_NOT_OBSERVED");
+    const marketplaceProduct = runQualityFilterAgent(observation({ productUrl: "https://marketplace.example/item/sku-1" }));
+    expect(marketplaceProduct.status).toBe("ACCEPTED");
+    expect(marketplaceProduct.flags).toContain("PRODUCT_DETAIL_URL_OFF_SOURCE_SITE");
+  });
+  it("allows a minimal product name and traceable source while flagging all missing enrichment fields", () => {
+    const result = runQualityFilterAgent(observation({
+      description: undefined, sku: undefined, brand: undefined, packSize: undefined,
+      unitOfMeasure: undefined, purchaseUnit: undefined, unitPrice: null, images: [],
+      productUrl: undefined, category: undefined, attributes: undefined,
+    }));
+    expect(result.status).toBe("ACCEPTED");
+    expect(result.flags).toContain("PACK_SIZE_NOT_OBSERVED");
+    expect(result.flags).toContain("PRICE_NOT_OBSERVED");
+    expect(result.flags).toContain("PRODUCT_IMAGE_NOT_OBSERVED");
+    expect(result.flags).toContain("DESCRIPTION_NOT_OBSERVED");
   });
   it("rejects navigation and marketing labels, but does not delete the raw record", () => {
     expect(runQualityFilterAgent(observation({ name: "Our Products", productUrl: "https://supplier.example/product/1" })).status).toBe("REJECTED");

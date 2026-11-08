@@ -54,7 +54,7 @@ export async function GET(
 
   const result = await fetchAndAssessProductImage(imageUrl, [record.batch.sourceUrl]);
   if (!result.input || result.assessment.status !== "ACCEPTED") {
-    return Response.json({ error: "CATALOG_IMAGE_FAILED_QUALITY_RECHECK", assessment: result.assessment }, { status: 422 });
+    return Response.json({ error: "CATALOG_IMAGE_FAILED_QUALITY_RECHECK" }, { status: 422 });
   }
   try {
     const output = await enhanceProductImage(result.input);
