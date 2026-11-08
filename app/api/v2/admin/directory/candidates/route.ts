@@ -47,7 +47,7 @@ const reviewSchema = z.object({
   publicPurchaseUnit: optionalPublicText(1, 160),
   publicDescription: optionalPublicText(10, 2000),
   publicAttributes: z.record(z.string(), z.unknown()).default({}),
-  publicImages: z.array(z.string().url()).max(8).default([]),
+  publicImages: z.array(z.string().regex(/^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/)).max(8).default([]),
   publicSearchTerms: z.array(z.string().trim().min(1).max(160)).max(40).default([]),
 });
 
@@ -134,6 +134,23 @@ export async function PATCH(request: Request) {
   });
   if (!candidate || candidate.deletedAt || candidate.reviewStatus !== 'PENDING_REVIEW') return NextResponse.json({ error: 'PENDING_DIRECTORY_CANDIDATE_NOT_FOUND' }, { status: 404 });
   if (parsed.data.decision === 'APPROVE' && candidate.source.permissionStatus !== 'PERMITTED') return NextResponse.json({ error: 'SOURCE_PERMISSION_REQUIRED_FOR_PUBLICATION' }, { status: 409 });
+  const candidateImagePaths = Array.isArray(candidate.images)
+    ? candidate.images.filter((image): image is string => typeof image === 'string' && /^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/.test(image))
+    : [];
+  if (parsed.data.decision === 'APPROVE' && parsed.data.publicImages.some((image) => !candidateImagePaths.includes(image))) {
+    return NextResponse.json({ error: 'PUBLIC_IMAGES_MUST_BE_QUALITY_APPROVED_RECEIVING_DOCK_MEDIA' }, { status: 400 });
+  }
+  if (parsed.data.decision === 'APPROVE' && parsed.data.publicImages.length > 0) {
+    const snapshot = candidate.sourceSnapshot && typeof candidate.sourceSnapshot === 'object' && !Array.isArray(candidate.sourceSnapshot)
+      ? candidate.sourceSnapshot as Record<string, unknown>
+      : {};
+    const receivingRecordId = typeof snapshot.receivingRecordId === 'string' ? snapshot.receivingRecordId : null;
+    const imageRights = receivingRecordId ? await prisma.catalogReceivingRecord.findFirst({
+      where: { id: receivingRecordId, deletedAt: null, qualityStatus: 'ACCEPTED', imageRightsStatus: 'PERMITTED' },
+      select: { id: true },
+    }) : null;
+    if (!imageRights) return NextResponse.json({ error: 'PRODUCT_IMAGE_RIGHTS_PERMISSION_REQUIRED' }, { status: 409 });
+  }
   if (parsed.data.decision === 'APPROVE' && (!parsed.data.publicName || !parsed.data.publicCategory)) return NextResponse.json({ error: 'REVIEWER_AUTHORED_PUBLIC_LABELS_REQUIRED' }, { status: 400 });
   if (parsed.data.decision === 'APPROVE' && !parsed.data.publicDescription) return NextResponse.json({ error: 'PUBLIC_DESCRIPTION_REQUIRED_FOR_PUBLICATION' }, { status: 400 });
   const publicDescription = parsed.data.decision === 'APPROVE' ? publicDirectoryText(parsed.data.publicDescription) : null;
@@ -162,7 +179,7 @@ export async function PATCH(request: Request) {
   const result = await prisma.$transaction(async (tx) => {
     const reviewed = await tx.directoryCandidate.update({ where: { id: candidate.id }, data: { reviewStatus: parsed.data.decision === 'APPROVE' ? 'APPROVED' : 'REJECTED', reviewNote: parsed.data.reviewNote, reviewedAt: new Date(), reviewedById: actor.id } });
     const profile = parsed.data.decision === 'APPROVE' ? await tx.directoryProfile.create({
-      data: { candidateId: candidate.id, itemType: candidate.itemType, name: publicFields!.name, nameAr: publicFields!.nameAr, category: publicFields!.category, subcategory: publicFields!.subcategory, description: publicDescription!, attributes: toJson(publicSpecifications), unitOfMeasure: publicFields!.unitOfMeasure, purchaseUnit: publicFields!.purchaseUnit, images: toJson(safeDirectoryImages(parsed.data.publicImages)), searchTerms: toJson([]), searchText: directorySearchText({ name: publicFields!.name, nameAr: publicFields!.nameAr ?? undefined, category: publicFields!.category, subcategory: publicFields!.subcategory ?? undefined, description: publicDescription!, searchTerms: [] }), publicationStatus: 'PUBLISHED', publishedById: actor.id },
+      data: { candidateId: candidate.id, itemType: candidate.itemType, name: publicFields!.name, nameAr: publicFields!.nameAr, category: publicFields!.category, subcategory: publicFields!.subcategory, description: publicDescription!, attributes: toJson(publicSpecifications), unitOfMeasure: publicFields!.unitOfMeasure, purchaseUnit: publicFields!.purchaseUnit, images: toJson(parsed.data.publicImages.filter((image) => /^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/.test(image))), searchTerms: toJson([]), searchText: directorySearchText({ name: publicFields!.name, nameAr: publicFields!.nameAr ?? undefined, category: publicFields!.category, subcategory: publicFields!.subcategory ?? undefined, description: publicDescription!, searchTerms: [] }), publicationStatus: 'PUBLISHED', publishedById: actor.id },
       select: { id: true },
     }) : null;
     await appendAuditEntry({ entityName: parsed.data.decision === 'APPROVE' ? 'DIRECTORY_PROFILE' : 'DIRECTORY_CANDIDATE', entityId: profile?.id ?? candidate.id, actionType: 'STATUS_CHANGED', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { candidateId: candidate.id, decision: parsed.data.decision, reviewNote: parsed.data.reviewNote, sourceId: candidate.source.id } }, tx);

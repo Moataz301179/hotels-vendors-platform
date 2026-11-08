@@ -8,9 +8,29 @@ type Candidate = {
   itemType: 'PRODUCT' | 'SERVICE';
   name: string;
   category: string;
+  images: string[];
+  description: string | null;
   source: { sourceUrl: string; permissionStatus: 'PERMISSION_UNKNOWN' | 'PERMITTED' | 'RESTRICTED' };
 };
 
+type SupplierLead = {
+  observationId: string;
+  supplierName: string | null;
+  supplierWebsite: string | null;
+  productName: string;
+  sku: string | null;
+  brand: string | null;
+  packSize: string | null;
+  unitOfMeasure: string | null;
+  lastObservedPrice: string | null;
+  currency: string;
+  stockText: string | null;
+  productUrl: string | null;
+  sourceName: string;
+  sourceUrl: string;
+  observedAt: string;
+  imageRightsStatus: string;
+};
 type Draft = {
   reviewNote: string;
   publicName: string;
@@ -20,9 +40,10 @@ type Draft = {
   publicUnitOfMeasure: string;
   publicPurchaseUnit: string;
   publicDescription: string;
+  publicImages: string[];
 };
 
-const emptyDraft = (): Draft => ({ reviewNote: '', publicName: '', publicNameAr: '', publicCategory: '', publicSubcategory: '', publicUnitOfMeasure: '', publicPurchaseUnit: '', publicDescription: '' });
+const emptyDraft = (): Draft => ({ reviewNote: '', publicName: '', publicNameAr: '', publicCategory: '', publicSubcategory: '', publicUnitOfMeasure: '', publicPurchaseUnit: '', publicDescription: '', publicImages: [] });
 const sourceHost = (sourceUrl: string) => {
   try { return new URL(sourceUrl).hostname; } catch { return 'recorded private source'; }
 };
@@ -32,6 +53,8 @@ export function DirectoryCandidateReview() {
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [supplierLeads, setSupplierLeads] = useState<Record<string, SupplierLead[]>>({});
+  const [supplierBusy, setSupplierBusy] = useState<string | null>(null);
 
   const load = async () => {
     const response = await requestJson<{ candidates: Candidate[] }>('/api/v2/admin/directory/candidates');
@@ -43,8 +66,26 @@ export function DirectoryCandidateReview() {
   }, []);
 
   const draftFor = (candidateId: string) => drafts[candidateId] ?? emptyDraft();
-  const update = (candidateId: string, field: keyof Draft, value: string) => {
+  const loadSupplierLeads = async (candidateId: string) => {
+    setSupplierBusy(candidateId);
+    try {
+      const result = await requestJson<{ supplierLeads: SupplierLead[] }>('/api/v2/admin/catalog-receiving/supplier-matches?candidateId=' + encodeURIComponent(candidateId));
+      setSupplierLeads((current) => ({ ...current, [candidateId]: result.supplierLeads }));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to load supplier research leads.');
+    } finally {
+      setSupplierBusy(null);
+    }
+  };
+  const update = (candidateId: string, field: Exclude<keyof Draft, 'publicImages'>, value: string) => {
     setDrafts((current) => ({ ...current, [candidateId]: { ...draftFor(candidateId), [field]: value } }));
+  };
+  const togglePublicImage = (candidateId: string, image: string, checked: boolean) => {
+    setDrafts((current) => {
+      const draft = draftFor(candidateId);
+      const publicImages = checked ? [...new Set([...draft.publicImages, image])] : draft.publicImages.filter((item) => item !== image);
+      return { ...current, [candidateId]: { ...draft, publicImages } };
+    });
   };
 
   const decide = async (candidateId: string, decision: 'APPROVE' | 'REJECT') => {
@@ -76,8 +117,18 @@ export function DirectoryCandidateReview() {
       const draft = draftFor(candidate.id);
       const disabled = busy === candidate.id;
       return <article key={candidate.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 18 }}>
-        <div><strong>Private source candidate: {candidate.name}</strong><p className="muted">{candidate.itemType.toLowerCase()} · source permission {candidate.source.permissionStatus.replaceAll('_', ' ').toLowerCase()} · {sourceHost(candidate.source.sourceUrl)}</p></div>
+        <div><strong>Private source candidate: {candidate.name}</strong><p className="muted">{candidate.itemType.toLowerCase()} · source permission {candidate.source.permissionStatus.replaceAll('_', ' ').toLowerCase()} · {sourceHost(candidate.source.sourceUrl)}</p>{candidate.description && <p className="muted"><strong>Observed description (admin-only; rewrite before publication):</strong> {candidate.description}</p>}</div>
         <div className="workspace-form">
+          {candidate.images.length > 0 && <div>
+            <strong>Quality-approved product images</strong>
+            <p className="muted">Select only images whose rights have been cleared for this exact product. Unselected images remain admin-only.</p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {candidate.images.filter((image) => /^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/.test(image)).map((image) => <label key={image} style={{ width: 150 }}>
+                <img src={image} alt="Internal product image review" loading="lazy" style={{ width: 140, height: 140, objectFit: 'contain', background: '#f8f9fa', border: '1px solid var(--line)', borderRadius: 8 }} />
+                <span style={{ display: 'block' }}><input type="checkbox" checked={draft.publicImages.includes(image)} onChange={(event) => togglePublicImage(candidate.id, image, event.target.checked)} /> Clear for public listing</span>
+              </label>)}
+            </div>
+          </div>}
           <label>Reviewer-authored public name<input required minLength={2} maxLength={300} value={draft.publicName} onChange={(event) => update(candidate.id, 'publicName', event.target.value)} placeholder="Neutral product or service reference" /></label>
           <label>Arabic public name (optional)<input minLength={2} maxLength={300} value={draft.publicNameAr} onChange={(event) => update(candidate.id, 'publicNameAr', event.target.value)} placeholder="اسم مرجعي محايد" /></label>
           <label>Reviewer-authored category<input required minLength={2} maxLength={160} value={draft.publicCategory} onChange={(event) => update(candidate.id, 'publicCategory', event.target.value)} placeholder="Hospitality category" /></label>
@@ -87,7 +138,23 @@ export function DirectoryCandidateReview() {
           <label>Reviewer-authored public description<textarea required minLength={10} maxLength={2000} value={draft.publicDescription} onChange={(event) => update(candidate.id, 'publicDescription', event.target.value)} placeholder="Neutral hospitality specification; never paste source or Vendor text." /></label>
           <label>Review note<textarea required minLength={10} maxLength={1000} value={draft.reviewNote} onChange={(event) => update(candidate.id, 'reviewNote', event.target.value)} placeholder="Record the permission and anonymity review decision." /></label>
         </div>
-        <div className="workspace-source-actions"><button className="btn btn-blue" disabled={disabled || candidate.source.permissionStatus !== 'PERMITTED'} onClick={() => void decide(candidate.id, 'APPROVE')}>Publish anonymous reference</button><button className="btn btn-ghost" disabled={disabled} onClick={() => void decide(candidate.id, 'REJECT')}>Reject candidate</button></div>
+        <div className="workspace-source-actions">
+          <button className="btn btn-ghost" disabled={supplierBusy === candidate.id} onClick={() => void loadSupplierLeads(candidate.id)}>{supplierBusy === candidate.id ? 'Loading supplier leads…' : 'View supplier leads (admin only)'}</button>
+          <button className="btn btn-blue" disabled={disabled || candidate.source.permissionStatus !== 'PERMITTED'} onClick={() => void decide(candidate.id, 'APPROVE')}>Publish anonymous reference</button>
+          <button className="btn btn-ghost" disabled={disabled} onClick={() => void decide(candidate.id, 'REJECT')}>Reject candidate</button>
+        </div>
+        {supplierLeads[candidate.id] && <div style={{ overflowX: 'auto', marginTop: 14 }}>
+          <strong>Internal RFQ sourcing leads · {supplierLeads[candidate.id].length}</strong>
+          <table className="table"><thead><tr><th>Supplier</th><th>Observed pack</th><th>Last observed price</th><th>Evidence</th></tr></thead><tbody>
+            {supplierLeads[candidate.id].map((lead) => <tr key={lead.observationId}>
+              <td><strong>{lead.supplierName || 'Supplier not identified'}</strong><br /><small>{lead.supplierWebsite || ''}</small></td>
+              <td>{lead.packSize || 'Not observed'} · {lead.unitOfMeasure || 'Unit unknown'}{lead.sku ? ' · SKU ' + lead.sku : ''}</td>
+              <td>{lead.lastObservedPrice === null ? 'Not observed' : Number(lead.lastObservedPrice).toLocaleString() + ' ' + lead.currency}</td>
+              <td>{lead.productUrl ? <a href={lead.productUrl} target="_blank" rel="noreferrer">Product page</a> : <a href={lead.sourceUrl} target="_blank" rel="noreferrer">Catalog source</a>}<br /><small>{new Date(lead.observedAt).toLocaleDateString('en-GB')}</small></td>
+            </tr>)}
+            {!supplierLeads[candidate.id].length && <tr><td colSpan={4}>No supplier observations are linked to this candidate yet.</td></tr>}
+          </tbody></table>
+        </div>}
       </article>;
     })}</div>}
     {message ? <p className="workspace-status" role="status">{message}</p> : null}

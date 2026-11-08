@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ClipboardCheck, DatabaseZap, FileSearch, ShieldCheck } from 'lucide-react';
 import { AdminClient } from '@/components/v2/admin-client';
+import { CatalogReceivingDock } from '@/components/v2/catalog-receiving-dock';
 import { AdminControls } from '@/components/v2/admin-controls';
 import { AdminOperationsOverview } from '@/components/v2/admin-operations-overview';
 import { DirectoryCandidateReview } from '@/components/v2/directory-candidate-review';
@@ -60,7 +61,7 @@ export function AdminCommandCenter() {
 
     {mode === 'health' && <Panel id="admin-panel-health" labelledBy="admin-tab-health"><AdminOperationsOverview /><ReleaseIdentity /></Panel>}
     {mode === 'trust' && <Panel id="admin-panel-trust" labelledBy="admin-tab-trust"><div className="admin-command-stack"><PendingUserReview /><SupplierReview /><AdminClient /></div></Panel>}
-    {mode === 'catalogue' && <Panel id="admin-panel-catalogue" labelledBy="admin-tab-catalogue"><div className="admin-command-stack"><DirectorySourceGovernance /><DirectoryCandidateReview /><RequirementMatching /></div></Panel>}
+    {mode === 'catalogue' && <Panel id="admin-panel-catalogue" labelledBy="admin-tab-catalogue"><div className="admin-command-stack"><CatalogReceivingDock /><DirectorySourceGovernance /><DirectoryCandidateReview /><RequirementMatching /></div></Panel>}
     {mode === 'governance' && <Panel id="admin-panel-governance" labelledBy="admin-tab-governance"><div className="admin-command-stack"><div className="admin-command-notice"><strong>Policy changes are deliberate.</strong><span>Start only after selecting the hotel organization affected. Every permission, approval rule and department scope is recorded.</span></div><AdminControls /></div></Panel>}
     <p className="admin-command-context"><strong>Current work mode:</strong> {active.label}. {active.description}</p>
   </div>;

@@ -16,6 +16,11 @@ export type ScrapeGraphProductObservation = {
   moq?: number | null;
   images?: string[];
   productUrl?: string;
+  brand?: string;
+  packSize?: string;
+  unitOfMeasure?: string;
+  purchaseUnit?: string;
+  attributes?: Record<string, string | number | boolean>;
 };
 
 export type ScrapeGraphDiscovery = {
@@ -64,6 +69,11 @@ const productSchema = {
           moq: { type: ["number", "null"] },
           images: { type: "array", items: { type: "string" } },
           productUrl: { type: "string" },
+          brand: { type: "string" },
+          packSize: { type: "string" },
+          unitOfMeasure: { type: "string" },
+          purchaseUnit: { type: "string" },
+          attributes: { type: "object", additionalProperties: { type: ["string", "number", "boolean"] } },
         },
         required: ["name"],
       },
@@ -98,6 +108,13 @@ function asProducts(value: unknown): ScrapeGraphProductObservation[] {
       moq: typeof row.moq === "number" ? row.moq : null,
       images: Array.isArray(row.images) ? row.images.map(String).filter((image) => /^https?:\/\//i.test(image)) : [],
       productUrl: row.productUrl ? String(row.productUrl) : undefined,
+      brand: row.brand ? String(row.brand).trim() : undefined,
+      packSize: row.packSize ? String(row.packSize).trim() : undefined,
+      unitOfMeasure: row.unitOfMeasure ? String(row.unitOfMeasure).trim() : undefined,
+      purchaseUnit: row.purchaseUnit ? String(row.purchaseUnit).trim() : undefined,
+      attributes: record(row.attributes)
+        ? Object.fromEntries(Object.entries(record(row.attributes)!).filter((entry): entry is [string, string | number | boolean] => ["string", "number", "boolean"].includes(typeof entry[1])))
+        : undefined,
     } satisfies ScrapeGraphProductObservation];
   });
 }
@@ -140,12 +157,37 @@ function productFromJsonLd(value: Record<string, unknown>, baseUrl: string): Scr
     .filter((image): image is string => Boolean(image));
   const price = offer?.price ?? offer?.lowPrice;
   const stock = offer?.inventoryLevel;
+  const brandValue = record(value.brand);
+  const brand = typeof value.brand === "string" ? value.brand : typeof brandValue?.name === "string" ? brandValue.name : undefined;
+  const weightValue = record(value.weight);
+  const sizeValue = record(value.size);
+  const packSize = typeof value.packSize === "string" ? value.packSize
+    : typeof value.size === "string" ? value.size
+    : typeof weightValue?.value === "number" ? String(weightValue.value) + (typeof weightValue.unitText === "string" ? " " + weightValue.unitText : "")
+    : typeof sizeValue?.name === "string" ? sizeValue.name
+    : undefined;
+  const additional = Array.isArray(value.additionalProperty) ? value.additionalProperty : [];
+  const attributes: Record<string, string | number | boolean> = {};
+  for (const item of additional) {
+    const property = record(item);
+    if (!property || typeof property.name !== "string") continue;
+    const propertyValue = property.value;
+    if (["string", "number", "boolean"].includes(typeof propertyValue)) attributes[property.name] = propertyValue as string | number | boolean;
+  }
+  if (typeof value.material === "string") attributes.material = value.material;
+  if (typeof value.color === "string") attributes.color = value.color;
+  if (typeof value.size === "string") attributes.size = value.size;
   return {
     externalId: typeof value.productID === "string" ? value.productID : undefined,
     name,
     description: typeof value.description === "string" ? value.description.trim() : undefined,
     sku: typeof value.sku === "string" ? value.sku : undefined,
     category: typeof value.category === "string" ? value.category : undefined,
+    brand,
+    packSize,
+    unitOfMeasure: typeof value.unitCode === "string" ? value.unitCode : typeof value.unitText === "string" ? value.unitText : undefined,
+    purchaseUnit: typeof value.purchaseUnit === "string" ? value.purchaseUnit : undefined,
+    attributes,
     unitPrice: typeof price === "number" ? price : typeof price === "string" && Number.isFinite(Number(price)) ? Number(price) : null,
     currency: typeof offer?.priceCurrency === "string" ? offer.priceCurrency.toUpperCase() : "EGP",
     stockQuantity: typeof stock === "number" ? stock : null,
@@ -230,14 +272,20 @@ function productFromWooCommerceHtml(html: string, baseUrl: string): ScrapeGraphP
   const gallery = /<[^>]*\bclass=["'][^"']*woocommerce-product-gallery[^"']*["'][^>]*>[\s\S]*?<img\b([^>]*)>/i.exec(html)?.[1];
   const image = gallery ? absolutePublicUrl(htmlAttribute(gallery, "src"), baseUrl) : undefined;
   const stock = /\b(?:stock in-stock|availability-text[^>]*>\s*In stock)/i.test(html) ? 1 : /\b(?:outofstock|out of stock)\b/i.test(html) ? 0 : null;
+  const brandElement = /<[^>]*\bclass=["'][^"']*(?:product-brand|brand|pwb-brand)[^"']*["'][^>]*>([\s\S]*?)<\//i.exec(html)?.[1];
+  const packElement = /<[^>]*\bclass=["'][^"']*(?:pack-size|product-weight|woocommerce-product-attributes-item--weight)[^"']*["'][^>]*>([\s\S]*?)<\//i.exec(html)?.[1];
+  const priceElement = /<[^>]*\bclass=["'][^"']*woocommerce-Price-amount[^"']*["'][^>]*>([\s\S]*?)<\//i.exec(html)?.[1];
+  const numericPrice = priceElement ? Number(decodeHtml(priceElement).replace(/[^0-9.,]/g, "").replace(/,(?=\d{3}\b)/g, "").replace(",", ".")) : NaN;
   return {
     name,
     sku: sku ? decodeHtml(sku) : undefined,
     category,
+    brand: brandElement ? decodeHtml(brandElement) : undefined,
+    packSize: packElement ? decodeHtml(packElement) : undefined,
     stockQuantity: stock,
     images: image ? [image] : [],
     productUrl: canonicalUrl,
-    unitPrice: null,
+    unitPrice: Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice : null,
     currency: "EGP",
   };
 }

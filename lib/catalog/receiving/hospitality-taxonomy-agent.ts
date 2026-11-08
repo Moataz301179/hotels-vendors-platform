@@ -42,6 +42,10 @@ const RULES: Rule[] = [
   {root:"FFE",sub:"OPERATIONS_FURNITURE",pattern:/\b(storage rack|filing cabinet|office desk|workbench|service station)\b/i},
   {root:"FFE",sub:"MATTRESSES_BEDS",pattern:/\b(mattress|bed frame|hotel bed|box spring|bed base)\b/i},
   {root:"FFE",sub:"FLOOR_WALL_FINISHES",pattern:/\b(carpet|vinyl flooring|wallpaper|floor finish|wall finish)\b/i},
+  // Guest-room linen takes precedence over the broad back-of-house linen rule.
+  {root:"GUEST_ROOMS_AMENITIES",sub:"BATH_LINEN",pattern:/\b(bath towel|bath mat|bathrobe|face towel|pool towel|guest towel|guest bath towel)\b/i},
+  {root:"GUEST_ROOMS_AMENITIES",sub:"BEDDING_LINEN",pattern:/\b(guest bed sheet|hotel bed sheet|bedsheet|pillowcase|duvet cover|bed runner|mattress protector|guest pillow|hotel pillow)\b/i},
+  {root:"GUEST_ROOMS_AMENITIES",sub:"BATHROOM_AMENITIES",pattern:/\b(hotel shampoo|guest shampoo|conditioner|body wash|shower gel|soap bar|toothbrush|dental kit|shower cap|vanity kit|body lotion)\b/i},
   {root:"HOUSEKEEPING_LAUNDRY",sub:"CLEANING_CHEMICALS",pattern:/\b(detergent|disinfectant|sanitizer|degreaser|glass cleaner|floor cleaner|bleach|descaler)\b/i},
   {root:"HOUSEKEEPING_LAUNDRY",sub:"LAUNDRY_CHEMICALS",pattern:/\b(laundry detergent|laundry bleach|fabric softener|laundry sour|laundry chemical)\b/i},
   {root:"HOUSEKEEPING_LAUNDRY",sub:"LAUNDRY_EQUIPMENT",pattern:/\b(washing machine|washer extractor|tumble dryer|laundry dryer|ironer|flatwork ironer|laundry press)\b/i},
@@ -106,12 +110,15 @@ function observedPackUnit(record: RawCatalogObservation): string | null {
   const match = /\b(kg|kilograms?|g|grams?|ml|millilit(?:er|re)s?|lit(?:er|re)s?|pieces?|pcs?|packs?|cases?|cartons?|rolls?|sets?|pairs?|boxes?)\b/i.exec(pack);
   return match ? normalizeUnit(match[1]) : null;
 }
-function buildDescription(root: string, subcategory: string, packSize: string | null, unit: string | null): string {
-  const family = titleCase(subcategory);
-  const bits = ["Hospitality " + family.toLocaleLowerCase("en") + " reference in " + titleCase(root).toLocaleLowerCase("en") + "."];
+function buildDescription(record: RawCatalogObservation, root: string, subcategory: string, normalizedName: string, packSize: string | null, unit: string | null): string {
+  // Retain the observed description for administrator review and rewriting;
+  // do not replace a real product description with a generic AI sentence.
+  const observed = clean(record.description).replace(/https?:\/\/\S+/gi, "").replace(/\s+/g, " ").trim();
+  if (observed) return observed.slice(0, 1500);
+  const bits = [normalizedName + "."];
   if (packSize) bits.push("Observed pack specification: " + packSize + ".");
   if (unit) bits.push("Observed unit: " + unit + ".");
-  bits.push("Supplier, price, stock and offer terms are stored separately from this buyer-facing reference.");
+  bits.push("Hospitality category: " + titleCase(root) + " / " + titleCase(subcategory) + ".");
   return bits.join(" ");
 }
 
@@ -144,7 +151,7 @@ export function runHospitalityTaxonomyAgent(record: RawCatalogObservation): Taxo
     categoryCode: matched.root,
     subcategoryCode: matched.sub,
     normalizedName,
-    normalizedDescription: buildDescription(matched.root, matched.sub, clean(record.packSize) || null, unit),
+    normalizedDescription: buildDescription(record, matched.root, matched.sub, normalizedName, clean(record.packSize) || null, unit),
     unitOfMeasure: unit,
     purchaseUnit,
     specifications: specs,

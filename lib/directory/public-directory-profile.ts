@@ -131,6 +131,12 @@ export function publicDirectorySpecifications(attributes: unknown) {
  * Reviewed image URLs are source evidence. Do not send browser clients to
  * third-party hosts until an origin-pinned, first-party media proxy exists.
  */
-export function publicDirectoryImages(_images: unknown): string[] {
-  return [];
+export function publicDirectoryImages(images: unknown): string[] {
+  if (!Array.isArray(images)) return [];
+  return images.flatMap((image) => (
+    typeof image === 'string' &&
+    /^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/.test(image)
+      ? [image]
+      : []
+  )).slice(0, 8);
 }

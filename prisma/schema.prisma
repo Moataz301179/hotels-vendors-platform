@@ -4836,6 +4836,10 @@ model CatalogReceivingRecord {
   observedCurrency         String                            @default("EGP")
   rawStockText             String?
   imageUrls                String[]                          @default([])
+  imageRightsStatus        String                            @default("PERMISSION_UNKNOWN")
+  imageRightsNote          String?
+  approvedImageUrls         String[]                          @default([])
+  imageQualityOutput        Json?
   rawPayload               Json
   qualityStatus            CatalogReceivingQualityStatus     @default(PENDING)
   taxonomyStatus           CatalogReceivingTaxonomyStatus    @default(PENDING)

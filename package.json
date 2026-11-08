@@ -82,7 +82,8 @@
     "scrapegraph-js": "^2.2.1",
     "tailwindcss": "^4.3.3",
     "twilio": "^6.0.2",
-    "zod": "^4.4.1"
+    "zod": "^4.4.1",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@clerk/testing": "^2.2.54",
