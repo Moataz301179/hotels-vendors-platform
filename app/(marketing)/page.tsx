@@ -29,9 +29,9 @@ const categories = [
 ];
 
 const actions = [
-  { number: "01", icon: PackageSearch, title: "Frame the need", body: "Start with the property category, specification, quantity and timing.", href: "/marketplace", cta: "Explore sourcing areas" },
-  { number: "02", icon: ClipboardCheck, title: "Control the decision", body: "Route the requirement, terms and authority checks through one record.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace", cta: "Open a workspace" },
-  { number: "03", icon: FileCheck2, title: "Prove the handoff", body: "Keep order, delivery and receiving evidence connected after approval.", href: "/login?redirect_url=%2Forders", cta: "Follow an order" },
+  { number: "01", icon: PackageSearch, title: "Identify the need", body: "Start with the property category, specification, quantity and timing.", href: "/marketplace", cta: "Explore sourcing areas" },
+  { number: "02", icon: ClipboardCheck, title: "Own the decision", body: "Route the requirement, terms and authority checks through one record.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace", cta: "Open a workspace" },
+  { number: "03", icon: FileCheck2, title: "Verify the handoff", body: "Keep order, delivery and receiving evidence connected after approval.", href: "/login?redirect_url=%2Forders", cta: "Follow an order" },
 ];
 
 const lifecycle = [
@@ -51,40 +51,29 @@ export default function MarketingPage() {
   return (
     <main className={styles.home}>
       <section className={heroStyles.hero}>
-        <div className={`${styles.shell} ${heroStyles.heroShell}`}>
-          <div>
-            <p className={styles.eyebrow}>Technology reimagined · Hospitality network · Egypt</p>
-            <h1>Technology reimagined for hotel procurement.<em> Every decision connected. Every handoff accountable.</em></h1>
-            <p className={styles.lead}>HotelsVendors turns fragmented sourcing, approval, delivery and receipt evidence into one protected operating record—so Egyptian hotel teams can control spend, qualify local supply and act with confidence.</p>
-            <div className={styles.actions}>
-              <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
-              <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
+        <div className={styles.shell}>
+          <div className={styles.heroGrid}>
+            <div className={styles.heroCopy}>
+              <p className={styles.eyebrow}>One commercial record · Hospitality sourcing network · Egypt</p>
+              <h1>Technology reimagined for hotel procurement.<em> Every decision connected. Every handoff accountable.</em></h1>
+              <p className={styles.lead}>HotelsVendors turns fragmented sourcing, approval, delivery and receipt evidence into one protected operating record—so Egyptian hotel teams can control spend and qualify local supply with confidence.</p>
+              <div className={styles.actions}>
+                <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
+                <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
+              </div>
             </div>
-            <div className={styles.taskDock} aria-label="Start a procurement task">
-              {actions.map(({ number, icon: Icon, title, body, href, cta }) => <Link href={href} key={title} className={styles.taskTile}>
-                <span>{number}</span><Icon size={21} aria-hidden="true" /><div><strong>{title}</strong><small>{body}</small></div><b>{cta}<ArrowRight size={14} /></b>
-              </Link>)}
-            </div>
+            <figure className={styles.heroVisual}>
+              <Image src="/hero-clean.jpeg" alt="Luxury hotel suite with a private balcony opening onto the sea" fill sizes="(max-width: 950px) calc(100vw - 48px), 44vw" />
+              <figcaption><span>Authorized hospitality imagery</span><small>HotelsVendors</small></figcaption>
+            </figure>
           </div>
-          <HeroCarousel />
         </div>
       </section>
 
-      <section className={styles.section} aria-labelledby="operating-title">
+      <section className={styles.carouselSection} aria-labelledby="journeys-title">
         <div className={styles.shell}>
-          <Header eyebrow="One commercial record" title="The network carries context forward. The hotel keeps authority." text="A requirement does not disappear into a marketplace. It moves through an accountable record that connects the right organization at the right handoff." />
-          <div className={styles.journeyBoard}>
-            <figure className={styles.sceneImage}>
-              <Image src="/hv-workspace-team.webp" alt="Hotel operations team using purchasing data while preparing hospitality supplies" fill sizes="(max-width: 850px) calc(100vw - 34px), 52vw" />
-              <figcaption>Start from what the property needs—not a generic catalogue search.</figcaption>
-            </figure>
-            <div className={styles.journeySteps}>
-              {lifecycle.slice(0, 3).map(({ icon: Icon, label, detail, href }, index) => <Link href={href} className={styles.journeyStep} key={label}>
-                <span>{String(index + 1).padStart(2, "0")}</span><Icon size={23} aria-hidden="true" /><div><strong>{label}</strong><small>{detail}</small></div><ArrowRight size={16} aria-hidden="true" />
-              </Link>)}
-              <div className={styles.journeySignal}><CheckCircle2 size={18} aria-hidden="true" /><span>The hotel retains commercial authority at every decision point.</span></div>
-            </div>
-          </div>
+          <Header eyebrow="Sourcing journeys" title="Every operating area, one accountable path." text="Move from a visual product reference to a controlled requirement, an authorized decision and a verified receiving handoff." />
+          <HeroCarousel />
         </div>
       </section>
 
@@ -101,26 +90,7 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      <section className={styles.controlSection} aria-labelledby="control-title">
-        <div className={styles.shell}>
-          <Header eyebrow="Virtual Shadow · illustrative view" title="Turn operating evidence into a decision brief—not an automatic decision." text="Virtual Shadow connects permissioned records into signals for the people who own the action. It can surface a gap or pattern; commercial authority remains human and organization-scoped." />
-          <div className={styles.controlBoard}>
-            <div className={styles.controlNav}><span className={styles.navActive}><PackageSearch size={17} /> Requirement</span><span><ClipboardCheck size={17} /> Terms</span><span><ShieldCheck size={17} /> Approval</span><span><Truck size={17} /> Receipt</span></div>
-            <div className={styles.controlCanvas}>
-              <div className={styles.controlSummary}><p>Illustrative signal folio</p><strong>Review a controlled requirement before it advances.</strong><span>Requirement context · commercial response · authority record</span></div>
-              <div className={styles.controlChecks}><article><span>Evidence available</span><b>Review required</b></article><article><span>Commercial terms</span><b>Restricted</b></article><article><span>Next authority</span><b>Identified</b></article></div>
-              <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.controlAction}>Open your secure workspace <ArrowRight size={16} /></Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.mobile} aria-labelledby="mobile-title"><div className={`${styles.shell} ${styles.mobileShell}`}>
-        <div className={styles.mobileIntro}><p className={styles.eyebrow}>HOVIN receiving companion</p><h2 id="mobile-title">The receiving record belongs at the dock—not in a spreadsheet later.</h2><p>HOVIN is the controlled field companion for an assigned handoff. It helps the receiving operator capture what arrived, what did not, and the evidence an authorized hotel team needs to resolve the exception.</p><Link href="/hovin" className={styles.textLink}>See the HOVIN receiving model <ArrowRight size={16} /></Link></div>
-        <HovinReceivingPreview />
-      </div></section>
-
-      <section className={styles.close}><div className={styles.shell}><div className={styles.closeHeading}><p className={styles.eyebrow}>Enter the operating network</p><h2>Open a workspace that matches your responsibility.</h2><p>Hotels and Vendors can register directly. Carrier and funder access is provisioned only when the relevant organization and workflow are approved.</p></div><div className={styles.roleStartGrid}>{roleStarts.map(({ icon: Icon, label, detail, href, action }) => <Link href={href} className={styles.roleStart} key={label}><Icon size={22} aria-hidden="true"/><div><span>{label}</span><p>{detail}</p></div><strong>{action}<ArrowRight size={15}/></strong></Link>)}</div><Link href="/getting-started" className={styles.textLink}>See the guided onboarding path <ArrowRight size={16} /></Link></div></section>
+      <section className={styles.close}><div className={styles.shell}><div className={styles.closeHeading}><p className={styles.eyebrow}>Enter the operating network</p><h2>Open a workspace that matches your responsibility.</h2><p>Hotels and Vendors can register directly.</p></div><div className={styles.roleStartGrid}>{roleStarts.map(({ icon: Icon, label, detail, href, action }) => <Link href={href} className={styles.roleStart} key={label}><Icon size={22} aria-hidden="true" /><div><span>{label}</span><p>{detail}</p></div><strong>{action}<ArrowRight size={15}/></strong></Link>)}</div><Link href="/getting-started" className={styles.textLink}>See the guided onboarding path <ArrowRight size={16} /></Link></div></section>
     </main>
   );
 }

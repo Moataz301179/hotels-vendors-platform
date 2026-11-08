@@ -6,7 +6,9 @@ import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
 
 const ingestSchema = z.object({
-  hotelId: z.string().min(1),
+  // hotelId is intentionally absent: the target hotel is resolved from the
+  // authenticated session on the server (SEC-001 / DATA-002 / FIN-015).
+  // A caller-supplied hotelId is stripped by Zod and never trusted.
   sourceType: z.string().trim().min(1).max(64),
   sourceReference: z.string().trim().min(1).max(160),
   payloadSummary: z.object({
@@ -33,10 +35,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "A minimised e-invoice payload summary is required." }, { status: 400 });
   }
 
-  const { hotelId, sourceType, sourceReference, payloadSummary, recordCount } = parsed.data;
+  const { sourceType, sourceReference, payloadSummary, recordCount } = parsed.data;
 
+  // Resolve the hotel from the authenticated identity only. A client-supplied
+  // hotelId is never consulted, so a caller cannot aim an ingest at another
+  // property in the tenant (TST-SEC-001 / SEC-001 / FIN-015).
   const hotel = await prisma.hotel.findFirst({
-    where: { id: hotelId, tenantId: actor.tenantId, deletedAt: null },
+    where: actor.hotelId
+      ? { id: actor.hotelId, tenantId: actor.tenantId, deletedAt: null }
+      : { tenantId: actor.tenantId, status: "ACTIVE", deletedAt: null },
     select: { id: true, status: true },
   });
   if (!hotel) return NextResponse.json({ error: "HOTEL_NOT_FOUND" }, { status: 404 });
@@ -59,7 +66,7 @@ export async function POST(req: Request) {
     const created = await tx.hotelEInvoiceImport.create({
       data: {
         tenantId: actor.tenantId,
-        hotelId,
+        hotelId: hotel.id,
         sourceType,
         sourceReference,
         payloadSummary,
@@ -74,7 +81,7 @@ export async function POST(req: Request) {
       tenantId: actor.tenantId,
       actorId: actor.id,
       actorRole: actor.platformRole,
-      changes: { hotelId, sourceType, sourceReference, recordCount },
+      changes: { hotelId: hotel.id, sourceType, sourceReference, recordCount },
     }, tx);
     return created;
   });
@@ -93,7 +100,9 @@ export async function GET() {
   }
 
   const hotel = await prisma.hotel.findFirst({
-    where: { tenantId: actor.tenantId, status: "ACTIVE", deletedAt: null },
+    where: actor.hotelId
+      ? { id: actor.hotelId, tenantId: actor.tenantId, deletedAt: null }
+      : { tenantId: actor.tenantId, status: "ACTIVE", deletedAt: null },
     select: { id: true },
   });
   if (!hotel) return NextResponse.json({ error: "ACTIVE_HOTEL_REQUIRED" }, { status: 409 });

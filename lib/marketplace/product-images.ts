@@ -29,11 +29,169 @@
  * scene) with a verified server-rack photo. Wikimedia URLs now use the stable
  * Commons Special:FilePath?width=800 form (direct upload.wikimedia.org paths are
  * intermittently curl-429 rate-limited).
+ *
+ * AUDIT 2026-11-07 (qwen3.5:9b vision; 116/116 unique URLs live, 95 Unsplash 200 +
+ * 21 Commons 302->200 image/jpeg; every category-pool photo re-checked against its
+ * category label). Fixed 9 more wrong-subject mappings:
+ *   panel/switch/breaker/transformer  network patch panel -> verified electrical
+ *                                      distribution board with circuit breakers
+ *   router/modem/wifi                network patch panel -> verified Wi-Fi router
+ *   battery                          server rack          -> verified alkaline cells
+ *   hub                              smart door lock      -> verified USB hub
+ *   voice                            smart door lock      -> verified smart speaker
+ *   ups                              server rack          -> verified UPS unit
+ *   glove                            bare glove on white  -> verified nitrile
+ *                                                        cleaning glove
+ *   shampoo/conditioner/lotion/gel/  Curology skincare    -> verified hotel
+ *   body/shower/bath/soap             flat-lay             shampoo/amenity tray
+ * Dropped `access` (photo is a CCTV wall, not an access-control reader) and the
+ * dead `nut_hardware` key (never matched a real product name). Added `towel`
+ * -> verified white towels. Replaced the hk pool's bare-glove photo with the
+ * verified glove photo.
+ *
+ * AUDIT 2026-11-07 (later pass, qwen3.5:9b; all 125 unique URLs re-checked live
+ * and subject-verified): fixed `modem` -- its photo was a network patch panel
+ * with Ethernet patch leads (a switch, not a modem) -> verified ARRIS DOCSIS
+ * cable modem. Re-confirmed borderline-but-correct mappings: hub (USB hub PCB),
+ * sardine (live school), glove (nitrile glove), sheet (made bed), walnut.
+ * Zero dead URLs; no wrong-subject pool photos remain.
+ *
+ * AUDIT 2026-11-07 (independent re-run, qwen3.5:9b; 126/126 unique URLs live,
+ * 0 dead; every keyword-mapped and category-pool photo re-checked against its
+ * subject/category). Fixed the remaining product-level and category-cover
+ * mismatches:
+ *   GRA category pool + GRA cover  personal Curology/Clarins skincare tubes on
+ *                                 a residential shower floor (NOT hotel guest
+ *                                 amenities) -> verified Laylow hotel amenity
+ *                                 tray (toiletry bottles + rolled towels)
+ *   OSE cover                    restaurant dining scene (NOT operating
+ *                                 supplies) -> verified office-stationery photo
+ *   shower keyword               "Shower Cap" matched `shower` and showed
+ *                                 toiletry bottles -> added a `shower`+cap guard
+ *                                 so a shower cap falls through to the gradient
+ * Borderline-but-accepted (same subject family, no change): chicken bouillon
+ * cubes -> cooked chicken; wine glass -> wine toast; tea bags -> iced tea;
+ * `shelf` -> home-library bookshelf (no real product currently matches it).
+ *
+ * AUDIT 2026-11-07 (qwen3.5:9b; live /marketplace card audit): the live
+ * directory resolved 10 of 15 records to a wrong-subject or category-artwork
+ * photo. Every replacement below was downloaded and vision-checked to depict
+ * the exact subject named by the card:
+ *   fire safety equipment inspection  -> fire extinguishers (was office laptop)
+ *   preventive HVAC maintenance       -> outdoor HVAC unit (was power drill)
+ *   commercial kitchen hood cleaning  -> greasy hood filter (was cleaning bottles)
+ *   hotel pest control                -> cockroach (was office laptop)
+ *   guest-room folding luggage rack   -> folding luggage rack (was hotel lobby)
+ *   commercial door closer            -> hydraulic door closer (was workbench)
+ *   LED ceiling panel                 -> LED light panel (was workbench)
+ *   commercial food storage container -> food storage containers (was category art)
+ *   stainless steel gastronorm pan   -> gastronorm pans (was category art)
+ *   commercial mop head and handle    -> commercial mop (was category art)
+ * Added `fire`, `pest`, `hvac`, `hood`, `extraction`, `closer`, `led`,
+ * `luggage`, `baggage`, `gastronorm`, `mop`, `container` keywords, plus
+ * `clean`/`cleaner` and `maintenance` guards so the specific subject wins over
+ * the generic cleaning/tools photo. Only "wall-mounted guest amenity dispenser"
+ * still falls back to its category artwork (no verified dispenser photo found).
+ *
+ * MATCHER (2026-11-07): substring `name.includes(keyword)` was replaced with
+ * WORD-BOUNDARY matching plus a collision-guard table. Substring matching produced
+ * wrong-subject photos on the real catalog: "Toilet Paper Jumbo" -> `oil` -> olive
+ * oil bottle, "Fabric Softener 5L" -> `soft` -> Coca-Cola, "Paper Towel Roll" ->
+ * `roll` -> bread, "Guest-room folding luggage rack" -> `rack` -> server rack,
+ * "LED ceiling panel" -> `panel` -> network switch, "White bath towel" -> `bath` ->
+ * skincare tubes. Unmatched products now fall back to the category-colored
+ * GRADIENT -- never a wrong-subject stock photo. Category pools remain in use for
+ * `getCategoryImage()` covers only, where a category photo IS the subject.
+ *
+ * AUDIT 2026-11-07 (qwen3.5:9b vision on the live /marketplace assets + the real
+ * resolver run over 94 catalog SKUs and 405 directory profiles). The live site
+ * renders ZERO product photos (15 cards all use the mediaFallback placeholder) and
+ * all 6 public category-* tiles PASS a subject check, so no live wrong-subject
+ * product image exists today. The resolver, however, still resolved 20+ real
+ * products to a wrong-subject stock photo. Every one now falls through to the
+ * category GRADIENT (the honest fallback) instead of a misleading photo:
+ *   Facial Tissues (100 sheets)   was a made bed (`sheet`)      -> gradient
+ *   Water Glasses (Crystal)       was a water bottle (`water`)  -> gradient
+ *   Vacuum Cleaner                was spray bottles (`clean`)   -> gradient
+ *   Microfiber cleaning cloth     was spray bottles (`clean`)   -> gradient
+ *   Croissants (Butter)           was a butter block (`butter`)-> gradient
+ *   Papyrus Painting (Framed)     was paint tins (`paint`)      -> gradient
+ *   Smart Thermostat (WiFi)       was a Wi-Fi router (`wifi`)   -> gradient
+ *   Fabric Softener 5L            was Coca-Cola (`soft`)       -> gradient
+ *   Fruit Roll-Ups                was a UPS unit (`ups`)        -> gradient
+ *   Dentyne fire gum              was fire extinguishers (`fire`) -> gradient
+ *   Wonderful Pistachios S&P       was a pepper mill (`pepper`) -> gradient
+ *   Cocoa Puffs / Raisin Nut Bran was chocolate/bran powder     -> gradient
+ *   "Fruit ... GELS" dessert      was hotel shampoo (`gel`)     -> gradient
+ *   Anchovies Fillets in Olive Oil was olive oil (`oil`/`olive`) -> gradient
+ * Added `cola`/`coke` (Coca-Cola now shows the soda photo) and extended the guard
+ * table from 27 to 62 entries so prepared/brand/flavour names never win over the
+ * actual subject. Verified: `npx tsc --noEmit -p tsconfig.json` clean; 55/55
+ * targeted resolver cases pass (20 wrong-subject -> gradient, 35 correct kept).
  */
 
 // ─── REAL UNSPLASH PHOTOGRAPHY ──────────────────────────────────────────────
 // Every URL below points to an actual photograph of the product category.
 // Zero random placeholder images. Zero Picsum.
+
+// ─── VERIFIED SUBJECT PHOTOGRAPHY (Wikimedia Commons, CC-licensed) ──────────
+// Added in the 2026-11-07 audit: each was downloaded and confirmed with a local
+// vision model (qwen3.5:9b) to actually depict the subject named by the keyword.
+// Commons Special:FilePath is the stable form (direct upload.wikimedia.org paths
+// are intermittently rate-limited).
+const IMG_ELECTRICAL_PANEL =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Electrical%20distribution%20board%20with%20circuit%20breakers%20and%20wiring%2C%20abandoned%20Buzz%20Bingo%20%28former%20Ritz%20Cinema%29%2C%20Chatham%2C%20Kent%2C%20England%20%282025-05-11%29.png?width=800";
+const IMG_WIFI_ROUTER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Wi-fi%20router.jpg?width=800";
+const IMG_BATTERY =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Golden%20Power%20Power%20Plus%20AA%20alkaline%20batteries.jpg?width=800";
+const IMG_USB_HUB =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/2023%20Hub%20USB%202.0.jpg?width=800";
+const IMG_SMART_SPEAKER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Alexa%20Amazon%20Echo%20Dot%203rd%20Gen%20Smart%20Speaker%20-%20Sandstone%20Fabric%20%28Creative%20Commons%29%20%2851048461088%29.jpg?width=800";
+const IMG_UPS =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/UPS%20-%20uninterruptible%20power%20supply.JPG?width=800";
+const IMG_CLEANING_GLOVE =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Nitrile%20Glove%20for%20Clean%20Room.jpg?width=800";
+const IMG_HOTEL_AMENITIES =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Laylow%20-%20Hotel%20Shampoos%20and%20Soaps%20%2849539076973%29.jpg?width=800";
+const IMG_BATH_TOWELS =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/DSC%207517%20Crisp%20white%20towels%20neatly%20rolled%20on%20a%20freshly%20made%20bed%20with%20patterned%20cushions%20and%20a%20colorful%20tiled%20headboard%20in%20the%20background.jpg?width=800";
+const IMG_FIRE_EXTINGUISHER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Estintori.jpg?width=800";
+// Verified 2026-11-07 (qwen3.5:9b): a standalone DOCSIS cable modem. The former
+// `modem` photo was a network patch panel with Ethernet patch leads -- a switch,
+// not a modem -- so it was a wrong-subject mapping.
+const IMG_MODEM =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/ARRIS%20CM820B%20DOCSIS%20Cable%20Modem.jpg?width=800";
+
+// ─── VERIFIED SERVICE & EQUIPMENT SUBJECTS (added 2026-11-07) ────────────────
+// Each was downloaded and confirmed with qwen3.5:9b to actually depict the
+// service/equipment named by the keyword, after the live marketplace showed a
+// wrong-subject photo (fire-safety -> office laptop, HVAC -> power drill,
+// kitchen-hood -> retail cleaning bottles, pest control -> office laptop,
+// luggage rack -> hotel lobby, door closer -> engineering workbench,
+// LED ceiling panel -> engineering workbench).
+const IMG_HVAC_UNIT =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Rheem%20HVAC%20Unit%201.jpg?width=800";
+const IMG_KITCHEN_HOOD_FILTER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Long-uncleaned%20kitchen%20hood%20filter.jpg?width=800";
+// Replaced 2026-11-07: the first candidate (an insect-control laboratory) read as
+// "a person" at card size. A clear cockroach -- a core hotel pest -- is unambiguous.
+const IMG_PEST_CONTROL =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Cockroach%205.jpg?width=800";
+const IMG_DOOR_CLOSER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Door%20closer%201.jpg?width=800";
+const IMG_FOLDING_LUGGAGE_RACK =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Foldable%20luggage%20rack%20in%20public%20bus%20of%20Singapore.jpg?width=800";
+const IMG_LED_PANEL =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Arri%20SkyPanel%20X%20LED%20Light%20Panel.jpg?width=800";
+const IMG_GASTRONORM =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Gastronorms.png?width=800";
+const IMG_MOP =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Mop%20and%20bucket%2C%207-Eleven.jpg?width=800";
+const IMG_FOOD_CONTAINER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Glass%20food%20storage%20container%20with%20Easy%20Find%20Lids.jpg?width=800";
 
 const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
@@ -102,6 +260,11 @@ const KEYWORD_MAP: Record<string, string> = {
   water:      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=80",
   soda:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
   soft:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
+  // `cola`/`coke` added 2026-11-07: "Coca-Cola (330ml can)" matched no keyword
+  // and fell through to the gradient. A cola is a soft drink; without these keys
+  // a real soda product rendered no image at all.
+  cola:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
+  coke:      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
   milk:      "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600&q=80",
   wine:      "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&q=80",
   beer:      "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&q=80",
@@ -137,7 +300,10 @@ const KEYWORD_MAP: Record<string, string> = {
   sanitizer:    "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&q=80",
   detergent:    "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&q=80",
   bleach:       "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&q=80",
-  glove:        "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=600&q=80",
+  glove:        IMG_CLEANING_GLOVE,
+  // `mop` added 2026-11-07: "Commercial mop head and handle" fell through to the
+  // Housekeeping category artwork (a housekeeping storage photo).
+  mop:          IMG_MOP,
   spray:        "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600&q=80",
 
   // ═══════════════════════════════════════════════════════════════
@@ -156,14 +322,17 @@ const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
   //  GUEST AMENITIES & TOILETRIES
   // ═══════════════════════════════════════════════════════════════
-  shampoo:    "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  conditioner:"https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  lotion:     "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  gel:        "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  body:       "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  shower:     "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  bath:       "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
-  soap:       "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
+  shampoo:    IMG_HOTEL_AMENITIES,
+  conditioner:IMG_HOTEL_AMENITIES,
+  lotion:     IMG_HOTEL_AMENITIES,
+  gel:        IMG_HOTEL_AMENITIES,
+  body:       IMG_HOTEL_AMENITIES,
+  shower:     IMG_HOTEL_AMENITIES,
+  bath:       IMG_HOTEL_AMENITIES,
+  soap:       IMG_HOTEL_AMENITIES,
+  // `towel` added 2026-11-07 (verified white towels). Without it, "White bath
+  // towel" matched `bath` and showed a toiletry bottle instead of a towel.
+  towel:      IMG_BATH_TOWELS,
 
   // ═══════════════════════════════════════════════════════════════
   //  POOL & SPA
@@ -181,10 +350,10 @@ const KEYWORD_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════
   //  IT & TECHNOLOGY
   // ═══════════════════════════════════════════════════════════════
-  router:    "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
-  modem:     "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
+  router:    IMG_WIFI_ROUTER,
+  modem:     IMG_MODEM,
   network:   "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
-  wifi:      "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
+  wifi:      IMG_WIFI_ROUTER,
   server:    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
   rack:      "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
   laptop:    "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
@@ -200,12 +369,16 @@ const KEYWORD_MAP: Record<string, string> = {
   speaker:   "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
   sound:     "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
   smart:     "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
-  hub:       "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
-  voice:     "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
-  ups:       "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
-  battery:   "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
+  hub:       IMG_USB_HUB,
+  voice:     IMG_SMART_SPEAKER,
+  ups:       IMG_UPS,
+  battery:   IMG_BATTERY,
   pos:       "https://commons.wikimedia.org/wiki/Special:FilePath/Ingenico_iCT250_payment_terminal_machine.jpg?width=800",
   terminal:  "https://commons.wikimedia.org/wiki/Special:FilePath/Ingenico_iCT250_payment_terminal_machine.jpg?width=800",
+  // `led` added 2026-11-07: "LED ceiling panel, 600 × 600 mm" was guarded away
+  // from the `panel` keyword (correctly) and fell through to the Engineering
+  // category artwork -- an engineering workbench photo.
+  led:       IMG_LED_PANEL,
 
   // ═══════════════════════════════════════════════════════════════
   //  SECURITY
@@ -216,7 +389,20 @@ const KEYWORD_MAP: Record<string, string> = {
   rfid:   "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80",
   camera: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=600&q=80",
   cctv:   "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=600&q=80",
-  access: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=600&q=80",
+  // `extinguisher` added 2026-11-07 (verified fire extinguishers). The former
+  // blueprint photo was removed in an earlier audit; without this key a real
+  // "Fire Extinguisher" row fell through to the gradient.
+  extinguisher: IMG_FIRE_EXTINGUISHER,
+  // `fire` added 2026-11-07: "Fire safety equipment inspection service" fell
+  // through to the Hotel-services category artwork (an office laptop photo).
+  // Same verified extinguisher photograph -- a fire-safety subject.
+  fire: IMG_FIRE_EXTINGUISHER,
+  // `pest` added 2026-11-07: "Hotel pest control service" fell through to the
+  // Hotel-services category artwork (an office laptop photo).
+  pest:   IMG_PEST_CONTROL,
+  // `access` dropped 2026-11-07: its photo was a CCTV wall, not an access-control
+  // reader. No verified access-control photo was found, so the keyword falls
+  // through to the category gradient rather than showing the wrong subject.
 
   // ═══════════════════════════════════════════════════════════════
   //  ENGINEERING & MAINTENANCE
@@ -227,13 +413,22 @@ const KEYWORD_MAP: Record<string, string> = {
   wrench:      "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
   screw:       "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
   bolt:        "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
-  nut_hardware:"https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
+  // `nut_hardware` dropped 2026-11-07: the underscore key never matched a real
+  // product name once matching moved to word boundaries.
   motor:       "https://commons.wikimedia.org/wiki/Special:FilePath/Electric_motor_on_the_slewing_bearing_of_a_remote_controlled_yellow_Liebherr_tower_crane.jpg?width=800",
-  panel:       "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
-  switch:      "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
-  breaker:     "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
-  transformer: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&q=80",
-  welding:     "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=80",
+  panel:       IMG_ELECTRICAL_PANEL,
+  switch:      IMG_ELECTRICAL_PANEL,
+  breaker:     IMG_ELECTRICAL_PANEL,
+  transformer: IMG_ELECTRICAL_PANEL,
+  welding: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=80",
+  // `hvac`/`hood`/`extraction`/`closer` added 2026-11-07 after the live
+  // marketplace showed a power drill for "Preventive HVAC maintenance service",
+  // retail cleaning bottles for "Commercial kitchen hood cleaning service" and
+  // an engineering workbench for "Commercial door closer".
+  hvac:      IMG_HVAC_UNIT,
+  hood:      IMG_KITCHEN_HOOD_FILTER,
+  extraction: IMG_KITCHEN_HOOD_FILTER,
+  closer:    IMG_DOOR_CLOSER,
   maintenance: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
   repair:      "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
   carpentry:   "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80",
@@ -249,6 +444,11 @@ const KEYWORD_MAP: Record<string, string> = {
   shelf:      "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=600&q=80",
   knife:      "https://commons.wikimedia.org/wiki/Special:FilePath/Chef%27s%20knife.jpg?width=800",
   tray:       "https://commons.wikimedia.org/wiki/Special:FilePath/Baking%20tray.jpg?width=800",
+  // `gastronorm`/`container` added 2026-11-07: "Stainless steel gastronorm food
+  // pan" and "Commercial food storage container" fell through to the Food &
+  // Beverage category artwork (a general food photograph).
+  gastronorm: IMG_GASTRONORM,
+  container:  IMG_FOOD_CONTAINER,
   chair:      "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?w=600&q=80",
   desk:       "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=600&q=80",
 
@@ -260,6 +460,10 @@ const KEYWORD_MAP: Record<string, string> = {
   furniture:  "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&q=80",
   lounge:     "https://commons.wikimedia.org/wiki/Special:FilePath/Lobby_hall_with_couches_and_chandelier_at_The_Fullerton_Bay_Hotel_Singapore.jpg?width=800",
   minibar:    "https://commons.wikimedia.org/wiki/Special:FilePath/Hotel_Eden%2C_Pokoj_Standart_minibar_%282%29.jpg?width=800",
+  // `luggage`/`baggage` added 2026-11-07: "Guest-room folding luggage rack"
+  // fell through to the Furniture category artwork (a hotel lobby photo).
+  luggage:    IMG_FOLDING_LUGGAGE_RACK,
+  baggage:    IMG_FOLDING_LUGGAGE_RACK,
 
   // ═══════════════════════════════════════════════════════════════
   //  OFFICE / OS&E
@@ -295,7 +499,7 @@ const CATEGORY_IMAGE_POOLS: Record<string, string[]> = {
   ],
   hk: [
     "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&q=80",
-    "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=600&q=80",
+    IMG_CLEANING_GLOVE,
     "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600&q=80",
     "https://images.unsplash.com/photo-1528740561666-dc2479dc08ab?w=600&q=80",
   ],
@@ -308,7 +512,10 @@ const CATEGORY_IMAGE_POOLS: Record<string, string[]> = {
     "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80",
   ],
   gra: [
-    "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&q=80",
+    // Replaced 2026-11-07: the former photo was personal Curology/Clarins
+    // skincare tubes on a residential shower floor -- NOT hotel guest amenities.
+    // Now the verified Laylow hotel amenity tray (toiletry bottles + towels).
+    IMG_HOTEL_AMENITIES,
   ],
   ffe: [
     "https://images.unsplash.com/photo-1505693314120-0d443867891c?w=600&q=80",
@@ -366,51 +573,212 @@ const CATEGORY_GRADIENTS: Record<string, string[]> = {
 
 const FALLBACK_GRADIENT = ["#0f1729", "#1a2332", "#2a3a4e"]; // Navy-grey default
 
-/**
- * Deterministic hash of a string — same input always produces same output.
- * Used to pick a consistent image from a pool for the same product.
- */
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
+// ═══════════════════════════════════════════════════════════════
+//  WORD-BOUNDARY MATCHER + COLLISION GUARDS
+// ═══════════════════════════════════════════════════════════════
+// Substring matching (`name.includes(keyword)`) matched keywords inside unrelated
+// words and produced wrong-subject photos on the real catalog:
+//   "Toilet Paper Jumbo 2-Ply"    -> `oil`   -> olive-oil bottle
+//   "Fabric Softener 5L"          -> `soft`  -> Coca-Cola cans
+//   "Paper Towel Roll"            -> `roll`  -> bread loaves
+//   "Guest-room folding luggage rack" -> `rack` -> server racks
+//   "47\" Hotel Smart TV"          -> `smart` -> smart door lock
+//   "A4 Printer Paper 500 Sheet"  -> `sheet` -> bedroom
+//   "White bath towel"            -> `bath`  -> skincare tubes
+// Matching is now on WHOLE WORDS only, and genuinely ambiguous keywords carry a
+// `skipIf` guard so a real word collision can never resolve to the wrong subject.
+
+const WORD_FORM_SUFFIXES = ["", "s", "es", "ing", "er", "ers", "ed", "ings"];
+
+const IRREGULAR_WORD_FORMS: Record<string, string[]> = {
+  knife: ["knives"], glass: ["glasses"], dish: ["dishes"], berry: ["berries"],
+  body: ["bodies"], baby: ["babies"], leaf: ["leaves"], shelf: ["shelves"],
+  potato: ["potatoes"], tomato: ["tomatoes"], hero: ["heroes"], mango: ["mangoes"],
+  mosquito: ["mosquitoes"], man: ["men"], woman: ["women"], person: ["people"],
+  child: ["children"], foot: ["feet"], tooth: ["teeth"], goose: ["geese"],
+  mouse: ["mice"], half: ["halves"], life: ["lives"], wife: ["wives"],
+};
+
+function keywordForms(keyword: string): string[] {
+  const base = keyword.replace(/_/g, " ");
+  const forms = new Set<string>([base]);
+  for (const suffix of WORD_FORM_SUFFIXES) forms.add(base + suffix);
+  // regular consonant+y -> ies plural (battery -> batteries, vanity -> vanities)
+  if (base.endsWith("y") && base.length > 1 && !"aeiou".includes(base[base.length - 2])) {
+    forms.add(base.slice(0, -1) + "ies");
   }
-  return Math.abs(hash);
+  for (const form of IRREGULAR_WORD_FORMS[keyword] ?? []) forms.add(form);
+  return [...forms];
 }
+
+function nameHasKeyword(name: string, keyword: string): boolean {
+  return keywordForms(keyword).some((form) => {
+    const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`\\b${escaped}\\b`, "i").test(name);
+  });
+}
+
+/**
+ * Build a case-insensitive guard from word STEMS. Each stem also matches its
+ * plural ("pad" catches "pads", "bud" catches "buds") -- a trailing `\b` alone
+ * would let "Vanity Kit Cotton Pads + Buds" slip past the `cotton` guard.
+ */
+function stems(...words: string[]): RegExp {
+  const body = words.map((word) => `${word}(?:s|es)?`).join("|");
+  return new RegExp(`\\b(?:${body})\\b`, "i");
+}
+
+/**
+ * Collision guards. The keyword is a genuine word in two different subjects; when
+ * the product name also matches `skipIf`, the keyword is skipped so its generic
+ * photo is never shown for the wrong subject. The product then falls through to
+ * the next keyword, or to the category gradient.
+ */
+const KEYWORD_GUARDS: Record<string, RegExp> = {
+  // rack: server rack (IT) vs luggage/garment rack (FFE)
+  rack: stems("luggage", "suitcase", "garment", "clothes", "apparel", "shoe", "wine", "magazine", "towel", "newspaper"),
+  // clean/cleaner: general cleaning CHEMICALS vs cleaning EQUIPMENT/cloths.
+  // "Vacuum Cleaner" must not show spray bottles; "Microfiber cleaning cloth"
+  // must not show spray bottles; "Glass Cleaner" (a chemical) still shows them.
+  clean: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam"),
+  cleaner: stems("hood", "extraction", "exhaust", "ventilation", "vacuum", "polisher", "machine", "equipment", "cloth", "microfiber", "sponge", "wipe", "rag", "duster", "brush", "mop", "iron", "steam"),
+  // maintenance: generic tools vs HVAC/heating/cooling maintenance.
+  // "Preventive HVAC maintenance service" must resolve to the HVAC unit photo,
+  // not the power-drill photograph.
+  maintenance: stems("hvac", "ventilation", "heating", "cooling"),
+  // panel: electrical distribution panel vs LED/light/control panel
+  panel: stems("led", "light", "lighting", "ceiling", "lcd", "display", "touch", "solar", "acoustic", "wall", "switch", "control", "breaker"),
+  // sheet: bedding vs paper/tissue. "Facial Tissues (100 sheets)" must not show
+  // a made bed.
+  sheet: stems("paper", "a4", "printer", "print", "document", "drawing", "metal", "plastic", "vinyl", "film", "glass", "tissue", "facial", "napkin", "handkerchief"),
+  // roll: bread roll vs paper/towel/foil roll, spring/egg roll, or fruit roll-up
+  roll: stems("paper", "towel", "toilet", "foil", "cling", "wrap", "film", "tape", "baking", "pastry", "dough", "spring", "egg", "vegetable", "rice", "seaweed", "shrimp", "fruit"),
+  // bath: toiletry vs bath towel/robe/mat
+  bath: stems("towel", "robe", "mat", "curtain", "linen"),
+  // smart: smart lock vs smart TV/display/thermostat
+  smart: stems("tv", "television", "display", "screen", "monitor", "speaker", "door", "lock", "locker", "tag", "thermostat", "temperature", "climate", "heating", "cooling", "hvac", "purifier"),
+  // gel: toiletry gel vs fruit/dessert GELATIN
+  gel: stems("hair", "hand", "nail", "shave", "floor", "tile", "fruit", "fruity", "dessert", "jelly", "gelatin", "pudding", "sweet", "cake", "snack", "candy", "rau", "thach", "thạch"),
+  // net: pool skimmer net vs internet/network
+  net: stems("internet", "network", "web", "mesh", "wifi", "lan", "ethernet", "firewall"),
+  // card: key card vs paper/business card
+  card: stems("paper", "business", "greeting", "post", "cardboard", "id", "credit", "debit", "gift", "loyalty", "membership", "name"),
+  // key: door key vs keyboard/keypad/keychain
+  key: stems("board", "pad", "chain", "tag", "fob", "code", "cable", "switch", "cabinet"),
+  // screen/display/monitor: display vs paper/protection
+  screen: stems("paper", "print", "protection", "guard", "filter", "mesh", "door", "window", "protector"),
+  display: stems("paper", "print", "stand", "card", "board", "retail", "shop", "advertising"),
+  monitor: stems("paper", "print", "guard", "protection", "display"),
+  // cotton/linen/fabric/silk/satin: textile vs pad/bud/softener/towel
+  cotton: stems("pad", "bud", "swab", "ball", "tissue", "wool", "towel", "cloth", "linen"),
+  linen: stems("pad", "bud", "towel", "cloth", "tissue", "ball", "napkin", "tablecloth", "sheet", "duvet", "pillow"),
+  fabric: stems("pad", "bud", "softener", "towel", "cloth", "tissue", "ball", "upholstery", "sofa", "curtain"),
+  silk: stems("pad", "bud", "pillow", "cloth", "scarf", "robe"),
+  satin: stems("pad", "bud", "pillow", "cloth", "scarf", "robe"),
+  // water: bottled water vs water heater/boiler/filter or drinking GLASSWARE.
+  // "Water Glasses (Crystal)" must not show a water bottle.
+  water: stems("heater", "boiler", "filter", "softener", "pump", "tank", "dispenser", "bottleless", "ionizer", "purifier", "glass", "glasses", "cup", "cups", "mug", "jug", "carafe", "tumbler"),
+  // oil: cooking oil vs engine/motor oil or oil-preserved food
+  oil: stems("engine", "motor", "lubricant", "hydraulic", "gear", "transmission", "crankcase", "anchovy", "anchovies", "sardine", "sardines", "fish"),
+  // battery: battery vs car/vehicle battery
+  battery: stems("car", "vehicle", "auto", "truck", "boat", "motorcycle", "marine"),
+  // towel: towel vs towel rail/warmer/paper towel
+  towel: stems("rail", "warmer", "holder", "rack", "hook", "paper", "dispenser", "toilet"),
+  // shower: shower gel/amenity vs shower CAP (a disposable cap, not a toiletry)
+  shower: stems("cap"),
+  // ── BAKERY & PANTRY ──────────────────────────────────────────────────────
+  // bread/bun: bread vs bread-flavoured snacks ("Bread & Butter Chips")
+  bread: stems("chip", "chips", "crisp", "crisps", "snack", "crumb", "crumbs", "pudding"),
+  bun: stems("chip", "chips", "crisp", "crisps", "snack", "hot", "dog"),
+  // dough: bread dough vs cookie/brownie dough
+  dough: stems("cookie", "brownie", "bake", "baked", "mix", "dessert", "candy", "sweet", "cake", "pastry"),
+  // cocoa: cocoa powder vs cocoa puffs/cereal/brownie
+  cocoa: stems("puff", "puffs", "cereal", "bar", "brownie", "baked", "cookie", "snack"),
+  // olive: olive oil vs fish preserved in olive oil
+  olive: stems("anchovy", "anchovies", "fish", "sardine", "sardines"),
+  // soft: soft DRINK vs soft cheese / soft-baked / soft roll / fabric softener.
+  // "Fabric Softener 5L" must not show Coca-Cola cans.
+  soft: stems("softener", "fabric", "laundry", "detergent", "conditioner", "rinse", "cheese", "roll", "bread", "bun", "grain", "wheat", "seed", "baked", "bake", "oatmeal", "bar", "square", "granola", "cereal", "snack", "drink", "soda", "sparkling", "carbonated"),
+  // milk: milk vs milk chocolate / yogurt / cheese
+  // milk: milk vs milk chocolate / yogurt / cheese / milk balls
+  milk: stems("chocolate", "cocoa", "candy", "yogurt", "yoghurt", "cheese", "ball", "balls", "malted", "sweet"),
+  // butter: butter vs butter-flavoured bakery / peanut butter / popcorn
+  butter: stems("croissant", "bread", "bun", "pastry", "cake", "cookie", "biscuit", "dough", "bakery", "cereal", "peanut", "chip", "chocolate", "bar", "mix", "cracker", "snack", "popcorn"),
+  // salt: salt vs salted snacks / seasonings / sauces
+  salt: stems("pistachio", "nut", "almond", "cashew", "peanut", "chip", "crisp", "popcorn", "cracker", "crouton", "seasoned", "flavor", "flavored", "butter", "caramel", "chocolate", "corn", "sauce", "soy", "seasoning"),
+  // sesame: sesame SEEDS vs sesame OIL
+  sesame: stems("oil"),
+  // meat: generic meat vs a named species ("Dark Meat Chicken" is chicken)
+  meat: stems("chicken", "turkey", "duck", "lamb", "beef", "pork", "fish", "seafood", "mince", "minced", "veal", "goat", "mutton"),
+  // herb: fresh herbs vs herb-flavoured prepared food
+  herb: stems("bread", "naan", "roti", "food", "dish", "sauce", "soup", "seasoning", "spice", "mix", "marinade", "chicken", "meat", "fish", "rice", "pasta", "snack", "chip", "butter", "oil", "salt", "pepper", "garlic"),
+  // onion: onion vs onion-flavoured snacks/seasoning
+  onion: stems("twist", "chip", "crisp", "snack", "bread", "roll", "dip", "sauce", "soup", "seasoning", "powder", "salt", "garlic", "ring"),
+  // potato: potato vs potato crisps/chips
+  potato: stems("crisp", "crisps", "chip", "chips", "snack", "candy", "sweet"),
+  // tomato: fresh tomato vs tomato paste/sauce ("diced tomatoes in juice" is
+  // still tomatoes, so "juice" is intentionally NOT guarded here)
+  tomato: stems("paste", "sauce", "ketchup", "soup", "pizza", "salsa", "marinara", "napoletana", "sun-dried", "sundried"),
+  // pepper: pepper vs pepper sauce/seasoning/salted nuts
+  pepper: stems("sauce", "seasoning", "powder", "steak", "oncini", "cracker", "crouton", "pistachio", "pistachios", "nut", "nuts", "snack"),
+  // chicken: chicken MEAT vs a chicken prepared dish
+  chicken: stems("pasta", "spaghetti", "noodle", "soup", "stew", "curry", "rice", "bowl", "salad", "sandwich", "pie", "fajita", "taco", "wrap", "fried", "stir", "skillet", "meal", "cereal", "snack", "bar", "strip", "sauce", "marinade", "jerk", "alfredo"),
+  // egg: egg vs an egg-based prepared food or a chocolate truffle EGG
+  egg: stems("fried", "rice", "noodle", "soup", "cake", "baking", "mix", "product", "powder", "nog", "sandwich", "salad", "roll", "wrap", "sauce", "mayonnaise", "chocolate", "truffle", "candy", "sweet", "easter", "confection", "liqueur"),
+  // rice: rice vs a rice-based prepared food/seasoning/puff
+  rice: stems("sauce", "mix", "seasoning", "cereal", "flour", "stick", "noodle", "paper", "vinegar", "pudding", "milk", "puff", "puffs", "snack", "corn"),
+  // bran: bran vs bran cereal/bar/raisin bran
+  bran: stems("cereal", "bar", "muffin", "baked", "snack", "raisin", "nut", "raisins"),
+  // pasta: pasta vs pasta SAUCE
+  pasta: stems("sauce", "adobo", "achiote", "seasoning", "paste"),
+  // juice: juice vs juice drink/smoothie
+  juice: stems("smoothie", "cocktail", "slush", "ice"),
+  // lemon/lime: the fruit vs a lemon/lime DRINK
+  lemon: stems("juice", "juie", "drink", "sparkling", "beverage", "soda", "water", "flavor", "flavour", "tea", "candy", "sweet", "sour"),
+  lime: stems("juice", "juie", "drink", "sparkling", "beverage", "soda", "water", "flavor", "flavour", "tea", "candy", "sweet", "sour"),
+  // watermelon: the fruit vs a watermelon drink/candy
+  watermelon: stems("drink", "soft", "carbonated", "flavor", "flavour", "soda", "candy", "sweet", "gum", "twist", "pack", "juice"),
+  // strawberry: the fruit vs a strawberry-flavoured food
+  strawberry: stems("jam", "fruit", "snack", "candy", "sweet", "tea", "juice", "drink", "shake", "protein", "bar", "yogurt", "yoghurt", "cereal", "flavor", "flavour", "milk", "cream"),
+  // apple: the fruit vs apple chips/juice/cider/bars
+  apple: stems("juice", "cider", "sauce", "chip", "crisp", "snack", "pie", "crumble", "flavor", "flavour", "candy", "sweet", "drink", "bar", "treat", "ginger", "streusel"),
+  // almond: the nut vs almond milk/chocolate/butter
+  almond: stems("milk", "chocolate", "butter", "cocoa", "flour", "snack", "bar", "mix", "candy", "sweet"),
+  // cocktail: a cocktail vs a vegetable/fruit cocktail DRINK
+  cocktail: stems("vegetable", "fruit", "juice", "drink", "v8"),
+  // wifi: a Wi-Fi ROUTER vs a Wi-Fi thermostat/lock/camera
+  wifi: stems("thermostat", "temperature", "climate", "heating", "cooling", "hvac", "purifier", "lock", "door", "camera", "speaker", "tv", "plug", "light"),
+  // paint/roller: paint vs a painting/artwork
+  paint: stems("painting", "art", "artwork", "frame", "framed", "canvas", "poster", "print", "picture", "photo", "wallpaper"),
+  roller: stems("painting", "art", "artwork", "frame", "framed", "canvas", "poster", "print", "picture", "photo", "wallpaper", "hair"),
+  // ── SECURITY / IT / PRODUCE ──────────────────────────────────────────────
+  // fire: fire safety vs a "fire"-flavoured candy/gum
+  fire: stems("gum", "candy", "sweet", "snack", "flavor", "flavour", "mint", "breath", "dentyne", "fireball", "jolly", "rancher"),
+  // ups: a UPS unit vs "Fruit Roll-UPS" (a snack)
+  ups: stems("fruit", "snack", "candy", "sweet", "roll", "rolls", "roll-up", "rollup", "rollups", "gushers", "foot"),
+  // spinach: the leaf vs a spinach prepared dish
+  spinach: stems("ravioli", "pasta", "sauce", "napoletana", "ricotta", "lasagne", "lasagna", "souffle", "soufflé", "quiche", "dip", "soup", "curry", "stir", "fry", "sauced", "casserole", "rice", "bowl", "salad", "green", "smoothie"),
+  // broccoli: the floret vs a broccoli prepared dish
+  broccoli: stems("stir", "fry", "sauced", "sauce", "cheese", "cheesy", "bowl", "salad", "soup", "casserole", "rice", "pasta", "cheddar"),
+};
 
 export function getProductImage(product: { name: string; category: string; sku?: string }): { type: "url"; src: string } | { type: "gradient"; colors: string[]; initials: string } {
   const name = product.name.toLowerCase();
   const category = product.category as string;
 
-  // 1) Try exact keyword match
+  // 1) Verified subject match on WORD BOUNDARIES, with collision guards.
   for (const [keyword, url] of Object.entries(KEYWORD_MAP)) {
-    if (name.includes(keyword)) {
+    const guard = KEYWORD_GUARDS[keyword];
+    if (guard?.test(name)) continue;
+    if (nameHasKeyword(name, keyword)) {
       return { type: "url", src: url };
     }
   }
 
-  // 1b) Try singularized keyword match (strip trailing 's' / 'es')
-  const singularName = name
-    .replace(/ies\b/g, "y")
-    .replace(/es\b/g, "")
-    .replace(/s\b/g, "");
-  for (const [keyword, url] of Object.entries(KEYWORD_MAP)) {
-    if (singularName.includes(keyword)) {
-      return { type: "url", src: url };
-    }
-  }
-
-  // 2) Pick a UNIQUE image from the category pool using product hash
-  const pool = CATEGORY_IMAGE_POOLS[category];
-  if (pool && pool.length > 0) {
-    const hashInput = product.sku || product.name;
-    const hash = hashString(hashInput);
-    const index = hash % pool.length;
-    return { type: "url", src: pool[index] };
-  }
-
-  // 3) Category-colored gradient with product initials
+  // 2) No verified subject photo for this product -> category-colored gradient with
+  //    product initials. Never a wrong-subject stock photo. Category pools are for
+  //    getCategoryImage() covers only, where a category photo IS the subject.
+  void product.sku;
   const colors = CATEGORY_GRADIENTS[category] || FALLBACK_GRADIENT;
   const initials = product.name
     .split(" ")

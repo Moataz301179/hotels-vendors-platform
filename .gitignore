@@ -92,3 +92,15 @@ mktemp(5792) MallocStackLogging: could not tag MSL-related memory as no_footprin
 recovery-reports/
 .agent-runs/
 .agent-home/
+
+# Live Clerk session cookies — never commit (distinct from .auth/ and .auth-testing/)
+/.auth-test/
+
+# Pre-release backup archives are large binaries; the record markdown stays tracked
+docs/backups/**/*.tar.gz
+
+# Catalog imagery and derived import artifacts — rights unverified, never commit
+/data/catalog-images/
+/data/catalog-preview/
+/data/catalog-import-results.json
+/data/catalog-revert-results.json

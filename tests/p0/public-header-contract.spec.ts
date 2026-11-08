@@ -8,19 +8,26 @@ const css = readFileSync(resolve(root, 'components/marketing/public-nav.module.c
 const footer = readFileSync(resolve(root, 'components/marketing/site-footer.tsx'), 'utf8');
 
 describe('public header contract', () => {
-  it('keeps About and Help in the header, while partner portals remain in the footer', () => {
-    expect(nav).toContain('href: "/about", label: "About"');
-    expect(nav).toContain('href: "/support", label: "Help"');
-    expect(nav).not.toContain('label: "Funders"');
-    expect(nav).not.toContain('label: "Carriers"');
-    expect(footer).toContain('Carrier partner portal');
-    expect(footer).toContain('Funder partner portal');
+  it('uses the reference header labels and customer-facing partner labels in the footer', () => {
+    expect(nav).toContain('label: "How it works"');
+    expect(nav).toContain('label: "Catalogue"');
+    expect(nav).toContain('label: "Market insights"');
+    expect(nav).toContain('label: "E-invoicing"');
+    expect(nav).toContain('label: "Partners"');
+    expect(nav).toContain('Sign in');
+    expect(nav).toContain('Join the network');
+    expect(footer).toContain('For Vendors');
+    expect(footer).toContain('Logistics partners');
+    expect(footer).toContain('Finance partners');
+    expect(footer).toContain('Partner enquiries');
+    expect(footer).not.toContain('Carrier partner portal');
+    expect(footer).not.toContain('Funder partner portal');
   });
 
-  it('uses the dark translucent chrome, blur, and light action system', () => {
-    expect(css).toContain('background:color-mix(in oklch,var(--chrome) 94%,transparent)');
-    expect(css).toContain('backdrop-filter:blur(14px)');
+  it('uses the solid charcoal chrome and cobalt action system', () => {
+    expect(css).toContain('background:var(--chrome)');
     expect(css).toContain('background:var(--blue)');
-    expect(css).toContain('background:var(--paper-0)');
+    expect(css).toContain('color:#fff');
+    expect(css).toContain('background:#fff');
   });
 });

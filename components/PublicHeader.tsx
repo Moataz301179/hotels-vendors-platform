@@ -17,12 +17,12 @@ export default function PublicHeader({ solid }: { solid?: boolean }) {
   return (
     <header
       className={`sticky top-0 z-40 border-b ${
-        solid ? "sf-glass border-line dark:border-linedark" : "sf-ink border-white/10 text-white"
+        solid ? "sf-glass border-line border-line" : "sf-ink border-white/10 text-white"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <Logo className={`h-8 w-8 ${solid ? "text-ink-950 dark:text-white" : "text-white"}`} />
+          <Logo className={`h-8 w-8 ${solid ? "text-ink-950 text-ink-950" : "text-white"}`} />
           <div className="leading-none">
             <div className="text-[15px] font-bold tracking-tight">HOTELSVENDORS</div>
             <div className={`mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] sm:block ${solid ? "text-ink-500" : "text-ink-400"}`}>
@@ -37,7 +37,7 @@ export default function PublicHeader({ solid }: { solid?: boolean }) {
               href={l.href}
               className={`rounded px-3 py-2 text-[13px] font-medium transition-colors ${
                 solid
-                  ? "text-ink-600 hover:bg-fog-100 hover:text-ink-950 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-white"
+                  ? "text-ink-600 hover:bg-fog-100 hover:text-ink-950 text-ink-600 hover:bg-paper-100 hover:text-ink-950"
                   : "text-ink-300 hover:bg-white/5 hover:text-white"
               }`}
             >
@@ -49,7 +49,7 @@ export default function PublicHeader({ solid }: { solid?: boolean }) {
           <button
             onClick={() => setLang(lang === "en" ? "ar" : "en")}
             className={`flex h-9 items-center gap-1.5 rounded px-2.5 text-[13px] font-medium transition-colors ${
-              solid ? "text-ink-600 hover:bg-fog-100 dark:text-ink-300 dark:hover:bg-ink-800" : "text-ink-300 hover:bg-white/10 hover:text-white"
+              solid ? "text-ink-600 hover:bg-fog-100" : "text-ink-300 hover:bg-white/10 hover:text-white"
             }`}
             aria-label="language"
           >
@@ -59,7 +59,7 @@ export default function PublicHeader({ solid }: { solid?: boolean }) {
           <button
             onClick={toggleTheme}
             className={`flex h-9 w-9 items-center justify-center rounded transition-colors ${
-              solid ? "text-ink-600 hover:bg-fog-100 dark:text-ink-300 dark:hover:bg-ink-800" : "text-ink-300 hover:bg-white/10 hover:text-white"
+              solid ? "text-ink-600 hover:bg-fog-100" : "text-ink-300 hover:bg-white/10 hover:text-white"
             }`}
             aria-label="theme"
           >

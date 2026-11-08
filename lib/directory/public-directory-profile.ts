@@ -128,9 +128,12 @@ export function publicDirectorySpecifications(attributes: unknown) {
 }
 
 /**
- * Reviewed image URLs are source evidence. Do not send browser clients to
- * third-party hosts until an origin-pinned, first-party media proxy exists.
- */
-export function publicDirectoryImages(_images: unknown): string[] {
-  return [];
-}
+ /** Reviewed image URLs are source evidence. Do not send browser clients to
+  * third-party hosts until an origin-pinned, first-party media proxy exists.
+  *
+  * Returns empty for third-party images. Local category images are mapped in
+  * the marketplace directory component directly.
+  */
+ export function publicDirectoryImages(_images: unknown): string[] {
+   return [];
+ }

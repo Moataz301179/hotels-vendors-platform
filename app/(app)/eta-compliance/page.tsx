@@ -2,6 +2,7 @@ import { requireActorRole } from "@/lib/v2-auth";
 import { prisma } from "@/lib/prisma";
 import { classifyEtaCompliance, etaComplianceLabel, type EtaComplianceStatus } from "@/lib/logistics/eta-compliance";
 import { EtaConnectPanel } from "@/components/v2/eta-connect-panel";
+import { RegulatoryConnectionNotice } from "@/components/v2/regulatory-connection-notice";
 
 const tone: Record<EtaComplianceStatus, string> = {
   MISSING: "#8b5a17",
@@ -41,6 +42,7 @@ export default async function EtaCompliancePage() {
       <p className="muted" style={{ maxWidth: 760 }}>Review recorded delivery commitments. An ETA is shown only when it was recorded on the order; missing information is never inferred.</p>
 
       {actor.platformRole === "HOTEL" && <EtaConnectPanel />}
+      <RegulatoryConnectionNotice />
 
       <div className="grid4" style={{ marginTop: 28 }}>
         {([

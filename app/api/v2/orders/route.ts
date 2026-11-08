@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { notifyOrderTransition } from "@/lib/orders/notify";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { evaluateV2Authority } from "@/lib/auth/v2-authority";
@@ -8,6 +9,7 @@ import { appendNetworkTransactionEvent } from "@/lib/procurement/network-transac
 import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 import { managedHotelTenants } from "@/lib/admin/managed-hotel-tenants";
 import { classifyEtaCompliance } from "@/lib/logistics/eta-compliance";
+import { persistReleaseIntent, dispatchReleaseIntent } from "@/lib/procurement/release-outbox";
 
 export async function GET(request:Request){
  const user=await getActor(); if(!user)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
@@ -76,11 +78,32 @@ export async function PATCH(req:Request){
   const authority=await evaluateV2Authority(order.id,{role:user.role,tenantId:user.tenantId});
   if(!authority.allowed)return NextResponse.json({error:authority.reason},{status:409});
  }
+ // ETA gate: dispatch and delivery transitions require an ETA-accepted,
+ // digitally signed invoice for this order (state-machine TRANSITION_GATES).
+ // This mirrors atomicStatusUpdate so the workspace route cannot bypass it.
+ if(["IN_TRANSIT","PARTIALLY_DELIVERED","DELIVERED"].includes(b.status)){
+  const etaClearance=await prisma.invoice.findFirst({where:{orderId:order.id,tenantId:order.tenantId,deletedAt:null,etaStatus:"ACCEPTED",etaUuid:{not:null},digitalSignature:{not:null}},select:{id:true}});
+  if(!etaClearance)return NextResponse.json({error:'ETA_CLEARANCE_REQUIRED',message:'An ETA-accepted, digitally signed invoice is required before this transition.'},{status:409});
+ }
+ // The binding release (APPROVED → CONFIRMED) persists the notification/outbox
+ // intent in the SAME transaction as the status change, audit entry and
+ // network-ledger entry. Dispatch runs only after commit.
+ let releaseIntentId: string | null = null;
  const result=await prisma.$transaction(async tx=>{
   const changed=await tx.order.updateMany({where:{id:order.id,status:order.status,deletedAt:null},data:{status:b.status,...(estimatedDelivery?{estimatedDelivery}:{})}});
-  if(changed.count===1){const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'STATUS_CHANGED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{from:order.status,to:b.status,...(estimatedDelivery?{estimatedDelivery:estimatedDelivery.toISOString()}:{}),}},tx);await appendNetworkTransactionEvent(tx,{tenantId:order.tenantId,orderId:order.id,sourceEntityName:'ORDER',sourceEntityId:order.id,eventType:'STATUS_CHANGED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'AUTHORISED_WORKSPACE_WRITE',payload:{from:order.status,to:b.status,estimatedDelivery:estimatedDelivery?.toISOString()??null},auditLogId});}
+  if(changed.count===1){const auditLogId=await appendAuditEntry({entityName:'ORDER',entityId:order.id,actionType:'STATUS_CHANGED',tenantId:order.tenantId,actorId:user.id,actorRole:user.platformRole,changes:{from:order.status,to:b.status,...(estimatedDelivery?{estimatedDelivery:estimatedDelivery.toISOString()}:{}),}},tx);await appendNetworkTransactionEvent(tx,{tenantId:order.tenantId,orderId:order.id,sourceEntityName:'ORDER',sourceEntityId:order.id,eventType:'STATUS_CHANGED',actorId:user.id,actorRole:user.platformRole,verificationMethod:'AUTHORISED_WORKSPACE_WRITE',payload:{from:order.status,to:b.status,estimatedDelivery:estimatedDelivery?.toISOString()??null},auditLogId});
+   if(b.status==='CONFIRMED'){const intent=await persistReleaseIntent(tx,{tenantId:order.tenantId,userId:order.requesterId,orderId:order.id,orderReference:order.id.slice(-8),releasedById:user.id,releasedByRole:user.platformRole,channel:'IN_APP'});releaseIntentId=intent.id;}}
   return changed;
  });
  if(result.count!==1)return NextResponse.json({error:'The order changed. Refresh before acting.'},{status:409});
+ // Dispatch AFTER the transaction committed. A dispatch failure leaves the
+ // intent pending (sentAt still null) and retryable; it never fails the release.
+ if(releaseIntentId){try{await dispatchReleaseIntent(prisma,releaseIntentId);}catch{}}
+ // Unified notification: durable, tenant-scoped, preference-aware. Runs AFTER
+ // commit so a notification failure cannot roll back the commercial state.
+ // Supplier external delivery stays suppressed until final release.
+ try{
+  await notifyOrderTransition({orderId:order.id,tenantId:order.tenantId,requesterId:order.requesterId,supplierId:order.supplierId,orderNumber:order.orderNumber,from:order.status,to:b.status,actorId:user.id,actorRole:user.platformRole,allowExternal:false});
+ }catch(notificationError){console.error('[notifications] order transition notification failed',notificationError);}
  return NextResponse.json({updated:true});
 }

@@ -6,7 +6,7 @@ import { publicProductImageUrls } from "@/lib/catalog/public-product-images";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
-export async function GET(_request: Request, { params }: { params: Promise<{ productId: string; imageIndex: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ productId: string; imageIndex: string }> }) {
   const actor = await getActor();
   if (!actor) return Response.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   if (actor.platformRole !== "HOTEL") return Response.json({ error: "BUYER_CATALOG_ACCESS_REQUIRED" }, { status: 403 });
@@ -35,5 +35,22 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   const contentType = imageResponse.headers.get("content-type") ?? "";
   const contentLength = Number(imageResponse.headers.get("content-length") ?? "0");
   if (!imageResponse.ok || !contentType.startsWith("image/") || (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES)) return Response.json({ error: "CATALOG_IMAGE_UNAVAILABLE" }, { status: 502 });
-  return new Response(imageResponse.body, { status: 200, headers: { "content-type": contentType, "cache-control": "private, max-age=300", "x-content-type-options": "nosniff" } });
+
+  const baseHeaders = { "content-type": contentType, "cache-control": "private, max-age=300", "x-content-type-options": "nosniff" };
+  const requestedWidth = Number(new URL(request.url).searchParams.get("w") ?? "0");
+
+  // Resized variants keep the catalog download proportional to its display size.
+  // Absence of the resizer degrades to the original bytes rather than failing.
+  if (requestedWidth >= 80 && requestedWidth <= 1600) {
+    try {
+      const sharp = (await import("sharp")).default;
+      const buffer = Buffer.from(await imageResponse.arrayBuffer());
+      const resized = await sharp(buffer).resize({ width: requestedWidth, withoutEnlargement: true }).jpeg({ quality: 82 }).toBuffer();
+      return new Response(resized, { status: 200, headers: { ...baseHeaders, "content-type": "image/jpeg" } });
+    } catch {
+      // fall through to the original image
+    }
+  }
+
+  return new Response(imageResponse.body, { status: 200, headers: baseHeaders });
 }

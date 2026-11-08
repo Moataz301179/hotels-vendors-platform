@@ -77,6 +77,23 @@ describe("provider-controlled funding referral lifecycle", () => {
     expect(m.requestCreate).not.toHaveBeenCalled();
   });
 
+  it("accepts a first referral when the one-to-one relation is null", async () => {
+    m.actor.mockResolvedValue({ id: "supplier-user", tenantId: "supplier-tenant", supplierId: "supplier-1", platformRole: "SUPPLIER" });
+    m.invoiceFindFirst.mockResolvedValue({ id: "invoice-1", tenantId: "hotel-tenant", total: 1000, factoringRequests: null });
+    const response = await POST(request("POST", { invoiceId: "invoice-1", factoringCompanyId: "funder-1" }));
+    expect(response.status).toBe(201);
+    expect(m.requestCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not create a second referral when the invoice already has one", async () => {
+    m.actor.mockResolvedValue({ id: "supplier-user", tenantId: "supplier-tenant", supplierId: "supplier-1", platformRole: "SUPPLIER" });
+    m.invoiceFindFirst.mockResolvedValue({ id: "invoice-1", tenantId: "hotel-tenant", total: 1000, factoringRequests: { id: "existing-referral" } });
+    const response = await POST(request("POST", { invoiceId: "invoice-1", factoringCompanyId: "funder-1" }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "FUNDING_REFERRAL_ALREADY_EXISTS" });
+    expect(m.requestCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects an idempotency key reused for another referral", async () => {
     m.actor.mockResolvedValue({ id: "supplier-user", tenantId: "supplier-tenant", supplierId: "supplier-1", platformRole: "SUPPLIER" });
     m.requestFindFirst.mockResolvedValue({ id: "referral-1", invoiceId: "another-invoice", factoringCompanyId: "funder-1" });

@@ -4,6 +4,7 @@ import { getActor } from "@/lib/v2-auth";
 import { resolvedProductEvidenceIds } from "@/lib/catalog/resolved-product-evidence";
 import { buyerSafeCatalogImageUrls } from "@/lib/catalog/buyer-safe-media";
 import { toAnonymousCatalogProduct } from "@/lib/procurement/anonymous-commercial-disclosure";
+import { isGenuineSupplier, isSyntheticProductName } from "@/lib/catalog/synthetic-supplier";
 
 export async function GET(req: Request) {
   const user = await getActor();
@@ -16,11 +17,11 @@ export async function GET(req: Request) {
       status: "ACTIVE", deletedAt: null, source:{not:"FIXTURE"},
       ...(q ? { OR: [{ name:{contains:q,mode:"insensitive"} }, { sku:{contains:q,mode:"insensitive"} }] } : {})
     },
-    select: { id:true,uuid:true,sku:true,name:true,description:true,category:true,unitOfMeasure:true,images:true,sourceKey:true,supplier:{select:{website:true}} },
+    select: { id:true,uuid:true,sku:true,name:true,description:true,category:true,unitOfMeasure:true,images:true,sourceKey:true,supplier:{select:{website:true,name:true}} },
     orderBy:{createdAt:"desc"}, take:100
   });
   const eligibleProductIds = await resolvedProductEvidenceIds(prisma, products);
-  return NextResponse.json({products:products.filter(product => eligibleProductIds.has(product.id)).map((product)=>({
+  return NextResponse.json({products:products.filter(product => eligibleProductIds.has(product.id)).filter(product => isGenuineSupplier(product.supplier) && !isSyntheticProductName(product.name)).map((product)=>({
     ...toAnonymousCatalogProduct(product),
     images: buyerSafeCatalogImageUrls({productId:product.id,images:product.images,imageSourceUrl:product.sourceKey,supplierWebsite:product.supplier.website}),
   }))});

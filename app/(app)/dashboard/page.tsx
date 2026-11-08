@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { SignOutButton, useAuth } from '@clerk/nextjs';
 import { requestJson } from '@/lib/v2-http';
 import { RoleAuditWidget } from '@/components/v2/role-audit-widget';
+import { ActionQueue } from '@/components/v2/action-queue';
+import { Sparkline } from '@/components/v2/sparkline';
 import { roleDisplayName, type WorkspaceRole, workspaceRole } from '@/lib/dashboard/role-navigation';
 import { roleWorkspace } from '@/lib/dashboard/role-workspace';
 
@@ -13,6 +15,7 @@ type Metrics={potentialSavings:number|string;verifiedSavings:number|string;rfqs:
 type Data={role:string;organizationRole:string;metrics:Metrics};
 type IconName='catalogue'|'orders'|'receipt'|'funding'|'carrier'|'controls';
 type DashboardAction={title:string;detail:string;href:string;icon:IconName};
+type RoleMetric={label:string;value:number|string;href:string;detail:string;trend?:'orders'|'rfqs'};
 type DashboardModel={eyebrow:string;title:string;detail:string;sectionTitle:string;primary:DashboardAction;actions:DashboardAction[];journey:string[]};
 
 const models:Record<WorkspaceRole,DashboardModel>={
@@ -24,17 +27,18 @@ const models:Record<WorkspaceRole,DashboardModel>={
 };
 const iconFor=(icon:IconName)=>({catalogue:PackageCheck,orders:ClipboardCheck,receipt:FileText,funding:WalletCards,carrier:Truck,controls:ShieldCheck})[icon];
 const iconForWorkspaceHref=(href:string):IconName=>href.includes('marketplace')?'catalogue':href.includes('carrier')?'carrier':href.includes('funding')?'funding':href.includes('orders')?'receipt':'controls';
-function roleMetrics(role:WorkspaceRole,metrics:Metrics){
- if(role==='HOTEL')return[{label:'Open sourcing requests',value:metrics.rfqs,href:'/workspace/marketplace',detail:'Requests moving through the sealed sourcing workflow.'},{label:'Orders to follow',value:metrics.orders,href:'/orders',detail:'Authorized purchase records and receipt status.'},{label:'Recorded opportunity signals',value:metrics.opportunities,href:'/intelligence',detail:'Signals require review before a commercial action.'}];
- if(role==='SUPPLIER')return[{label:'Assigned RFQs',value:metrics.rfqs,href:'/suppliers',detail:'Only requests allocated to your organization.'},{label:'Active catalogue records',value:metrics.activeProducts,href:'/suppliers',detail:'Vendor-owned records with their own publication status.'},{label:'Orders to fulfil',value:metrics.orders,href:'/orders',detail:'Confirmed work requiring a controlled handoff.'}];
- if(role==='SHIPPING')return[{label:'Delivery tasks',value:metrics.shipments,href:'/carrier',detail:'Assigned movements and recorded handoffs.'},{label:'Order handoffs',value:metrics.orders,href:'/orders',detail:'Authorized order context for carrier actions.'}];
- if(role==='FACTORING')return[{label:'Funding records',value:metrics.fundingRequests,href:'/funding',detail:'Records released for your independent review.'},{label:'Authorized orders',value:metrics.orders,href:'/orders',detail:'Commercial evidence available to your organization.'}];
- return[{label:'Review queue',value:metrics.rfqs,href:'/admin',detail:'Governance indicators—not marketplace tasks.'},{label:'Audit-ready orders',value:metrics.orders,href:'/audit',detail:'Recorded transaction lifecycle activity.'}];
+function roleMetrics(role:WorkspaceRole,metrics:Metrics):RoleMetric[]{
+ if(role==='HOTEL')return[{label:'Open sourcing requests',value:metrics.rfqs,href:'/workspace/marketplace',detail:'Requests moving through the sealed sourcing workflow.',trend:'rfqs'},{label:'Orders to follow',value:metrics.orders,href:'/orders',detail:'Authorized purchase records and receipt status.',trend:'orders'},{label:'Recorded opportunity signals',value:metrics.opportunities,href:'/intelligence',detail:'Signals require review before a commercial action.'}];
+ if(role==='SUPPLIER')return[{label:'Assigned RFQs',value:metrics.rfqs,href:'/suppliers',detail:'Only requests allocated to your organization.',trend:'rfqs'},{label:'Active catalogue records',value:metrics.activeProducts,href:'/suppliers',detail:'Vendor-owned records with their own publication status.'},{label:'Orders to fulfil',value:metrics.orders,href:'/orders',detail:'Confirmed work requiring a controlled handoff.',trend:'orders'}];
+ if(role==='SHIPPING')return[{label:'Delivery tasks',value:metrics.shipments,href:'/carrier',detail:'Assigned movements and recorded handoffs.'},{label:'Order handoffs',value:metrics.orders,href:'/orders',detail:'Authorized order context for carrier actions.',trend:'orders'}];
+ if(role==='FACTORING')return[{label:'Funding records',value:metrics.fundingRequests,href:'/funding',detail:'Records released for your independent review.'},{label:'Authorized orders',value:metrics.orders,href:'/orders',detail:'Commercial evidence available to your organization.',trend:'orders'}];
+ return[{label:'Review queue',value:metrics.rfqs,href:'/admin',detail:'Governance indicators—not marketplace tasks.',trend:'rfqs'},{label:'Audit-ready orders',value:metrics.orders,href:'/audit',detail:'Recorded transaction lifecycle activity.',trend:'orders'}];
 }
 export default function Dashboard(){
  const { isSignedIn }=useAuth();
- const[data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[profile,setProfile]=useState<{complete:boolean}|null>(null);
+ const[data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[profile,setProfile]=useState<{complete:boolean}|null>(null),[trends,setTrends]=useState<{orders:{month:string;count:number}[];rfqs:{month:string;count:number}[]}|null>(null);
  useEffect(()=>{let active=true;Promise.all([requestJson<Data>('/api/v2/dashboard'),requestJson<{complete:boolean}>('/api/v2/onboarding')]).then(([dashboard,onboarding])=>{if(active){setData(dashboard);setProfile(onboarding)}}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'Unable to load your workspace.')});return()=>{active=false}},[]);
+ useEffect(()=>{let active=true;requestJson<{orders:{month:string;count:number}[];rfqs:{month:string;count:number}[]}>('/api/v2/dashboard/trends').then(series=>{if(active)setTrends(series)}).catch(()=>{if(active)setTrends(null)});return()=>{active=false}},[]);
  if(error==='UNAUTHENTICATED')return <div className="workspace-status" role="alert"><strong>{isSignedIn?'This account is not linked to an active workspace.':'Sign in to open your workspace.'}</strong><p>{isSignedIn?'Your Clerk session does not match an authorized organization role. Use the account assigned to your organization.':'Your organization records are available after sign in.'}</p>{isSignedIn?<SignOutButton redirectUrl="/login"><button className="btn btn-ghost" type="button">Switch account</button></SignOutButton>:<Link className="btn btn-blue" href="/login">Sign in</Link>}</div>;
  if(error)return <div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={()=>window.location.reload()}>Retry</button></div>;
  if(!data)return <p role="status" className="workspace-empty">Loading your role workspace…</p>;
@@ -42,8 +46,9 @@ export default function Dashboard(){
  return <div className="role-dashboard" data-role={role.toLowerCase()}>
   {!profile?.complete?<section className="workspace-status role-dashboard-profile"><div><strong>Complete your organization profile.</strong><p>Your role workspace activates after the required organization details are recorded.</p></div><Link href="/onboarding" className="btn btn-blue">Complete profile</Link></section>:null}
   <header className="role-dashboard-hero"><div><span className="eyebrow">{model.eyebrow}</span><h1>{scopedWorkspace?.title ?? model.title}</h1><p>{scopedWorkspace?.description ?? model.detail}</p></div><Link href={primary.href} className="role-dashboard-primary"><PrimaryIcon aria-hidden="true"/><span><small>Start here</small><strong>{primary.title}</strong><em>{primary.detail}</em></span><ArrowRight aria-hidden="true"/></Link></header>
-  <section className="role-dashboard-metrics" aria-label={`${roleDisplayName(data.role)} workspace status`}>{metrics.map(metric=><Link href={metric.href} className="card role-dashboard-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.detail}</small><ArrowRight aria-hidden="true"/></Link>)}</section>
-  <section className="role-dashboard-main"><div className="role-dashboard-actions"><div className="workspace-section-heading"><div><span className="eyebrow">Role-owned action queue</span><h2>{model.sectionTitle}</h2></div></div><div className="role-dashboard-action-grid">{actions.map(action=>{const Icon=iconFor(action.icon);return <Link href={action.href} className="card role-dashboard-action" key={action.title}><Icon aria-hidden="true"/><h3>{action.title}</h3><p>{action.detail}</p><span>Open <ArrowRight aria-hidden="true"/></span></Link>})}</div></div><aside className="card role-dashboard-journey" aria-label="How work moves"><span className="eyebrow">Controlled sequence</span><ol>{journey.map((step,index)=><li key={step}><span>{String(index+1).padStart(2,'0')}</span><strong>{step}</strong></li>)}</ol><p><Building2 aria-hidden="true"/> Each stage preserves its own organization-scoped evidence.</p></aside></section>
+  <section className="role-dashboard-metrics" aria-label={`${roleDisplayName(data.role)} workspace status`}>{metrics.map(metric=><Link href={metric.href} className="card role-dashboard-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.detail}</small>{metric.trend&&trends&&<Sparkline values={(trends[metric.trend]??[]).map(point=>point.count)} label={metric.label}/>}<ArrowRight aria-hidden="true"/></Link>)}</section>
+  <ActionQueue />
+ <section className="role-dashboard-main"><div className="role-dashboard-actions"><div className="workspace-section-heading"><div><span className="eyebrow">Role-owned action queue</span><h2>{model.sectionTitle}</h2></div></div><div className="role-dashboard-action-grid">{actions.map(action=>{const Icon=iconFor(action.icon);return <Link href={action.href} className="card role-dashboard-action" key={action.title}><Icon aria-hidden="true"/><h3>{action.title}</h3><p>{action.detail}</p><span>Open <ArrowRight aria-hidden="true"/></span></Link>})}</div></div><aside className="card role-dashboard-journey" aria-label="How work moves"><span className="eyebrow">Controlled sequence</span><ol>{journey.map((step,index)=><li key={step}><span>{String(index+1).padStart(2,'0')}</span><strong>{step}</strong></li>)}</ol><p><Building2 aria-hidden="true"/> Each stage preserves its own organization-scoped evidence.</p></aside></section>
   <RoleAuditWidget />
  </div>;
 }

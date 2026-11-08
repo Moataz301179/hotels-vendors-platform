@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, FileCheck2, Landmark, ShieldCheck } from 'lucide-react';
 import { requestJson } from '@/lib/v2-http';
+import { RegulatoryConnectionNotice } from '@/components/v2/regulatory-connection-notice';
 
 export type FundingRole = 'HOTEL' | 'SUPPLIER' | 'FACTORING' | 'ADMIN';
 type FundingRequest = { id: string; status: string; requestedAmount: string | null; requestedAt: string; factoringCompanyId: string };
@@ -40,12 +41,13 @@ export function FundingClient({ role }: { role: FundingRole }) {
   }
 
   const title = role === 'FACTORING' ? 'Make the provider decision visible—without moving money.' : role === 'SUPPLIER' ? 'Track the referral after verified fulfilment.' : role === 'HOTEL' ? 'See referral status without surrendering commercial control.' : 'Govern the provider-controlled referral boundary.';
-  const detail = role === 'FACTORING' ? 'Record a provider-controlled review, decision and reconciliation reference for referrals released to your organization.' : 'HotelsVendors records authorized referral status only. An external provider owns underwriting, terms, disbursement and settlement.';
+  const detail = role === 'FACTORING' ? 'Record a provider-controlled review, decision and reconciliation reference for referrals released to your organization.' : 'A provider-approved facility may be used only under that provider’s active terms and transaction-eligibility decision. HotelsVendors records the authorized status; the external provider owns underwriting, approval, disbursement and settlement.';
   const needsReference = action && ['DISBURSED', 'SETTLED', 'DEFAULTED'].includes(action.status);
 
   return <div className="funding-console">
     <header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">{role === 'FACTORING' ? 'Funder workspace' : 'Funding referral records'}</div><h1>{title}</h1><p className="workspace-page-lead muted">{detail}</p></div><div className="workspace-page-actions">{role === 'FACTORING' ? <Link href="/funding/evidence" className="btn btn-blue">Review released evidence <ArrowRight aria-hidden="true"/></Link> : <Link href="/onboarding" className="btn btn-ghost">Organization profile</Link>}</div></header>
-    <section className="workspace-focus funding-boundary"><div><span className="eyebrow">External-provider boundary</span><h2>Referral and reconciliation records—not lending.</h2><p>HotelsVendors does not underwrite, approve credit, disburse or settle funds. Provider status is recorded only against released evidence and is fully auditable.</p></div><div className="funding-boundary-points"><span><ShieldCheck aria-hidden="true"/>Authorized evidence only</span><span><Landmark aria-hidden="true"/>Provider decision only</span><span><FileCheck2 aria-hidden="true"/>Reconciliation reference required</span></div></section>
+    <section className="workspace-focus funding-boundary"><div><span className="eyebrow">External-provider boundary</span><h2>Provider facility records—not lending by HotelsVendors.</h2><p>Facility availability, transaction eligibility and any payment-protection status must come from a provisioned provider record. HotelsVendors does not underwrite, approve credit, disburse or settle funds.</p></div><div className="funding-boundary-points"><span><ShieldCheck aria-hidden="true"/>Authorized evidence only</span><span><Landmark aria-hidden="true"/>Provider decision only</span><span><FileCheck2 aria-hidden="true"/>Reconciliation reference required</span></div></section>
+    <RegulatoryConnectionNotice compact />
     {error && <div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={() => void load()} disabled={loading || busy}>Retry</button></div>}
     {loading ? <p className="workspace-empty" role="status">Loading authorized funding records…</p> : <>
       <section className="workspace-section" aria-labelledby="funding-records-title"><div className="workspace-section-heading"><div><span className="eyebrow">Referral queue</span><h2 id="funding-records-title">{role === 'FACTORING' ? 'Provider review queue' : 'Recorded referrals'}</h2><p>{role === 'FACTORING' ? 'Only your assigned external-provider referrals are visible.' : 'Status is evidence of a provider record, not a funding offer or payment.'}</p></div></div>

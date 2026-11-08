@@ -31,6 +31,33 @@ const workspaces: Record<string, RoleWorkspace> = {
       { title: "Follow fulfillment work", description: "Review confirmed order work and recorded exceptions.", href: "/orders" },
     ],
   },
+  SHIPPING: {
+    title: "Delivery tasks",
+    description: "Review assigned movements, record pickup and delivery evidence, and escalate exceptions.",
+    actions: [
+      { title: "Open delivery tasks", description: "Review the movement and delivery instructions assigned to your organization.", href: "/carrier" },
+      { title: "Confirm controlled handoff", description: "Open the authorized shipment record before recording a milestone.", href: "/carrier/handoff" },
+      { title: "Manage carrier access", description: "Review the people authorized to record carrier activity.", href: "/security" },
+    ],
+  },
+  FACTORING: {
+    title: "Funding records",
+    description: "Review released evidence and record independent funding decisions.",
+    actions: [
+      { title: "Review funding referrals", description: "Open authorized receivable and invoice evidence for assessment.", href: "/funding" },
+      { title: "Inspect protected evidence", description: "Review the authorized purchase, receipt and invoice context.", href: "/funding/evidence" },
+      { title: "Manage funder access", description: "Review your organization's controlled access.", href: "/security" },
+    ],
+  },
+  ADMIN: {
+    title: "Network controls",
+    description: "Govern access, provenance, policy and audit evidence across the network.",
+    actions: [
+      { title: "Open network health", description: "Review operational queues and release identity before acting.", href: "/admin?mode=health" },
+      { title: "Review trust & access", description: "Review organization onboarding, Vendor verification and scoped access.", href: "/admin?mode=trust" },
+      { title: "Govern catalogue evidence", description: "Review source permissions, candidates and unmatched requirements.", href: "/admin?mode=catalogue" },
+    ],
+  },
 };
 
 const hotelRoleWorkspaces: Record<string, RoleWorkspace> = {

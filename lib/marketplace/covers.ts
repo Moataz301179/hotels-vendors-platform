@@ -33,7 +33,9 @@ export const CATEGORY_COVERS: CategoryCover[] = [
   {
     code: "GRA", label: "Guest Amenities", hub: "gra",
     blurb: "Toiletries, slippers & minibar",
-    img: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=900&auto=format&fit=crop",
+    // Replaced 2026-11-07: former photo was personal skincare tubes on a shower
+    // floor (wrong subject). Now the verified Laylow hotel amenity tray.
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Laylow%20-%20Hotel%20Shampoos%20and%20Soaps%20%2849539076973%29.jpg?width=800",
   },
   {
     code: "HK", label: "Housekeeping", hub: "hk",
@@ -68,7 +70,9 @@ export const CATEGORY_COVERS: CategoryCover[] = [
   {
     code: "OSE", label: "Operating Supplies", hub: "ose",
     blurb: "OS&E — daily operations essentials",
-    img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=900&auto=format&fit=crop",
+    // Replaced 2026-11-07: former photo was a restaurant dining scene (wrong
+    // subject). Now a verified office-stationery photo from the ose pool.
+    img: "https://images.unsplash.com/photo-1517842645767-c639042777db?q=80&w=900&auto=format&fit=crop",
   },
 ];
 

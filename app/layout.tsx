@@ -1,14 +1,11 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import '@fontsource/plus-jakarta-sans/400.css';
-import '@fontsource/plus-jakarta-sans/500.css';
-import '@fontsource/plus-jakarta-sans/600.css';
-import '@fontsource/plus-jakarta-sans/700.css';
-import '@fontsource/plus-jakarta-sans/800.css';
-import '@fontsource/manrope/500.css';
+import '@fontsource/manrope/400.css';
 import '@fontsource/manrope/600.css';
 import '@fontsource/manrope/700.css';
-import '@fontsource/manrope/800.css';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n/language-context';
 
@@ -34,8 +31,7 @@ export const metadata: Metadata = {
     images: ['/hero-clean.jpeg'],
   },
 };
+
 export default async function RootLayout({children}:{children:React.ReactNode}){
-  // `dynamic` makes Clerk read the nonce forwarded by proxy.ts and attach it
-  // to the Clerk bootstrap script. This is required by our strict-dynamic CSP.
   return <html lang="en"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
 }

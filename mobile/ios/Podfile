@@ -59,5 +59,19 @@ target 'HOVIN' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+    # HOVIN_XCODE27_FMT_CONSTEVAL_FIX
+    fmt_base = File.join(__dir__, 'Pods', 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      fmt_source = File.read(fmt_base)
+      fmt_fixed = fmt_source.gsub(
+        '#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L',
+        '#elif defined(__apple_build_version__)'
+      )
+      if fmt_fixed != fmt_source
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, fmt_fixed)
+        File.chmod(0444, fmt_base)
+      end
+    end
   end
 end

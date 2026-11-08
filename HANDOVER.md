@@ -413,3 +413,124 @@ Bounded repair executed per directive (work only in repo, branch `impl/sync-desi
 
 **Status**
 - App code: closed (verified clean). Provider config: open. Deployment unchanged — no merge or deploy performed.
+
+## ETA / provider-claim correction — 2026-11-07
+
+- Added `public/eta-seal.png` and the bilingual
+  `components/v2/regulatory-connection-notice.tsx` to the authenticated ETA
+  compliance and funding workspaces, plus the public ETA page. The component
+  states the organization-specific activation conditions in English and Arabic.
+- Corrected the ETA import interface so that an intake record is not labelled a
+  live ETA connection. The existing endpoint creates a `PENDING`
+  `HotelEInvoiceImport`; it does not itself submit credentials to ETA or prove
+  registration. The endpoint now also resolves the current authenticated
+  hotel's id server-side when the client uses the existing `hotelId: "current"`
+  convention.
+- Funding copy now describes provider-approved facilities as conditional,
+  provider-recorded status. HotelsVendors is not represented as the lender,
+  factor, guarantor, or payment obligor.
+- Validation: scoped ESLint passed; `tests/p0/funder-controlled-packet.spec.ts`
+  passed 7/7; `git diff --check` passed. Full `npx tsc --noEmit` remains blocked
+  by the pre-existing dirty change in `app/(marketing)/marketplace/page.tsx:83`
+  (`JsonValue` is incompatible with its current string-only image helper).
+- Not verified or claimed: any individual organization ETA registration,
+  production ETA activation, FRA licence, signed factoring-provider contract,
+  live facility, or payment-protection coverage. No deploy, commit, push,
+  migration, or external configuration change was performed.
+
+## Catalogue image-evidence correction — 2026-11-07
+
+- Removed the category-artwork fallback from individual public directory cards.
+  A category image had been used for every record without a reviewed,
+  first-party product image, creating repeated and misleading product imagery.
+- Product cards now show the category-specific, clearly labelled reference
+  state (`Product image pending review`) until a reviewed first-party image can
+  be published. Category imagery remains appropriate for category navigation,
+  not product evidence.
+- Removed a redundant client-side category-sync effect; the server-provided
+  category query initializes the directory directly.
+- Validation: scoped ESLint completed with one existing warning for a remote
+  image element, `npx tsc --noEmit` passed, and `git diff --check` passed.
+  Browser inspection of `http://127.0.0.1:3000/marketplace` rendered 15
+  directory records with the honest reference state and no repeated category
+  photos in individual cards. No deploy, commit, push, migration, or data
+  mutation was performed.
+- Follow-up: the owner correctly rejected image removal as insufficient. The
+  directory now uses the existing subject-matched visual resolver per record;
+  unresolved items use distinct initials/gradient references. All resolver
+  output is visibly labelled `Illustrative reference`, while category cover
+  images remain navigation-only. This prevents a visual from being presented
+  as reviewed supplier/product evidence. Browser re-check passed; lint retains
+  one non-blocking direct-remote-image performance warning.
+
+---
+
+## Repository handover — 2026-11-08 (READ THIS FIRST)
+
+### ⚠ The latest commit does NOT contain the current approved design
+
+| | |
+|---|---|
+| Branch | `impl/sync-design-workspace` |
+| HEAD commit | `4c9c7fab11dc2fae7dde8bcb953cc06c6ecace94` |
+| Remote | `origin/impl/sync-design-workspace` is **in sync** with HEAD (no unpushed commits) |
+| Working tree | **160 dirty entries — 75 tracked modified, 5056 insertions / 1451 deletions, plus untracked files** |
+| PR | #49 open → `main` (no deploy) |
+
+**The design, colour tokens, components and navigation described below exist ONLY in the
+uncommitted working tree.** Checking out `4c9c7fab` gives you the *previous* design.
+The working tree is the source of truth. Do not `checkout`, `stash`, `reset` or `clean`
+this tree without an explicit, approved commit first — it would discard the approved work.
+
+### Design system (working tree, `app/globals.css`)
+
+Reference grade: **warm paper page, near-white cards, charcoal chrome, cobalt action.**
+
+```
+--paper-0:#ffffff   --paper-50:#f7f7f0   --paper-100:#f1f0e8   --paper-200:#e6e7de
+--slate-950..200    oklch neutral ramp (visually neutral)
+--ice-100:#e3eef7   --ice-300:#9dc3e6      ← signals/action ONLY, never a dark page surface
+--cobalt-600:#2f6fb0  --cobalt-700:#245c96 ← action + focus
+--amber:#9a6a12       --amber-soft:#f5ecd9
+--green-600:#2f7d4f   --red-600:#b0432f
+--charcoal:#0f1419   --ink:#1a222b   --muted:#5f6b73
+--line:#d7dbd9        --line-soft:#e4e6df
+```
+
+Semantic aliases (components must consume these, not arbitrary colours):
+`--bg`, `--surface`, `--surface-raised`, `--blue`, `--blue-strong`, `--chrome`,
+`--chrome-text`, `--accent-wash`, `--green`, `--danger`, `--focus`.
+
+Typography: `--font-display:'Manrope','SF Pro Display'` · `--font-body:'Plus Jakarta Sans','SF Pro Text'`.
+Spacing: 4pt grid (`--space-1..14`). Control radius: `--radius-control:2px`.
+
+### Navigation (working tree, `lib/dashboard/role-navigation.ts`)
+
+Role-specific groups, each describing the actor's real authority:
+
+- **Hotel** — Hotel operations (Today, Source supplies, Approvals, Receiving) · Plan and control (Market Compass, Connections & Data, Volume planning, Funding records)
+- **Vendor** — Vendor operations (Today, Catalogue & stock, Order fulfilment) · Documents (ETA records, Funding records)
+- **Carrier** — Carrier operations (Today, Delivery tasks, Handoff records)
+- **Funder** — Funder operations (Today, Funding records, Evidence)
+- **Admin** — Network controls (Control overview, Access & governance, Audit trail)
+
+`lib/dashboard/role-workspace.ts` supplies a distinct role workspace per actor
+(e.g. Hotel = "Sourcing control", Hotel management = "Portfolio control").
+
+### Verification status (working tree)
+
+- `npx tsc --noEmit` — **clean**
+- `npm run test` — **151 files / 720 tests passing**
+- `npx next build` — **exit 0, compiled successfully**
+- Runtime: five authenticated role sessions render five distinct dashboards; a controlled
+  `PENDING_APPROVAL → APPROVED` transition persisted an in-app notification for the correct
+  requester with **zero external deliveries**.
+
+### Known remaining blockers
+
+1. **No genuinely sourced product** — all 191 ACTIVE products are `source=FIXTURE` with
+   `example.com` images; the buyer catalogue correctly returns 0.
+2. **Exposed MeDo API key** committed in history (`fd902a94`, `lib/integrations/medo.ts`) — rotate before any release.
+3. **No `FIRECRAWL_API_KEY`** — the ingestion pipeline is built and tested but cannot crawl real supplier pages.
+4. **MeDo is a stub** (`enabled:false`); the npm package contains no frontend export.
+5. `P0-REDESIGN` remains open; public release gate is **NO-GO**.
