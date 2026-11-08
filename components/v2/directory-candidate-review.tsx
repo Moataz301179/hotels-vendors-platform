@@ -8,6 +8,7 @@ type Candidate = {
   itemType: 'PRODUCT' | 'SERVICE';
   name: string;
   category: string;
+  images: string[];
   source: { sourceUrl: string; permissionStatus: 'PERMISSION_UNKNOWN' | 'PERMITTED' | 'RESTRICTED' };
 };
 
@@ -20,9 +21,10 @@ type Draft = {
   publicUnitOfMeasure: string;
   publicPurchaseUnit: string;
   publicDescription: string;
+  publicImages: string[];
 };
 
-const emptyDraft = (): Draft => ({ reviewNote: '', publicName: '', publicNameAr: '', publicCategory: '', publicSubcategory: '', publicUnitOfMeasure: '', publicPurchaseUnit: '', publicDescription: '' });
+const emptyDraft = (): Draft => ({ reviewNote: '', publicName: '', publicNameAr: '', publicCategory: '', publicSubcategory: '', publicUnitOfMeasure: '', publicPurchaseUnit: '', publicDescription: '', publicImages: [] });
 const sourceHost = (sourceUrl: string) => {
   try { return new URL(sourceUrl).hostname; } catch { return 'recorded private source'; }
 };
@@ -43,8 +45,15 @@ export function DirectoryCandidateReview() {
   }, []);
 
   const draftFor = (candidateId: string) => drafts[candidateId] ?? emptyDraft();
-  const update = (candidateId: string, field: keyof Draft, value: string) => {
+  const update = (candidateId: string, field: Exclude<keyof Draft, 'publicImages'>, value: string) => {
     setDrafts((current) => ({ ...current, [candidateId]: { ...draftFor(candidateId), [field]: value } }));
+  };
+  const togglePublicImage = (candidateId: string, image: string, checked: boolean) => {
+    setDrafts((current) => {
+      const draft = draftFor(candidateId);
+      const publicImages = checked ? [...new Set([...draft.publicImages, image])] : draft.publicImages.filter((item) => item !== image);
+      return { ...current, [candidateId]: { ...draft, publicImages } };
+    });
   };
 
   const decide = async (candidateId: string, decision: 'APPROVE' | 'REJECT') => {
@@ -78,6 +87,16 @@ export function DirectoryCandidateReview() {
       return <article key={candidate.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 18 }}>
         <div><strong>Private source candidate: {candidate.name}</strong><p className="muted">{candidate.itemType.toLowerCase()} · source permission {candidate.source.permissionStatus.replaceAll('_', ' ').toLowerCase()} · {sourceHost(candidate.source.sourceUrl)}</p></div>
         <div className="workspace-form">
+          {candidate.images.length > 0 && <div>
+            <strong>Quality-approved product images</strong>
+            <p className="muted">Select only images whose rights have been cleared for this exact product. Unselected images remain admin-only.</p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {candidate.images.filter((image) => /^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/.test(image)).map((image) => <label key={image} style={{ width: 150 }}>
+                <img src={image} alt="Internal product image review" loading="lazy" style={{ width: 140, height: 140, objectFit: 'contain', background: '#f8f9fa', border: '1px solid var(--line)', borderRadius: 8 }} />
+                <span style={{ display: 'block' }}><input type="checkbox" checked={draft.publicImages.includes(image)} onChange={(event) => togglePublicImage(candidate.id, image, event.target.checked)} /> Clear for public listing</span>
+              </label>)}
+            </div>
+          </div>}
           <label>Reviewer-authored public name<input required minLength={2} maxLength={300} value={draft.publicName} onChange={(event) => update(candidate.id, 'publicName', event.target.value)} placeholder="Neutral product or service reference" /></label>
           <label>Arabic public name (optional)<input minLength={2} maxLength={300} value={draft.publicNameAr} onChange={(event) => update(candidate.id, 'publicNameAr', event.target.value)} placeholder="اسم مرجعي محايد" /></label>
           <label>Reviewer-authored category<input required minLength={2} maxLength={160} value={draft.publicCategory} onChange={(event) => update(candidate.id, 'publicCategory', event.target.value)} placeholder="Hospitality category" /></label>

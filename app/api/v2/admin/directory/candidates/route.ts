@@ -134,6 +134,23 @@ export async function PATCH(request: Request) {
   });
   if (!candidate || candidate.deletedAt || candidate.reviewStatus !== 'PENDING_REVIEW') return NextResponse.json({ error: 'PENDING_DIRECTORY_CANDIDATE_NOT_FOUND' }, { status: 404 });
   if (parsed.data.decision === 'APPROVE' && candidate.source.permissionStatus !== 'PERMITTED') return NextResponse.json({ error: 'SOURCE_PERMISSION_REQUIRED_FOR_PUBLICATION' }, { status: 409 });
+  const candidateImagePaths = Array.isArray(candidate.images)
+    ? candidate.images.filter((image): image is string => typeof image === 'string' && /^\/api\/v2\/catalog\/receiving\/images\/[A-Za-z0-9_-]+\/\d+$/.test(image))
+    : [];
+  if (parsed.data.decision === 'APPROVE' && parsed.data.publicImages.some((image) => !candidateImagePaths.includes(image))) {
+    return NextResponse.json({ error: 'PUBLIC_IMAGES_MUST_BE_QUALITY_APPROVED_RECEIVING_DOCK_MEDIA' }, { status: 400 });
+  }
+  if (parsed.data.decision === 'APPROVE' && parsed.data.publicImages.length > 0) {
+    const snapshot = candidate.sourceSnapshot && typeof candidate.sourceSnapshot === 'object' && !Array.isArray(candidate.sourceSnapshot)
+      ? candidate.sourceSnapshot as Record<string, unknown>
+      : {};
+    const receivingRecordId = typeof snapshot.receivingRecordId === 'string' ? snapshot.receivingRecordId : null;
+    const imageRights = receivingRecordId ? await prisma.catalogReceivingRecord.findFirst({
+      where: { id: receivingRecordId, deletedAt: null, qualityStatus: 'ACCEPTED', imageRightsStatus: 'PERMITTED' },
+      select: { id: true },
+    }) : null;
+    if (!imageRights) return NextResponse.json({ error: 'PRODUCT_IMAGE_RIGHTS_PERMISSION_REQUIRED' }, { status: 409 });
+  }
   if (parsed.data.decision === 'APPROVE' && (!parsed.data.publicName || !parsed.data.publicCategory)) return NextResponse.json({ error: 'REVIEWER_AUTHORED_PUBLIC_LABELS_REQUIRED' }, { status: 400 });
   if (parsed.data.decision === 'APPROVE' && !parsed.data.publicDescription) return NextResponse.json({ error: 'PUBLIC_DESCRIPTION_REQUIRED_FOR_PUBLICATION' }, { status: 400 });
   const publicDescription = parsed.data.decision === 'APPROVE' ? publicDirectoryText(parsed.data.publicDescription) : null;

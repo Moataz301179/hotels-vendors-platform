@@ -42,7 +42,12 @@ export async function PATCH(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'SOURCE_PERMISSION_DECISION_AND_NOTE_REQUIRED' }, { status: 400 });
   try {
     const source = await prisma.$transaction(async (tx) => {
-      const updated = await tx.directorySource.update({ where: { id: parsed.data.sourceId }, data: { permissionStatus: parsed.data.permissionStatus, permissionNote: parsed.data.permissionNote }, select: { id: true, permissionStatus: true, permissionNote: true } });
+      const existing = await tx.directorySource.findUnique({ where: { id: parsed.data.sourceId }, select: { id: true, sourceType: true } });
+      if (!existing) throw Object.assign(new Error('DIRECTORY_SOURCE_NOT_FOUND'), { code: 'P2025' });
+      const sourceType = parsed.data.permissionStatus === 'PERMITTED' && existing.sourceType === 'PUBLIC_CATALOG_OBSERVATION'
+        ? 'VENDOR_AUTHORIZED_HORECA_CATALOG'
+        : existing.sourceType;
+      const updated = await tx.directorySource.update({ where: { id: parsed.data.sourceId }, data: { permissionStatus: parsed.data.permissionStatus, permissionNote: parsed.data.permissionNote, sourceType }, select: { id: true, permissionStatus: true, permissionNote: true, sourceType: true } });
       await appendAuditEntry({ entityName: 'DIRECTORY_SOURCE', entityId: updated.id, actionType: 'STATUS_CHANGED', tenantId: actor.tenantId, actorId: actor.id, actorRole: actor.platformRole, changes: { permissionStatus: updated.permissionStatus, permissionNote: updated.permissionNote } }, tx);
       return updated;
     });
