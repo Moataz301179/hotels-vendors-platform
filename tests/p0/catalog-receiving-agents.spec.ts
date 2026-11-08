@@ -57,6 +57,12 @@ describe("catalog receiving subagents", () => {
     expect(result.subcategoryCode).toBe("CLEANING_CHEMICALS");
     expect(result.unitOfMeasure).toBe("L");
   });
+  it("prefers guest-room linen categories over back-of-house linen for guest bath towels", () => {
+    const result = runHospitalityTaxonomyAgent(observation({ name: "Hotel guest bath towel 70 x 140 cm", category: "Guest Room Linen" }));
+    expect(result.status).toBe("MAPPED");
+    expect(result.categoryCode).toBe("GUEST_ROOMS_AMENITIES");
+    expect(result.subcategoryCode).toBe("BATH_LINEN");
+  });
   it("does not invent MOQ, a purchase unit, or category when the source is insufficient", () => {
     const result = runHospitalityTaxonomyAgent(observation({ name: "Unspecified hospitality item", description: undefined, category: undefined, unitOfMeasure: undefined, packSize: undefined, purchaseUnit: undefined }));
     expect(result.status).toBe("REVIEW_REQUIRED");

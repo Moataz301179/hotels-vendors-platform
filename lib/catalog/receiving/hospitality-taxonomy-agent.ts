@@ -42,6 +42,10 @@ const RULES: Rule[] = [
   {root:"FFE",sub:"OPERATIONS_FURNITURE",pattern:/\b(storage rack|filing cabinet|office desk|workbench|service station)\b/i},
   {root:"FFE",sub:"MATTRESSES_BEDS",pattern:/\b(mattress|bed frame|hotel bed|box spring|bed base)\b/i},
   {root:"FFE",sub:"FLOOR_WALL_FINISHES",pattern:/\b(carpet|vinyl flooring|wallpaper|floor finish|wall finish)\b/i},
+  // Guest-room linen takes precedence over the broad back-of-house linen rule.
+  {root:"GUEST_ROOMS_AMENITIES",sub:"BATH_LINEN",pattern:/\b(bath towel|bath mat|bathrobe|face towel|pool towel|guest towel|guest bath towel)\b/i},
+  {root:"GUEST_ROOMS_AMENITIES",sub:"BEDDING_LINEN",pattern:/\b(guest bed sheet|hotel bed sheet|bedsheet|pillowcase|duvet cover|bed runner|mattress protector|guest pillow|hotel pillow)\b/i},
+  {root:"GUEST_ROOMS_AMENITIES",sub:"BATHROOM_AMENITIES",pattern:/\b(hotel shampoo|guest shampoo|conditioner|body wash|shower gel|soap bar|toothbrush|dental kit|shower cap|vanity kit|body lotion)\b/i},
   {root:"HOUSEKEEPING_LAUNDRY",sub:"CLEANING_CHEMICALS",pattern:/\b(detergent|disinfectant|sanitizer|degreaser|glass cleaner|floor cleaner|bleach|descaler)\b/i},
   {root:"HOUSEKEEPING_LAUNDRY",sub:"LAUNDRY_CHEMICALS",pattern:/\b(laundry detergent|laundry bleach|fabric softener|laundry sour|laundry chemical)\b/i},
   {root:"HOUSEKEEPING_LAUNDRY",sub:"LAUNDRY_EQUIPMENT",pattern:/\b(washing machine|washer extractor|tumble dryer|laundry dryer|ironer|flatwork ironer|laundry press)\b/i},
