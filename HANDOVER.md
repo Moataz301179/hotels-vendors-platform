@@ -546,3 +546,13 @@ Branch: `cursor/catalog-register-dashboards-d37d`. Revision: `f6b5e2a`. Local da
 - Thirty supplier-neutral specifications remain published in the local directory. Eight public-source contracting targets remain in `SupplierResearchCandidate` and are shown only in Admin → Contracting register.
 - Verified locally on 10 November 2026 at 10:47 PM Africa/Cairo: five Vitest files, 23 tests, passed. The local marketplace rendered the carousel, category covers, compact rows, a quantity update from 1 reference / 2 units to 2 references / 7 units, and the nine-step buying path.
 - Next action: do not deploy until the production database and a real platform administrator are confirmed. Then publish the directory on that database and release this revision. Do not treat `local-directory@127.0.0.1` as a production administrator. Signed-in hotel submission and the admin register still need a Clerk session.
+
+## Deploy check — 2026-11-10 10:50 PM Africa/Cairo
+
+The owner asked for a Hostinger website deploy after verification. No deploy ran.
+
+- Verified live: `GET https://www.hotelsvendors.com/api/health` returned `ok`, `database=ready`, `authorization=configured`, `releaseId` and `sourceCommit` `github-565c65a406567c1820e2e6ba0191cbebcee2314b`. Marketplace HTML still has 15 records, the old hero, and Wikimedia images. `Add to list` count is 0.
+- DNS for `hotelsvendors.com` and `www` is `187.77.181.3`, the existing Hostinger VPS. The governed release is `.github/workflows/deploy-production.yml`: `main` only, green `build` and `chromium` checks, the recovery gate, and the backup confirmation `APPLY_AFTER_NEON_BACKUP`, then PM2 and Nginx on that VPS.
+- This catalog revision is `f6b5e2a` on `cursor/catalog-register-dashboards-d37d`. It is not on `main`. A website-archive deploy would not update the VPS process that serves the domain, and it would not copy the local 30 specifications into the production database.
+- Hostinger website, order, and VPS list calls timed out, so no shared-hosting target was confirmed. No archive was uploaded and no production workflow was started.
+- Next action: merge this branch to `main` only when the owner accepts the pull request, create a restorable production database backup, run the production workflow from `main`, then publish the directory with a real platform administrator. The code release alone restyles the records already in production. It does not add the local specifications.
