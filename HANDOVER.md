@@ -565,3 +565,21 @@ The owner asked for the code release and a production deploy. The release checks
 - The repair adds `SUPPLIER_RESEARCH_REGISTER` and migration `20261111013000_add_supplier_research_register_audit_entity`, and passes a boolean `aria-hidden` to the icon. Local `tsc --noEmit` is clean, and the audit-enum plus migration-history tests pass.
 - This environment’s GitHub token can push the feature branch. It cannot read branch protection or the production environment, and it is not a substitute for the VPS deploy secrets. The production workflow still runs only from `main`, and only after green `build` and `chromium` checks plus `APPLY_AFTER_NEON_BACKUP`. The November 8 backup record is not a current restorable Neon branch for this migration, so that confirmation was not entered.
 - The 30 local specifications are still not in the production database. A code deploy does not publish them.
+
+## Production release — 2026-11-11 1:14 AM Africa/Cairo
+
+The owner confirmed a restorable backup and started the production workflow. It completed successfully.
+
+- Workflow: [HotelsVendors Production Deploy run 42921037806](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/42921037806). Conclusion `success`. Head `805645c662023c0685855230cee9afc59cd96069`. Migration step and VPS activation both passed.
+- Live `GET https://www.hotelsvendors.com/api/health` at 1:14 AM Africa/Cairo returned `ok`, `database=ready`, `authorization=configured`, and `releaseId`/`sourceCommit` `github-805645c662023c0685855230cee9afc59cd96069`.
+- Live `/marketplace` HTML has the category-cover carousel, the specification heading, and 15 `Add to list` controls. Wikimedia and Unsplash URLs are absent, and the old text hero is absent. The count is 15 because those are the records already in the production database.
+- The extra 15 local specifications and the 8 contracting targets were not copied to production. Next action: a real platform administrator publishes the additional supplier-neutral specifications to the production directory. Do not use `local-directory@127.0.0.1` for that.
+
+## Operating catalog — 2026-11-11 1:19 AM Africa/Cairo
+
+The live marketplace showed 15 records because that was the only reviewed directory set in the production database. The 10,000-SKU planning file contains no products, and the synthetic market file is not a publishable catalog.
+
+- Added `data/directory/hospitality-operating-catalog.v1.json`: 179 generic operating specifications across the nine areas. Together with the existing 30, the directory has 209 supplier-neutral records.
+- Local apply created 179 profiles and updated 30. `http://127.0.0.1:3000/marketplace` returned HTTP 200 with 209 Add to list controls.
+- The next production workflow publishes this catalog to Neon through an existing platform administrator, then the same release serves it. The page reads up to 1,000 published records.
+- `npx vitest run tests/p0/operating-catalog.spec.ts tests/p0/internal-directory-batch.spec.ts` passed, 3 tests.
