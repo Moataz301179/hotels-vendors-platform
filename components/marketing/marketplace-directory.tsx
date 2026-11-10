@@ -149,7 +149,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
           <div className={styles.identity}>
             <span>
               <Link href={`/marketplace/${entry.id}`}>{entry.name}</Link>
-              <small><Icon size={14} aria-hidden="true" />{entry.subcategory || taxonomy.subcategory}</small>
+              <small><Icon size={14} aria-hidden={true} />{entry.subcategory || taxonomy.subcategory}</small>
             </span>
           </div>
           <span className={styles.parameter}>{entry.unitOfMeasure ?? 'Set later'}</span>

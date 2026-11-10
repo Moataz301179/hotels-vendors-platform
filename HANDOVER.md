@@ -556,3 +556,12 @@ The owner asked for a Hostinger website deploy after verification. No deploy ran
 - This catalog revision is `f6b5e2a` on `cursor/catalog-register-dashboards-d37d`. It is not on `main`. A website-archive deploy would not update the VPS process that serves the domain, and it would not copy the local 30 specifications into the production database.
 - Hostinger website, order, and VPS list calls timed out, so no shared-hosting target was confirmed. No archive was uploaded and no production workflow was started.
 - Next action: merge this branch to `main` only when the owner accepts the pull request, create a restorable production database backup, run the production workflow from `main`, then publish the directory with a real platform administrator. The code release alone restyles the records already in production. It does not add the local specifications.
+
+## Release-access check — 2026-11-11 12:44 AM Africa/Cairo
+
+The owner asked for the code release and a production deploy. The release checks on `2b2f7d7` were red, so nothing was merged or deployed.
+
+- CI `build` failed one test: `appendAuditEntry` wrote `EntityName.SUPPLIER_RESEARCH_REGISTER`, which was not in the Prisma enum. Chromium failed typecheck because the category icon passed `aria-hidden` as a string.
+- The repair adds `SUPPLIER_RESEARCH_REGISTER` and migration `20261111013000_add_supplier_research_register_audit_entity`, and passes a boolean `aria-hidden` to the icon. Local `tsc --noEmit` is clean, and the audit-enum plus migration-history tests pass.
+- This environment’s GitHub token can push the feature branch. It cannot read branch protection or the production environment, and it is not a substitute for the VPS deploy secrets. The production workflow still runs only from `main`, and only after green `build` and `chromium` checks plus `APPLY_AFTER_NEON_BACKUP`. The November 8 backup record is not a current restorable Neon branch for this migration, so that confirmation was not entered.
+- The 30 local specifications are still not in the production database. A code deploy does not publish them.
