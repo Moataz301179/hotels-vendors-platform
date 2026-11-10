@@ -599,3 +599,43 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 .fee-calculator__empty, .fee-calculator__note { font-size: 12px; line-height: 1.6; }
 .fee-calculator__note { margin: 14px 0 0; }
 .fee-calculator .pill-muted { margin-left: 8px; }
+
+.ops-console.role-dashboard-hero,
+.ops-console .role-dashboard-hero{padding:22px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:none}
+.ops-console .role-dashboard-hero h1{font-size:clamp(28px,3vw,36px)!important;letter-spacing:-.04em!important;max-width:18ch}
+.ops-console .role-dashboard-hero p{font-size:14px;line-height:1.6;max-width:62ch}
+.ops-workboard{display:flex;flex-wrap:wrap;gap:8px}
+.ops-workboard a{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:650;text-decoration:none}
+.ops-workboard a:hover,.ops-workboard a:focus-visible{border-color:var(--cobalt-600);color:var(--cobalt-700);outline:2px solid var(--focus);outline-offset:2px}
+.ops-console .role-dashboard-metrics{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.ops-console .role-dashboard-metric{min-height:0;padding:16px}
+.ops-console .role-dashboard-metric strong{font-size:28px}
+.supplier-register{padding:22px}
+.supplier-register-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.supplier-register-head h2{margin:6px 0 8px;font-size:28px;letter-spacing:-.04em}
+.supplier-register-head p,.supplier-register small{color:var(--muted)}
+.supplier-register-coverage{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.supplier-register-coverage span{display:grid;gap:2px;min-width:140px;padding:10px 12px;border:1px solid var(--line);background:var(--paper-50,#f7f7f0);font-size:12px}
+.supplier-register-coverage strong{font-size:18px}
+.supplier-register-table{overflow-x:auto}
+.supplier-register td small{display:block;margin-top:3px}
+.ops-reference-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.ops-reference-card{display:grid;gap:6px;padding:16px;text-align:left;box-shadow:none}
+.ops-reference-card span,.ops-reference-card small{color:var(--muted);font-size:12px}
+.ops-reference-card strong{font-size:16px;letter-spacing:-.02em}
+.buying-path{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:16px 0 0;padding:0;list-style:none}
+.buying-path li{display:grid;gap:3px;min-width:0;padding:10px;border:1px solid var(--line);background:var(--paper-50,#f7f7f0)}
+.buying-path span{color:#245c96;font-size:11px;font-weight:750}
+.buying-path strong{font-size:13px}
+.buying-path small{color:var(--muted);font-size:12px;line-height:1.4}
+.hotel-selection-tray{padding:18px}
+.hotel-selection-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.hotel-selection-head h2{margin:4px 0 6px;font-size:24px;letter-spacing:-.03em}
+.hotel-selection-head p{margin:0;max-width:62ch;color:var(--muted);font-size:14px}
+.hotel-selection-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hotel-selection-items{display:grid;gap:8px;margin:14px 0 0;padding:0;list-style:none}
+.hotel-selection-items li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+@media (max-width:800px){.buying-path{grid-template-columns:1fr}.hotel-selection-head{display:grid}}
+@media (max-width:720px){
+  .supplier-register-head,.ops-console .role-dashboard-hero{display:grid}
+}

@@ -8,6 +8,7 @@ import { requestJson } from '@/lib/v2-http';
 import { RoleAuditWidget } from '@/components/v2/role-audit-widget';
 import { ActionQueue } from '@/components/v2/action-queue';
 import { Sparkline } from '@/components/v2/sparkline';
+import { HotelSelectionTray } from '@/components/v2/hotel-selection-tray';
 import { roleDisplayName, type WorkspaceRole, workspaceRole } from '@/lib/dashboard/role-navigation';
 import { roleWorkspace } from '@/lib/dashboard/role-workspace';
 
@@ -26,6 +27,14 @@ const models:Record<WorkspaceRole,DashboardModel>={
  ADMIN:{eyebrow:'Network controls',title:'Protect the operating network. Do not become the transaction.',detail:'Network administration governs access, provenance, policy and audit evidence. Hotels own buying, Vendors own their terms, carriers own handoffs and funders own decisions.',sectionTitle:'Today’s network controls',primary:{title:'Open network health',detail:'Review operational queues and release identity before acting.',href:'/admin?mode=health',icon:'controls'},actions:[{title:'Review trust & access',detail:'Review organization onboarding, Vendor verification and scoped access.',href:'/admin?mode=trust',icon:'orders'},{title:'Govern catalogue evidence',detail:'Review source permissions, candidates and unmatched requirements.',href:'/admin?mode=catalogue',icon:'catalogue'},{title:'Set auditable policy',detail:'Open explicit policy controls only for a deliberate governed change.',href:'/admin?mode=governance',icon:'controls'}],journey:['Review network health','Protect identity and access','Govern provenance','Inspect auditable policy changes']}
 };
 const iconFor=(icon:IconName)=>({catalogue:PackageCheck,orders:ClipboardCheck,receipt:FileText,funding:WalletCards,carrier:Truck,controls:ShieldCheck})[icon];
+function RoleGlyph({ name }: { name: IconName }) {
+  if (name === 'catalogue') return <PackageCheck aria-hidden="true" />;
+  if (name === 'orders') return <ClipboardCheck aria-hidden="true" />;
+  if (name === 'receipt') return <FileText aria-hidden="true" />;
+  if (name === 'funding') return <WalletCards aria-hidden="true" />;
+  if (name === 'carrier') return <Truck aria-hidden="true" />;
+  return <ShieldCheck aria-hidden="true" />;
+}
 const iconForWorkspaceHref=(href:string):IconName=>href.includes('marketplace')?'catalogue':href.includes('carrier')?'carrier':href.includes('funding')?'funding':href.includes('orders')?'receipt':'controls';
 function roleMetrics(role:WorkspaceRole,metrics:Metrics):RoleMetric[]{
  if(role==='HOTEL')return[{label:'Open sourcing requests',value:metrics.rfqs,href:'/workspace/marketplace',detail:'Requests moving through the sealed sourcing workflow.',trend:'rfqs'},{label:'Orders to follow',value:metrics.orders,href:'/orders',detail:'Authorized purchase records and receipt status.',trend:'orders'},{label:'Recorded opportunity signals',value:metrics.opportunities,href:'/intelligence',detail:'Signals require review before a commercial action.'}];
@@ -42,10 +51,21 @@ export default function Dashboard(){
  if(error==='UNAUTHENTICATED')return <div className="workspace-status" role="alert"><strong>{isSignedIn?'This account is not linked to an active workspace.':'Sign in to open your workspace.'}</strong><p>{isSignedIn?'Your Clerk session does not match an authorized organization role. Use the account assigned to your organization.':'Your organization records are available after sign in.'}</p>{isSignedIn?<SignOutButton redirectUrl="/login"><button className="btn btn-ghost" type="button">Switch account</button></SignOutButton>:<Link className="btn btn-blue" href="/login">Sign in</Link>}</div>;
  if(error)return <div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={()=>window.location.reload()}>Retry</button></div>;
  if(!data)return <p role="status" className="workspace-empty">Loading your role workspace…</p>;
- const role=workspaceRole(data.role)??'HOTEL',model=models[role],metrics=roleMetrics(role,data.metrics),scopedWorkspace=roleWorkspace(data.role,data.organizationRole),scopedActions=scopedWorkspace?.actions.map(action=>({title:action.title,detail:action.description,href:action.href,icon:iconForWorkspaceHref(action.href)})),primary=scopedActions?.[0]??model.primary,actions=scopedActions?.slice(1)??model.actions,journey=scopedActions?.map(action=>action.title)??model.journey,PrimaryIcon=iconFor(primary.icon);
- return <div className="role-dashboard" data-role={role.toLowerCase()}>
+ const role=workspaceRole(data.role)??'HOTEL',model=models[role],metrics=roleMetrics(role,data.metrics),scopedWorkspace=roleWorkspace(data.role,data.organizationRole),scopedActions=scopedWorkspace?.actions.map(action=>({title:action.title,detail:action.description,href:action.href,icon:iconForWorkspaceHref(action.href)})),primary=scopedActions?.[0]??model.primary,actions=scopedActions?.slice(1)??model.actions,journey=scopedActions?.map(action=>action.title)??model.journey;
+ const workboard = role === 'HOTEL'
+  ? [{ href: '/marketplace?category=Restaurants%20%26%20bars', label: 'Restaurants & bars' }, { href: '/marketplace?category=Housekeeping%20%26%20laundry', label: 'Housekeeping' }, { href: '/marketplace?category=Guest%20rooms%20%26%20amenities', label: 'Guest rooms' }, { href: '/marketplace?category=Engineering%20%26%20maintenance', label: 'Engineering' }, { href: '/marketplace?category=Furniture%2C%20fixtures%20%26%20outdoor', label: 'Furniture' }, { href: '/marketplace?category=Hotel%20services', label: 'Services' }, { href: '/workspace/marketplace', label: 'Start a requirement' }]
+  : role === 'ADMIN'
+    ? [{ href: '/admin?mode=register', label: 'Contracting register' }, { href: '/admin?mode=catalogue', label: 'Catalogue review' }, { href: '/marketplace', label: 'Public directory' }, { href: '/audit', label: 'Audit trail' }]
+    : role === 'SUPPLIER'
+      ? [{ href: '/suppliers', label: 'Catalogue readiness' }, { href: '/orders', label: 'Fulfilment' }, { href: '/eta-compliance', label: 'ETA records' }]
+      : role === 'SHIPPING'
+        ? [{ href: '/carrier', label: 'Delivery tasks' }, { href: '/carrier/handoff', label: 'Handoff records' }]
+        : [{ href: '/funding', label: 'Funding records' }, { href: '/funding/evidence', label: 'Evidence' }];
+ return <div className="role-dashboard ops-console" data-role={role.toLowerCase()}>
   {!profile?.complete?<section className="workspace-status role-dashboard-profile"><div><strong>Complete your organization profile.</strong><p>Your role workspace activates after the required organization details are recorded.</p></div><Link href="/onboarding" className="btn btn-blue">Complete profile</Link></section>:null}
-  <header className="role-dashboard-hero"><div><span className="eyebrow">{model.eyebrow}</span><h1>{scopedWorkspace?.title ?? model.title}</h1><p>{scopedWorkspace?.description ?? model.detail}</p></div><Link href={primary.href} className="role-dashboard-primary"><PrimaryIcon aria-hidden="true"/><span><small>Start here</small><strong>{primary.title}</strong><em>{primary.detail}</em></span><ArrowRight aria-hidden="true"/></Link></header>
+  <header className="role-dashboard-hero"><div><span className="eyebrow">{roleDisplayName(data.role)} workspace</span><h1>{scopedWorkspace?.title ?? model.title}</h1><p>{scopedWorkspace?.description ?? model.detail}</p></div><Link href={primary.href} className="role-dashboard-primary"><RoleGlyph name={primary.icon}/><span><small>Next action</small><strong>{primary.title}</strong><em>{primary.detail}</em></span><ArrowRight aria-hidden="true"/></Link></header>
+  <nav className="ops-workboard" aria-label="Role workboard">{workboard.map((item) => <Link key={item.href} href={item.href}>{item.label}</Link>)}</nav>
+  {role === 'HOTEL' ? <HotelSelectionTray /> : null}
   <section className="role-dashboard-metrics" aria-label={`${roleDisplayName(data.role)} workspace status`}>{metrics.map(metric=><Link href={metric.href} className="card role-dashboard-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.detail}</small>{metric.trend&&trends&&<Sparkline values={(trends[metric.trend]??[]).map(point=>point.count)} label={metric.label}/>}<ArrowRight aria-hidden="true"/></Link>)}</section>
   <ActionQueue />
  <section className="role-dashboard-main"><div className="role-dashboard-actions"><div className="workspace-section-heading"><div><span className="eyebrow">Role-owned action queue</span><h2>{model.sectionTitle}</h2></div></div><div className="role-dashboard-action-grid">{actions.map(action=>{const Icon=iconFor(action.icon);return <Link href={action.href} className="card role-dashboard-action" key={action.title}><Icon aria-hidden="true"/><h3>{action.title}</h3><p>{action.detail}</p><span>Open <ArrowRight aria-hidden="true"/></span></Link>})}</div></div><aside className="card role-dashboard-journey" aria-label="How work moves"><span className="eyebrow">Controlled sequence</span><ol>{journey.map((step,index)=><li key={step}><span>{String(index+1).padStart(2,'0')}</span><strong>{step}</strong></li>)}</ol><p><Building2 aria-hidden="true"/> Each stage preserves its own organization-scoped evidence.</p></aside></section>

@@ -534,3 +534,13 @@ Role-specific groups, each describing the actor's real authority:
 3. **No `FIRECRAWL_API_KEY`** — the ingestion pipeline is built and tested but cannot crawl real supplier pages.
 4. **MeDo is a stub** (`enabled:false`); the npm package contains no frontend export.
 5. `P0-REDESIGN` remains open; public release gate is **NO-GO**.
+
+## Catalog buying list — 2026-11-10
+
+Branch: `cursor/catalog-register-dashboards-d37d`. Local database only. Not a production release.
+
+- Public directory is a compact specification list. A hotel sets a quantity and adds the reference to a browser list that reopens in the hotel workspace at `/workspace/marketplace/basket`.
+- That list creates sealed requests. It does not create a paid order or draw a credit line. A purchase order still requires an approved response. Funding remains an external funder decision; `/api/v2/funders` still reports the credit line as unavailable.
+- Thirty supplier-neutral specifications are published in the local directory, covering the nine operating areas. Eight public-source contracting targets are in `SupplierResearchCandidate` and are shown only in Admin → Contracting register.
+- Verified locally: marketplace HTTP 200, quantity add updates the list bar, category filters wrap, specification pages use operating-area names, and `npx vitest run` on the catalog, basket, and navigation tests passed (13 tests).
+- Next action: sign in as a hotel, open the list, and send one sealed request. Do not treat the local directory publisher (`local-directory@127.0.0.1`) as a production administrator.
