@@ -72,6 +72,7 @@ export function createOrderWorker(): Worker {
           });
 
           if (result.action === "AUTO_APPROVE") {
+            if (!order.paymentGuaranteed) throw new Error("A verified payment guarantee is required before automatic approval");
             await prisma.order.update({
               where: { id: orderId },
               data: { status: "APPROVED" },
@@ -112,6 +113,9 @@ export function createOrderWorker(): Worker {
           }
           if (!order.paymentGuaranteed) {
             throw new Error("Payment guarantee required before confirmation");
+          }
+          if (metadata?.supplierId !== order.supplierId) {
+            throw new Error("Only the assigned vendor can confirm this order");
           }
 
           await prisma.order.update({

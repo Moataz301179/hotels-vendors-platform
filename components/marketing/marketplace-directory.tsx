@@ -6,7 +6,7 @@ import { SignInButton, useAuth } from '@clerk/nextjs';
 import { Armchair, BedDouble, ClipboardCheck, Search, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
-import { getProductImage } from '@/lib/marketplace/product-images';
+import { MarketplaceCarousel } from './marketplace-carousel';
 import { operatingCategory } from '@/lib/directory/operating-category';
 import { addCatalogReferenceToBasket, persistCatalogReferenceBasket, readCatalogReferenceBasket, setCatalogReferenceBasketQuantity, type CatalogReferenceBasketItem } from '@/lib/procurement/catalog-reference-basket';
 import { BuyingPath } from '@/components/procurement/buying-path';
@@ -14,17 +14,13 @@ import { BuyingPath } from '@/components/procurement/buying-path';
 // Approved category artwork for the public catalogue card. Used whenever a
 // record has no reviewed first-party product photograph, so no card renders as
 // an empty gradient block.
-const CATEGORY_ARTWORK: Record<string, string> = {
-  'Restaurants & bars': 'category-food-beverage.png',
-  'Housekeeping & laundry': 'category-housekeeping.png',
-  'Guest rooms & amenities': 'category-guest-supplies.png',
-  'Engineering & maintenance': 'category-engineering-ffe.png',
-  'Furniture, fixtures & outdoor': 'category-furniture-fixtures.jpg',
-  'Hotel services': 'hv-workspace-team.webp',
-  'Safety & compliance': 'category-engineering-ffe.png',
-  'Hotel technology': 'category-supplier-catalogue.png',
-  'Uniforms & workwear': 'hv-workspace-team.webp',
-  'Other operating needs': 'category-supplier-catalogue.png',
+const APPROVED_COVERS: Record<string, { image: string; detail: string }> = {
+  'Restaurants & bars': { image: '/category-food-beverage.png', detail: 'Food, beverage, kitchen and table service' },
+  'Housekeeping & laundry': { image: '/category-housekeeping.png', detail: 'Linen, cleaning and room turnover' },
+  'Guest rooms & amenities': { image: '/category-guest-supplies.png', detail: 'In-room amenities and replenishment' },
+  'Engineering & maintenance': { image: '/category-engineering-ffe.png', detail: 'Property systems, parts and maintenance' },
+  'Furniture, fixtures & outdoor': { image: '/category-furniture-fixtures.jpg', detail: 'Rooms, public areas and outdoor furniture' },
+  'Hotel services': { image: '/category-supplier-catalogue.png', detail: 'Specialist operating services' },
 };
 
 export type MarketplaceDirectoryEntry = {
@@ -110,7 +106,16 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     setQuantities((current) => ({ ...current, [id]: quantity }));
   }
 
+  const covers = Object.entries(APPROVED_COVERS).map(([title, cover]) => ({ title, detail: cover.detail, image: cover.image }));
+  const grouped = categories.filter((category) => category !== 'All').map((group) => ({
+    group,
+    cover: APPROVED_COVERS[group]?.image ?? null,
+    entries: visibleEntries.filter((entry) => taxonomyFor(entry).group === group),
+  })).filter((group) => group.entries.length);
+
   return <section className={styles.directory} aria-labelledby="directory-title">
+    <MarketplaceCarousel slides={covers} onSelect={(title) => { setActiveCategory(title); setActiveSubcategory('All'); }} />
+    <div className="shell">
     <div className={styles.toolbar}>
       <div>
         <p className={styles.eyebrow}>{selectedCategory === 'All' ? 'Reviewed directory' : `${selectedCategory} catalogue`}</p>
@@ -127,33 +132,24 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     </div>
 
     <div className={styles.selectionBar}><div><strong>{basket.length ? `${basket.length} reference${basket.length === 1 ? '' : 's'} · ${listedUnits} units` : 'Nothing selected yet'}</strong><span>The hotel list is not checkout. An order is created only after approval. Funding, if used, comes from an external funder.</span></div><HotelListLink count={basket.length} /></div>
-    {visibleEntries.length ? <div className={styles.list} role="table" aria-label="Reviewed specifications">
+    {grouped.length ? grouped.map((group) => <section key={group.group} aria-labelledby={`album-${group.group}`}>
+      <header className={styles.album} id={`album-${group.group}`}>
+        {group.cover ? <Image src={group.cover} alt="" width={120} height={80} /> : <span className={styles.albumMark}>No approved cover</span>}
+        <div><h3>{group.group}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. The cover is the only approved image for this area.</p></div>
+      </header>
+      <div className={styles.list} role="table" aria-label={group.group}>
       <div className={styles.listHead} role="row"><span>Specification</span><span>Unit</span><span>How it is bought</span><span>Quantity</span><span>List</span></div>
-      {visibleEntries.map(entry => {
+      {group.entries.map(entry => {
         const taxonomy = taxonomyFor(entry);
         const Icon = taxonomy.icon;
-        const match = entry.image
-          ? { type: 'url' as const, src: entry.image, illustrative: false }
-          : getProductImage({ name: entry.name, category: entry.category ?? taxonomy.group });
-        const visual: { type: 'url'; src: string; illustrative: boolean } =
-          match.type === 'gradient'
-            ? { type: 'url', src: CATEGORY_ARTWORK[taxonomy.group] ?? 'category-supplier-catalogue.png', illustrative: true }
-            : { ...match, illustrative: entry.image ? false : true };
         const saved = listedQuantity(entry.id);
         const draft = draftQuantity(entry.id);
         const unchanged = saved > 0 && draft === saved;
         return <article className={styles.row} role="row" key={entry.id}>
           <div className={styles.identity}>
-            <span className={styles.thumb}>
-              {visual.src.startsWith('http') ? (
-                <img src={visual.src} alt="" />
-              ) : (
-                <Image src={`/${visual.src}`} alt="" fill sizes="56px" />
-              )}
-            </span>
             <span>
               <Link href={`/marketplace/${entry.id}`}>{entry.name}</Link>
-              <small><Icon size={14} aria-hidden="true" />{taxonomy.group} · {entry.subcategory || taxonomy.subcategory}</small>
+              <small><Icon size={14} aria-hidden="true" />{entry.subcategory || taxonomy.subcategory}</small>
             </span>
           </div>
           <span className={styles.parameter}>{entry.unitOfMeasure ?? 'Set later'}</span>
@@ -169,7 +165,9 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
           <button type="button" className={styles.add} disabled={unchanged} onClick={() => saveQuantity(entry.id)}>{unchanged ? 'In the list' : saved ? 'Update' : 'Add to list'}</button>
         </article>;
       })}
-    </div> : <div className={styles.empty}><h3>{selectedCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${selectedCategory} yet.`}</h3><p>{selectedCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{selectedCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
+      </div>
+    </section>) : <div className={styles.empty}><h3>{selectedCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${selectedCategory} yet.`}</h3><p>{selectedCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{selectedCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
     <BuyingPath />
+    </div>
   </section>;
 }

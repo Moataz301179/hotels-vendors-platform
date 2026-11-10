@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const marketplacePage = readFileSync(join(process.cwd(), "app/(marketing)/marketplace/page.tsx"), "utf8");
+const directory = readFileSync(join(process.cwd(), "components/marketing/marketplace-directory.tsx"), "utf8");
 
 describe("public marketplace sourcing-area entry points", () => {
-  it("exposes every controlled HoReCa family as its own contextual category route", () => {
+  it("exposes every controlled HoReCa family through an approved category cover", () => {
     for (const category of [
       "Restaurants & bars",
       "Housekeeping & laundry",
@@ -14,8 +14,10 @@ describe("public marketplace sourcing-area entry points", () => {
       "Furniture, fixtures & outdoor",
       "Hotel services",
     ]) {
-      expect(marketplacePage).toContain(`title: '${category}'`);
+      expect(directory).toContain(`'${category}':`);
+      expect(directory).toContain("category-");
     }
-    expect(marketplacePage).toContain("encodeURIComponent(title)");
+    expect(directory).toContain("MarketplaceCarousel");
+    expect(directory).not.toContain("getProductImage");
   });
 });
