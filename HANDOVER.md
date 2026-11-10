@@ -535,12 +535,14 @@ Role-specific groups, each describing the actor's real authority:
 4. **MeDo is a stub** (`enabled:false`); the npm package contains no frontend export.
 5. `P0-REDESIGN` remains open; public release gate is **NO-GO**.
 
-## Catalog buying list — 2026-11-10
+## Catalog covers and commercial controls — 2026-11-10
 
-Branch: `cursor/catalog-register-dashboards-d37d`. Revision: `1fc1244`. Local database only. Not a production release.
+Branch: `cursor/catalog-register-dashboards-d37d`. Revision: `f6b5e2a`. Local database and local server only. Not a production release. https://www.hotelsvendors.com/marketplace was last checked still serving the previous page: 15 records and rejected product photos.
 
-- Public directory is a compact specification list. A hotel sets a quantity and adds the reference to a browser list that reopens in the hotel workspace at `/workspace/marketplace/basket`.
-- That list creates sealed requests. It does not create a paid order or draw a credit line. A purchase order still requires an approved response. Funding remains an external funder decision; `/api/v2/funders` still reports the credit line as unavailable.
-- Thirty supplier-neutral specifications are published in the local directory, covering the nine operating areas. Eight public-source contracting targets are in `SupplierResearchCandidate` and are shown only in Admin → Contracting register.
-- Verified locally: marketplace HTTP 200, quantity add updates the list bar, category filters wrap, specification pages use operating-area names, and `npx vitest run` on the catalog, basket, and navigation tests passed (13 tests).
-- Next action: sign in as a hotel, open the list, and send one sealed request. Do not treat the local directory publisher (`local-directory@127.0.0.1`) as a production administrator.
+- The public marketplace opens with an animated carousel of the six approved category album covers. Clicking a slide filters the list. Safety, Hotel technology, and Uniforms have no approved cover and show “No approved cover”.
+- Each operating area shows that one cover, then compact specification rows. Per-item stock photos are not rendered. The directory does not call `getProductImage`.
+- The hotel list stays in the browser until sign-in, then continues at `/workspace/marketplace/basket` as sealed requests. A purchase order still exists only after an independent payment guarantee and hotel approval. Automatic approval and vendor confirmation both refuse an order that is not payment-guaranteed, and only the assigned vendor can confirm.
+- A 48-hour supplier payment is a funder referral. The funding request requires a delivered order, `paymentGuaranteed`, an accepted or partially accepted receipt, and an ETA-accepted signed invoice. The response still records `moneyMoved: false`. The hotel’s own payment term does not change.
+- Thirty supplier-neutral specifications remain published in the local directory. Eight public-source contracting targets remain in `SupplierResearchCandidate` and are shown only in Admin → Contracting register.
+- Verified locally on 10 November 2026 at 10:47 PM Africa/Cairo: five Vitest files, 23 tests, passed. The local marketplace rendered the carousel, category covers, compact rows, a quantity update from 1 reference / 2 units to 2 references / 7 units, and the nine-step buying path.
+- Next action: do not deploy until the production database and a real platform administrator are confirmed. Then publish the directory on that database and release this revision. Do not treat `local-directory@127.0.0.1` as a production administrator. Signed-in hotel submission and the admin register still need a Clerk session.
