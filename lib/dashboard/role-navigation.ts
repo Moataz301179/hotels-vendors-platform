@@ -29,7 +29,7 @@ const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
     { label: 'Organization', items: sharedAccount },
   ],
   ADMIN: [
-    { label: 'Network controls', items: [{ href: '/dashboard', label: 'Control overview', icon: 'home' }, { href: '/admin', label: 'Access & governance', icon: 'governance' }, { href: '/audit', label: 'Audit trail', icon: 'audit' }] },
+    { label: 'Network controls', items: [{ href: '/dashboard', label: 'Control overview', icon: 'home' }, { href: '/admin', label: 'Access & governance', icon: 'governance' }, { href: '/admin?mode=register', label: 'Contracting register', icon: 'catalogue' }, { href: '/audit', label: 'Audit trail', icon: 'audit' }] },
     { label: 'Organization', items: [{ href: '/security', label: 'Security & access', icon: 'security' }] },
   ],
 };

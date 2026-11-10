@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ClipboardCheck, DatabaseZap, FileSearch, ShieldCheck } from 'lucide-react';
 import { AdminClient } from '@/components/v2/admin-client';
@@ -11,14 +11,16 @@ import { DirectorySourceGovernance } from '@/components/v2/directory-source-gove
 import { PendingUserReview } from '@/components/v2/pending-user-review';
 import { ReleaseIdentity } from '@/components/v2/release-identity';
 import { RequirementMatching } from '@/components/v2/requirement-matching';
+import { SupplierContractRegister } from '@/components/v2/supplier-contract-register';
 import { SupplierReview } from '@/components/v2/supplier-review';
 
-type WorkspaceMode = 'health' | 'trust' | 'catalogue' | 'governance';
+type WorkspaceMode = 'health' | 'trust' | 'catalogue' | 'register' | 'governance';
 
 const modes: Array<{ id: WorkspaceMode; label: string; description: string; icon: typeof DatabaseZap }> = [
   { id: 'health', label: 'Network health', description: 'Review queues, recorded settlement status and the running release identity.', icon: DatabaseZap },
   { id: 'trust', label: 'Trust & access', description: 'Review organizations, Vendor verification and immutable activity records.', icon: ShieldCheck },
   { id: 'catalogue', label: 'Catalogue governance', description: 'Approve permitted sources, review private candidates and route uncovered demand.', icon: FileSearch },
+  { id: 'register', label: 'Contracting register', description: 'Review target organizations by operating area before any commercial relationship exists.', icon: ShieldCheck },
   { id: 'governance', label: 'Policy controls', description: 'Define scoped hotel controls only when policy changes are deliberate and auditable.', icon: ClipboardCheck },
 ];
 
@@ -31,7 +33,11 @@ export function AdminCommandCenter() {
   const requestedMode = searchParams.get('mode');
   const initialMode = requestedMode && modes.some((item) => item.id === requestedMode) ? requestedMode as WorkspaceMode : 'health';
   const [mode, setMode] = useState<WorkspaceMode>(initialMode);
-  useEffect(() => { setMode(initialMode); }, [initialMode]);
+  const [seenMode, setSeenMode] = useState(initialMode);
+  if (seenMode !== initialMode) {
+    setSeenMode(initialMode);
+    setMode(initialMode);
+  }
   const active = modes.find((item) => item.id === mode)!;
 
   return <div className="admin-command-center">
@@ -61,6 +67,7 @@ export function AdminCommandCenter() {
     {mode === 'health' && <Panel id="admin-panel-health" labelledBy="admin-tab-health"><AdminOperationsOverview /><ReleaseIdentity /></Panel>}
     {mode === 'trust' && <Panel id="admin-panel-trust" labelledBy="admin-tab-trust"><div className="admin-command-stack"><PendingUserReview /><SupplierReview /><AdminClient /></div></Panel>}
     {mode === 'catalogue' && <Panel id="admin-panel-catalogue" labelledBy="admin-tab-catalogue"><div className="admin-command-stack"><DirectorySourceGovernance /><DirectoryCandidateReview /><RequirementMatching /></div></Panel>}
+    {mode === 'register' && <Panel id="admin-panel-register" labelledBy="admin-tab-register"><SupplierContractRegister /></Panel>}
     {mode === 'governance' && <Panel id="admin-panel-governance" labelledBy="admin-tab-governance"><div className="admin-command-stack"><div className="admin-command-notice"><strong>Policy changes are deliberate.</strong><span>Start only after selecting the hotel organization affected. Every permission, approval rule and department scope is recorded.</span></div><AdminControls /></div></Panel>}
     <p className="admin-command-context"><strong>Current work mode:</strong> {active.label}. {active.description}</p>
   </div>;

@@ -1,0 +1,75 @@
+.carousel {
+  position: relative;
+  height: clamp(220px, 32vw, 320px);
+  overflow: hidden;
+  background: #1d2730;
+  color: #f7f4ee;
+}
+.viewport { height: 100%; overflow: hidden; }
+.track {
+  display: flex;
+  height: 100%;
+  transition: transform 600ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .track { transition: none; }
+}
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  background: #1d2730;
+}
+.slide img { object-fit: cover; }
+.slide span {
+  position: absolute;
+  left: 24px;
+  bottom: 22px;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  max-width: min(520px, calc(100% - 48px));
+  padding: 14px 16px;
+  background: rgba(20, 28, 34, 0.78);
+}
+.slide small { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #d5e4ef; }
+.slide strong { font-size: clamp(26px, 3vw, 40px); letter-spacing: -.04em; line-height: 1.05; }
+.slide em { font-style: normal; font-size: 14px; color: #e7e1d6; }
+.nav {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255,255,255,.4);
+  background: rgba(20, 28, 34, 0.55);
+  color: #fff;
+  cursor: pointer;
+}
+.next { left: auto; right: 12px; }
+.dots {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+.dots button {
+  width: 8px;
+  height: 8px;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(255,255,255,.45);
+  cursor: pointer;
+}
+.dots button[aria-selected="true"] { background: #fff; width: 18px; }

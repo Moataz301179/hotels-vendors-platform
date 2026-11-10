@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 import { MarketplaceSelectionAction } from '@/components/marketing/marketplace-selection-action';
+import { operatingCategory } from '@/lib/directory/operating-category';
 import { publicDirectoryFields, publicDirectorySpecifications, publicDirectoryText } from '@/lib/directory/public-directory-profile';
 
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,7 @@ export default async function MarketplaceReferencePage({ params }: { params: Pro
   const fields = publicDirectoryFields(entry);
   if (!fields) notFound();
 
+  const area = operatingCategory(fields.category, fields.name);
   const specifications = publicDirectorySpecifications(entry.attributes);
   const material = specifications.material ?? null;
   const description = publicDirectoryText(entry.description);
@@ -36,7 +38,7 @@ export default async function MarketplaceReferencePage({ params }: { params: Pro
           <PackageCheck size={62} aria-hidden="true" />
         </div>
         <div className="hv-reference-summary">
-          <span className="eyebrow">{fields.category}{fields.subcategory ? ` · ${fields.subcategory}` : ''}</span>
+          <span className="eyebrow">{area.group}{fields.subcategory ? ` · ${fields.subcategory}` : ` · ${area.subcategory}`}</span>
           <h1>{fields.name}</h1>
           {fields.nameAr ? <p lang="ar" dir="rtl">{fields.nameAr}</p> : null}
           <p>{description ?? 'A reviewed HoReCa reference ready to be specified in a controlled procurement requirement.'}</p>

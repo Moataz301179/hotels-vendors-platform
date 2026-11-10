@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         etaUuid: { not: null },
         digitalSignature: { not: null },
         deletedAt: null,
-        order: { status: "DELIVERED", goodsReceiptNotes: { some: { status: { in: ["ACCEPTED", "PARTIALLY_ACCEPTED"] }, deletedAt: null } } },
+        order: { status: "DELIVERED", paymentGuaranteed: true, goodsReceiptNotes: { some: { status: { in: ["ACCEPTED", "PARTIALLY_ACCEPTED"] }, deletedAt: null } } },
       },
       select: { id: true, tenantId: true, total: true, factoringRequests: { select: { id: true } } },
     }),

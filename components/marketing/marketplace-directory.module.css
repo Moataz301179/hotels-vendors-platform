@@ -1,12 +1,12 @@
 .directory {
-  padding: 0 0 90px;
+  padding: 0 0 48px;
 }
 .toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 36px;
+  gap: 24px;
   align-items: end;
-  padding: 48px 0 28px;
+  padding: 20px 0 16px;
 }
 .eyebrow,
 .itemType {
@@ -19,11 +19,11 @@
 }
 .toolbar h2 {
   max-width: 760px;
-  margin: 10px 0 10px;
+  margin: 8px 0 8px;
   font-family: var(--font-display);
-  font-size: clamp(30px, 4vw, 50px);
-  line-height: 1.06;
-  letter-spacing: -0.045em;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.12;
+  letter-spacing: -0.04em;
 }
 .toolbar > div > p:not(.eyebrow) {
   max-width: 690px;
@@ -76,9 +76,9 @@
 .filters,
 .subfilters {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  overflow-x: auto;
   padding-bottom: 2px;
 }
 .filters button,
@@ -359,6 +359,155 @@
   color: #245c96;
   font-weight: 800;
   cursor: pointer;
+}
+.album {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin-top: 22px;
+}
+.album img { width: 120px; height: 80px; object-fit: cover; border: 1px solid var(--line); }
+.album h3 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.03em; }
+.album p { margin: 0; color: var(--muted); font-size: 13px; }
+.albumMark { display: grid; place-items: center; width: 120px; height: 80px; border: 1px dashed var(--line); color: var(--muted); font-size: 11px; text-align: center; }
+.list {
+  display: grid;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.listHead,
+.row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(90px, .5fr) minmax(160px, .9fr) 148px 112px;
+  gap: 12px;
+  align-items: center;
+}
+.listHead {
+  padding: 10px 8px;
+  color: #66747c;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.row {
+  min-height: 72px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-raised);
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.thumb {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--paper-100);
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.identity a {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  text-decoration: none;
+}
+.identity small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.parameter {
+  color: #3d4b54;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.stepper {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  min-height: 36px;
+  border: 1px solid var(--line);
+}
+.stepper button,
+.stepper input {
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+}
+.stepper input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+.add,
+.listContinue {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #245c96;
+  background: #245c96;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.add:disabled {
+  border-color: var(--line);
+  background: var(--paper-100);
+  color: #4d6b4f;
+  cursor: default;
+}
+.selectionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #1d2730;
+  background: #1d2730;
+  color: #f4f7f8;
+}
+.selectionBar strong,
+.selectionBar span {
+  display: block;
+}
+.selectionBar span {
+  margin-top: 3px;
+  color: #c5d0d6;
+  font-size: 12px;
+  line-height: 1.45;
+}
+@media (max-width: 900px) {
+  .listHead { display: none; }
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+  .identity { grid-column: 1 / -1; }
+  .parameter:nth-of-type(1) { grid-column: 1; }
+  .stepper, .add { grid-column: auto; }
+  .selectionBar { align-items: stretch; flex-direction: column; }
 }
 @media (max-width: 980px) {
   .grid {

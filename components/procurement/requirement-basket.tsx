@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { requestJson } from '@/lib/v2-http';
+import { operatingCategory } from '@/lib/directory/operating-category';
+import { BuyingPath } from '@/components/procurement/buying-path';
 import {
   addCatalogReferenceToBasket,
   persistCatalogReferenceBasket,
@@ -45,37 +47,40 @@ export function RequirementBasket() {
 
   useEffect(() => {
     let active = true;
-    const selectedReference = new URL(window.location.href).searchParams.get('catalogReference')?.trim();
-    const storedItems = readCatalogReferenceBasket();
-    const initialItems = selectedReference && !storedItems.some((item) => item.catalogReferenceId === selectedReference)
-      ? addCatalogReferenceToBasket(storedItems, selectedReference)
-      : storedItems;
-    persistCatalogReferenceBasket(initialItems);
-    setItems(initialItems);
-
-    if (!initialItems.length) {
-      setMessage('Choose reviewed catalogue references before starting a sourcing request.');
-      setStatus('ready');
-      return () => { active = false; };
-    }
-
-    Promise.all(initialItems.map(async (item) => {
-      const response = await requestJson<DirectoryResponse>(`/api/v2/directory?id=${encodeURIComponent(item.catalogReferenceId)}`);
-      return [item.catalogReferenceId, response.profiles[0] ?? null] as const;
-    })).then((resolved) => {
+    Promise.resolve().then(() => {
       if (!active) return;
-      const visible = Object.fromEntries(resolved.filter((entry): entry is [string, CatalogueReference] => entry[1] !== null));
-      const unavailable = resolved.filter(([, entry]) => entry === null).map(([id]) => id);
-      const retained = unavailable.length ? removeCatalogReferenceBasketItems(initialItems, unavailable) : initialItems;
-      if (unavailable.length) persistCatalogReferenceBasket(retained);
-      setItems(retained);
-      setReferences(visible);
-      setMessage(unavailable.length ? `${unavailable.length} unavailable reference${unavailable.length === 1 ? ' was' : 's were'} removed from this basket.` : '');
-      setStatus('ready');
-    }).catch((error: unknown) => {
-      if (!active) return;
-      setMessage(error instanceof Error ? error.message : 'Unable to load the selected catalogue references.');
-      setStatus('error');
+      const selectedReference = new URL(window.location.href).searchParams.get('catalogReference')?.trim();
+      const storedItems = readCatalogReferenceBasket();
+      const initialItems = selectedReference && !storedItems.some((item) => item.catalogReferenceId === selectedReference)
+        ? addCatalogReferenceToBasket(storedItems, selectedReference)
+        : storedItems;
+      persistCatalogReferenceBasket(initialItems);
+      setItems(initialItems);
+
+      if (!initialItems.length) {
+        setMessage('Choose reviewed catalogue references before starting a sourcing request.');
+        setStatus('ready');
+        return;
+      }
+
+      Promise.all(initialItems.map(async (item) => {
+        const response = await requestJson<DirectoryResponse>(`/api/v2/directory?id=${encodeURIComponent(item.catalogReferenceId)}`);
+        return [item.catalogReferenceId, response.profiles[0] ?? null] as const;
+      })).then((resolved) => {
+        if (!active) return;
+        const visible = Object.fromEntries(resolved.filter((entry): entry is [string, CatalogueReference] => entry[1] !== null));
+        const unavailable = resolved.filter(([, entry]) => entry === null).map(([id]) => id);
+        const retained = unavailable.length ? removeCatalogReferenceBasketItems(initialItems, unavailable) : initialItems;
+        if (unavailable.length) persistCatalogReferenceBasket(retained);
+        setItems(retained);
+        setReferences(visible);
+        setMessage(unavailable.length ? `${unavailable.length} unavailable reference${unavailable.length === 1 ? ' was' : 's were'} removed from this basket.` : '');
+        setStatus('ready');
+      }).catch((error: unknown) => {
+        if (!active) return;
+        setMessage(error instanceof Error ? error.message : 'Unable to load the selected catalogue references.');
+        setStatus('error');
+      });
     });
     return () => { active = false; };
   }, []);
@@ -124,13 +129,13 @@ export function RequirementBasket() {
   }
 
   return <section className="requirement-basket" aria-labelledby="requirement-basket-title">
-    <header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">Requirement basket</div><h1 id="requirement-basket-title">Confirm the requirement list.</h1><p className="workspace-page-lead muted">This is a B2B sourcing basket—not consumer checkout. It records operational needs before commercial matching, purchase orders, or invoices exist.</p></div></header>
+    <header className="workspace-page-header"><div className="workspace-page-header-copy"><div className="eyebrow">Hotel buying list</div><h1 id="requirement-basket-title">Confirm the requirement list.</h1><p className="workspace-page-lead muted">This list records what the hotel needs. It does not place a paid order and it does not draw a credit line. A purchase order exists after an approved response. An external funder may later finance the invoice; HotelsVendors does not lend.</p><BuyingPath /></div></header>
     {status === 'loading' ? <p role="status">Loading selected references…</p> : null}
     {status === 'error' && !resolvedItems.length ? <section className="workspace-status" role="alert"><p>{message}</p><Link className="btn btn-dark" href="/marketplace">Return to catalogue</Link></section> : null}
     {status !== 'loading' && resolvedItems.length ? <form className="card workspace-form" onSubmit={(event) => void createRfqs(event)} style={{ padding: 24 }}>
       <div style={{ gridColumn: '1 / -1' }}><div className="eyebrow">Selected references</div><h2>{resolvedItems.length} item{resolvedItems.length === 1 ? '' : 's'} ready for sourcing</h2><p className="muted">Each item becomes its own sealed RFQ so specifications, matching and approval stay traceable.</p></div>
       <div className="workspace-request-list-items" style={{ gridColumn: '1 / -1' }}>
-        {resolvedItems.map((item) => <div className="workspace-request-list-item" key={item.catalogReferenceId}><div><strong>{item.reference.name}</strong><small>{item.reference.category}{item.reference.subcategory ? ` · ${item.reference.subcategory}` : ''} · {item.reference.purchaseUnit ?? item.reference.unitOfMeasure ?? 'Unit to be confirmed'}</small></div><div className="workspace-quantity-control" aria-label={`Quantity for ${item.reference.name}`}><button type="button" onClick={() => updateItems(setCatalogReferenceBasketQuantity(items, item.catalogReferenceId, item.quantity - 1))} aria-label={`Decrease ${item.reference.name} quantity`}>−</button><span>{item.quantity}</span><button type="button" onClick={() => updateItems(setCatalogReferenceBasketQuantity(items, item.catalogReferenceId, item.quantity + 1))} aria-label={`Increase ${item.reference.name} quantity`}>+</button></div><button type="button" className="btn btn-ghost" onClick={() => updateItems(setCatalogReferenceBasketQuantity(items, item.catalogReferenceId, 0))}>Remove</button></div>)}
+        {resolvedItems.map((item) => <div className="workspace-request-list-item" key={item.catalogReferenceId}><div><strong>{item.reference.name}</strong><small>{operatingCategory(item.reference.category, item.reference.name).group}{item.reference.subcategory ? ` · ${item.reference.subcategory}` : ''} · {item.reference.purchaseUnit ?? item.reference.unitOfMeasure ?? 'Unit to be confirmed'}</small></div><div className="workspace-quantity-control" aria-label={`Quantity for ${item.reference.name}`}><button type="button" onClick={() => updateItems(setCatalogReferenceBasketQuantity(items, item.catalogReferenceId, item.quantity - 1))} aria-label={`Decrease ${item.reference.name} quantity`}>−</button><span>{item.quantity}</span><button type="button" onClick={() => updateItems(setCatalogReferenceBasketQuantity(items, item.catalogReferenceId, item.quantity + 1))} aria-label={`Increase ${item.reference.name} quantity`}>+</button></div><button type="button" className="btn btn-ghost" onClick={() => updateItems(setCatalogReferenceBasketQuantity(items, item.catalogReferenceId, 0))}>Remove</button></div>)}
       </div>
       <label>Response window<select value={responseWindowHours} onChange={(event) => setResponseWindowHours(Number(event.target.value))}><option value={4}>Same day — 4 hours</option><option value={24}>Planned — 1 business day</option><option value={72}>Technical / complex — 3 days</option></select></label>
       <label>Delivery location <span className="muted">(optional)</span><input maxLength={240} value={deliveryLocation} onChange={(event) => setDeliveryLocation(event.target.value)} /></label>

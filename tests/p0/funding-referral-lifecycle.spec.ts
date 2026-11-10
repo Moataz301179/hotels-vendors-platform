@@ -66,6 +66,11 @@ describe("provider-controlled funding referral lifecycle", () => {
       status: "PENDING",
     }) });
     expect(m.invoiceUpdate).toHaveBeenCalledWith({ where: { id: "invoice-1" }, data: { factoringStatus: "OFFERED", factoringCompanyId: "funder-1" } });
+    expect(m.invoiceFindFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        order: expect.objectContaining({ status: "DELIVERED", paymentGuaranteed: true }),
+      }),
+    }));
   });
 
   it("returns the original referral for an identical idempotent replay", async () => {

@@ -534,3 +534,34 @@ Role-specific groups, each describing the actor's real authority:
 3. **No `FIRECRAWL_API_KEY`** — the ingestion pipeline is built and tested but cannot crawl real supplier pages.
 4. **MeDo is a stub** (`enabled:false`); the npm package contains no frontend export.
 5. `P0-REDESIGN` remains open; public release gate is **NO-GO**.
+
+## Catalog covers and commercial controls — 2026-11-10
+
+Branch: `cursor/catalog-register-dashboards-d37d`. Revision: `f6b5e2a`. Local database and local server only. Not a production release. https://www.hotelsvendors.com/marketplace was last checked still serving the previous page: 15 records and rejected product photos.
+
+- The public marketplace opens with an animated carousel of the six approved category album covers. Clicking a slide filters the list. Safety, Hotel technology, and Uniforms have no approved cover and show “No approved cover”.
+- Each operating area shows that one cover, then compact specification rows. Per-item stock photos are not rendered. The directory does not call `getProductImage`.
+- The hotel list stays in the browser until sign-in, then continues at `/workspace/marketplace/basket` as sealed requests. A purchase order still exists only after an independent payment guarantee and hotel approval. Automatic approval and vendor confirmation both refuse an order that is not payment-guaranteed, and only the assigned vendor can confirm.
+- A 48-hour supplier payment is a funder referral. The funding request requires a delivered order, `paymentGuaranteed`, an accepted or partially accepted receipt, and an ETA-accepted signed invoice. The response still records `moneyMoved: false`. The hotel’s own payment term does not change.
+- Thirty supplier-neutral specifications remain published in the local directory. Eight public-source contracting targets remain in `SupplierResearchCandidate` and are shown only in Admin → Contracting register.
+- Verified locally on 10 November 2026 at 10:47 PM Africa/Cairo: five Vitest files, 23 tests, passed. The local marketplace rendered the carousel, category covers, compact rows, a quantity update from 1 reference / 2 units to 2 references / 7 units, and the nine-step buying path.
+- Next action: do not deploy until the production database and a real platform administrator are confirmed. Then publish the directory on that database and release this revision. Do not treat `local-directory@127.0.0.1` as a production administrator. Signed-in hotel submission and the admin register still need a Clerk session.
+
+## Deploy check — 2026-11-10 10:50 PM Africa/Cairo
+
+The owner asked for a Hostinger website deploy after verification. No deploy ran.
+
+- Verified live: `GET https://www.hotelsvendors.com/api/health` returned `ok`, `database=ready`, `authorization=configured`, `releaseId` and `sourceCommit` `github-565c65a406567c1820e2e6ba0191cbebcee2314b`. Marketplace HTML still has 15 records, the old hero, and Wikimedia images. `Add to list` count is 0.
+- DNS for `hotelsvendors.com` and `www` is `187.77.181.3`, the existing Hostinger VPS. The governed release is `.github/workflows/deploy-production.yml`: `main` only, green `build` and `chromium` checks, the recovery gate, and the backup confirmation `APPLY_AFTER_NEON_BACKUP`, then PM2 and Nginx on that VPS.
+- This catalog revision is `f6b5e2a` on `cursor/catalog-register-dashboards-d37d`. It is not on `main`. A website-archive deploy would not update the VPS process that serves the domain, and it would not copy the local 30 specifications into the production database.
+- Hostinger website, order, and VPS list calls timed out, so no shared-hosting target was confirmed. No archive was uploaded and no production workflow was started.
+- Next action: merge this branch to `main` only when the owner accepts the pull request, create a restorable production database backup, run the production workflow from `main`, then publish the directory with a real platform administrator. The code release alone restyles the records already in production. It does not add the local specifications.
+
+## Release-access check — 2026-11-11 12:44 AM Africa/Cairo
+
+The owner asked for the code release and a production deploy. The release checks on `2b2f7d7` were red, so nothing was merged or deployed.
+
+- CI `build` failed one test: `appendAuditEntry` wrote `EntityName.SUPPLIER_RESEARCH_REGISTER`, which was not in the Prisma enum. Chromium failed typecheck because the category icon passed `aria-hidden` as a string.
+- The repair adds `SUPPLIER_RESEARCH_REGISTER` and migration `20261111013000_add_supplier_research_register_audit_entity`, and passes a boolean `aria-hidden` to the icon. Local `tsc --noEmit` is clean, and the audit-enum plus migration-history tests pass.
+- This environment’s GitHub token can push the feature branch. It cannot read branch protection or the production environment, and it is not a substitute for the VPS deploy secrets. The production workflow still runs only from `main`, and only after green `build` and `chromium` checks plus `APPLY_AFTER_NEON_BACKUP`. The November 8 backup record is not a current restorable Neon branch for this migration, so that confirmation was not entered.
+- The 30 local specifications are still not in the production database. A code deploy does not publish them.
