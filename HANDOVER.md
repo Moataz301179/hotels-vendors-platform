@@ -537,7 +537,7 @@ Role-specific groups, each describing the actor's real authority:
 
 ## Catalog buying list — 2026-11-10
 
-Branch: `cursor/catalog-register-dashboards-d37d`. Local database only. Not a production release.
+Branch: `cursor/catalog-register-dashboards-d37d`. Revision: `1fc1244`. Local database only. Not a production release.
 
 - Public directory is a compact specification list. A hotel sets a quantity and adds the reference to a browser list that reopens in the hotel workspace at `/workspace/marketplace/basket`.
 - That list creates sealed requests. It does not create a paid order or draw a credit line. A purchase order still requires an approved response. Funding remains an external funder decision; `/api/v2/funders` still reports the credit line as unavailable.
