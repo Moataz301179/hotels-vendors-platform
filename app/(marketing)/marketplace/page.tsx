@@ -21,7 +21,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   const directoryProfiles = await prisma.directoryProfile.findMany({
     where: publicMarketplaceDirectoryProfileWhere,
     select: { id: true, itemType: true, name: true, nameAr: true, category: true, subcategory: true, unitOfMeasure: true, purchaseUnit: true, images: true, description: true, attributes: true },
-    orderBy: { updatedAt: 'desc' }, take: 100,
+    orderBy: [{ category: 'asc' }, { name: 'asc' }], take: 1000,
   }).catch(() => null);
   const entries = directoryProfiles?.flatMap((profile) => {
     const category = profile.category ?? null;

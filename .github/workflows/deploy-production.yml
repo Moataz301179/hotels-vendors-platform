@@ -149,6 +149,7 @@ jobs:
           DATABASE_URL="$PRODUCTION_DATABASE_URL" npx prisma migrate deploy
           DATABASE_URL="$PRODUCTION_DATABASE_URL" npx prisma migrate status
           DATABASE_URL="$PRODUCTION_DATABASE_URL" node scripts/verify-live-procurement-schema.mjs
+          DATABASE_URL="$PRODUCTION_DATABASE_URL" HV_ALLOW_PRODUCTION_DIRECTORY_PUBLICATION=1 npx tsx scripts/catalog/publish-production-catalog.ts
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}

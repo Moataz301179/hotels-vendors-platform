@@ -5,16 +5,10 @@
  *   npx tsx scripts/catalog/load-operating-catalog.ts
  *   HV_ALLOW_INTERNAL_DIRECTORY_PUBLICATION=1 npx tsx scripts/catalog/load-operating-catalog.ts --apply
  */
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { prisma } from "@/lib/prisma";
-import { publishInternalDirectoryBatch, validateInternalDirectoryBatch, type InternalDirectoryBatch } from "@/lib/directory/publish-internal-batch";
+import { publishInternalDirectoryBatch, validateInternalDirectoryBatch } from "@/lib/directory/publish-internal-batch";
 import { operatingCategory } from "@/lib/directory/operating-category";
-
-const files = [
-  "data/directory/hospitality-core-specifications.v1.json",
-  "data/directory/hospitality-category-specifications.v1.json",
-];
+import { loadOperatingCatalogBatches } from "@/lib/directory/operating-catalog-batches";
 
 function assertLocalDatabase() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -49,7 +43,7 @@ async function localPublisher() {
 }
 
 async function main() {
-  const batches = await Promise.all(files.map(async (file) => JSON.parse(await readFile(resolve(process.cwd(), file), "utf8")) as InternalDirectoryBatch));
+  const batches = await loadOperatingCatalogBatches();
   const coverage = new Map<string, number>();
   for (const batch of batches) {
     validateInternalDirectoryBatch(batch);

@@ -1,0 +1,3273 @@
+{
+  "version": "2026-11-11",
+  "source": {
+    "sourceUrl": "internal://hotelsvendors/hospitality-operating-catalog/v1",
+    "sourceType": "INTERNAL_HOSPITALITY_SPECIFICATION",
+    "permissionStatus": "PERMITTED",
+    "permissionNote": "Internally authored generic hospitality operating specifications. Approved for anonymous directory publication. No commercial party, commercial term, or private commercial data is included."
+  },
+  "records": [
+    {
+      "sourceRecordKey": "fnb-long-grain-rice",
+      "itemType": "PRODUCT",
+      "name": "Long-grain white rice",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic dry-grocery specification for hotel kitchen meal preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "long",
+        "grain",
+        "white",
+        "rice"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-wheat-flour",
+      "itemType": "PRODUCT",
+      "name": "Wheat flour, all purpose",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic bakery and kitchen flour specification for hotel meal preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "wheat",
+        "flour",
+        "all",
+        "purpose"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-crystal-sugar",
+      "itemType": "PRODUCT",
+      "name": "White crystal sugar",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic sugar specification for kitchen, pastry and beverage preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "crystal",
+        "sugar"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-iodized-salt",
+      "itemType": "PRODUCT",
+      "name": "Iodized table salt",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic salt specification for kitchen seasoning and pastry preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "iodized",
+        "table",
+        "salt"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-sunflower-oil",
+      "itemType": "PRODUCT",
+      "name": "Sunflower cooking oil",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Cooking fats",
+      "description": "Generic cooking-oil specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Cooking fats"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "sunflower",
+        "cooking",
+        "oil"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-tomato-paste",
+      "itemType": "PRODUCT",
+      "name": "Tomato paste",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic tomato paste specification for hotel sauce and stew preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "tomato",
+        "paste"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-dry-pasta",
+      "itemType": "PRODUCT",
+      "name": "Dry durum pasta",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic pasta specification for hotel restaurant meal preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "dry",
+        "durum",
+        "pasta"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-uht-milk",
+      "itemType": "PRODUCT",
+      "name": "UHT whole milk",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dairy",
+      "description": "Generic long-life milk specification for kitchen and breakfast service.",
+      "attributes": {
+        "use": "Dairy"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "uht",
+        "whole",
+        "milk"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-salted-butter",
+      "itemType": "PRODUCT",
+      "name": "Salted butter",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dairy",
+      "description": "Generic butter specification for pastry and breakfast preparation.",
+      "attributes": {
+        "use": "Dairy"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "salted",
+        "butter"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-shell-eggs",
+      "itemType": "PRODUCT",
+      "name": "Fresh shell eggs",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dairy",
+      "description": "Generic shell-egg specification for hotel breakfast and pastry preparation.",
+      "attributes": {
+        "use": "Dairy"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fresh",
+        "shell",
+        "eggs"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-chicken-breast",
+      "itemType": "PRODUCT",
+      "name": "Frozen chicken breast",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Protein",
+      "description": "Generic frozen poultry specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Protein"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "frozen",
+        "chicken",
+        "breast"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-beef-cubes",
+      "itemType": "PRODUCT",
+      "name": "Frozen beef cubes",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Protein",
+      "description": "Generic frozen beef specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Protein"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "frozen",
+        "beef",
+        "cubes"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-white-fish-fillet",
+      "itemType": "PRODUCT",
+      "name": "Frozen white fish fillet",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Protein",
+      "description": "Generic frozen fish specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Protein"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "frozen",
+        "white",
+        "fish",
+        "fillet"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-black-tea",
+      "itemType": "PRODUCT",
+      "name": "Black tea leaves",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Beverage",
+      "description": "Generic tea specification for restaurant and room-service beverage preparation.",
+      "attributes": {
+        "use": "Beverage"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "black",
+        "tea",
+        "leaves"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-roasted-coffee",
+      "itemType": "PRODUCT",
+      "name": "Roasted coffee beans",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Beverage",
+      "description": "Generic coffee specification for hotel beverage preparation.",
+      "attributes": {
+        "use": "Beverage"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "roasted",
+        "coffee",
+        "beans"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-mineral-water",
+      "itemType": "PRODUCT",
+      "name": "Still mineral water, 330 ml",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Beverage",
+      "description": "Generic bottled-water specification for restaurant and room service.",
+      "attributes": {
+        "use": "Beverage"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "still",
+        "mineral",
+        "water",
+        "330"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-orange-juice",
+      "itemType": "PRODUCT",
+      "name": "Orange juice",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Beverage",
+      "description": "Generic juice specification for breakfast and restaurant service.",
+      "attributes": {
+        "use": "Beverage"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "orange",
+        "juice"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-white-vinegar",
+      "itemType": "PRODUCT",
+      "name": "White vinegar",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic vinegar specification for kitchen preparation.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "vinegar"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-ground-black-pepper",
+      "itemType": "PRODUCT",
+      "name": "Ground black pepper",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Dry grocery",
+      "description": "Generic spice specification for hotel kitchen seasoning.",
+      "attributes": {
+        "use": "Dry grocery"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "ground",
+        "black",
+        "pepper"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-breakfast-bread",
+      "itemType": "PRODUCT",
+      "name": "Sliced white bread",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Bakery",
+      "description": "Generic bread specification for hotel breakfast service.",
+      "attributes": {
+        "use": "Bakery"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "sliced",
+        "white",
+        "bread"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-bath-towel-100x150",
+      "itemType": "PRODUCT",
+      "name": "White bath towel, 100 × 150 cm",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest bathroom linen",
+      "description": "Generic bath-towel specification for guest-room linen programs.",
+      "attributes": {
+        "use": "Guest bathroom linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "bath",
+        "towel",
+        "100"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-hand-towel",
+      "itemType": "PRODUCT",
+      "name": "White hand towel, 50 × 90 cm",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest bathroom linen",
+      "description": "Generic hand-towel specification for guest bathroom linen.",
+      "attributes": {
+        "use": "Guest bathroom linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "hand",
+        "towel"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-face-towel",
+      "itemType": "PRODUCT",
+      "name": "White face towel, 30 × 30 cm",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest bathroom linen",
+      "description": "Generic face-towel specification for guest bathroom linen.",
+      "attributes": {
+        "use": "Guest bathroom linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "face",
+        "towel"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-bath-sheet",
+      "itemType": "PRODUCT",
+      "name": "White bath sheet, 100 × 180 cm",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest bathroom linen",
+      "description": "Generic bath-sheet specification for suite linen programs.",
+      "attributes": {
+        "use": "Guest bathroom linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "bath",
+        "sheet",
+        "100"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-pool-towel",
+      "itemType": "PRODUCT",
+      "name": "White pool towel, 80 × 160 cm",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Pool and leisure linen",
+      "description": "Generic pool-towel specification for leisure and beach operations.",
+      "attributes": {
+        "use": "Pool and leisure linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "pool",
+        "towel",
+        "160"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-pillowcase",
+      "itemType": "PRODUCT",
+      "name": "White pillowcase, standard",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest room bedding",
+      "description": "Generic pillowcase specification for guest-room bedding.",
+      "attributes": {
+        "use": "Guest room bedding"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "pillowcase",
+        "standard"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-duvet-cover-king",
+      "itemType": "PRODUCT",
+      "name": "White duvet cover, king size",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest room bedding",
+      "description": "Generic duvet-cover specification for king guest-room bedding.",
+      "attributes": {
+        "use": "Guest room bedding"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "duvet",
+        "cover",
+        "king"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-flat-sheet-king",
+      "itemType": "PRODUCT",
+      "name": "White flat sheet, king size",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest room bedding",
+      "description": "Generic flat-sheet specification for king guest-room bedding.",
+      "attributes": {
+        "use": "Guest room bedding"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "flat",
+        "sheet",
+        "king"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-mattress-protector",
+      "itemType": "PRODUCT",
+      "name": "Mattress protector, king size",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest room bedding",
+      "description": "Generic mattress-protector specification for guest-room bedding.",
+      "attributes": {
+        "use": "Guest room bedding"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "mattress",
+        "protector",
+        "king",
+        "size"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-blanket",
+      "itemType": "PRODUCT",
+      "name": "White blanket, king size",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Guest room bedding",
+      "description": "Generic blanket specification for guest-room bedding.",
+      "attributes": {
+        "use": "Guest room bedding"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "blanket",
+        "king",
+        "size"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-tablecloth",
+      "itemType": "PRODUCT",
+      "name": "White restaurant tablecloth",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Restaurant linen",
+      "description": "Generic tablecloth specification for restaurant service.",
+      "attributes": {
+        "use": "Restaurant linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "restaurant",
+        "tablecloth"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-napkin",
+      "itemType": "PRODUCT",
+      "name": "White restaurant napkin",
+      "category": "LINEN_TEXTILES",
+      "subcategory": "Restaurant linen",
+      "description": "Generic napkin specification for restaurant service.",
+      "attributes": {
+        "use": "Restaurant linen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "white",
+        "restaurant",
+        "napkin"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-laundry-detergent",
+      "itemType": "PRODUCT",
+      "name": "Laundry detergent for hotel linen",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Laundry chemicals",
+      "description": "Generic laundry-detergent specification for hotel linen processing.",
+      "attributes": {
+        "use": "Laundry chemicals"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "laundry",
+        "detergent",
+        "for",
+        "hotel"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-fabric-softener",
+      "itemType": "PRODUCT",
+      "name": "Fabric softener for hotel linen",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Laundry chemicals",
+      "description": "Generic fabric-softener specification for hotel linen processing.",
+      "attributes": {
+        "use": "Laundry chemicals"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fabric",
+        "softener",
+        "for",
+        "hotel"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-glass-cleaner",
+      "itemType": "PRODUCT",
+      "name": "Glass and mirror cleaner",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Room cleaning",
+      "description": "Generic glass-cleaner specification for housekeeping routines.",
+      "attributes": {
+        "use": "Room cleaning"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "glass",
+        "and",
+        "mirror",
+        "cleaner"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-bathroom-cleaner",
+      "itemType": "PRODUCT",
+      "name": "Bathroom surface cleaner",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Room cleaning",
+      "description": "Generic bathroom-cleaner specification for housekeeping routines.",
+      "attributes": {
+        "use": "Room cleaning"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "bathroom",
+        "surface",
+        "cleaner"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-toilet-cleaner",
+      "itemType": "PRODUCT",
+      "name": "Toilet bowl cleaner",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Room cleaning",
+      "description": "Generic toilet-cleaner specification for housekeeping routines.",
+      "attributes": {
+        "use": "Room cleaning"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "toilet",
+        "bowl",
+        "cleaner"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-refuse-bag",
+      "itemType": "PRODUCT",
+      "name": "Refuse bag, 50 litre",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Waste handling",
+      "description": "Generic refuse-bag specification for guest-room and public-area waste.",
+      "attributes": {
+        "use": "Waste handling"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "refuse",
+        "bag",
+        "litre"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-broom",
+      "itemType": "PRODUCT",
+      "name": "Commercial lobby broom",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Cleaning tools",
+      "description": "Generic broom specification for public-area cleaning.",
+      "attributes": {
+        "use": "Cleaning tools"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "commercial",
+        "lobby",
+        "broom"
+      ]
+    },
+    {
+      "sourceRecordKey": "hk-cleaning-gloves",
+      "itemType": "PRODUCT",
+      "name": "Reusable cleaning gloves",
+      "category": "HOUSEKEEPING",
+      "subcategory": "Cleaning tools",
+      "description": "Generic glove specification for housekeeping routines.",
+      "attributes": {
+        "use": "Cleaning tools"
+      },
+      "unitOfMeasure": "pair",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "reusable",
+        "cleaning",
+        "gloves"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-shampoo",
+      "itemType": "PRODUCT",
+      "name": "Guest shampoo, single use",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic shampoo specification for guest bathroom amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "shampoo",
+        "single",
+        "use"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-conditioner",
+      "itemType": "PRODUCT",
+      "name": "Guest conditioner, single use",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic conditioner specification for guest bathroom amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "conditioner",
+        "single",
+        "use"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-body-wash",
+      "itemType": "PRODUCT",
+      "name": "Guest body wash, single use",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic body-wash specification for guest bathroom amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "body",
+        "wash",
+        "single"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-soap",
+      "itemType": "PRODUCT",
+      "name": "Guest soap, 20 g",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic soap specification for guest bathroom amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "soap"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-body-lotion",
+      "itemType": "PRODUCT",
+      "name": "Guest body lotion, single use",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic lotion specification for guest bathroom amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "body",
+        "lotion",
+        "single"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-dental-kit",
+      "itemType": "PRODUCT",
+      "name": "Guest dental kit",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic dental-kit specification for guest amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "set",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "dental",
+        "kit"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-shower-cap",
+      "itemType": "PRODUCT",
+      "name": "Guest shower cap",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic shower-cap specification for guest amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "shower",
+        "cap"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-slippers",
+      "itemType": "PRODUCT",
+      "name": "Closed guest slippers",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic slipper specification for guest-room amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "pair",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "closed",
+        "guest",
+        "slippers"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-vanity-kit",
+      "itemType": "PRODUCT",
+      "name": "Guest vanity kit",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic vanity-kit specification for guest amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "set",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "vanity",
+        "kit"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-coffee-sachet",
+      "itemType": "PRODUCT",
+      "name": "Guest coffee sachet",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic coffee-sachet specification for in-room beverage trays.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "coffee",
+        "sachet"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-tea-sachet",
+      "itemType": "PRODUCT",
+      "name": "Guest tea sachet",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic tea-sachet specification for in-room beverage trays.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "tea",
+        "sachet"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-hanger",
+      "itemType": "PRODUCT",
+      "name": "Guest-room clothes hanger",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "Room fittings",
+      "description": "Generic hanger specification for guest wardrobes.",
+      "attributes": {
+        "use": "Room fittings"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "clothes",
+        "hanger"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-notepad",
+      "itemType": "PRODUCT",
+      "name": "Guest-room notepad",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "Stationery",
+      "description": "Generic notepad specification for guest-room desks.",
+      "attributes": {
+        "use": "Stationery"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "notepad"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-pen",
+      "itemType": "PRODUCT",
+      "name": "Guest-room pen",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "Stationery",
+      "description": "Generic pen specification for guest-room desks.",
+      "attributes": {
+        "use": "Stationery"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "pen"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-facial-tissue",
+      "itemType": "PRODUCT",
+      "name": "Facial tissue box",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic tissue specification for guest-room replenishment.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "facial",
+        "tissue",
+        "box"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-toilet-tissue",
+      "itemType": "PRODUCT",
+      "name": "Toilet tissue roll",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic toilet-tissue specification for guest bathroom replenishment.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "toilet",
+        "tissue",
+        "roll"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-sanitary-bag",
+      "itemType": "PRODUCT",
+      "name": "Sanitary disposal bag",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic sanitary-bag specification for guest bathrooms.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "sanitary",
+        "disposal",
+        "bag"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-laundry-bag",
+      "itemType": "PRODUCT",
+      "name": "Guest laundry bag",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic laundry-bag specification for guest-room use.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "laundry",
+        "bag"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-shoe-mitten",
+      "itemType": "PRODUCT",
+      "name": "Shoe-care mitten",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic shoe-care specification for guest amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "shoe",
+        "care",
+        "mitten"
+      ]
+    },
+    {
+      "sourceRecordKey": "guest-shower-gel",
+      "itemType": "PRODUCT",
+      "name": "Guest shower gel, single use",
+      "category": "GUEST_SUPPLIES",
+      "subcategory": "In-room amenities",
+      "description": "Generic shower-gel specification for guest bathroom amenity programs.",
+      "attributes": {
+        "use": "In-room amenities"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "shower",
+        "gel",
+        "single"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-led-bulb",
+      "itemType": "PRODUCT",
+      "name": "LED lamp, E27, warm white",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Lighting",
+      "description": "Generic lamp specification for guest-room and corridor lighting.",
+      "attributes": {
+        "use": "Lighting"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "led",
+        "lamp",
+        "e27",
+        "warm"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-fuse",
+      "itemType": "PRODUCT",
+      "name": "Electrical fuse, specified rating",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Electrical parts",
+      "description": "Generic fuse specification for hotel electrical maintenance.",
+      "attributes": {
+        "use": "Electrical parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "electrical",
+        "fuse",
+        "specified",
+        "rating"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-switch",
+      "itemType": "PRODUCT",
+      "name": "Wall light switch",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Electrical parts",
+      "description": "Generic switch specification for guest-room electrical maintenance.",
+      "attributes": {
+        "use": "Electrical parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "wall",
+        "light",
+        "switch"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-socket",
+      "itemType": "PRODUCT",
+      "name": "Wall power socket",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Electrical parts",
+      "description": "Generic socket specification for guest-room electrical maintenance.",
+      "attributes": {
+        "use": "Electrical parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "wall",
+        "power",
+        "socket"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-interior-paint",
+      "itemType": "PRODUCT",
+      "name": "Interior wall paint, white",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Finishes",
+      "description": "Generic paint specification for guest-room and corridor refinishing.",
+      "attributes": {
+        "use": "Finishes"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "interior",
+        "wall",
+        "paint",
+        "white"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-silicone",
+      "itemType": "PRODUCT",
+      "name": "Sanitary silicone sealant",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Finishes",
+      "description": "Generic sealant specification for bathroom maintenance.",
+      "attributes": {
+        "use": "Finishes"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "sanitary",
+        "silicone",
+        "sealant"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-ac-filter",
+      "itemType": "PRODUCT",
+      "name": "Air-conditioning filter panel",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "HVAC parts",
+      "description": "Generic filter specification for guest-room air-conditioning maintenance.",
+      "attributes": {
+        "use": "HVAC parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "air",
+        "conditioning",
+        "filter",
+        "panel"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-shower-hose",
+      "itemType": "PRODUCT",
+      "name": "Flexible shower hose",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Plumbing parts",
+      "description": "Generic shower-hose specification for bathroom maintenance.",
+      "attributes": {
+        "use": "Plumbing parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "flexible",
+        "shower",
+        "hose"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-hinge",
+      "itemType": "PRODUCT",
+      "name": "Guest-room door hinge",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Door hardware",
+      "description": "Generic hinge specification for guest-room door maintenance.",
+      "attributes": {
+        "use": "Door hardware"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "door",
+        "hinge"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-lock-cylinder",
+      "itemType": "PRODUCT",
+      "name": "Guest-room lock cylinder",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Door hardware",
+      "description": "Generic lock-cylinder specification for guest-room door maintenance.",
+      "attributes": {
+        "use": "Door hardware"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "lock",
+        "cylinder"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-door-stop",
+      "itemType": "PRODUCT",
+      "name": "Door stop",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Door hardware",
+      "description": "Generic door-stop specification for guest-room and corridor doors.",
+      "attributes": {
+        "use": "Door hardware"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "door",
+        "stop"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-battery-aa",
+      "itemType": "PRODUCT",
+      "name": "AA battery",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Electrical parts",
+      "description": "Generic battery specification for locks, remotes and devices.",
+      "attributes": {
+        "use": "Electrical parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "battery"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-electrical-tape",
+      "itemType": "PRODUCT",
+      "name": "Electrical insulation tape",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Electrical parts",
+      "description": "Generic tape specification for electrical maintenance.",
+      "attributes": {
+        "use": "Electrical parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "electrical",
+        "insulation",
+        "tape"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-screw-kit",
+      "itemType": "PRODUCT",
+      "name": "Assorted maintenance screw kit",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Hardware",
+      "description": "Generic fastener specification for hotel maintenance.",
+      "attributes": {
+        "use": "Hardware"
+      },
+      "unitOfMeasure": "set",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "assorted",
+        "maintenance",
+        "screw",
+        "kit"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-paint-roller",
+      "itemType": "PRODUCT",
+      "name": "Paint roller and frame",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Finishes",
+      "description": "Generic roller specification for interior refinishing.",
+      "attributes": {
+        "use": "Finishes"
+      },
+      "unitOfMeasure": "set",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "paint",
+        "roller",
+        "and",
+        "frame"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-caulk",
+      "itemType": "PRODUCT",
+      "name": "Paintable gap filler",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Finishes",
+      "description": "Generic gap-filler specification for interior maintenance.",
+      "attributes": {
+        "use": "Finishes"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "paintable",
+        "gap",
+        "filler"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-tap-cartridge",
+      "itemType": "PRODUCT",
+      "name": "Basin tap cartridge",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Plumbing parts",
+      "description": "Generic tap-cartridge specification for bathroom maintenance.",
+      "attributes": {
+        "use": "Plumbing parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "basin",
+        "tap",
+        "cartridge"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-toilet-flapper",
+      "itemType": "PRODUCT",
+      "name": "Toilet flush valve seal",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Plumbing parts",
+      "description": "Generic flush-valve specification for guest bathroom maintenance.",
+      "attributes": {
+        "use": "Plumbing parts"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "toilet",
+        "flush",
+        "valve",
+        "seal"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-cable-tie",
+      "itemType": "PRODUCT",
+      "name": "Cable tie assortment",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Hardware",
+      "description": "Generic cable-tie specification for maintenance and low-voltage work.",
+      "attributes": {
+        "use": "Hardware"
+      },
+      "unitOfMeasure": "pack",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "cable",
+        "tie",
+        "assortment"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-safety-sign-blank",
+      "itemType": "PRODUCT",
+      "name": "Blank equipment tag",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Hardware",
+      "description": "Generic equipment-tag specification for maintenance identification.",
+      "attributes": {
+        "use": "Hardware"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "blank",
+        "equipment",
+        "tag"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-pillow-fibre",
+      "itemType": "PRODUCT",
+      "name": "Fibre guest pillow",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic pillow specification for guest-room bedding.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fibre",
+        "guest",
+        "pillow"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-mattress-king",
+      "itemType": "PRODUCT",
+      "name": "Hotel mattress, king size",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic mattress specification for king guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "hotel",
+        "mattress",
+        "king",
+        "size"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-bed-base",
+      "itemType": "PRODUCT",
+      "name": "Guest-room bed base, king size",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic bed-base specification for king guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "bed",
+        "base"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-headboard",
+      "itemType": "PRODUCT",
+      "name": "Upholstered headboard, king size",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic headboard specification for king guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "upholstered",
+        "headboard",
+        "king",
+        "size"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-nightstand",
+      "itemType": "PRODUCT",
+      "name": "Guest-room nightstand",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic nightstand specification for guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "nightstand"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-desk",
+      "itemType": "PRODUCT",
+      "name": "Guest-room writing desk",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic desk specification for guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "writing",
+        "desk"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-desk-chair",
+      "itemType": "PRODUCT",
+      "name": "Guest-room desk chair",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic chair specification for guest-room desks.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "desk",
+        "chair"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-wardrobe",
+      "itemType": "PRODUCT",
+      "name": "Guest-room wardrobe",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic wardrobe specification for guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "wardrobe"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-luggage-bench",
+      "itemType": "PRODUCT",
+      "name": "Guest-room luggage bench",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic bench specification for guest rooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "luggage",
+        "bench"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-mirror",
+      "itemType": "PRODUCT",
+      "name": "Guest bathroom mirror",
+      "category": "FFE",
+      "subcategory": "Guest room furniture",
+      "description": "Generic mirror specification for guest bathrooms.",
+      "attributes": {
+        "use": "Guest room furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "bathroom",
+        "mirror"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-blackout-curtain",
+      "itemType": "PRODUCT",
+      "name": "Blackout curtain pair",
+      "category": "FFE",
+      "subcategory": "Window treatments",
+      "description": "Generic curtain specification for guest-room windows.",
+      "attributes": {
+        "use": "Window treatments"
+      },
+      "unitOfMeasure": "pair",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "blackout",
+        "curtain",
+        "pair"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-sheer-curtain",
+      "itemType": "PRODUCT",
+      "name": "Sheer curtain pair",
+      "category": "FFE",
+      "subcategory": "Window treatments",
+      "description": "Generic sheer specification for guest-room windows.",
+      "attributes": {
+        "use": "Window treatments"
+      },
+      "unitOfMeasure": "pair",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "sheer",
+        "curtain",
+        "pair"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-banquet-chair",
+      "itemType": "PRODUCT",
+      "name": "Banquet chair",
+      "category": "FFE",
+      "subcategory": "Public area furniture",
+      "description": "Generic chair specification for banquet and meeting rooms.",
+      "attributes": {
+        "use": "Public area furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "banquet",
+        "chair"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-banquet-table",
+      "itemType": "PRODUCT",
+      "name": "Banquet table, 180 cm",
+      "category": "FFE",
+      "subcategory": "Public area furniture",
+      "description": "Generic table specification for banquet and meeting rooms.",
+      "attributes": {
+        "use": "Public area furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "banquet",
+        "table",
+        "180"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-bar-stool",
+      "itemType": "PRODUCT",
+      "name": "Bar stool",
+      "category": "FFE",
+      "subcategory": "Public area furniture",
+      "description": "Generic stool specification for bar and lounge areas.",
+      "attributes": {
+        "use": "Public area furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "bar",
+        "stool"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-side-table",
+      "itemType": "PRODUCT",
+      "name": "Lounge side table",
+      "category": "FFE",
+      "subcategory": "Public area furniture",
+      "description": "Generic side-table specification for lobby and lounge areas.",
+      "attributes": {
+        "use": "Public area furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "lounge",
+        "side",
+        "table"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-outdoor-table",
+      "itemType": "PRODUCT",
+      "name": "Outdoor dining table",
+      "category": "FFE",
+      "subcategory": "Outdoor furniture",
+      "description": "Generic table specification for pool and terrace dining.",
+      "attributes": {
+        "use": "Outdoor furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "outdoor",
+        "dining",
+        "table"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-sun-umbrella",
+      "itemType": "PRODUCT",
+      "name": "Outdoor sun umbrella",
+      "category": "FFE",
+      "subcategory": "Outdoor furniture",
+      "description": "Generic umbrella specification for pool and terrace areas.",
+      "attributes": {
+        "use": "Outdoor furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "outdoor",
+        "sun",
+        "umbrella"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-sofa",
+      "itemType": "PRODUCT",
+      "name": "Lobby two-seat sofa",
+      "category": "FFE",
+      "subcategory": "Public area furniture",
+      "description": "Generic sofa specification for lobby seating.",
+      "attributes": {
+        "use": "Public area furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "lobby",
+        "two",
+        "seat",
+        "sofa"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-coffee-table",
+      "itemType": "PRODUCT",
+      "name": "Lobby coffee table",
+      "category": "FFE",
+      "subcategory": "Public area furniture",
+      "description": "Generic table specification for lobby seating.",
+      "attributes": {
+        "use": "Public area furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "lobby",
+        "coffee",
+        "table"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-linen-rental",
+      "itemType": "SERVICE",
+      "name": "Hotel linen rental program",
+      "category": "SERVICES",
+      "subcategory": "Linen programs",
+      "description": "Generic service specification for a hotel linen rental program.",
+      "attributes": {
+        "use": "Linen programs"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "hotel",
+        "linen",
+        "rental",
+        "program"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-waste-collection",
+      "itemType": "SERVICE",
+      "name": "General waste collection service",
+      "category": "SERVICES",
+      "subcategory": "Waste handling",
+      "description": "Generic service specification for hotel waste collection.",
+      "attributes": {
+        "use": "Waste handling"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "general",
+        "waste",
+        "collection",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-elevator-inspection",
+      "itemType": "SERVICE",
+      "name": "Passenger elevator inspection",
+      "category": "SERVICES",
+      "subcategory": "Compliance services",
+      "description": "Generic service specification for passenger elevator inspection.",
+      "attributes": {
+        "use": "Compliance services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "passenger",
+        "elevator",
+        "inspection"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-pool-care",
+      "itemType": "SERVICE",
+      "name": "Swimming pool water-care service",
+      "category": "SERVICES",
+      "subcategory": "Leisure services",
+      "description": "Generic service specification for swimming-pool water care.",
+      "attributes": {
+        "use": "Leisure services"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "swimming",
+        "pool",
+        "water",
+        "care"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-landscape",
+      "itemType": "SERVICE",
+      "name": "Hotel landscape care service",
+      "category": "SERVICES",
+      "subcategory": "Grounds services",
+      "description": "Generic service specification for hotel grounds care.",
+      "attributes": {
+        "use": "Grounds services"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "hotel",
+        "landscape",
+        "care",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-deep-clean",
+      "itemType": "SERVICE",
+      "name": "Guest-room deep cleaning service",
+      "category": "SERVICES",
+      "subcategory": "Cleaning services",
+      "description": "Generic service specification for periodic guest-room deep cleaning.",
+      "attributes": {
+        "use": "Cleaning services"
+      },
+      "unitOfMeasure": "room",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "deep",
+        "cleaning"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-grease-trap",
+      "itemType": "SERVICE",
+      "name": "Kitchen grease-trap cleaning service",
+      "category": "SERVICES",
+      "subcategory": "Kitchen services",
+      "description": "Generic service specification for kitchen grease-trap cleaning.",
+      "attributes": {
+        "use": "Kitchen services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "kitchen",
+        "grease",
+        "trap",
+        "cleaning"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-water-treatment",
+      "itemType": "SERVICE",
+      "name": "Potable water treatment service",
+      "category": "SERVICES",
+      "subcategory": "Building services",
+      "description": "Generic service specification for hotel water treatment.",
+      "attributes": {
+        "use": "Building services"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "potable",
+        "water",
+        "treatment",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-window-clean",
+      "itemType": "SERVICE",
+      "name": "Exterior window cleaning service",
+      "category": "SERVICES",
+      "subcategory": "Cleaning services",
+      "description": "Generic service specification for exterior window cleaning.",
+      "attributes": {
+        "use": "Cleaning services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "exterior",
+        "window",
+        "cleaning",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-carpet-clean",
+      "itemType": "SERVICE",
+      "name": "Public-area carpet cleaning service",
+      "category": "SERVICES",
+      "subcategory": "Cleaning services",
+      "description": "Generic service specification for public-area carpet cleaning.",
+      "attributes": {
+        "use": "Cleaning services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "public",
+        "area",
+        "carpet",
+        "cleaning"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-marble-polish",
+      "itemType": "SERVICE",
+      "name": "Lobby stone polishing service",
+      "category": "SERVICES",
+      "subcategory": "Cleaning services",
+      "description": "Generic service specification for lobby stone polishing.",
+      "attributes": {
+        "use": "Cleaning services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "lobby",
+        "stone",
+        "polishing",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-generator",
+      "itemType": "SERVICE",
+      "name": "Standby generator inspection",
+      "category": "SERVICES",
+      "subcategory": "Building services",
+      "description": "Generic service specification for standby generator inspection.",
+      "attributes": {
+        "use": "Building services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "standby",
+        "generator",
+        "inspection"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-boiler",
+      "itemType": "SERVICE",
+      "name": "Hot-water boiler inspection",
+      "category": "SERVICES",
+      "subcategory": "Building services",
+      "description": "Generic service specification for hot-water boiler inspection.",
+      "attributes": {
+        "use": "Building services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "hot",
+        "water",
+        "boiler",
+        "inspection"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-cctv",
+      "itemType": "SERVICE",
+      "name": "Camera system maintenance service",
+      "category": "SERVICES",
+      "subcategory": "Technology services",
+      "description": "Generic service specification for camera-system maintenance.",
+      "attributes": {
+        "use": "Technology services"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "camera",
+        "system",
+        "maintenance",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-minibar",
+      "itemType": "SERVICE",
+      "name": "In-room refrigerator replenishment",
+      "category": "SERVICES",
+      "subcategory": "Guest services",
+      "description": "Generic service specification for in-room refrigerator replenishment.",
+      "attributes": {
+        "use": "Guest services"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "room",
+        "refrigerator",
+        "replenishment"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-uniform-laundry",
+      "itemType": "SERVICE",
+      "name": "Staff uniform laundry service",
+      "category": "SERVICES",
+      "subcategory": "Linen programs",
+      "description": "Generic service specification for staff uniform laundry.",
+      "attributes": {
+        "use": "Linen programs"
+      },
+      "unitOfMeasure": "month",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "staff",
+        "uniform",
+        "laundry",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-kitchen-deep",
+      "itemType": "SERVICE",
+      "name": "Kitchen deep cleaning service",
+      "category": "SERVICES",
+      "subcategory": "Kitchen services",
+      "description": "Generic service specification for periodic kitchen deep cleaning.",
+      "attributes": {
+        "use": "Kitchen services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "kitchen",
+        "deep",
+        "cleaning",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-roof-inspect",
+      "itemType": "SERVICE",
+      "name": "Roof and terrace inspection",
+      "category": "SERVICES",
+      "subcategory": "Building services",
+      "description": "Generic service specification for roof and terrace inspection.",
+      "attributes": {
+        "use": "Building services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "roof",
+        "and",
+        "terrace",
+        "inspection"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-signage",
+      "itemType": "SERVICE",
+      "name": "Wayfinding sign maintenance",
+      "category": "SERVICES",
+      "subcategory": "Building services",
+      "description": "Generic service specification for wayfinding sign maintenance.",
+      "attributes": {
+        "use": "Building services"
+      },
+      "unitOfMeasure": "visit",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "wayfinding",
+        "sign",
+        "maintenance"
+      ]
+    },
+    {
+      "sourceRecordKey": "svc-event-setup",
+      "itemType": "SERVICE",
+      "name": "Meeting-room setup service",
+      "category": "SERVICES",
+      "subcategory": "Guest services",
+      "description": "Generic service specification for meeting-room setup.",
+      "attributes": {
+        "use": "Guest services"
+      },
+      "unitOfMeasure": "event",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "meeting",
+        "room",
+        "setup",
+        "service"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-smoke-detector",
+      "itemType": "PRODUCT",
+      "name": "Guest-room smoke detector",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Detection",
+      "description": "Generic detector specification for guest-room fire detection.",
+      "attributes": {
+        "use": "Detection"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "smoke",
+        "detector"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-fire-blanket",
+      "itemType": "PRODUCT",
+      "name": "Kitchen fire blanket",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Suppression",
+      "description": "Generic fire-blanket specification for kitchen protection.",
+      "attributes": {
+        "use": "Suppression"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "kitchen",
+        "fire",
+        "blanket"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-exit-sign",
+      "itemType": "PRODUCT",
+      "name": "Illuminated exit sign",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Signage",
+      "description": "Generic exit-sign specification for hotel escape routes.",
+      "attributes": {
+        "use": "Signage"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "illuminated",
+        "exit",
+        "sign"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-hose-reel",
+      "itemType": "PRODUCT",
+      "name": "Fire hose reel",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Suppression",
+      "description": "Generic hose-reel specification for hotel fire protection.",
+      "attributes": {
+        "use": "Suppression"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fire",
+        "hose",
+        "reel"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-emergency-light",
+      "itemType": "PRODUCT",
+      "name": "Emergency lighting unit",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Lighting",
+      "description": "Generic emergency-light specification for escape routes.",
+      "attributes": {
+        "use": "Lighting"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "emergency",
+        "lighting",
+        "unit"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-spill-kit",
+      "itemType": "PRODUCT",
+      "name": "Chemical spill kit",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Response",
+      "description": "Generic spill-kit specification for housekeeping and kitchen stores.",
+      "attributes": {
+        "use": "Response"
+      },
+      "unitOfMeasure": "set",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "chemical",
+        "spill",
+        "kit"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-eyewash",
+      "itemType": "PRODUCT",
+      "name": "Portable eyewash bottle",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Response",
+      "description": "Generic eyewash specification for chemical handling areas.",
+      "attributes": {
+        "use": "Response"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "portable",
+        "eyewash",
+        "bottle"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-helmet",
+      "itemType": "PRODUCT",
+      "name": "Maintenance safety helmet",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Personal protection",
+      "description": "Generic helmet specification for maintenance work.",
+      "attributes": {
+        "use": "Personal protection"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "maintenance",
+        "safety",
+        "helmet"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-goggles",
+      "itemType": "PRODUCT",
+      "name": "Safety goggles",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Personal protection",
+      "description": "Generic goggle specification for maintenance work.",
+      "attributes": {
+        "use": "Personal protection"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "safety",
+        "goggles"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-vest",
+      "itemType": "PRODUCT",
+      "name": "High-visibility vest",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Personal protection",
+      "description": "Generic vest specification for engineering and grounds work.",
+      "attributes": {
+        "use": "Personal protection"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "high",
+        "visibility",
+        "vest"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-hydrant-wrench",
+      "itemType": "PRODUCT",
+      "name": "Fire hydrant wrench",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Suppression",
+      "description": "Generic wrench specification for hotel fire protection.",
+      "attributes": {
+        "use": "Suppression"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fire",
+        "hydrant",
+        "wrench"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-door-seal",
+      "itemType": "PRODUCT",
+      "name": "Fire-door smoke seal",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Compartmentation",
+      "description": "Generic seal specification for fire doors.",
+      "attributes": {
+        "use": "Compartmentation"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fire",
+        "door",
+        "smoke",
+        "seal"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-assembly-sign",
+      "itemType": "PRODUCT",
+      "name": "Assembly-point sign",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Signage",
+      "description": "Generic sign specification for hotel assembly points.",
+      "attributes": {
+        "use": "Signage"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "assembly",
+        "point",
+        "sign"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-alarm-battery",
+      "itemType": "PRODUCT",
+      "name": "Detector battery",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Detection",
+      "description": "Generic battery specification for smoke detectors.",
+      "attributes": {
+        "use": "Detection"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "detector",
+        "battery"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-torch",
+      "itemType": "PRODUCT",
+      "name": "Emergency torch",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Response",
+      "description": "Generic torch specification for emergency response.",
+      "attributes": {
+        "use": "Response"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "emergency",
+        "torch"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-first-aid-refill",
+      "itemType": "PRODUCT",
+      "name": "First aid refill pack",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Response",
+      "description": "Generic refill specification for hotel first aid cabinets.",
+      "attributes": {
+        "use": "Response"
+      },
+      "unitOfMeasure": "set",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "first",
+        "aid",
+        "refill",
+        "pack"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-wet-floor-sign",
+      "itemType": "PRODUCT",
+      "name": "Wet-floor caution sign",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Signage",
+      "description": "Generic caution-sign specification for housekeeping.",
+      "attributes": {
+        "use": "Signage"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "wet",
+        "floor",
+        "caution",
+        "sign"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-fire-door-closer",
+      "itemType": "PRODUCT",
+      "name": "Fire-door closer",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Compartmentation",
+      "description": "Generic closer specification for fire doors.",
+      "attributes": {
+        "use": "Compartmentation"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fire",
+        "door",
+        "closer"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-sprinkler-head",
+      "itemType": "PRODUCT",
+      "name": "Sprinkler head, specified type",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Suppression",
+      "description": "Generic sprinkler-head specification for hotel fire protection.",
+      "attributes": {
+        "use": "Suppression"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "sprinkler",
+        "head",
+        "specified",
+        "type"
+      ]
+    },
+    {
+      "sourceRecordKey": "safe-evacuation-plan",
+      "itemType": "PRODUCT",
+      "name": "Evacuation plan holder",
+      "category": "SAFETY_SECURITY",
+      "subcategory": "Signage",
+      "description": "Generic holder specification for guest-floor evacuation plans.",
+      "attributes": {
+        "use": "Signage"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "evacuation",
+        "plan",
+        "holder"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-network-switch",
+      "itemType": "PRODUCT",
+      "name": "Network access switch",
+      "category": "ICT_AV",
+      "subcategory": "Network",
+      "description": "Generic switch specification for hotel network rooms.",
+      "attributes": {
+        "use": "Network"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "network",
+        "access",
+        "switch"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-patch-cable",
+      "itemType": "PRODUCT",
+      "name": "Network patch cable",
+      "category": "ICT_AV",
+      "subcategory": "Network",
+      "description": "Generic cable specification for hotel network rooms.",
+      "attributes": {
+        "use": "Network"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "network",
+        "patch",
+        "cable"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-patch-panel",
+      "itemType": "PRODUCT",
+      "name": "Network patch panel",
+      "category": "ICT_AV",
+      "subcategory": "Network",
+      "description": "Generic panel specification for hotel network rooms.",
+      "attributes": {
+        "use": "Network"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "network",
+        "patch",
+        "panel"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-equipment-rack",
+      "itemType": "PRODUCT",
+      "name": "Network equipment rack",
+      "category": "ICT_AV",
+      "subcategory": "Network",
+      "description": "Generic rack specification for hotel network rooms.",
+      "attributes": {
+        "use": "Network"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "network",
+        "equipment",
+        "rack"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-guest-tv",
+      "itemType": "PRODUCT",
+      "name": "Guest-room television",
+      "category": "ICT_AV",
+      "subcategory": "Guest room systems",
+      "description": "Generic television specification for guest rooms.",
+      "attributes": {
+        "use": "Guest room systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "television"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-tv-remote",
+      "itemType": "PRODUCT",
+      "name": "Guest-room television remote",
+      "category": "ICT_AV",
+      "subcategory": "Guest room systems",
+      "description": "Generic remote specification for guest-room televisions.",
+      "attributes": {
+        "use": "Guest room systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "television",
+        "remote"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-projector",
+      "itemType": "PRODUCT",
+      "name": "Meeting-room projector",
+      "category": "ICT_AV",
+      "subcategory": "Meeting systems",
+      "description": "Generic projector specification for meeting rooms.",
+      "attributes": {
+        "use": "Meeting systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "meeting",
+        "room",
+        "projector"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-phone",
+      "itemType": "PRODUCT",
+      "name": "Guest-room telephone",
+      "category": "ICT_AV",
+      "subcategory": "Guest room systems",
+      "description": "Generic telephone specification for guest rooms.",
+      "attributes": {
+        "use": "Guest room systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "guest",
+        "room",
+        "telephone"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-lock-encoder",
+      "itemType": "PRODUCT",
+      "name": "Door-lock card encoder",
+      "category": "ICT_AV",
+      "subcategory": "Access systems",
+      "description": "Generic encoder specification for guest-room door locks.",
+      "attributes": {
+        "use": "Access systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "door",
+        "lock",
+        "card",
+        "encoder"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-door-controller",
+      "itemType": "PRODUCT",
+      "name": "Door access controller",
+      "category": "ICT_AV",
+      "subcategory": "Access systems",
+      "description": "Generic controller specification for staff door access.",
+      "attributes": {
+        "use": "Access systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "door",
+        "access",
+        "controller"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-camera",
+      "itemType": "PRODUCT",
+      "name": "Fixed security camera",
+      "category": "ICT_AV",
+      "subcategory": "Security systems",
+      "description": "Generic camera specification for public-area monitoring.",
+      "attributes": {
+        "use": "Security systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fixed",
+        "security",
+        "camera"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-speaker",
+      "itemType": "PRODUCT",
+      "name": "Meeting-room speaker",
+      "category": "ICT_AV",
+      "subcategory": "Meeting systems",
+      "description": "Generic speaker specification for meeting rooms.",
+      "attributes": {
+        "use": "Meeting systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "meeting",
+        "room",
+        "speaker"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-microphone",
+      "itemType": "PRODUCT",
+      "name": "Meeting-room microphone",
+      "category": "ICT_AV",
+      "subcategory": "Meeting systems",
+      "description": "Generic microphone specification for meeting rooms.",
+      "attributes": {
+        "use": "Meeting systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "meeting",
+        "room",
+        "microphone"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-printer",
+      "itemType": "PRODUCT",
+      "name": "Front-office printer",
+      "category": "ICT_AV",
+      "subcategory": "Office systems",
+      "description": "Generic printer specification for front-office operations.",
+      "attributes": {
+        "use": "Office systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "front",
+        "office",
+        "printer"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-scanner",
+      "itemType": "PRODUCT",
+      "name": "Front-office document scanner",
+      "category": "ICT_AV",
+      "subcategory": "Office systems",
+      "description": "Generic scanner specification for front-office operations.",
+      "attributes": {
+        "use": "Office systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "front",
+        "office",
+        "document",
+        "scanner"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-keyboard",
+      "itemType": "PRODUCT",
+      "name": "Front-office keyboard",
+      "category": "ICT_AV",
+      "subcategory": "Office systems",
+      "description": "Generic keyboard specification for front-office workstations.",
+      "attributes": {
+        "use": "Office systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "front",
+        "office",
+        "keyboard"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-pos",
+      "itemType": "PRODUCT",
+      "name": "Restaurant point-of-sale terminal",
+      "category": "ICT_AV",
+      "subcategory": "Restaurant systems",
+      "description": "Generic terminal specification for restaurant service.",
+      "attributes": {
+        "use": "Restaurant systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "restaurant",
+        "point",
+        "sale",
+        "terminal"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-router",
+      "itemType": "PRODUCT",
+      "name": "Network router",
+      "category": "ICT_AV",
+      "subcategory": "Network",
+      "description": "Generic router specification for hotel network rooms.",
+      "attributes": {
+        "use": "Network"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "network",
+        "router"
+      ]
+    },
+    {
+      "sourceRecordKey": "tech-label-printer",
+      "itemType": "PRODUCT",
+      "name": "Luggage label printer",
+      "category": "ICT_AV",
+      "subcategory": "Office systems",
+      "description": "Generic printer specification for luggage labels.",
+      "attributes": {
+        "use": "Office systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "luggage",
+        "label",
+        "printer"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-housekeeping-trousers",
+      "itemType": "PRODUCT",
+      "name": "Housekeeping work trousers",
+      "category": "UNIFORMS",
+      "subcategory": "Housekeeping",
+      "description": "Generic trouser specification for housekeeping uniforms.",
+      "attributes": {
+        "use": "Housekeeping"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "housekeeping",
+        "work",
+        "trousers"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-reception-blazer",
+      "itemType": "PRODUCT",
+      "name": "Reception blazer",
+      "category": "UNIFORMS",
+      "subcategory": "Front office",
+      "description": "Generic blazer specification for reception uniforms.",
+      "attributes": {
+        "use": "Front office"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "reception",
+        "blazer"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-reception-shirt",
+      "itemType": "PRODUCT",
+      "name": "Reception shirt",
+      "category": "UNIFORMS",
+      "subcategory": "Front office",
+      "description": "Generic shirt specification for reception uniforms.",
+      "attributes": {
+        "use": "Front office"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "reception",
+        "shirt"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-chef-trousers",
+      "itemType": "PRODUCT",
+      "name": "Chef work trousers",
+      "category": "UNIFORMS",
+      "subcategory": "Kitchen",
+      "description": "Generic trouser specification for kitchen uniforms.",
+      "attributes": {
+        "use": "Kitchen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "chef",
+        "work",
+        "trousers"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-waist-apron",
+      "itemType": "PRODUCT",
+      "name": "Service waist apron",
+      "category": "UNIFORMS",
+      "subcategory": "Food service",
+      "description": "Generic apron specification for restaurant service.",
+      "attributes": {
+        "use": "Food service"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "service",
+        "waist",
+        "apron"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-bib-apron",
+      "itemType": "PRODUCT",
+      "name": "Kitchen bib apron",
+      "category": "UNIFORMS",
+      "subcategory": "Kitchen",
+      "description": "Generic apron specification for kitchen work.",
+      "attributes": {
+        "use": "Kitchen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "kitchen",
+        "bib",
+        "apron"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-chef-hat",
+      "itemType": "PRODUCT",
+      "name": "Chef hat",
+      "category": "UNIFORMS",
+      "subcategory": "Kitchen",
+      "description": "Generic hat specification for kitchen uniforms.",
+      "attributes": {
+        "use": "Kitchen"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "chef",
+        "hat"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-service-shirt",
+      "itemType": "PRODUCT",
+      "name": "Restaurant service shirt",
+      "category": "UNIFORMS",
+      "subcategory": "Food service",
+      "description": "Generic shirt specification for restaurant service.",
+      "attributes": {
+        "use": "Food service"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "restaurant",
+        "service",
+        "shirt"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-security-shirt",
+      "itemType": "PRODUCT",
+      "name": "Security staff shirt",
+      "category": "UNIFORMS",
+      "subcategory": "Security",
+      "description": "Generic shirt specification for security uniforms.",
+      "attributes": {
+        "use": "Security"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "security",
+        "staff",
+        "shirt"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-pool-shirt",
+      "itemType": "PRODUCT",
+      "name": "Pool attendant shirt",
+      "category": "UNIFORMS",
+      "subcategory": "Leisure",
+      "description": "Generic shirt specification for pool attendants.",
+      "attributes": {
+        "use": "Leisure"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "pool",
+        "attendant",
+        "shirt"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-engineering-shirt",
+      "itemType": "PRODUCT",
+      "name": "Engineering work shirt",
+      "category": "UNIFORMS",
+      "subcategory": "Engineering",
+      "description": "Generic shirt specification for engineering uniforms.",
+      "attributes": {
+        "use": "Engineering"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "engineering",
+        "work",
+        "shirt"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-name-badge",
+      "itemType": "PRODUCT",
+      "name": "Staff name badge",
+      "category": "UNIFORMS",
+      "subcategory": "Accessories",
+      "description": "Generic badge specification for staff identification.",
+      "attributes": {
+        "use": "Accessories"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "staff",
+        "name",
+        "badge"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-belt",
+      "itemType": "PRODUCT",
+      "name": "Uniform belt",
+      "category": "UNIFORMS",
+      "subcategory": "Accessories",
+      "description": "Generic belt specification for staff uniforms.",
+      "attributes": {
+        "use": "Accessories"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "uniform",
+        "belt"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-work-shoes",
+      "itemType": "PRODUCT",
+      "name": "Closed work shoes",
+      "category": "UNIFORMS",
+      "subcategory": "Footwear",
+      "description": "Generic shoe specification for non-slip hotel work.",
+      "attributes": {
+        "use": "Footwear"
+      },
+      "unitOfMeasure": "pair",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "closed",
+        "work",
+        "shoes"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-neck-scarf",
+      "itemType": "PRODUCT",
+      "name": "Reception neck scarf",
+      "category": "UNIFORMS",
+      "subcategory": "Front office",
+      "description": "Generic scarf specification for reception uniforms.",
+      "attributes": {
+        "use": "Front office"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "reception",
+        "neck",
+        "scarf"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-cap",
+      "itemType": "PRODUCT",
+      "name": "Staff work cap",
+      "category": "UNIFORMS",
+      "subcategory": "Accessories",
+      "description": "Generic cap specification for kitchen and grounds work.",
+      "attributes": {
+        "use": "Accessories"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "staff",
+        "work",
+        "cap"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-housekeeping-dress",
+      "itemType": "PRODUCT",
+      "name": "Housekeeping work dress",
+      "category": "UNIFORMS",
+      "subcategory": "Housekeeping",
+      "description": "Generic dress specification for housekeeping uniforms.",
+      "attributes": {
+        "use": "Housekeeping"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "housekeeping",
+        "work",
+        "dress"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-vest",
+      "itemType": "PRODUCT",
+      "name": "Service vest",
+      "category": "UNIFORMS",
+      "subcategory": "Food service",
+      "description": "Generic vest specification for restaurant service.",
+      "attributes": {
+        "use": "Food service"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "service",
+        "vest"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-tie",
+      "itemType": "PRODUCT",
+      "name": "Reception tie",
+      "category": "UNIFORMS",
+      "subcategory": "Front office",
+      "description": "Generic tie specification for reception uniforms.",
+      "attributes": {
+        "use": "Front office"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "reception",
+        "tie"
+      ]
+    },
+    {
+      "sourceRecordKey": "uni-socks",
+      "itemType": "PRODUCT",
+      "name": "Work socks",
+      "category": "UNIFORMS",
+      "subcategory": "Footwear",
+      "description": "Generic sock specification for hotel work uniforms.",
+      "attributes": {
+        "use": "Footwear"
+      },
+      "unitOfMeasure": "pair",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "work",
+        "socks"
+      ]
+    }
+  ]
+}

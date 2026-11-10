@@ -574,3 +574,12 @@ The owner confirmed a restorable backup and started the production workflow. It 
 - Live `GET https://www.hotelsvendors.com/api/health` at 1:14 AM Africa/Cairo returned `ok`, `database=ready`, `authorization=configured`, and `releaseId`/`sourceCommit` `github-805645c662023c0685855230cee9afc59cd96069`.
 - Live `/marketplace` HTML has the category-cover carousel, the specification heading, and 15 `Add to list` controls. Wikimedia and Unsplash URLs are absent, and the old text hero is absent. The count is 15 because those are the records already in the production database.
 - The extra 15 local specifications and the 8 contracting targets were not copied to production. Next action: a real platform administrator publishes the additional supplier-neutral specifications to the production directory. Do not use `local-directory@127.0.0.1` for that.
+
+## Operating catalog — 2026-11-11 1:19 AM Africa/Cairo
+
+The live marketplace showed 15 records because that was the only reviewed directory set in the production database. The 10,000-SKU planning file contains no products, and the synthetic market file is not a publishable catalog.
+
+- Added `data/directory/hospitality-operating-catalog.v1.json`: 179 generic operating specifications across the nine areas. Together with the existing 30, the directory has 209 supplier-neutral records.
+- Local apply created 179 profiles and updated 30. `http://127.0.0.1:3000/marketplace` returned HTTP 200 with 209 Add to list controls.
+- The next production workflow publishes this catalog to Neon through an existing platform administrator, then the same release serves it. The page reads up to 1,000 published records.
+- `npx vitest run tests/p0/operating-catalog.spec.ts tests/p0/internal-directory-batch.spec.ts` passed, 3 tests.
