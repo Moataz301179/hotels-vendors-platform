@@ -1,10 +1,12 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ClipboardCheck, PackageCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 import { MarketplaceSelectionAction } from '@/components/marketing/marketplace-selection-action';
 import { operatingCategory } from '@/lib/directory/operating-category';
+import { groupLabel, listingArabicName, listingImage } from '@/lib/directory/listing-visual';
 import { publicDirectoryFields, publicDirectorySpecifications, publicDirectoryText } from '@/lib/directory/public-directory-profile';
 
 export const dynamic = 'force-dynamic';
@@ -29,18 +31,20 @@ export default async function MarketplaceReferencePage({ params }: { params: Pro
   const specifications = publicDirectorySpecifications(entry.attributes);
   const material = specifications.material ?? null;
   const description = publicDirectoryText(entry.description);
+  const image = listingImage(fields.name, fields.category);
+  const arabic = listingArabicName(fields.name, fields.nameAr);
 
   return <main className="hv-public-page hv-marketplace-reference">
     <section className="hv-public-section"><div className="shell">
       <Link href="/marketplace" className="hv-public-text-link"><ArrowLeft size={16} /> Back to catalogue</Link>
       <div className="hv-reference-layout">
         <div className="hv-reference-media">
-          <PackageCheck size={62} aria-hidden="true" />
+          {image ? <Image src={image} alt="" fill sizes="(max-width: 800px) 100vw, 50vw" /> : <PackageCheck size={62} aria-hidden="true" />}
         </div>
         <div className="hv-reference-summary">
-          <span className="eyebrow">{area.group}{fields.subcategory ? ` · ${fields.subcategory}` : ` · ${area.subcategory}`}</span>
+          <span className="eyebrow">{groupLabel(area.group)}{fields.subcategory ? ` · ${fields.subcategory}` : ` · ${area.subcategory}`}</span>
           <h1>{fields.name}</h1>
-          {fields.nameAr ? <p lang="ar" dir="rtl">{fields.nameAr}</p> : null}
+          {arabic ? <p lang="ar" dir="rtl">{arabic}</p> : null}
           <p>{description ?? 'A reviewed HoReCa reference ready to be specified in a controlled procurement requirement.'}</p>
           <dl className="hv-reference-specs">
             <div><dt>Procurement unit</dt><dd>{fields.purchaseUnit ?? fields.unitOfMeasure ?? 'Specified in requirement'}</dd></div>
