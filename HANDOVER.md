@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN architecture review — 2026-11-12 01:25 Africa/Cairo
+
+- Source read: `mobile/` on `cursor/eseal-local-signer-d37d` at the review time, plus `/api/v2/mobile/receipts` and `/api/v2/grn`. No device or store build was run.
+- Keep HOVIN as the hotel receiving companion on the shared `/api/v2` session. Do not rebuild it as a four-pillar mobile platform. Supplier, carrier, and funder work stays in the web workspaces.
+- The server already limits the phone to an authorized hotel receiver and omits supplier, price, invoice, and source fields. `DEPARTMENT_HEAD` is refused with `RECEIVING_ROLE_REQUIRED`. The allowed organization roles are owner, regional GM, GM, financial controller, and receiving clerk, and the account must also hold `order:update`.
+- Open gaps: no signed store release, no photo upload, the camera count is separate from the receipt, and the empty queue opens the full web orders workspace. The legacy `hotels-vendors-mobile` repository stays out of release.
+- Next action: assign the hotel receiving role before any device test, then finish receipt evidence on this same app. Do not add purchasing, pricing, or the other three pillars to the phone.
+
 ## Local USB e-seal signer — 2026-11-11 13:45 Africa/Cairo
 
 - Source branch: `cursor/eseal-local-signer-d37d`. Not deployed. The website still cannot file a VAT invoice.
