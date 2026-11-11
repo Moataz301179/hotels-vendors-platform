@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Account access pools and e-invoice check — 2026-11-11 05:24 Africa/Cairo
+
+- Source branch: `cursor/tenant-access-pools-d37d`. Not deployed.
+- Security & access now identifies the four account types. The account admin, the organization owner, can assign one recommended pool to another member of the same account: place a request, accept an order, record receiving, connect e-invoices, answer a request, fulfil an order, prepare an e-invoice, view or run a delivery, or review or decide funding. The choice is audited. It cannot grant another account or platform administration, and it cannot change the account admin’s own authority.
+- E-invoice submission is not configured in this environment. `ETA_API_URL`, `ETA_IDENTITY_URL`, `ETA_CLIENT_ID`, `ETA_CLIENT_SECRET`, `ETA_CALLBACK_API_KEY`, `ETA_REGISTRATION_NUMBER`, `ETA_ENVIRONMENT`, and `ETA_SUBMISSION_ENABLED` are unset. Submission stays disabled, and hardware e-seal signing remains `NOT_CONFIGURED`. The delivery ETA page uses only a time stored on the order.
+- Verification: `npx vitest run tests/p0/pillar-access.spec.ts` passed, 6 tests.
+- Next action: an account owner opens Security & access after this revision is deployed. E-invoice submission still needs the taxpayer credentials and an approved e-seal before it can be enabled.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.
