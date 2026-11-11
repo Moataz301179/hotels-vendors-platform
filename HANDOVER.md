@@ -6,7 +6,7 @@
 - `npm run eta:eseal-sign-test` runs on the laptop that has the USB token. It asks for the token user PIN on that laptop, signs one local test line through the token library, and checks the signature against the certificate that belongs to that signing key. It does not send the document to the tax authority and it does not accept a PIN from the request or the environment.
 - The token library package `pkcs11js` is installed on that laptop with `npm install --no-save pkcs11js`. The loader reads that package from the project folder. On this Apple Silicon Mac the installed ePass library is Intel-only, so the test must be run with the separate Intel Node in `$HOME/node-x64`.
 - Verification on the owner’s laptop at 14:10 Africa/Cairo: `npm run eta:eseal-sign-test`, under that Intel Node, printed `Signed with the USB token` and `Algorithm: SHA256-RSA-PKCS`. The signature matched the certificate on the stick. No document was sent to the tax authority.
-- Next action: keep the website from filing invoices until a preproduction invoice is signed on this laptop and accepted by the tax authority.
+- Next action: on the laptop, with the Intel Node and the stick, run `npm run eta:eseal-sign-invoice`. That signs one local invoice and does not send it to the tax authority. A CAdES invoice signature is still required before any test submission.
 
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 

@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { assertNoPinInput, assertPinNotInEnvironment, resolveEsealLibrary, signWithToken, verifiedTokenSignature } from "@/lib/eta/eseal-provider";
+import { signLocalInvoice } from "@/lib/eta/eseal-invoice";
 import { loadPkcs11Module, pkcs11TokenConnection, type Pkcs11Module } from "@/lib/eta/eseal-pkcs11";
 
 function testCertificate() {
@@ -27,6 +28,14 @@ describe("local e-seal provider", () => {
     expect(signed.algorithm).toBe("SHA256-RSA-PKCS");
     expect(signed.certificateFingerprint).toMatch(/^(?:[A-F0-9]{2}:){31}[A-F0-9]{2}$/);
     expect(() => verifiedTokenSignature(document, { signature: Buffer.from("not-the-signature"), certificateDer })).toThrow("ESEAL_SIGNATURE_NOT_VERIFIED");
+  });
+
+  it("signs one local invoice with the token and does not submit it", async () => {
+    const { key, certificateDer } = testCertificate();
+    const pkcs11 = fakePkcs11({ key, certificateDer, loginError: "" });
+    const signed = await signLocalInvoice(pkcs11TokenConnection("/usr/local/lib/libeps2003csp11.dylib", pkcs11), "user-pin");
+    expect(signed).toMatchObject({ internalId: "HV-LOCAL-SIGNING-TEST", algorithm: "SHA256-RSA-PKCS", submitted: false });
+    expect(signed.canonicalSha256).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it("reports a missing token package from the project folder", () => {
