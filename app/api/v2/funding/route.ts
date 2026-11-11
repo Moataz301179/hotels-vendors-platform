@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
+import { PermissionDeniedError, requirePermission } from "@/lib/auth/rbac";
 
 const visibleRoles = ["HOTEL", "SUPPLIER", "FACTORING", "ADMIN"];
 const transitions: Record<string, string[]> = {
@@ -139,6 +140,10 @@ export async function PATCH(req: Request) {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   if (actor.platformRole !== "FACTORING" || !actor.factoringCompanyId) return NextResponse.json({ error: "AUTHORIZED_FUNDER_REQUIRED" }, { status: 403 });
+  if (actor.role !== "OWNER") {
+    try { await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, "factoring:fund"); }
+    catch (error) { if (error instanceof PermissionDeniedError) return NextResponse.json({ error: "FUNDING_DECISION_PERMISSION_REQUIRED" }, { status: 403 }); throw error; }
+  }
   const body = await req.json().catch(() => null);
   if (typeof body?.id !== "string" || typeof body?.status !== "string") {
     return NextResponse.json({ error: "Funding referral and provider status are required." }, { status: 400 });

@@ -25,6 +25,8 @@ vi.mock("@/lib/prisma", () => {
       factoringRequest: { findMany: m.requestFindMany, findFirst: m.requestFindFirst },
       factoringCompany: { findMany: m.companyFindMany, findFirst: m.companyFindFirst },
       invoice: { findFirst: m.invoiceFindFirst },
+      userPermissionGrant: { findFirst: vi.fn().mockResolvedValue(null) },
+      user: { findUnique: vi.fn().mockResolvedValue({ roleId: null }) },
       $transaction: vi.fn(async (callback: (client: typeof tx) => unknown) => callback(tx)),
     },
   };
@@ -108,7 +110,7 @@ describe("provider-controlled funding referral lifecycle", () => {
   });
 
   it("allows only the assigned funder to record a valid next state", async () => {
-    m.actor.mockResolvedValue({ id: "funder-user", tenantId: "funder-tenant", factoringCompanyId: "funder-1", platformRole: "FACTORING" });
+    m.actor.mockResolvedValue({ id: "funder-user", tenantId: "funder-tenant", factoringCompanyId: "funder-1", platformRole: "FACTORING", role: "OWNER" });
     m.requestFindFirst.mockResolvedValue({ id: "referral-1", tenantId: "supplier-tenant", factoringCompanyId: "funder-1", status: "PENDING", partnerResponse: null });
     const response = await PATCH(request("PATCH", { id: "referral-1", status: "UNDER_REVIEW" }));
     expect(response.status).toBe(200);
@@ -120,7 +122,7 @@ describe("provider-controlled funding referral lifecycle", () => {
   });
 
   it("rejects skipped transitions and provider settlement claims without a reference", async () => {
-    m.actor.mockResolvedValue({ id: "funder-user", tenantId: "funder-tenant", factoringCompanyId: "funder-1", platformRole: "FACTORING" });
+    m.actor.mockResolvedValue({ id: "funder-user", tenantId: "funder-tenant", factoringCompanyId: "funder-1", platformRole: "FACTORING", role: "OWNER" });
     m.requestFindFirst.mockResolvedValueOnce({ id: "referral-1", tenantId: "supplier-tenant", factoringCompanyId: "funder-1", status: "PENDING", partnerResponse: null });
     const skipped = await PATCH(request("PATCH", { id: "referral-1", status: "DISBURSED", externalReference: "provider-1" }));
     expect(skipped.status).toBe(409);
@@ -129,6 +131,14 @@ describe("provider-controlled funding referral lifecycle", () => {
     const missingReference = await PATCH(request("PATCH", { id: "referral-1", status: "DISBURSED" }));
     expect(missingReference.status).toBe(400);
     expect(m.requestUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("blocks a review-only funder from recording a funding decision", async () => {
+    m.actor.mockResolvedValue({ id: "reviewer", tenantId: "funder-tenant", factoringCompanyId: "funder-1", platformRole: "FACTORING", role: "CLERK" });
+    const response = await PATCH(request("PATCH", { id: "referral-1", status: "UNDER_REVIEW" }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "FUNDING_DECISION_PERMISSION_REQUIRED" });
+    expect(m.requestFindFirst).not.toHaveBeenCalled();
   });
 
   it("never lets a hotel or supplier record a funder decision", async () => {

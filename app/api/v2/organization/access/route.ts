@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getActor } from "@/lib/v2-auth";
 import { appendAuditEntry } from "@/lib/audit/tamper-proof";
-import { accessPool, accessPoolsFor, accessRoleName, isAccountAdmin, isAccountPillar, permissionName, pillarPermissionCodes } from "@/lib/access/pillar-access";
+import { accessPool, accessPoolsFor, accessRoleName, isAccountAdmin, isAccountPillar, organizationRoleForPool, permissionName, pillarPermissionCodes } from "@/lib/access/pillar-access";
 
 const choice = z.object({ userId: z.string().min(1), poolId: z.string().min(1) });
 
@@ -71,7 +71,22 @@ export async function POST(request: Request) {
       });
     }
     await tx.rolePermission.deleteMany({ where: { roleId: role.id, permissionId: { notIn: permissionIds } } });
-    const user = await tx.user.update({ where: { id: member.id }, data: { roleId: role.id }, select: { id: true, roleId: true } });
+    const removedCodes = [...allowed].filter((code) => !pool.permissions.includes(code));
+    const removedPermissions = removedCodes.length
+      ? await tx.permission.findMany({ where: { code: { in: removedCodes } }, select: { id: true } })
+      : [];
+    if (removedPermissions.length) {
+      await tx.userPermissionGrant.updateMany({
+        where: { tenantId: actor.tenantId, userId: member.id, permissionId: { in: removedPermissions.map((permission) => permission.id) }, revokedAt: null },
+        data: { revokedAt: new Date(), revokedById: actor.id },
+      });
+    }
+    const organizationRole = organizationRoleForPool(pool.id);
+    const user = await tx.user.update({
+      where: { id: member.id },
+      data: { roleId: role.id, ...(organizationRole ? { role: organizationRole } : {}) },
+      select: { id: true, roleId: true, role: true },
+    });
     await appendAuditEntry({
       entityName: "USER",
       entityId: user.id,
@@ -79,9 +94,9 @@ export async function POST(request: Request) {
       tenantId: actor.tenantId,
       actorId: actor.id,
       actorRole: actor.platformRole,
-      changes: { accessPool: pool.id, permissions: [...pool.permissions], previousRoleId: member.roleId },
+      changes: { accessPool: pool.id, permissions: [...pool.permissions], organizationRole: user.role, previousRoleId: member.roleId, revokedDelegatedPermissions: removedCodes },
     }, tx);
     return user;
   });
-  return NextResponse.json({ userId: updated.id, accessPoolId: pool.id, permissions: pool.permissions });
+  return NextResponse.json({ userId: updated.id, accessPoolId: pool.id, permissions: pool.permissions, organizationRole: updated.role });
 }

@@ -68,3 +68,11 @@ export function pillarPermissionCodes(pillar: AccountPillar): string[] {
 export function accessRoleName(poolId: string): string {
   return `ACCESS_${poolId}`;
 }
+
+/** Existing hotel workflow gates read the organization role, so the pool sets that role too. */
+export function organizationRoleForPool(poolId: string): "DEPARTMENT_HEAD" | "FINANCIAL_CONTROLLER" | "RECEIVING_CLERK" | null {
+  if (poolId === "hotel_accept_orders") return "FINANCIAL_CONTROLLER";
+  if (poolId === "hotel_receive_deliveries") return "RECEIVING_CLERK";
+  if (poolId === "hotel_place_requests" || poolId === "hotel_connect_einvoices") return "DEPARTMENT_HEAD";
+  return null;
+}

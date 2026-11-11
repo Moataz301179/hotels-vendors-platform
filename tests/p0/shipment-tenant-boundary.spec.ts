@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ actor: vi.fn(), assignment: vi.fn(), shipment: vi.fn() }));
+const m = vi.hoisted(() => ({ actor: vi.fn(), assignment: vi.fn(), shipment: vi.fn(), grant: vi.fn(), user: vi.fn() }));
 vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
-vi.mock("@/lib/prisma", () => ({ prisma: { carrierOrderAssignment: { findFirst: m.assignment }, shipment: { create: m.shipment } } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { carrierOrderAssignment: { findFirst: m.assignment }, shipment: { create: m.shipment }, userPermissionGrant: { findFirst: m.grant }, user: { findUnique: m.user } } }));
 vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: vi.fn() }));
 
 import { POST } from "@/app/api/v2/shipments/route";
@@ -16,7 +16,9 @@ const request = (body: unknown) => new Request("https://hotelsvendors.test/api/v
 describe("shipment tenant boundary", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    m.actor.mockResolvedValue({ id: "carrier-user", tenantId: "carrier-tenant-a", platformRole: "SHIPPING" });
+    m.actor.mockResolvedValue({ id: "carrier-user", tenantId: "carrier-tenant-a", platformRole: "SHIPPING", role: "OWNER" });
+    m.grant.mockResolvedValue(null);
+    m.user.mockResolvedValue({ roleId: null });
     m.assignment.mockResolvedValue(null);
   });
 
@@ -58,5 +60,13 @@ describe("shipment tenant boundary", () => {
     expect(await response.json()).toEqual({ error: "orderIds must not contain duplicates" });
     expect(m.assignment).not.toHaveBeenCalled();
     expect(m.shipment).not.toHaveBeenCalled();
+  });
+
+  it("blocks a view-only carrier member from creating a shipment", async () => {
+    m.actor.mockResolvedValue({ id: "viewer", tenantId: "carrier-tenant-a", platformRole: "SHIPPING", role: "CLERK" });
+    const response = await POST(request({ corridor: "Cairo", originHub: "A", destinationHub: "B", orderIds: ["order-1"] }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "DELIVERY_PERMISSION_REQUIRED" });
+    expect(m.assignment).not.toHaveBeenCalled();
   });
 });

@@ -2,11 +2,20 @@ import {NextResponse} from "next/server";
 import {prisma} from "@/lib/prisma";
 import {getActor} from "@/lib/v2-auth";
 import {appendAuditEntry} from "@/lib/audit/tamper-proof";
+import {PermissionDeniedError, requirePermission} from "@/lib/auth/rbac";
+
+async function requireCarrierPermission(actor: {id: string; tenantId: string; platformRole: string; role?: string}, code: string) {
+ if (actor.role === "OWNER") return;
+ await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, code);
+}
+
 export async function GET(){const u=await getActor();if(!u)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});if(!["SHIPPING", "ADMIN"].includes(u.platformRole))return NextResponse.json({error:"CARRIER_ROLE_REQUIRED"},{status:403});return NextResponse.json({shipments:await prisma.shipment.findMany({where:{tenantId:u.tenantId,deletedAt:null},orderBy:{createdAt:"desc"},take:100})});}
 export async function POST(req:Request){
  const u=await getActor();
  if(!u)return NextResponse.json({error:"UNAUTHENTICATED"},{status:401});
  if(u.platformRole!=="SHIPPING")return NextResponse.json({error:"CARRIER_ROLE_REQUIRED"},{status:403});
+ try { await requireCarrierPermission(u, "shipping:create_trip"); }
+ catch (error) { if (error instanceof PermissionDeniedError) return NextResponse.json({ error: "DELIVERY_PERMISSION_REQUIRED" }, { status: 403 }); throw error; }
  const b=await req.json().catch(()=>null);
  if(!b?.corridor||!b?.originHub||!b?.destinationHub)return NextResponse.json({error:"corridor, originHub and destinationHub are required"},{status:400});
  const orderIds=Array.isArray(b.orderIds)&&b.orderIds.every((id:unknown)=>typeof id==='string'&&id.length>0)?b.orderIds as string[]:[];
@@ -26,6 +35,8 @@ export async function POST(req:Request){
 export async function PATCH(req:Request){
  const u=await getActor();if(!u)return NextResponse.json({error:'UNAUTHENTICATED'},{status:401});
  if(u.platformRole!=='SHIPPING')return NextResponse.json({error:'CARRIER_ROLE_REQUIRED'},{status:403});
+ try { await requireCarrierPermission(u, "order:update"); }
+ catch (error) { if (error instanceof PermissionDeniedError) return NextResponse.json({ error: "DELIVERY_PERMISSION_REQUIRED" }, { status: 403 }); throw error; }
  const b=await req.json().catch(()=>null);
  const transitions:Record<string,string[]>={PLANNED:['PICKED_UP'],PICKED_UP:['IN_TRANSIT'],IN_TRANSIT:['DELIVERED'],DELIVERED:[]};
  if(typeof b?.id!=='string'||typeof b?.status!=='string')return NextResponse.json({error:'Shipment and status are required'},{status:400});

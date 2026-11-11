@@ -28,7 +28,7 @@ export function OrganizationAccessPanel() {
     setMessage("");
     try {
       await requestJson("/api/v2/organization/access", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userId, poolId }) });
-      setMessage("The access choice was saved and audited.");
+      setMessage("The access choice was saved. It replaces any earlier permission that conflicts with it.");
       await load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The access choice was not saved.");
@@ -39,7 +39,7 @@ export function OrganizationAccessPanel() {
 
   return <section className="card" style={{ padding: 24, marginTop: 16 }}>
     <h2>{PILLAR_LABEL[data.pillar] ?? data.pillar} access</h2>
-    <p className="muted">The account admin chooses one recommended access pool for each member. Placing a request and accepting an order are separate choices. A member cannot receive access outside this account.</p>
+    <p className="muted">The account admin chooses one recommended access pool for each member. For a hotel, that choice also sets who can accept an order and who can record a delivery. A view-only carrier cannot run a trip, and a review-only funder cannot record a funding decision. An earlier extra permission that conflicts with the choice is revoked.</p>
     <div style={{ display: "grid", gap: 12, marginTop: 16 }}>{data.pools.map((pool) => <div key={pool.id}><strong>{pool.label}</strong><p className="muted">{pool.purpose}</p></div>)}</div>
     {data.accountAdmin ? <div style={{ display: "grid", gap: 14, marginTop: 18 }}>{data.members.filter((member) => member.organizationRole !== "OWNER").map((member) => <form key={member.id} className="workspace-form" onSubmit={(event) => { event.preventDefault(); void apply(member.id); }}>
       <div><strong>{member.name}</strong><p className="muted">{member.email}</p></div>

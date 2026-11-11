@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { accessPool, accessPoolsFor, isAccountAdmin } from "@/lib/access/pillar-access";
+import { accessPool, accessPoolsFor, isAccountAdmin, organizationRoleForPool } from "@/lib/access/pillar-access";
 import { etaEInvoicingConfiguration } from "@/lib/eta/configuration";
 
 const m = vi.hoisted(() => ({
@@ -10,6 +10,8 @@ const m = vi.hoisted(() => ({
   permissionUpsert: vi.fn(),
   rolePermissionUpsert: vi.fn(),
   rolePermissionDelete: vi.fn(),
+  permissionFind: vi.fn(),
+  grantUpdate: vi.fn(),
   userUpdate: vi.fn(),
   audit: vi.fn(),
   transaction: vi.fn(),
@@ -20,8 +22,9 @@ vi.mock("@/lib/audit/tamper-proof", () => ({ appendAuditEntry: m.audit }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   user: { findMany: m.users, findFirst: m.user, update: m.userUpdate },
   role: { upsert: m.roleUpsert },
-  permission: { upsert: m.permissionUpsert },
+  permission: { upsert: m.permissionUpsert, findMany: m.permissionFind },
   rolePermission: { upsert: m.rolePermissionUpsert, deleteMany: m.rolePermissionDelete },
+  userPermissionGrant: { updateMany: m.grantUpdate },
   $transaction: m.transaction,
 } }));
 
@@ -35,6 +38,10 @@ describe("four-pillar access pools", () => {
     expect(place?.permissions).not.toContain("order:approve");
     expect(accept?.permissions).toContain("order:approve");
     expect(accept?.permissions).not.toContain("order:create");
+    expect(organizationRoleForPool("hotel_accept_orders")).toBe("FINANCIAL_CONTROLLER");
+    expect(organizationRoleForPool("hotel_receive_deliveries")).toBe("RECEIVING_CLERK");
+    expect(organizationRoleForPool("hotel_place_requests")).toBe("DEPARTMENT_HEAD");
+    expect(organizationRoleForPool("carrier_view_tasks")).toBeNull();
     expect(accessPoolsFor("SUPPLIER").map((pool) => pool.id)).toEqual(["vendor_answer_requests", "vendor_fulfil_orders", "vendor_submit_einvoices"]);
     expect(accessPoolsFor("SHIPPING").map((pool) => pool.id)).toEqual(["carrier_view_tasks", "carrier_run_deliveries"]);
     expect(accessPoolsFor("FACTORING").map((pool) => pool.id)).toEqual(["funder_review_records", "funder_decide_funding"]);
@@ -69,12 +76,15 @@ describe("account admin access choice", () => {
     m.permissionUpsert.mockImplementation(({ where }: { where: { code: string } }) => Promise.resolve({ id: `perm-${where.code}` }));
     m.rolePermissionUpsert.mockResolvedValue({});
     m.rolePermissionDelete.mockResolvedValue({ count: 0 });
-    m.userUpdate.mockResolvedValue({ id: "buyer", roleId: "pool-role" });
+    m.permissionFind.mockResolvedValue([{ id: "perm-order:create" }]);
+    m.grantUpdate.mockResolvedValue({ count: 1 });
+    m.userUpdate.mockResolvedValue({ id: "buyer", roleId: "pool-role", role: "FINANCIAL_CONTROLLER" });
     m.audit.mockResolvedValue(undefined);
     m.transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn({
       role: { upsert: m.roleUpsert },
-      permission: { upsert: m.permissionUpsert },
+      permission: { upsert: m.permissionUpsert, findMany: m.permissionFind },
       rolePermission: { upsert: m.rolePermissionUpsert, deleteMany: m.rolePermissionDelete },
+      userPermissionGrant: { updateMany: m.grantUpdate },
       user: { update: m.userUpdate },
     }));
   });
@@ -90,8 +100,9 @@ describe("account admin access choice", () => {
   it("lets the account admin assign order acceptance and audits the choice", async () => {
     const response = await POST(new Request("https://hotelsvendors.test/api/v2/organization/access", { method: "POST", body: JSON.stringify({ userId: "buyer", poolId: "hotel_accept_orders" }) }));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ accessPoolId: "hotel_accept_orders", permissions: ["order:read", "order:approve", "order:reject"] });
-    expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "buyer" }, data: { roleId: "pool-role" }, select: { id: true, roleId: true } });
+    expect(await response.json()).toMatchObject({ accessPoolId: "hotel_accept_orders", permissions: ["order:read", "order:approve", "order:reject"], organizationRole: "FINANCIAL_CONTROLLER" });
+    expect(m.userUpdate).toHaveBeenCalledWith({ where: { id: "buyer" }, data: { roleId: "pool-role", role: "FINANCIAL_CONTROLLER" }, select: { id: true, roleId: true, role: true } });
+    expect(m.grantUpdate).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ userId: "buyer", revokedAt: null }), data: expect.objectContaining({ revokedById: "owner" }) }));
     expect(m.audit).toHaveBeenCalledWith(expect.objectContaining({ tenantId: "hotel-tenant", changes: expect.objectContaining({ accessPool: "hotel_accept_orders" }) }), expect.anything());
   });
 

@@ -129,6 +129,8 @@ describe('procurement lifecycle against the isolated database', () => {
       prisma.permission.upsert({ where: { code: 'order:confirm' }, update: {}, create: { code: 'order:confirm', name: 'Confirm procurement orders' } }),
       prisma.permission.upsert({ where: { code: 'order:update' }, update: {}, create: { code: 'order:update', name: 'Update procurement orders' } }),
       prisma.permission.upsert({ where: { code: 'quote:submit' }, update: {}, create: { code: 'quote:submit', name: 'Submit supplier quotes' } }),
+      prisma.permission.upsert({ where: { code: 'shipping:create_trip' }, update: {}, create: { code: 'shipping:create_trip', name: 'Schedule a delivery trip' } }),
+      prisma.permission.upsert({ where: { code: 'factoring:fund' }, update: {}, create: { code: 'factoring:fund', name: 'Record a funding decision' } }),
     ]);
     const byCode = new Map(permissions.map((permission) => [permission.code, permission.id]));
     await prisma.rolePermission.createMany({
@@ -139,6 +141,9 @@ describe('procurement lifecycle against the isolated database', () => {
         { roleId: supplierRole.id, permissionId: byCode.get('quote:submit')! },
         { roleId: supplierRole.id, permissionId: byCode.get('order:confirm')! },
         { roleId: supplierRole.id, permissionId: byCode.get('order:update')! },
+        { roleId: carrierRole.id, permissionId: byCode.get('shipping:create_trip')! },
+        { roleId: carrierRole.id, permissionId: byCode.get('order:update')! },
+        { roleId: funderRole.id, permissionId: byCode.get('factoring:fund')! },
       ],
     });
 
