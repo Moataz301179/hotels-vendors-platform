@@ -583,3 +583,14 @@ The live marketplace showed 15 records because that was the only reviewed direct
 - Local apply created 179 profiles and updated 30. `http://127.0.0.1:3000/marketplace` returned HTTP 200 with 209 Add to list controls.
 - The next production workflow publishes this catalog to Neon through an existing platform administrator, then the same release serves it. The page reads up to 1,000 published records.
 - `npx vitest run tests/p0/operating-catalog.spec.ts tests/p0/internal-directory-batch.spec.ts` passed, 3 tests.
+- Production run 42928794395 on `3a2c862` failed before any database or VPS change. The confirmation value was ` APPLY_AFTER_NEON_BACKUP` with a leading space, so the exact comparison failed. The live site stayed on `805645c` with 15 records. The gate now removes whitespace before comparing.
+
+## Production catalog release — 2026-11-11 2:40 AM Africa/Cairo
+
+The owner retried the production workflow without the extra space. It completed successfully and published the operating catalog.
+
+- Workflow: [HotelsVendors Production Deploy run 42932789017](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/42932789017). Conclusion `success`. Head `3a2c8623d221bb57537d796a289a2f06d19ac806`.
+- The catalog step returned `{"ok":true,"records":209,"batches":11}`.
+- Live `GET https://www.hotelsvendors.com/api/health` at 2:41 AM Africa/Cairo returned `ok`, `database=ready`, `authorization=configured`, and `releaseId`/`sourceCommit` `github-3a2c8623d221bb57537d796a289a2f06d19ac806`.
+- Live `/marketplace` HTML contains 209 unique specification links across 9 category groups: Engineering & maintenance, Furniture fixtures & outdoor, Guest rooms & amenities, Hotel services, Hotel technology, Housekeeping & laundry, Restaurants & bars, Safety & compliance, and Uniforms & workwear.
+- Next action: the whitespace-tolerant confirmation gate is on `cursor/catalog-register-dashboards-d37d` and is not in this release. Signed-in hotel submission still needs a Clerk session.
