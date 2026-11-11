@@ -20,9 +20,17 @@ const PUBLIC_PATHS = new Set([
 ]);
 const PUBLIC_PREFIXES = ["/_next", "/static", "/favicon", "/logo", "/videos", "/manifest.json", "/sw.js", "/robots.txt", "/sitemap", "/api/webhooks"];
 const CLERK_CONTEXT_PUBLIC_PATHS = new Set([
+  "/",
   "/login",
   "/sign-in",
   "/sign-up",
+  "/register",
+  "/marketplace",
+  "/about",
+  "/contact",
+  "/support",
+  "/investors",
+  "/hovin",
   "/hotels/signup",
   "/suppliers/signup",
   "/auth/continue",
@@ -116,9 +124,14 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
     return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
   }
 
-  const clerkResponse = await clerkSecurityMiddleware(security.csp)(securedRequest, event);
-  if (clerkResponse instanceof Response) return alignLoopbackRewrite(clerkResponse, securedRequest);
-  return clerkResponse;
+  try {
+    const clerkResponse = await clerkSecurityMiddleware(security.csp)(securedRequest, event);
+    if (clerkResponse instanceof Response) return alignLoopbackRewrite(clerkResponse, securedRequest);
+    return clerkResponse;
+  } catch (error) {
+    if (isPublic(pathname)) return addSecurityHeaders(NextResponse.next({ request: { headers: securedRequest.headers } }), security.csp);
+    throw error;
+  }
 }
 
 export const config = {

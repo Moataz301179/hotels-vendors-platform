@@ -1,4 +1,22 @@
 # HotelsVendors — Production-Ready Handover
+
+## Production deploy run 42939432074 — 2026-11-11 03:35 Africa/Cairo
+
+- Verified: workflow `HotelsVendors Production Deploy` run `42939432074` failed on `main` at `3a2c8623d221bb57537d796a289a2f06d19ac806`. The only failed step was `Activate release and verify`. It exited 1 about two seconds after the remote script started, with no remote error text.
+- Cause: that commit is already the active release. The activator runs `test ! -e /var/www/hv-releases/github-$GITHUB_SHA` before it changes PM2, Nginx, or the database. The same SHA succeeded earlier in run `42932789017`.
+- Live check after the failure: `GET https://www.hotelsvendors.com/api/health` returned `ok: true`, `database: ready`, `authorization: configured`, and `releaseId` `github-3a2c8623d221bb57537d796a289a2f06d19ac806`.
+- The sign-in and company-page revision `f74e9d1` is not on `main`, so this run could not publish it. Next action: put a new commit on `main`, then run the production workflow once for that new SHA with confirmation `APPLY_AFTER_NEON_BACKUP`.
+
+## Authentication handoff and company pages — 2026-11-11
+
+- Source: `cursor/auth-workspace-pages-d37d`, based on `3a2c862`. This change is not on production. The live site remains release `github-3a2c8623d221bb57537d796a289a2f06d19ac806` until this revision is on `main` and the owner runs HotelsVendors Production Deploy with the confirmation `APPLY_AFTER_NEON_BACKUP` and no extra spaces.
+- Sign-up and sign-in no longer send a completed Clerk session back to the sign-in form. `/auth/continue` waits until the browser session is loaded. `/api/v2/auth/handoff` then opens onboarding for a pending organization, the requested workspace for an active organization, or `/register?choose=1` when the sign-in has no hotel or vendor workspace. Choosing a role writes Clerk `unsafeMetadata.platformRole` and creates the pending organization.
+- A signed-in public header offers Open workspace. An unlinked dashboard visit offers the same choice. Purchasing stays closed while the organization is `PENDING_VERIFICATION`.
+- About, Support, Contact, Privacy and Terms now use the public page system and describe the actual operating boundary. HOVIN explains that it checks a delivery and does not place an order. Android and iOS links stay hidden because no signed store release is configured.
+- Verification: `npx vitest run tests/p0/auth-handoff.spec.ts tests/p0/clerk-auth-routing.spec.ts tests/p0/production-shell-contract.spec.ts tests/p0/commercial-controls.spec.ts` passed, 4 files, 16 tests. `npx tsc --noEmit` passed before the final dashboard recovery copy. Local pages `/about`, `/support`, `/contact`, `/privacy`, `/terms`, `/hovin`, `/register?choose=1` and `/login` returned 200 and were rendered in Chrome at 1280px and 390px. A real inbox sign-up was not completed in this environment.
+- Operational finding: the app is not ready for a new account to place a live order. `POST /api/v2/orders` returns `RFQ_QUOTE_ACCEPT_REQUIRED`. Approval requires a recorded payment guarantee. A 48-hour funder referral requires delivery, that guarantee, an accepted receipt and an accepted invoice. HOVIN shares the API, but no signed store build is published, and the default hotel role `DEPARTMENT_HEAD` receives `RECEIVING_ROLE_REQUIRED` from `/api/v2/mobile/receipts`.
+- Next action: merge this revision, then run the production deploy workflow from `main`. Do not weaken verification or the receiving-role check without a separate decision. The food-image catalogue change is a separate branch and is not included here.
+
 Date: 2026-10-31 · Branch: `chore/deploy-main-only` · Commit: `bd9ab3f`
 
 ## What changed this session

@@ -639,3 +639,6 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 @media (max-width:720px){
   .supplier-register-head,.ops-console .role-dashboard-hero{display:grid}
 }
+.hv-register-choice{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.hv-register-choice .workspace-status{grid-column:1/-1;margin:0}
+@media(max-width:560px){.hv-register-choice{grid-template-columns:1fr}}
