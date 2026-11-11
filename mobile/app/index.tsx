@@ -38,8 +38,10 @@ export default function ReceivingHome() {
   const [authStartupError, setAuthStartupError] = useState<string | null>(null);
   const [retryingAuthStartup, setRetryingAuthStartup] = useState(false);
   const didRetryClerkStartup = useRef(false);
+  const loadGeneration = useRef(0);
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
+  const sessionKey = isSignedIn ? user?.id ?? 'signed-in' : null;
   const clerk = useClerk();
   const { signOut } = clerk;
   const { startHostedAuth } = useHostedAuth();
@@ -143,12 +145,25 @@ export default function ReceivingHome() {
     }
   }
 
+  function clearFieldState() {
+    setPlan(null);
+    setTasks([]);
+    setHandoffs([]);
+    setSelected(null);
+    setEvidenceIds([]);
+    setPhotoOpen(false);
+    setFieldMode('home');
+    setMessage(null);
+  }
+
   async function loadField() {
     if (!isSignedIn || !api) return;
+    const generation = ++loadGeneration.current;
     setLoading(true);
     setMessage(null);
     try {
       const nextPlan = await api.session();
+      if (generation !== loadGeneration.current) return;
       setPlan(nextPlan);
       if (nextPlan.workspace === 'web-only') {
         setTasks([]);
@@ -156,18 +171,22 @@ export default function ReceivingHome() {
         return;
       }
       const nextTasks = await api.tasks();
+      if (generation !== loadGeneration.current) return;
       setTasks(nextTasks.tasks);
       setConnectionState('connected');
       if (nextPlan.workspace === 'hotel-field') await loadHandoffs();
     } catch (error) {
+      if (generation !== loadGeneration.current) return;
       if (isRetryableReceiptFailure(error)) {
         setConnectionState('offline');
         if (database) setOutboxSummary(await getOutboxSummary(database, null));
       } else {
+        setPlan(null);
+        setTasks([]);
         setMessage(receiptMessage(error));
       }
     } finally {
-      setLoading(false);
+      if (generation === loadGeneration.current) setLoading(false);
     }
   }
 
@@ -202,10 +221,17 @@ export default function ReceivingHome() {
   }
 
   useEffect(() => {
-    if (isSignedIn && outboxState === 'ready') void loadField();
-  // The refresh trigger is intentionally session and local-storage readiness only.
+    if (!isSignedIn) {
+      loadGeneration.current += 1;
+      clearFieldState();
+      return;
+    }
+    if (outboxState !== 'ready') return;
+    clearFieldState();
+    void loadField();
+  // A different signed-in account must not reuse the previous field workspace.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn, outboxState]);
+  }, [isSignedIn, sessionKey, outboxState]);
 
   async function openHandoff(handoff: ReceivingHandoff) {
     if (!api) return;
@@ -321,8 +347,23 @@ export default function ReceivingHome() {
 
   if (fieldMode === 'home') {
     if (!plan) {
-      if (connectionState === 'offline') return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadField()} loading={loading} />;
-      return <LoadingScreen label="Opening the field workspace" />;
+      if (loading || !message) {
+        if (connectionState === 'offline' && !loading) return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadField()} loading={loading} />;
+        return <LoadingScreen label="Opening the field workspace" />;
+      }
+      return (
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            <BrandBar />
+            <View style={styles.hero}>
+              <Text style={styles.eyebrow}>Field workspace unavailable</Text>
+              <Text accessibilityRole="alert" style={styles.body}>{message}</Text>
+              <Pressable accessibilityRole="button" style={styles.primaryAction} onPress={() => void loadField()}><Text style={styles.primaryActionText}>Retry</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text style={styles.back}>Sign out</Text></Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
     }
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -333,7 +374,7 @@ export default function ReceivingHome() {
           loading={loading}
           message={message}
           onRefresh={() => void loadField()}
-          onSignOut={() => void signOut()}
+          onSignOut={() => { loadGeneration.current += 1; clearFieldState(); void signOut(); }}
           onOpenPhone={openPhone}
           onOpenDesk={openDesk}
           onRespond={(task, status) => void respondToAssignment(task, status)}

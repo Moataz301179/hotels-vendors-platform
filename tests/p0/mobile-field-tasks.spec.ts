@@ -65,6 +65,13 @@ describe('HOVIN mobile session and tasks', () => {
     expect(m.orders).not.toHaveBeenCalled();
   });
 
+  it('refuses supplier field tasks without order-read permission', async () => {
+    m.actor.mockResolvedValue({ id: 'vendor-1', tenantId: 'vendor-tenant', platformRole: 'SUPPLIER', role: 'OWNER', supplierId: 'supplier-1' });
+    m.permission.mockRejectedValue(new PermissionDeniedError('denied'));
+    expect((await tasks()).status).toBe(403);
+    expect(m.orders).not.toHaveBeenCalled();
+  });
+
   it('returns no supplier tasks when the account has no supplier record', async () => {
     m.actor.mockResolvedValue({ id: 'vendor-1', tenantId: 'vendor-tenant', platformRole: 'SUPPLIER', role: 'OWNER', supplierId: null });
     const body = await (await tasks()).json();
@@ -99,7 +106,8 @@ describe('HOVIN mobile session and tasks', () => {
     const body = await (await tasks()).json();
     expect(body.workspace).toBe('supplier-field');
     expect(body.tasks[0]).toMatchObject({ module: 'fulfillment', action: 'none', detail: 'Rice 5kg × 2 bag' });
-    expect(m.orders).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ supplierId: 'supplier-1' }) }));
+    expect(m.permission).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 'vendor-tenant', platformRole: 'SUPPLIER' }), 'order:read');
+    expect(m.orders).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ supplierId: 'supplier-1', tenantId: 'vendor-tenant' }) }));
     expect(JSON.stringify(body)).not.toMatch(/unitPrice|total|hotelId/i);
   });
 });

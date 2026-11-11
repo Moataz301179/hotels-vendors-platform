@@ -38,7 +38,13 @@ export async function GET() {
   if (plan.workspace === 'carrier-field') {
     return NextResponse.json({ workspace: plan.workspace, tasks: await carrierTasks(actor.tenantId) });
   }
-  return NextResponse.json({ workspace: plan.workspace, tasks: await supplierTasks(actor.supplierId) });
+  try {
+    await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, 'order:read');
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) return NextResponse.json({ error: 'ORDER_READ_PERMISSION_REQUIRED' }, { status: 403 });
+    throw error;
+  }
+  return NextResponse.json({ workspace: plan.workspace, tasks: await supplierTasks(actor.supplierId, actor.tenantId) });
 }
 
 async function hotelTasks(actor: { id: string; tenantId: string; platformRole: string; role: string }): Promise<FieldTask[]> {
@@ -129,10 +135,10 @@ async function carrierTasks(tenantId: string): Promise<FieldTask[]> {
   return tasks;
 }
 
-async function supplierTasks(supplierId: string | null): Promise<FieldTask[]> {
+async function supplierTasks(supplierId: string | null, tenantId: string): Promise<FieldTask[]> {
   if (!supplierId) return [];
   const orders = await prisma.order.findMany({
-    where: { supplierId, deletedAt: null, status: { in: ['APPROVED', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_DELIVERED'] } },
+    where: { supplierId, tenantId, deletedAt: null, status: { in: ['APPROVED', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_DELIVERED'] } },
     select: {
       id: true,
       orderNumber: true,

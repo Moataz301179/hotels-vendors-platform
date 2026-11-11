@@ -14,7 +14,8 @@
 - Source branch: `cursor/hovin-field-layer-d37d`. Not deployed. No store build was produced.
 - HOVIN now asks `/api/v2/mobile/session` which workspace the persisted account owns. A receiving hotel gets arrivals, physical count, and exceptions on the phone, with approvals and sourcing left on the desk. A carrier gets assignment accept/decline and movement checkpoints. A supplier gets fulfillment quantities only. A department head, funder, or administrator stays on the desk.
 - `/api/v2/mobile/tasks` returns that field work without supplier identity, prices, invoices, or rates. Receipt recording still uses the existing goods-receipt route.
-- Verification: `npx vitest run tests/p0/mobile-field-layer.spec.ts tests/p0/mobile-field-tasks.spec.ts tests/p0/hovin-receipt-handoffs.spec.ts tests/p0/hovin-receipt-context.spec.ts` passed, 4 files, 17 tests.
+- Supplier field tasks use the same boundary as the orders desk: the supplier id, the signed-in tenant, and `order:read`. A failed field session shows retry and sign-out. Switching accounts clears the previous field data before the next request is shown.
+- Verification: `npx vitest run tests/p0/mobile-field-tasks.spec.ts tests/p0/orders-tenant-scope.spec.ts` passed, 2 files, 9 tests. `npx tsc --noEmit` passed.
 - Unresolved: photo and delivery-proof upload are still absent, and there is no signed store release. A device session was not signed in during this change.
 - Next action: assign a receiving, carrier, or supplier account and open the field home against a configured API origin before any store build.
 
