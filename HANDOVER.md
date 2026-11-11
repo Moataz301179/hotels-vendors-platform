@@ -14,7 +14,8 @@
 - Verification at 23:08 Africa/Cairo: the live test identity service returned HTTP 400 and the submission route returned HTTP 401, which is the expected unauthenticated response. `npx vitest run tests/p0/eta-preprod-submission.spec.ts tests/p0/eta-eseal-provider.spec.ts tests/p0/eta-unsigned-submission.spec.ts` passed, 3 files, 14 tests. A local stand-in accepted one signed document with HTTP 202, submission ID `SUB-100`, and UUID `DOC-100`. No invoice was sent to the tax authority.
 - Operator result at 23:56 Africa/Cairo: on the laptop, under the Intel Node, `npm run eta:eseal-preprod-health` printed identity HTTP 400, submission route HTTP 401, and `Preprod responding: yes`. `npm run eta:eseal-submit-preprod` then printed `ETA_PREPROD_NOT_CONFIGURED` and sent nothing. The test-system client ID and secret were not present in that terminal.
 - The preprod test invoice names the USB taxpayer as the issuer and a person, “Preprod test buyer”, as the receiver. The receiver has no tax number. The issuer’s tax number is not copied into the receiver. The invoice total is 1 EGP.
-- Next action: pull this branch on the laptop, then enter the test-system client ID, client secret, issuer tax number, issuer name, and activity code. Keep the GitHub production secrets unused. Do not paste the secret into chat.
+- Operator result at 01:20 Africa/Cairo on 12 Nov 2026: the USB token accepted the PIN. `npm run eta:eseal-submit-preprod` then stopped with `ETA_PREPROD_AUTH_FAILED:400`. The test identity service rejected the ERP client ID and secret. No invoice was submitted.
+- Next action: retry only with the client ID and secret issued for the test system. A live ERP pair is rejected by that service. Do not paste the secret into chat.
 
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
