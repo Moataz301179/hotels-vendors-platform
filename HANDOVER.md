@@ -10,7 +10,9 @@
 - `npm run eta:eseal-sign-cades` asks for the token PIN, signs the same local invoice as a detached CAdES-BES signature, and still does not send it. OpenSSL verified that structure in `tests/p0/eta-eseal-provider.spec.ts`.
 - Operator result at 14:22 Africa/Cairo: `npm run eta:eseal-sign-cades` printed `Signed local invoice HV-LOCAL-SIGNING-TEST in CAdES-BES form`, the same certificate fingerprint, `Algorithm: CAdES-BES`, and `Submitted to the tax authority: no`. This session did not re-run the stick.
 - The laptop signing steps are complete. The website still cannot file. The client ID and secret stored in the GitHub production environment belong to the live system and must not be used for this test.
-- Next action: send one invoice from the laptop to the tax authority’s test system only, at `api.preprod.invoicing.eta.gov.eg`. Do not submit this signature to the live system.
+- `npm run eta:eseal-preprod-health` checks the test system without credentials or an invoice. `npm run eta:eseal-submit-preprod` signs one preprod invoice with the USB token and sends it only to `https://api.preprod.invoicing.eta.gov.eg/api/v1.0/documentsubmissions`. Any live-system address is refused before a network call.
+- Verification at 23:08 Africa/Cairo: the live test identity service returned HTTP 400 and the submission route returned HTTP 401, which is the expected unauthenticated response. `npx vitest run tests/p0/eta-preprod-submission.spec.ts tests/p0/eta-eseal-provider.spec.ts tests/p0/eta-unsigned-submission.spec.ts` passed, 3 files, 14 tests. A local stand-in accepted one signed document with HTTP 202, submission ID `SUB-100`, and UUID `DOC-100`. No invoice was sent to the tax authority.
+- Next action: on the laptop, with the Intel Node and the stick, set the test-system client ID, client secret, issuer tax number, issuer name, receiver tax number, receiver name, and activity code in the environment, then run `npm run eta:eseal-submit-preprod`. Keep the GitHub production secrets unused.
 
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 

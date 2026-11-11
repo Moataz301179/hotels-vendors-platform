@@ -26,23 +26,31 @@ type CertificateIdentity = {
   issuer: Buffer;
 };
 
-export async function signLocalInvoiceCades(connection: TokenConnection, pin: string, signedAt = new Date()): Promise<LocalCadesSignature> {
+export async function signDetachedCades(connection: TokenConnection, pin: string, document: Buffer, signedAt = new Date()): Promise<{ cmsDer: Buffer; certificateFingerprint: string }> {
   if (!pin.trim()) throw new Error("ESEAL_PIN_REQUIRED");
+  if (!document.length) throw new Error("ETA_CANONICALIZATION_EMPTY_DOCUMENT");
+  const signed = await connection.signPrepared(pin, (certificateDer) => signedAttributeSet(document, certificateDer, signedAt));
+  const attributes = signedAttributeSet(document, signed.certificateDer, signedAt);
+  assertAttributeSignature(attributes, signed.signature, signed.certificateDer);
+  return {
+    cmsDer: contentInfo(document, signed.certificateDer, signed.signature, signedAt),
+    certificateFingerprint: fingerprint(signed.certificateDer),
+  };
+}
+
+export async function signLocalInvoiceCades(connection: TokenConnection, pin: string, signedAt = new Date()): Promise<LocalCadesSignature> {
   const canonical = canonicalizeEtaPayload({
     ...LOCAL_SIGNING_INVOICE,
     invoiceLines: LOCAL_SIGNING_INVOICE.invoiceLines.map((line) => ({ ...line })),
   });
   const document = Buffer.from(canonical.canonicalString, "utf8");
-  const signed = await connection.signPrepared(pin, (certificateDer) => signedAttributeSet(document, certificateDer, signedAt));
-  const attributes = signedAttributeSet(document, signed.certificateDer, signedAt);
-  assertAttributeSignature(attributes, signed.signature, signed.certificateDer);
-  const cmsDer = contentInfo(document, signed.certificateDer, signed.signature, signedAt);
+  const signed = await signDetachedCades(connection, pin, document, signedAt);
   return {
     internalId: LOCAL_SIGNING_INVOICE.internalId,
     algorithm: "CAdES-BES",
-    certificateFingerprint: fingerprint(signed.certificateDer),
+    certificateFingerprint: signed.certificateFingerprint,
     canonicalSha256: canonical.sha256Digest,
-    cmsDer,
+    cmsDer: signed.cmsDer,
     submitted: false,
   };
 }

@@ -24,6 +24,8 @@
     "eta:eseal-sign-test": "tsx scripts/eta-eseal-provider.ts --self-test",
     "eta:eseal-sign-invoice": "tsx scripts/eta-eseal-provider.ts --sign-invoice",
     "eta:eseal-sign-cades": "tsx scripts/eta-eseal-provider.ts --sign-cades",
+    "eta:eseal-preprod-health": "tsx scripts/eta-eseal-preprod.ts --health",
+    "eta:eseal-submit-preprod": "tsx scripts/eta-eseal-preprod.ts --submit",
     "test:browser": "playwright test",
     "test:browser:auth": "HV_AUTH_E2E=1 node scripts/recovery/batch-auth-states.mjs && node scripts/recovery/auth-e2e-preflight.mjs && playwright test --project=chromium-authenticated --workers=1",
     "test:recovery": "node --test scripts/recovery/incident-router.test.mjs scripts/recovery/repair-loop.test.mjs scripts/recovery/recovery-gate.test.mjs",
