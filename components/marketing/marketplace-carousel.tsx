@@ -5,9 +5,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import styles from './marketplace-carousel.module.css';
 
-export type CoverSlide = { title: string; detail: string; image: string };
+export type CoverSlide = { id: string; title: string; detail: string; image: string };
 
-export function MarketplaceCarousel({ slides, onSelect }: { slides: CoverSlide[]; onSelect: (title: string) => void }) {
+export function MarketplaceCarousel({ slides, onSelect }: { slides: CoverSlide[]; onSelect: (id: string) => void }) {
   const [index, setIndex] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const count = slides.length;
@@ -33,7 +33,7 @@ export function MarketplaceCarousel({ slides, onSelect }: { slides: CoverSlide[]
   return <section className={styles.carousel} aria-roledescription="carousel" aria-label="Approved category covers">
     <div className={styles.viewport}>
       <div className={styles.track} style={{ transform: `translateX(-${index * 100}%)` }}>
-        {slides.map((slide, slideIndex) => <button type="button" className={styles.slide} key={slide.title} onClick={() => onSelect(slide.title)} aria-label={`Show ${slide.title}`} aria-hidden={slideIndex !== index}>
+        {slides.map((slide, slideIndex) => <button type="button" className={styles.slide} key={slide.id} onClick={() => onSelect(slide.id)} aria-label={`Show ${slide.title}`} aria-hidden={slideIndex !== index}>
           <Image src={slide.image} alt="" fill sizes="100vw" priority={slideIndex === 0} />
           <span><small>Category cover</small><strong>{slide.title}</strong><em>{slide.detail}</em></span>
         </button>)}
@@ -41,6 +41,6 @@ export function MarketplaceCarousel({ slides, onSelect }: { slides: CoverSlide[]
     </div>
     <button type="button" className={styles.nav} onClick={previous} aria-label="Previous category cover"><ChevronLeft size={18} /></button>
     <button type="button" className={`${styles.nav} ${styles.next}`} onClick={next} aria-label="Next category cover"><ChevronRight size={18} /></button>
-    <div className={styles.dots} role="tablist" aria-label="Category covers">{slides.map((slide, slideIndex) => <button type="button" role="tab" key={slide.title} aria-label={slide.title} aria-selected={slideIndex === index} onClick={() => setIndex(slideIndex)} />)}</div>
+    <div className={styles.dots} role="tablist" aria-label="Category covers">{slides.map((slide, slideIndex) => <button type="button" role="tab" key={slide.id} aria-label={slide.title} aria-selected={slideIndex === index} onClick={() => setIndex(slideIndex)} />)}</div>
   </section>;
 }

@@ -1,5 +1,18 @@
 # HotelsVendors — Production-Ready Handover
 
+## Listing pictures — 2026-11-11 04:25 Africa/Cairo
+
+- Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.
+- Every public directory row now has a 72px picture. The edible specifications use item photographs under `public/catalog/`. Every other row uses its approved operating-area cover. The row still has no vendor, price, stock, or binding offer.
+- Verification: `npx vitest run tests/p0/listing-visual.spec.ts tests/p0/marketplace-sourcing-areas.spec.ts tests/p0/operating-category.spec.ts tests/p0/commercial-controls.spec.ts` passed, 4 files, 8 tests. Local `/marketplace` rendered 209 rows. The rice thumbnail request returned HTTP 200 JPEG, and the image was present in the mobile row.
+- Next action: merge this revision to `main`, then run HotelsVendors Production Deploy once with `APPLY_AFTER_NEON_BACKUP` and no extra spaces.
+
+## Production deploy succeeded — 2026-11-11 03:56 Africa/Cairo
+
+- Verified: workflow run `42941961629` concluded success for `7fb77ae9396b67e4c35599d47ed38ea0c11939af`.
+- Live check at 04:24 Africa/Cairo: `GET https://www.hotelsvendors.com/api/health` returned `ok: true`, `database: ready`, `authorization: configured`, and `releaseId` `github-7fb77ae9396b67e4c35599d47ed38ea0c11939af`.
+- This release contains the sign-in handoff and company pages. It does not contain the listing pictures.
+
 ## Production deploy run 42939432074 — 2026-11-11 03:35 Africa/Cairo
 
 - Verified: workflow `HotelsVendors Production Deploy` run `42939432074` failed on `main` at `3a2c8623d221bb57537d796a289a2f06d19ac806`. The only failed step was `Activate release and verify`. It exited 1 about two seconds after the remote script started, with no remote error text.
@@ -9,13 +22,13 @@
 
 ## Authentication handoff and company pages — 2026-11-11
 
-- Source: `cursor/auth-workspace-pages-d37d`, based on `3a2c862`. This change is not on production. The live site remains release `github-3a2c8623d221bb57537d796a289a2f06d19ac806` until this revision is on `main` and the owner runs HotelsVendors Production Deploy with the confirmation `APPLY_AFTER_NEON_BACKUP` and no extra spaces.
+- Source: `cursor/auth-workspace-pages-d37d`, merged to `main` as `7fb77ae` and deployed by run `42941961629`. Live release `github-7fb77ae9396b67e4c35599d47ed38ea0c11939af`.
 - Sign-up and sign-in no longer send a completed Clerk session back to the sign-in form. `/auth/continue` waits until the browser session is loaded. `/api/v2/auth/handoff` then opens onboarding for a pending organization, the requested workspace for an active organization, or `/register?choose=1` when the sign-in has no hotel or vendor workspace. Choosing a role writes Clerk `unsafeMetadata.platformRole` and creates the pending organization.
 - A signed-in public header offers Open workspace. An unlinked dashboard visit offers the same choice. Purchasing stays closed while the organization is `PENDING_VERIFICATION`.
 - About, Support, Contact, Privacy and Terms now use the public page system and describe the actual operating boundary. HOVIN explains that it checks a delivery and does not place an order. Android and iOS links stay hidden because no signed store release is configured.
 - Verification: `npx vitest run tests/p0/auth-handoff.spec.ts tests/p0/clerk-auth-routing.spec.ts tests/p0/production-shell-contract.spec.ts tests/p0/commercial-controls.spec.ts` passed, 4 files, 16 tests. `npx tsc --noEmit` passed before the final dashboard recovery copy. Local pages `/about`, `/support`, `/contact`, `/privacy`, `/terms`, `/hovin`, `/register?choose=1` and `/login` returned 200 and were rendered in Chrome at 1280px and 390px. A real inbox sign-up was not completed in this environment.
 - Operational finding: the app is not ready for a new account to place a live order. `POST /api/v2/orders` returns `RFQ_QUOTE_ACCEPT_REQUIRED`. Approval requires a recorded payment guarantee. A 48-hour funder referral requires delivery, that guarantee, an accepted receipt and an accepted invoice. HOVIN shares the API, but no signed store build is published, and the default hotel role `DEPARTMENT_HEAD` receives `RECEIVING_ROLE_REQUIRED` from `/api/v2/mobile/receipts`.
-- Next action: merge this revision, then run the production deploy workflow from `main`. Do not weaken verification or the receiving-role check without a separate decision. The food-image catalogue change is a separate branch and is not included here.
+- Next action: keep verification and the receiving-role check unchanged. Listing pictures are the separate revision recorded above.
 
 Date: 2026-10-31 · Branch: `chore/deploy-main-only` · Commit: `bd9ab3f`
 
@@ -601,3 +614,13 @@ The live marketplace showed 15 records because that was the only reviewed direct
 - Local apply created 179 profiles and updated 30. `http://127.0.0.1:3000/marketplace` returned HTTP 200 with 209 Add to list controls.
 - The next production workflow publishes this catalog to Neon through an existing platform administrator, then the same release serves it. The page reads up to 1,000 published records.
 - `npx vitest run tests/p0/operating-catalog.spec.ts tests/p0/internal-directory-batch.spec.ts` passed, 3 tests.
+
+## Food listings and pictures — 2026-11-11 2:55 AM Africa/Cairo
+
+The live catalogue already contained 20 food and beverage specifications, but they were filed under “Restaurants & bars” after six other sections, and every row was text only.
+
+- The marketplace now labels that area “Food & beverage”, places it first, and lists edible items before kitchen equipment.
+- Each food specification has a local item photograph. Other rows use the area cover. No Unsplash or Wikimedia URL is sent to the browser.
+- The 20 food specifications also show an Arabic name. `npx vitest run tests/p0/listing-visual.spec.ts tests/p0/operating-category.spec.ts tests/p0/operating-catalog.spec.ts tests/p0/marketplace-sourcing-areas.spec.ts` passed.
+- Local `http://127.0.0.1:3000/marketplace` showed the food section first, rice/chicken/juice photographs, Arabic names, and the rice detail photograph. This revision is not on the live site yet.
+- Next action: merge this branch and run the production workflow from `main` with `APPLY_AFTER_NEON_BACKUP`. The same run republishes the Arabic names.
