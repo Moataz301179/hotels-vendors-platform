@@ -40,3 +40,18 @@ Do not configure or run a provider wrapper until all of these are true:
 Until those gates pass, `/health` reports unavailable and every signing attempt
 fails closed. This gateway is local signing infrastructure, not proof of ETA
 credential registration, document acceptance, or production release.
+
+## Laptop signing test
+
+On the computer where the USB token is plugged in, from this project:
+
+```bash
+npm install --no-save pkcs11js
+npm run eta:eseal-sign-test
+```
+
+The command asks for the token user PIN on that computer. It signs one local
+test line and checks the signature against the certificate on the stick. It
+does not send anything to the tax authority and it does not store the PIN.
+If the token library is installed somewhere else, set
+`ETA_ESEAL_PKCS11_LIBRARY` to its absolute path before the command.

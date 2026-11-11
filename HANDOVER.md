@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## Local USB e-seal signer — 2026-11-11 13:45 Africa/Cairo
+
+- Source branch: `cursor/eseal-local-signer-d37d`. Not deployed. The website still cannot file a VAT invoice.
+- `npm run eta:eseal-sign-test` runs on the laptop that has the USB token. It asks for the token user PIN on that laptop, signs one local test line through the token library, and checks the signature against the certificate. It does not send the document to the tax authority and it does not accept a PIN from the request or the environment.
+- The token library package `pkcs11js` is installed on that laptop with `npm install --no-save pkcs11js`. This cloud session cannot see the stick, so the hardware test has not been run here.
+- Next action: on the laptop, update to this branch and run the test command above with the stick plugged in.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.
