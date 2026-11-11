@@ -1,28 +1,12 @@
-import { redirect } from "next/navigation";
-import { getOnboardingActor } from "@/lib/v2-auth";
-import { safeReturnPath } from "@/lib/auth/return-path";
-
-type ContinuePageProps = {
-  searchParams: Promise<{ returnTo?: string }>;
-};
+import { Suspense } from "react";
+import { AuthContinueClient } from "@/components/v2/auth-continue-client";
 
 /**
- * Every Clerk completion returns here first. It creates the local HOTEL or
- * SUPPLIER application record when appropriate, sends pending registrations
- * to onboarding, and only then releases active users to their requested page.
- *
- * This is the ONLY caller of getOnboardingActor, which is why a user still
- * completing their profile can reach the onboarding step instead of looping
- * back to login. It is not a general bypass: every protected operational API
- * and dashboard still resolves the actor through getActor, which rejects
- * PENDING_VERIFICATION users.
+ * Clerk finishes here only after the browser session is loaded. The handoff
+ * route calls getOnboardingActor() and sends a new hotel or vendor to
+ * onboarding, an active user to the requested workspace, and a session with
+ * no workspace to the organization choice. It does not return them to sign in.
  */
-export default async function AuthContinue({ searchParams }: ContinuePageProps) {
-  const user = await getOnboardingActor();
-  if (!user) redirect("/login");
-
-  if (user.status === "PENDING_VERIFICATION") redirect("/onboarding");
-
-  const params = await searchParams;
-  redirect(safeReturnPath(params.returnTo));
+export default function AuthContinue() {
+  return <Suspense fallback={<main className="hv-auth-page"><p className="hv-clerk-loading" role="status"><span />Opening your workspace…</p></main>}><AuthContinueClient /></Suspense>;
 }

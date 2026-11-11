@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Building2, Handshake } from 'lucide-react';
 import { SiteNav } from '@/components/marketing/site-nav';
+import { WorkspaceChoice } from '@/components/v2/workspace-choice';
 
 const workspaces = [
   {
@@ -19,7 +20,9 @@ const workspaces = [
   },
 ];
 
-export default function Register() {
+export default async function Register({ searchParams }: { searchParams: Promise<{ choose?: string; reason?: string }> }) {
+  const params = await searchParams;
+  const choosing = params.choose === '1';
   return (
     <>
       <SiteNav />
@@ -50,7 +53,7 @@ export default function Register() {
                 <div><h3 id="procurement-roles-title">Commercial workspaces</h3><p>One protected workflow connects the hotel requirement and the eligible Vendor response.</p></div>
               </div>
               <div className="hv-register-card-grid">
-                {workspaces.slice(0, 2).map(({ title, description, href, action, icon: Icon }) => (
+                {choosing ? <WorkspaceChoice reason={params.reason} /> : workspaces.slice(0, 2).map(({ title, description, href, action, icon: Icon }) => (
                   <Link className="card entry-card hv-register-card" href={href} key={title}>
                     <span className="hv-register-icon"><Icon size={21} aria-hidden="true" /></span>
                     <h3>{title}</h3>

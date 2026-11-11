@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Building2, ClipboardCheck, FileText, PackageCheck, ShieldCheck, Truck, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { SignOutButton, useAuth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { requestJson } from '@/lib/v2-http';
 import { RoleAuditWidget } from '@/components/v2/role-audit-widget';
 import { ActionQueue } from '@/components/v2/action-queue';
@@ -46,9 +46,9 @@ function roleMetrics(role:WorkspaceRole,metrics:Metrics):RoleMetric[]{
 export default function Dashboard(){
  const { isSignedIn }=useAuth();
  const[data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[profile,setProfile]=useState<{complete:boolean}|null>(null),[trends,setTrends]=useState<{orders:{month:string;count:number}[];rfqs:{month:string;count:number}[]}|null>(null);
- useEffect(()=>{let active=true;Promise.all([requestJson<Data>('/api/v2/dashboard'),requestJson<{complete:boolean}>('/api/v2/onboarding')]).then(([dashboard,onboarding])=>{if(active){setData(dashboard);setProfile(onboarding)}}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'Unable to load your workspace.')});return()=>{active=false}},[]);
+ useEffect(()=>{let active=true;Promise.all([requestJson<Data>('/api/v2/dashboard'),requestJson<{complete:boolean;pendingVerification?:boolean}>('/api/v2/onboarding')]).then(([dashboard,onboarding])=>{if(active){setData(dashboard);setProfile(onboarding)}}).catch(async cause=>{if(!active)return;if(cause instanceof Error&&cause.message==='UNAUTHENTICATED'){const onboarding=await requestJson<{pendingVerification?:boolean;complete?:boolean}>('/api/v2/onboarding').catch(()=>null);if(onboarding){window.location.assign('/onboarding');return;}}if(active)setError(cause instanceof Error?cause.message:'Unable to load your workspace.')});return()=>{active=false}},[]);
  useEffect(()=>{let active=true;requestJson<{orders:{month:string;count:number}[];rfqs:{month:string;count:number}[]}>('/api/v2/dashboard/trends').then(series=>{if(active)setTrends(series)}).catch(()=>{if(active)setTrends(null)});return()=>{active=false}},[]);
- if(error==='UNAUTHENTICATED')return <div className="workspace-status" role="alert"><strong>{isSignedIn?'This account is not linked to an active workspace.':'Sign in to open your workspace.'}</strong><p>{isSignedIn?'Your Clerk session does not match an authorized organization role. Use the account assigned to your organization.':'Your organization records are available after sign in.'}</p>{isSignedIn?<SignOutButton redirectUrl="/login"><button className="btn btn-ghost" type="button">Switch account</button></SignOutButton>:<Link className="btn btn-blue" href="/login">Sign in</Link>}</div>;
+ if(error==='UNAUTHENTICATED')return <div className="workspace-status" role="alert"><strong>{isSignedIn?'This sign-in is not linked to a workspace yet.':'Sign in to open your workspace.'}</strong><p>{isSignedIn?'Choose the hotel or vendor organization that owns this account. Purchasing stays closed until that organization is verified.':'Your organization records are available after sign in.'}</p>{isSignedIn?<Link className="btn btn-blue" href="/register?choose=1">Choose a workspace</Link>:<Link className="btn btn-blue" href="/login?redirect_url=%2Fauth%2Fcontinue">Sign in</Link>}</div>;
  if(error)return <div className="workspace-status" role="alert">{error} <button className="btn btn-ghost" onClick={()=>window.location.reload()}>Retry</button></div>;
  if(!data)return <p role="status" className="workspace-empty">Loading your role workspace…</p>;
  const role=workspaceRole(data.role)??'HOTEL',model=models[role],metrics=roleMetrics(role,data.metrics),scopedWorkspace=roleWorkspace(data.role,data.organizationRole),scopedActions=scopedWorkspace?.actions.map(action=>({title:action.title,detail:action.description,href:action.href,icon:iconForWorkspaceHref(action.href)})),primary=scopedActions?.[0]??model.primary,actions=scopedActions?.slice(1)??model.actions,journey=scopedActions?.map(action=>action.title)??model.journey;
