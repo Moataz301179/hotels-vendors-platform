@@ -1,5 +1,24 @@
 # HotelsVendors — Production-Ready Handover
 
+## Desk path and receipt photo — 2026-11-12 01:45 Africa/Cairo
+
+- Source branch: `cursor/hovin-field-layer-d37d`. Not deployed. The new `ReceiptEvidenceFile` table is not applied to production.
+- The orders desk no longer stops at an empty sentence. With no orders, it points to the sourcing desk, where a sealed request starts. The page states that a tax invoice is not filed from this screen.
+- A receiving account can store a JPEG, PNG, or WebP photo. The website uses a file picker. HOVIN uses the camera. The goods receipt attaches the stored photo id. Another organization cannot read the bytes.
+- Verification: `npx vitest run tests/p0/receipt-image.spec.ts tests/p0/receipt-evidence-upload.spec.ts tests/p0/grn-route-auth.spec.ts tests/p0/hovin-receipt-handoffs.spec.ts tests/p0/mobile-field-tasks.spec.ts` passed, 5 files, 17 tests. `npx tsc --noEmit` passed. The orders screen was not signed in through a browser, and the phone camera was not opened on a device.
+- Still open: a live order still needs a real accepted quote, an administrator payment guarantee, and an accepted tax invoice. The website still cannot file that invoice. The photo table must be applied with the deployment handshake before a production receipt can store a photo.
+- Next action: apply the migration only inside the production deploy handshake, then walk one hotel from the sourcing desk through an accepted response.
+
+## HOVIN field layer — 2026-11-12 01:40 Africa/Cairo
+
+- Source branch: `cursor/hovin-field-layer-d37d`. Not deployed. No store build was produced.
+- HOVIN now asks `/api/v2/mobile/session` which workspace the persisted account owns. A receiving hotel gets arrivals, physical count, and exceptions on the phone, with approvals and sourcing left on the desk. A carrier gets assignment accept/decline and movement checkpoints. A supplier gets fulfillment quantities only. A department head, funder, or administrator stays on the desk.
+- `/api/v2/mobile/tasks` returns that field work without supplier identity, prices, invoices, or rates. Receipt recording still uses the existing goods-receipt route.
+- Supplier field tasks use the same boundary as the orders desk: the supplier id, the signed-in tenant, and `order:read`. A failed field session shows retry and sign-out. Switching accounts clears the previous field data before the next request is shown.
+- Verification: `npx vitest run tests/p0/mobile-field-tasks.spec.ts tests/p0/orders-tenant-scope.spec.ts` passed, 2 files, 9 tests. `npx tsc --noEmit` passed.
+- Unresolved: photo and delivery-proof upload are still absent, and there is no signed store release. A device session was not signed in during this change.
+- Next action: assign a receiving, carrier, or supplier account and open the field home against a configured API origin before any store build.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.

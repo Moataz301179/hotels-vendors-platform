@@ -46,6 +46,36 @@ export type ReceiptSubmission = {
     conditionNotes?: string | null;
   }>;
   evidenceUrls?: string[];
+  evidenceIds?: string[];
+};
+
+export type MobileWorkspace = 'hotel-field' | 'carrier-field' | 'supplier-field' | 'web-only';
+
+export type MobileModule = {
+  id: string;
+  title: string;
+  purpose: string;
+  surface: 'phone' | 'web';
+};
+
+export type MobilePlan = {
+  workspace: MobileWorkspace;
+  title: string;
+  summary: string;
+  deskPath: string;
+  modules: MobileModule[];
+  withheld: string[];
+  account: { platformRole: string; role: string };
+};
+
+export type FieldTask = {
+  id: string;
+  module: 'arrivals' | 'exceptions' | 'assignments' | 'movements' | 'fulfillment';
+  title: string;
+  detail: string;
+  status: string;
+  action: 'receive' | 'review' | 'respond' | 'none';
+  targetId: string;
 };
 
 export type CountableProduct = {
@@ -132,13 +162,30 @@ export function createHovinClient(getToken: () => Promise<string | null>) {
 
   return {
     identity: () => request<{ user: MobileIdentity }>('/api/v2/me'),
+    session: () => request<MobilePlan>('/api/v2/mobile/session'),
+    tasks: () => request<{ workspace: MobileWorkspace; tasks: FieldTask[] }>('/api/v2/mobile/tasks'),
+    respondToAssignment: (id: string, status: 'ACCEPTED' | 'REJECTED') => request<{ updated: boolean }>('/api/v2/carrier-assignments', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    }),
     handoffs: () => request<{ handoffs: ReceivingHandoff[] }>('/api/v2/mobile/receipts'),
     receiptContext: (orderId: string) => request<ReceiptContext>(`/api/v2/mobile/receipts/${encodeURIComponent(orderId)}`),
     submitReceipt: (payload: ReceiptSubmission, idempotencyKey: string) => request<{ grn: { id: string; grnNumber: string; status: string }; idempotent?: boolean }>('/api/v2/grn', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-idempotency-key': idempotencyKey },
-      body: JSON.stringify({ ...payload, evidenceUrls: payload.evidenceUrls ?? [] }),
+      body: JSON.stringify({ ...payload, evidenceUrls: payload.evidenceUrls ?? [], evidenceIds: payload.evidenceIds ?? [] }),
     }),
+    uploadEvidence: async (file: { uri: string; name: string; type: string }) => {
+      const token = await getToken();
+      if (!token) throw new HovinApiError(401, 'SESSION_TOKEN_UNAVAILABLE');
+      const body = new FormData();
+      body.append('file', { uri: file.uri, name: file.name, type: file.type } as unknown as Blob);
+      const headers = new Headers();
+      headers.set('Authorization', `Bearer ${token}`);
+      headers.set('Accept', 'application/json');
+      return parseResponse<{ id: string; sha256: string; contentType: string; byteSize: number }>(await fetch(`${apiOrigin}/api/v2/evidence/files`, { method: 'POST', headers, body }));
+    },
     resolveBarcode: (barcode: string) => request<{ product: CountableProduct; barcode: string; captureRule: 'EXPLICIT_HUMAN_QUANTITY_REQUIRED' }>(`/api/v2/inventory/counts?barcode=${encodeURIComponent(barcode)}`),
     submitPhysicalCount: (payload: { productId: string; clientSubmissionId: string; observedQuantity: number; barcode?: string; capturedAt: string }) => request<{ count: { id: string; status: 'PENDING_REVIEW' | 'ACCEPTED' | 'REJECTED'; observedQuantity: number; capturedAt: string }; message: string }>('/api/v2/inventory/counts', {
       method: 'POST',

@@ -6,7 +6,8 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import * as SQLite from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
 
-import { createHovinClient, HovinApiError, isRetryableReceiptFailure, resolveOrigin, type CountableProduct, type ReceiptContext, type ReceivingHandoff, type ReceiptSubmission } from '../src/api/hovin';
+import { createHovinClient, HovinApiError, isRetryableReceiptFailure, resolveOrigin, type CountableProduct, type FieldTask, type MobilePlan, type ReceiptContext, type ReceivingHandoff, type ReceiptSubmission } from '../src/api/hovin';
+import { FieldHome } from '../src/shell/FieldHome';
 import { enqueueGrn, flushGrns, getOutboxSummary, initializeOutbox, recordSuccessfulSync, type OutboxSummary } from '../src/sync/offlineQueue';
 
 type OutboxState = 'checking' | 'ready' | 'error';
@@ -14,8 +15,8 @@ type ConnectionState = 'connected' | 'offline';
 type ReceiptDraft = Record<string, { received: string; accepted: string; reason: string; notes: string }>;
 
 /**
- * HOVIN is a receiving companion, not a catalogue or a second purchasing
- * system. It renders only the signed-in hotel's authorized handoffs.
+ * HOVIN is the field layer for the signed-in account. The server decides
+ * which modules belong on the phone. Commercial decisions stay on the desk.
  */
 export default function ReceivingHome() {
   const [outboxState, setOutboxState] = useState<OutboxState>('checking');
@@ -24,16 +25,23 @@ export default function ReceivingHome() {
   const [connectionState, setConnectionState] = useState<ConnectionState>('connected');
   const [outboxSummary, setOutboxSummary] = useState<OutboxSummary>({ queued: 0, lastSyncAt: null });
   const [handoffs, setHandoffs] = useState<ReceivingHandoff[]>([]);
+  const [plan, setPlan] = useState<MobilePlan | null>(null);
+  const [tasks, setTasks] = useState<FieldTask[]>([]);
+  const [fieldMode, setFieldMode] = useState<'home' | 'receipt' | 'count'>('home');
   const [selected, setSelected] = useState<ReceiptContext | null>(null);
   const [draft, setDraft] = useState<ReceiptDraft>({});
+  const [evidenceIds, setEvidenceIds] = useState<string[]>([]);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [authStartupError, setAuthStartupError] = useState<string | null>(null);
   const [retryingAuthStartup, setRetryingAuthStartup] = useState(false);
   const didRetryClerkStartup = useRef(false);
+  const loadGeneration = useRef(0);
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
+  const sessionKey = isSignedIn ? user?.id ?? 'signed-in' : null;
   const clerk = useClerk();
   const { signOut } = clerk;
   const { startHostedAuth } = useHostedAuth();
@@ -137,11 +145,93 @@ export default function ReceivingHome() {
     }
   }
 
+  function clearFieldState() {
+    setPlan(null);
+    setTasks([]);
+    setHandoffs([]);
+    setSelected(null);
+    setEvidenceIds([]);
+    setPhotoOpen(false);
+    setFieldMode('home');
+    setMessage(null);
+  }
+
+  async function loadField() {
+    if (!isSignedIn || !api) return;
+    const generation = ++loadGeneration.current;
+    setLoading(true);
+    setMessage(null);
+    try {
+      const nextPlan = await api.session();
+      if (generation !== loadGeneration.current) return;
+      setPlan(nextPlan);
+      if (nextPlan.workspace === 'web-only') {
+        setTasks([]);
+        setConnectionState('connected');
+        return;
+      }
+      const nextTasks = await api.tasks();
+      if (generation !== loadGeneration.current) return;
+      setTasks(nextTasks.tasks);
+      setConnectionState('connected');
+      if (nextPlan.workspace === 'hotel-field') await loadHandoffs();
+    } catch (error) {
+      if (generation !== loadGeneration.current) return;
+      if (isRetryableReceiptFailure(error)) {
+        setConnectionState('offline');
+        if (database) setOutboxSummary(await getOutboxSummary(database, null));
+      } else {
+        setPlan(null);
+        setTasks([]);
+        setMessage(receiptMessage(error));
+      }
+    } finally {
+      if (generation === loadGeneration.current) setLoading(false);
+    }
+  }
+
+  async function respondToAssignment(task: FieldTask, status: 'ACCEPTED' | 'REJECTED') {
+    if (!api) return;
+    setMessage(null);
+    try {
+      await api.respondToAssignment(task.targetId, status);
+      setMessage(status === 'ACCEPTED' ? 'Assignment accepted.' : 'Assignment declined.');
+      await loadField();
+    } catch (error) {
+      setMessage(receiptMessage(error));
+    }
+  }
+
+  function openDesk() {
+    if (!plan?.deskPath.startsWith('/') || plan.deskPath.startsWith('//')) return;
+    void Linking.openURL(`https://www.hotelsvendors.com${plan.deskPath}`).catch(() => {
+      setMessage('The desk could not be opened. Check this device connection and try again.');
+    });
+  }
+
+  function openPhone(moduleId: string) {
+    if (moduleId === 'count') {
+      setFieldMode('count');
+      setScannerOpen(true);
+      return;
+    }
+    setScannerOpen(false);
+    setSelected(null);
+    setFieldMode('receipt');
+  }
+
   useEffect(() => {
-    if (isSignedIn && outboxState === 'ready') void loadHandoffs();
-  // The refresh trigger is intentionally session and local-storage readiness only.
+    if (!isSignedIn) {
+      loadGeneration.current += 1;
+      clearFieldState();
+      return;
+    }
+    if (outboxState !== 'ready') return;
+    clearFieldState();
+    void loadField();
+  // A different signed-in account must not reuse the previous field workspace.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn, outboxState]);
+  }, [isSignedIn, sessionKey, outboxState]);
 
   async function openHandoff(handoff: ReceivingHandoff) {
     if (!api) return;
@@ -150,6 +240,8 @@ export default function ReceivingHome() {
     try {
       const context = await api.receiptContext(handoff.orderId);
       setSelected(context);
+      setEvidenceIds([]);
+      setPhotoOpen(false);
       setDraft(Object.fromEntries(context.order.items.map((item) => [item.id, {
         received: String(item.remainingQuantity), accepted: String(item.remainingQuantity), reason: '', notes: '',
       }])));
@@ -182,6 +274,7 @@ export default function ReceivingHome() {
             conditionNotes: line?.notes.trim() || null,
           };
         }),
+        evidenceIds,
       };
       const idempotencyKey = `hovin-grn-${Crypto.randomUUID()}`;
       try {
@@ -198,14 +291,6 @@ export default function ReceivingHome() {
       setMessage(receiptMessage(error));
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function openWorkspace() {
-    try {
-      await Linking.openURL('https://www.hotelsvendors.com/login?redirect_url=%2Forders');
-    } catch {
-      setMessage('The protected workspace could not be opened. Check this device connection and try again.');
     }
   }
 
@@ -246,9 +331,9 @@ export default function ReceivingHome() {
         <ScrollView contentContainerStyle={styles.content}>
           <BrandBar />
           <View style={styles.hero}>
-            <Text style={styles.eyebrow}>HotelsVendors receiving companion</Text>
-            <Text style={styles.title}>Accept a delivery with the record, not a workaround.</Text>
-            <Text style={styles.body}>Sign in with the invited hotel receiving account. HOVIN never shows supplier, pricing, invoice, or catalogue data.</Text>
+            <Text style={styles.eyebrow}>HotelsVendors field layer</Text>
+            <Text style={styles.title}>The phone does the field work. The desk keeps the decision.</Text>
+            <Text style={styles.body}>Sign in with the organization account. HOVIN opens only the modules that account is allowed to use, and it keeps prices, invoices, and supplier identity off the hotel phone.</Text>
             <Pressable accessibilityRole="button" style={styles.primaryAction} onPress={authenticate}>
               <Text style={styles.primaryActionText}>Secure sign in</Text>
             </Pressable>
@@ -260,21 +345,59 @@ export default function ReceivingHome() {
     );
   }
 
+  if (fieldMode === 'home') {
+    if (!plan) {
+      if (loading || !message) {
+        if (connectionState === 'offline' && !loading) return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadField()} loading={loading} />;
+        return <LoadingScreen label="Opening the field workspace" />;
+      }
+      return (
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            <BrandBar />
+            <View style={styles.hero}>
+              <Text style={styles.eyebrow}>Field workspace unavailable</Text>
+              <Text accessibilityRole="alert" style={styles.body}>{message}</Text>
+              <Pressable accessibilityRole="button" style={styles.primaryAction} onPress={() => void loadField()}><Text style={styles.primaryActionText}>Retry</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text style={styles.back}>Sign out</Text></Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <FieldHome
+          plan={plan}
+          tasks={tasks}
+          email={user?.primaryEmailAddress?.emailAddress ?? 'Signed-in account'}
+          loading={loading}
+          message={message}
+          onRefresh={() => void loadField()}
+          onSignOut={() => { loadGeneration.current += 1; clearFieldState(); void signOut(); }}
+          onOpenPhone={openPhone}
+          onOpenDesk={openDesk}
+          onRespond={(task, status) => void respondToAssignment(task, status)}
+        />
+      </SafeAreaView>
+    );
+  }
+
   if (connectionState === 'offline' && !selected && !scannerOpen) {
-    return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadHandoffs()} loading={loading} />;
+    return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadField()} loading={loading} />;
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.topline}><BrandBar /><Pressable onPress={() => void signOut()} accessibilityRole="button"><Text style={styles.signOut}>Sign out</Text></Pressable></View>
+        <View style={styles.topline}><Pressable accessibilityRole="button" onPress={() => { setFieldMode('home'); setScannerOpen(false); setSelected(null); }}><Text style={styles.signOut}>‹ Field home</Text></Pressable><Pressable onPress={() => void signOut()} accessibilityRole="button"><Text style={styles.signOut}>Sign out</Text></Pressable></View>
 
         <View style={styles.identityBar}><Text style={styles.identityText}>{user?.primaryEmailAddress?.emailAddress ?? 'Signed-in receiver'}</Text><Text style={styles.identityContext}>Authorized receiving only</Text></View>
 
-        {scannerOpen ? <PhysicalCountScanner api={api} onClose={() => setScannerOpen(false)} onMessage={setMessage} /> : selected ? <ReceiptEditor context={selected} draft={draft} onChange={changeDraft} onCancel={() => setSelected(null)} onSubmit={() => void submitReceipt()} submitting={submitting} /> : <>
+        {scannerOpen ? <PhysicalCountScanner api={api} onClose={() => { setScannerOpen(false); if (fieldMode === 'count') setFieldMode('home'); }} onMessage={setMessage} /> : selected ? photoOpen ? <ReceiptPhotoCapture api={api} onClose={() => setPhotoOpen(false)} onSaved={(id) => { setEvidenceIds((current) => [...current, id]); setPhotoOpen(false); }} onMessage={setMessage} /> : <ReceiptEditor context={selected} draft={draft} evidenceCount={evidenceIds.length} onChange={changeDraft} onCancel={() => setSelected(null)} onCapturePhoto={() => setPhotoOpen(true)} onSubmit={() => void submitReceipt()} submitting={submitting} /> : <>
           <View style={styles.sectionHeader}><View><Text style={styles.eyebrow}>Today’s controlled handoffs</Text><Text style={styles.sectionTitle}>Receiving queue</Text></View><Pressable accessibilityRole="button" onPress={() => void loadHandoffs()} style={styles.textAction}><Text style={styles.textActionLabel}>{loading ? 'Refreshing' : 'Refresh'}</Text></Pressable></View>
           {loading ? <LoadingScreen label="Loading assigned handoffs" compact /> : null}
-          {!loading && handoffs.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No receivable orders assigned</Text><Text style={styles.emptyText}>A receiving handoff appears here only after an authorized hotel order reaches its controlled delivery state.</Text><Pressable accessibilityRole="button" style={styles.secondaryAction} onPress={openWorkspace}><Text style={styles.secondaryActionText}>Open workspace</Text></Pressable></View> : null}
+          {!loading && handoffs.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No receivable orders assigned</Text><Text style={styles.emptyText}>A receiving handoff appears here only after an authorized hotel order reaches its controlled delivery state.</Text><Pressable accessibilityRole="button" style={styles.secondaryAction} onPress={() => setFieldMode('home')}><Text style={styles.secondaryActionText}>Back to field home</Text></Pressable></View> : null}
           {handoffs.map((handoff) => <Pressable accessibilityRole="button" key={handoff.orderId} style={styles.handoffCard} onPress={() => void openHandoff(handoff)}><View><Text style={styles.handoffNumber}>{handoff.orderNumber}</Text><Text style={styles.handoffMeta}>{handoff.lineCount} lines · {handoff.remainingQuantity} remaining</Text></View><Text style={styles.handoffOpen}>Open ›</Text></Pressable>)}
           <Pressable accessibilityRole="button" style={styles.scanAction} onPress={() => setScannerOpen(true)}><Text style={styles.scanActionLabel}>Open camera verification</Text><Text style={styles.scanActionMeta}>Barcode · QR · explicit physical count</Text></Pressable>
           <ControlSequence />
@@ -333,11 +456,35 @@ function ConfigurationRequired({ origin }: { origin?: { code: string; message: s
 
 function ControlSequence() { return <View style={styles.section}><Text style={styles.sectionTitle}>Controlled receiving sequence</Text><WorkflowRow number="01" title="Assigned handoff" detail="Only an authorized hotel receiver opens the handoff." /><WorkflowRow number="02" title="Line receipt" detail="Remaining quantities are checked line by line." /><WorkflowRow number="03" title="Exception" detail="Rejected units require an explicit reason." /><WorkflowRow number="04" title="Record" detail="The server validates the GRN and preserves the audit trail." /></View>; }
 
-function ReceiptEditor({ context, draft, onChange, onCancel, onSubmit, submitting }: { context: ReceiptContext; draft: ReceiptDraft; onChange: (id: string, key: keyof ReceiptDraft[string], value: string) => void; onCancel: () => void; onSubmit: () => void; submitting: boolean }) {
-  return <View style={styles.editor}><Pressable onPress={onCancel} accessibilityRole="button"><Text style={styles.back}>‹ Receiving queue</Text></Pressable><Text style={styles.eyebrow}>Record delivery</Text><Text style={styles.editorTitle}>{context.order.orderNumber}</Text><Text style={styles.editorMeta}>{context.order.status.replaceAll('_', ' ')} · {context.order.items.length} lines</Text>{context.order.items.map((item) => { const line = draft[item.id] ?? { received: '', accepted: '', reason: '', notes: '' }; return <View key={item.id} style={styles.lineCard}><Text style={styles.lineTitle}>{item.product.name}</Text><Text style={styles.lineMeta}>Remaining {item.remainingQuantity}{item.product.unitOfMeasure ? ` ${item.product.unitOfMeasure}` : ''}</Text><View style={styles.inputRow}><QuantityField label="Received" value={line.received} onChangeText={(value) => onChange(item.id, 'received', value)} /><QuantityField label="Accepted" value={line.accepted} onChangeText={(value) => onChange(item.id, 'accepted', value)} /></View><TextInput value={line.reason} onChangeText={(value) => onChange(item.id, 'reason', value)} placeholder="Rejection reason (required if different)" placeholderTextColor="#9AA5AC" style={styles.input} /><TextInput value={line.notes} onChangeText={(value) => onChange(item.id, 'notes', value)} placeholder="Condition note (optional)" placeholderTextColor="#9AA5AC" style={styles.input} /></View>; })}<Text style={styles.evidenceNote}>Photo evidence upload is not enabled in this build. Do not attach unverified links; the receipt is recorded only with data the server can validate.</Text><Pressable accessibilityRole="button" disabled={!context.order.canRecordReceipt || submitting} style={[styles.primaryAction, (!context.order.canRecordReceipt || submitting) && styles.disabledAction]} onPress={onSubmit}><Text style={styles.primaryActionText}>{submitting ? 'Recording receipt…' : 'Record controlled receipt'}</Text></Pressable></View>;
+function ReceiptEditor({ context, draft, evidenceCount, onChange, onCancel, onCapturePhoto, onSubmit, submitting }: { context: ReceiptContext; draft: ReceiptDraft; evidenceCount: number; onChange: (id: string, key: keyof ReceiptDraft[string], value: string) => void; onCancel: () => void; onCapturePhoto: () => void; onSubmit: () => void; submitting: boolean }) {
+  return <View style={styles.editor}><Pressable onPress={onCancel} accessibilityRole="button"><Text style={styles.back}>‹ Receiving queue</Text></Pressable><Text style={styles.eyebrow}>Record delivery</Text><Text style={styles.editorTitle}>{context.order.orderNumber}</Text><Text style={styles.editorMeta}>{context.order.status.replaceAll('_', ' ')} · {context.order.items.length} lines</Text>{context.order.items.map((item) => { const line = draft[item.id] ?? { received: '', accepted: '', reason: '', notes: '' }; return <View key={item.id} style={styles.lineCard}><Text style={styles.lineTitle}>{item.product.name}</Text><Text style={styles.lineMeta}>Remaining {item.remainingQuantity}{item.product.unitOfMeasure ? ` ${item.product.unitOfMeasure}` : ''}</Text><View style={styles.inputRow}><QuantityField label="Received" value={line.received} onChangeText={(value) => onChange(item.id, 'received', value)} /><QuantityField label="Accepted" value={line.accepted} onChangeText={(value) => onChange(item.id, 'accepted', value)} /></View><TextInput value={line.reason} onChangeText={(value) => onChange(item.id, 'reason', value)} placeholder="Rejection reason (required if different)" placeholderTextColor="#9AA5AC" style={styles.input} /><TextInput value={line.notes} onChangeText={(value) => onChange(item.id, 'notes', value)} placeholder="Condition note (optional)" placeholderTextColor="#9AA5AC" style={styles.input} /></View>; })}<Text style={styles.evidenceNote}>{evidenceCount ? `${evidenceCount} receipt photo${evidenceCount === 1 ? '' : 's'} stored for this organization.` : 'A receipt photo is stored privately and attached to this record. The phone does not keep a public copy.'}</Text>{onCapturePhoto ? <Pressable accessibilityRole="button" style={styles.secondaryAction} onPress={onCapturePhoto}><Text style={styles.secondaryActionText}>Capture receipt photo</Text></Pressable> : null}<Pressable accessibilityRole="button" disabled={!context.order.canRecordReceipt || submitting} style={[styles.primaryAction, (!context.order.canRecordReceipt || submitting) && styles.disabledAction]} onPress={onSubmit}><Text style={styles.primaryActionText}>{submitting ? 'Recording receipt…' : 'Record controlled receipt'}</Text></Pressable></View>;
 }
 
 function QuantityField({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) { return <View style={styles.quantityField}><Text style={styles.inputLabel}>{label}</Text><TextInput value={value} onChangeText={onChangeText} keyboardType="number-pad" style={styles.input} /></View>; }
+
+function ReceiptPhotoCapture({ api, onClose, onSaved, onMessage }: { api: ReturnType<typeof createHovinClient> | null; onClose: () => void; onSaved: (id: string) => void; onMessage: (value: string | null) => void }) {
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [saving, setSaving] = useState(false);
+  async function capture() {
+    if (!api || saving) return;
+    setSaving(true);
+    try {
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.4 });
+      if (!photo?.uri) throw new Error('PHOTO_UNAVAILABLE');
+      const saved = await api.uploadEvidence({ uri: photo.uri, name: 'receipt.jpg', type: 'image/jpeg' });
+      onMessage('Receipt photo stored.');
+      onSaved(saved.id);
+    } catch (error) {
+      onMessage(receiptMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+  if (!permission) return <LoadingScreen label="Checking camera permission" />;
+  if (!permission.granted) return <View style={styles.scannerSurface}><Text style={styles.editorTitle}>Receipt photo</Text><Text style={styles.body}>The camera is used only when you choose to attach a photo to this receipt.</Text><Pressable accessibilityRole="button" style={styles.primaryAction} onPress={() => void requestPermission()}><Text style={styles.primaryActionText}>Allow camera</Text></Pressable><Pressable accessibilityRole="button" onPress={onClose}><Text style={styles.back}>Cancel</Text></Pressable></View>;
+  return <View style={styles.scannerSurface}><Pressable accessibilityRole="button" onPress={onClose}><Text style={styles.back}>‹ Receipt</Text></Pressable><Text style={styles.editorTitle}>Receipt photo</Text><View style={styles.cameraFrame}><CameraView ref={cameraRef} style={styles.camera} facing="back" /></View><Pressable accessibilityRole="button" disabled={saving} style={[styles.primaryAction, saving && styles.disabledAction]} onPress={() => void capture()}><Text style={styles.primaryActionText}>{saving ? 'Storing photo…' : 'Store this photo'}</Text></Pressable></View>;
+}
 
 function PhysicalCountScanner({ api, onClose, onMessage }: { api: ReturnType<typeof createHovinClient> | null; onClose: () => void; onMessage: (value: string | null) => void }) {
   const [permission, requestPermission] = useCameraPermissions();

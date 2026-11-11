@@ -25,6 +25,14 @@ function receiptEvidenceUrls(value: unknown) {
   return urls as string[];
 }
 
+function receiptEvidenceIds(value: unknown) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 8) return null;
+  const ids = [...new Set(value)];
+  if (!ids.every((id) => typeof id === 'string' && id.length > 0 && id.length <= 64)) return null;
+  return ids as string[];
+}
+
 export async function POST(req: Request) {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
@@ -43,6 +51,9 @@ export async function POST(req: Request) {
   }
   const evidenceUrls = receiptEvidenceUrls(body.evidenceUrls);
   if (!evidenceUrls) return NextResponse.json({ error: "Receipt evidence must contain up to eight secure HTTPS URLs." }, { status: 400 });
+  const evidenceIds = receiptEvidenceIds(body.evidenceIds);
+  if (!evidenceIds) return NextResponse.json({ error: "Receipt evidence files must contain up to eight stored photos." }, { status: 400 });
+  if (evidenceUrls.length + evidenceIds.length > 8) return NextResponse.json({ error: "Receipt evidence is limited to eight items." }, { status: 400 });
   if (body.shipmentId !== undefined && (typeof body.shipmentId !== "string" || body.shipmentId.length === 0)) {
     return NextResponse.json({ error: "shipmentId must be a non-empty string when provided." }, { status: 400 });
   }
@@ -139,19 +150,37 @@ export async function POST(req: Request) {
         },
         include: { lineItems: true },
       });
-      const evidence = await Promise.all(evidenceUrls.map((sourceUrl) => tx.evidenceRecord.create({
-        data: {
-          tenantId: order.tenantId,
-          entityId: grn.id,
-          entityName: "GOODS_RECEIPT_NOTE",
-          sourceUrl,
-          sourceReference: "receipt-evidence",
-          rawEvidenceHash: createHash("sha256").update(JSON.stringify({ grnId: grn.id, sourceUrl })).digest("hex"),
-          extractedFact: JSON.stringify({ grnNumber: grn.grnNumber, kind: "RECEIPT_EVIDENCE" }),
-          provenanceClass: "USER_PROVIDED",
-          status: "EXTRACTED",
-        },
-      })));
+      const storedFiles = evidenceIds.length
+        ? await tx.receiptEvidenceFile.findMany({ where: { id: { in: evidenceIds }, tenantId: order.tenantId, deletedAt: null }, select: { id: true, sha256: true } })
+        : [];
+      if (storedFiles.length !== evidenceIds.length) return { error: "RECEIPT_EVIDENCE_NOT_FOUND", status: 404 as const };
+      const evidence = await Promise.all([
+        ...evidenceUrls.map((sourceUrl) => tx.evidenceRecord.create({
+          data: {
+            tenantId: order.tenantId,
+            entityId: grn.id,
+            entityName: "GOODS_RECEIPT_NOTE",
+            sourceUrl,
+            sourceReference: "receipt-evidence",
+            rawEvidenceHash: createHash("sha256").update(JSON.stringify({ grnId: grn.id, sourceUrl })).digest("hex"),
+            extractedFact: JSON.stringify({ grnNumber: grn.grnNumber, kind: "RECEIPT_EVIDENCE" }),
+            provenanceClass: "USER_PROVIDED",
+            status: "EXTRACTED",
+          },
+        })),
+        ...storedFiles.map((file) => tx.evidenceRecord.create({
+          data: {
+            tenantId: order.tenantId,
+            entityId: grn.id,
+            entityName: "GOODS_RECEIPT_NOTE",
+            sourceReference: `receipt-file:${file.id}`,
+            rawEvidenceHash: file.sha256,
+            extractedFact: JSON.stringify({ grnNumber: grn.grnNumber, kind: "RECEIPT_PHOTO" }),
+            provenanceClass: "USER_PROVIDED",
+            status: "EXTRACTED",
+          },
+        })),
+      ]);
 
       for (const line of checked.lines) {
         const cumulativeAccepted = (prior[line.orderItemId] || 0) + line.acceptedQuantity;
