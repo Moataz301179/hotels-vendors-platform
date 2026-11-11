@@ -46,6 +46,7 @@ export type ReceiptSubmission = {
     conditionNotes?: string | null;
   }>;
   evidenceUrls?: string[];
+  evidenceIds?: string[];
 };
 
 export type MobileWorkspace = 'hotel-field' | 'carrier-field' | 'supplier-field' | 'web-only';
@@ -173,8 +174,18 @@ export function createHovinClient(getToken: () => Promise<string | null>) {
     submitReceipt: (payload: ReceiptSubmission, idempotencyKey: string) => request<{ grn: { id: string; grnNumber: string; status: string }; idempotent?: boolean }>('/api/v2/grn', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-idempotency-key': idempotencyKey },
-      body: JSON.stringify({ ...payload, evidenceUrls: payload.evidenceUrls ?? [] }),
+      body: JSON.stringify({ ...payload, evidenceUrls: payload.evidenceUrls ?? [], evidenceIds: payload.evidenceIds ?? [] }),
     }),
+    uploadEvidence: async (file: { uri: string; name: string; type: string }) => {
+      const token = await getToken();
+      if (!token) throw new HovinApiError(401, 'SESSION_TOKEN_UNAVAILABLE');
+      const body = new FormData();
+      body.append('file', { uri: file.uri, name: file.name, type: file.type } as unknown as Blob);
+      const headers = new Headers();
+      headers.set('Authorization', `Bearer ${token}`);
+      headers.set('Accept', 'application/json');
+      return parseResponse<{ id: string; sha256: string; contentType: string; byteSize: number }>(await fetch(`${apiOrigin}/api/v2/evidence/files`, { method: 'POST', headers, body }));
+    },
     resolveBarcode: (barcode: string) => request<{ product: CountableProduct; barcode: string; captureRule: 'EXPLICIT_HUMAN_QUANTITY_REQUIRED' }>(`/api/v2/inventory/counts?barcode=${encodeURIComponent(barcode)}`),
     submitPhysicalCount: (payload: { productId: string; clientSubmissionId: string; observedQuantity: number; barcode?: string; capturedAt: string }) => request<{ count: { id: string; status: 'PENDING_REVIEW' | 'ACCEPTED' | 'REJECTED'; observedQuantity: number; capturedAt: string }; message: string }>('/api/v2/inventory/counts', {
       method: 'POST',

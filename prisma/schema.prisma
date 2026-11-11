@@ -4891,3 +4891,19 @@ model CatalogAgentRun {
 
   @@index([batchId, stage, createdAt])
 }
+
+/// A receipt photo held for the tenant that captured it. The goods receipt
+/// references the row. The bytes are not a public catalogue image.
+model ReceiptEvidenceFile {
+  id           String    @id @default(cuid())
+  tenantId     String
+  uploadedById String
+  sha256       String
+  contentType  String
+  byteSize     Int
+  bytes        Bytes
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  @@index([tenantId, createdAt])
+}

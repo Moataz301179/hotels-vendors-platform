@@ -1,5 +1,14 @@
 # HotelsVendors — Production-Ready Handover
 
+## Desk path and receipt photo — 2026-11-12 01:45 Africa/Cairo
+
+- Source branch: `cursor/hovin-field-layer-d37d`. Not deployed. The new `ReceiptEvidenceFile` table is not applied to production.
+- The orders desk no longer stops at an empty sentence. With no orders, it points to the sourcing desk, where a sealed request starts. The page states that a tax invoice is not filed from this screen.
+- A receiving account can store a JPEG, PNG, or WebP photo. The website uses a file picker. HOVIN uses the camera. The goods receipt attaches the stored photo id. Another organization cannot read the bytes.
+- Verification: `npx vitest run tests/p0/receipt-image.spec.ts tests/p0/receipt-evidence-upload.spec.ts tests/p0/grn-route-auth.spec.ts tests/p0/hovin-receipt-handoffs.spec.ts tests/p0/mobile-field-tasks.spec.ts` passed, 5 files, 17 tests. `npx tsc --noEmit` passed. The orders screen was not signed in through a browser, and the phone camera was not opened on a device.
+- Still open: a live order still needs a real accepted quote, an administrator payment guarantee, and an accepted tax invoice. The website still cannot file that invoice. The photo table must be applied with the deployment handshake before a production receipt can store a photo.
+- Next action: apply the migration only inside the production deploy handshake, then walk one hotel from the sourcing desk through an accepted response.
+
 ## HOVIN field layer — 2026-11-12 01:40 Africa/Cairo
 
 - Source branch: `cursor/hovin-field-layer-d37d`. Not deployed. No store build was produced.
