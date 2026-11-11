@@ -1,5 +1,15 @@
 # HotelsVendors — Production-Ready Handover
 
+## Masked supplier products — 2026-11-11 05:12 Africa/Cairo
+
+- Source branch: `cursor/masked-supplier-products-d37d`. Local database only. Not deployed.
+- The hotel list now shows products read from public supplier catalogs. The selling company, the price, and the page address stay on the private receiving record. `GET /marketplace` locally returned 162 Add to list rows. The HTML contained none of the company names, `EGP`, or the catalog hosts.
+- Two catalogs in the reviewed register answered with public product collections: 97 and 110 products. 162 mapped to food and beverage and were published. 45 were kept private because the hospitality category was not specific enough. The other six register sites exposed no public product collection. Jumia, Noon, Carrefour Egypt, and Amazon.eg did not return a catalog page from this environment.
+- The 209 generic operating specifications remain stored and are no longer on the public list. Product photographs stay off the public page because they are hosted on the selling company's site.
+- A later review fix removes Arabic and short company names with Unicode matching and withholds the row if any company token remains. A repeat import updates the existing product by its source id and withdraws the previous public row.
+- Verification: `npx vitest run tests/p0/masked-supplier-product.spec.ts` passed, 6 tests, including `جهينة Milk 1 L` and `ABC Milk`. The earlier three-file run passed before this fix.
+- Next action: merge and deploy only after the owner accepts this list. A production run does not copy the local receiving records unless the same import is repeated against the production database by a platform administrator.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.

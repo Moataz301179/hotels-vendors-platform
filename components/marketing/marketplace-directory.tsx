@@ -113,8 +113,8 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     <div className={styles.toolbar}>
       <div>
         <p className={styles.eyebrow}>{selectedCategory === 'All' ? 'Reviewed directory' : `${groupLabel(selectedCategory)} catalogue`}</p>
-        <h2 id="directory-title">{selectedCategory === 'All' ? 'Select specifications. Send them from the hotel list.' : groupLabel(selectedCategory)}</h2>
-        <p>Each row is a supplier-neutral specification. Set a quantity and add it to the hotel list. Prices, stock and vendor names stay out of this directory.</p>
+        <h2 id="directory-title">{selectedCategory === 'All' ? 'Select products. Send them from the hotel list.' : groupLabel(selectedCategory)}</h2>
+        <p>Each row is a supplier product prepared for a request. The selling company and the price stay off this list. Set a quantity and add it to the hotel list.</p>
       </div>
       <div className={styles.count} aria-live="polite"><ClipboardCheck size={18}/><strong>{visibleEntries.length}</strong><span>available records</span></div>
     </div>

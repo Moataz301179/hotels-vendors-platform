@@ -8,11 +8,12 @@ import {
 describe("public marketplace HoReCa source gate", () => {
   it("allows only reviewed HoReCa source classes", () => {
     expect(PUBLIC_HORECA_DIRECTORY_SOURCE_TYPES).toEqual([
-      "INTERNAL_HOSPITALITY_SPECIFICATION",
       "VENDOR_AUTHORIZED_HORECA_CATALOG",
+      "MASKED_OBSERVED_SUPPLIER_PRODUCT",
     ]);
-    expect(isPublicHoRecaDirectorySourceType("INTERNAL_HOSPITALITY_SPECIFICATION")).toBe(true);
+    expect(isPublicHoRecaDirectorySourceType("INTERNAL_HOSPITALITY_SPECIFICATION")).toBe(false);
     expect(isPublicHoRecaDirectorySourceType("VENDOR_AUTHORIZED_HORECA_CATALOG")).toBe(true);
+    expect(isPublicHoRecaDirectorySourceType("MASKED_OBSERVED_SUPPLIER_PRODUCT")).toBe(true);
   });
 
   it("keeps open-data consumer exports and unknown source types out of public discovery", () => {
