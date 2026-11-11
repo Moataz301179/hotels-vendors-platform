@@ -26,6 +26,9 @@ describe("masked supplier products", () => {
   it("removes the selling company and a printed price from the hotel row", () => {
     expect(maskedPublicProductName("Juhayna Fruit Yogurt Strawberry 105 Gm EGP 18.50", "Juhayna Food Industries")).toBe("Fruit Yogurt Strawberry 105 Gm");
     expect(maskedPublicProductName("Flaming Cheesy Puffs", "Arabian Food Industries (Domty)")).toBe("Flaming Cheesy Puffs");
+    expect(maskedPublicProductName("جهينة Milk 1 L", "جهينة")).toBe("Milk 1 L");
+    expect(maskedPublicProductName("ABC Milk", "ABC")).toBe("Milk");
+    expect(maskedPublicProductName("جهينة", "جهينة")).toBeNull();
   });
 
   it("publishes the product without the company, price, or page address", () => {
@@ -37,6 +40,11 @@ describe("masked supplier products", () => {
     expect(JSON.stringify(result.fields)).not.toMatch(/example food|42|https:|supplier|price/i);
     expect(isPublicHoRecaDirectorySourceType("MASKED_OBSERVED_SUPPLIER_PRODUCT")).toBe(true);
     expect(isPublicHoRecaDirectorySourceType("PUBLIC_CATALOG_OBSERVATION")).toBe(false);
+  });
+
+  it("holds a product whose public title still names the selling company", () => {
+    const result = publicMaskedProduct(observation({ name: "جهينة", supplierName: "جهينة", brand: "جهينة" }));
+    expect(result.safe).toBe(false);
   });
 
   it("holds a page that is not an individual product", () => {

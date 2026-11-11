@@ -7,7 +7,7 @@ import { runQualityFilterAgent } from "@/lib/catalog/receiving/quality-filter-ag
 import type { RawCatalogObservation } from "@/lib/catalog/receiving/types";
 import { directoryFingerprint, directorySearchText, normalizeDirectoryText } from "@/lib/directory/catalog-normalization";
 import { hasSafePublicDirectoryFields, publicDirectoryFields, publicDirectorySpecifications, publicDirectoryText } from "@/lib/directory/public-directory-profile";
-import { maskedPublicProductName, observedPackSize } from "@/lib/sourcing/mask-supplier-product";
+import { maskedPublicProductName, observedPackSize, retainsSupplierIdentity } from "@/lib/sourcing/mask-supplier-product";
 
 export const MASKED_OBSERVED_SUPPLIER_PRODUCT = "MASKED_OBSERVED_SUPPLIER_PRODUCT";
 
@@ -31,8 +31,12 @@ export function publicMaskedProduct(observation: RawCatalogObservation) {
   const supplierName = observation.supplierName ?? "";
   const quality = runQualityFilterAgent(observation);
   const taxonomy = runHospitalityTaxonomyAgent(observation);
-  const name = maskedPublicProductName(taxonomy.normalizedName, supplierName);
-  const description = buyerDescription(taxonomy.normalizedDescription);
+  const identity = [supplierName, observation.brand].filter((value): value is string => Boolean(value)).join(" ");
+  const name = maskedPublicProductName(taxonomy.normalizedName, identity);
+  const described = buyerDescription(taxonomy.normalizedDescription);
+  const description = described && !retainsSupplierIdentity(described, identity)
+    ? described
+    : publicDirectoryText("Food product for a hotel request. The selling company and the price stay off this list.");
   const pack = observedPackSize(observation.name) ?? observation.packSize ?? null;
   const fields = name && description ? publicDirectoryFields({
     name,
@@ -47,9 +51,21 @@ export function publicMaskedProduct(observation: RawCatalogObservation) {
     && taxonomy.status === "MAPPED"
     && fields
     && description
-    && hasSafePublicDirectoryFields({ ...fields, nameAr: null }),
+    && hasSafePublicDirectoryFields({ ...fields, nameAr: null })
+    && !retainsSupplierIdentity([fields.name, fields.subcategory, fields.purchaseUnit, description].filter(Boolean).join(" "), identity),
   );
   return { quality, taxonomy, name, description, pack, fields, safe };
+}
+
+async function withdrawPublishedProduct(tx: Prisma.TransactionClient, sourceId: string, sourceRecordKey: string, now: Date, keepId?: string) {
+  const stale = await tx.directoryCandidate.findMany({
+    where: { sourceId, sourceRecordKey, deletedAt: null, ...(keepId ? { id: { not: keepId } } : {}) },
+    select: { id: true },
+  });
+  if (!stale.length) return;
+  const ids = stale.map((row) => row.id);
+  await tx.directoryProfile.updateMany({ where: { candidateId: { in: ids } }, data: { deletedAt: now, publicationStatus: "WITHDRAWN" } });
+  await tx.directoryCandidate.updateMany({ where: { id: { in: ids } }, data: { deletedAt: now, reviewStatus: "REJECTED", reviewNote: "Withdrawn because a later observation replaced this public row." } });
 }
 
 export async function publishMaskedCatalogObservations(input: {
@@ -121,17 +137,26 @@ export async function publishMaskedCatalogObservations(input: {
           processedAt: now,
         },
       });
+      const sourceRecordKey = observation.externalId ?? observation.productUrl ?? null;
       if (!publicProduct.safe || !publicProduct.fields || !publicProduct.name || !publicProduct.description) {
         held += 1;
+        if (sourceRecordKey) await withdrawPublishedProduct(tx, source.id, sourceRecordKey, now);
         continue;
       }
       const fields = publicProduct.fields;
       const attributes = publicDirectorySpecifications({ ...(publicProduct.pack ? { capacity: publicProduct.pack } : {}) });
-      const fingerprint = directoryFingerprint({ sourceUrl: input.sourceUrl, sourceRecordKey: observation.externalId ?? observation.productUrl, itemType: "PRODUCT", name: publicProduct.name, category: fields.category });
-      const candidate = await tx.directoryCandidate.upsert({
+      const fingerprint = directoryFingerprint({ sourceUrl: input.sourceUrl, sourceRecordKey, itemType: "PRODUCT", name: publicProduct.name, category: fields.category });
+      const existing = sourceRecordKey ? await tx.directoryCandidate.findFirst({ where: { sourceId: source.id, sourceRecordKey, deletedAt: null }, select: { id: true } }) : null;
+      if (sourceRecordKey) await withdrawPublishedProduct(tx, source.id, sourceRecordKey, now, existing?.id);
+      const candidate = existing
+        ? await tx.directoryCandidate.update({
+          where: { id: existing.id },
+          data: { sourceId: source.id, sourceRecordKey, sourceFingerprint: fingerprint, normalizedName: normalizeDirectoryText(publicProduct.name), searchText: directorySearchText({ ...fields, description: publicProduct.description, searchTerms: [] }), itemType: "PRODUCT", name: publicProduct.name, category: fields.category, subcategory: fields.subcategory, description: publicProduct.description, attributes: toJson(attributes), unitOfMeasure: fields.unitOfMeasure, purchaseUnit: fields.purchaseUnit, images: toJson([]), searchTerms: toJson([]), sourceSnapshot: toJson({ classification: "MASKED_PUBLIC_PRODUCT", receivingRecordId: record.id }), reviewStatus: "APPROVED", reviewNote: "Published as a masked product for the hotel request list.", reviewedAt: now, reviewedById: input.actor.id, deletedAt: null },
+        })
+        : await tx.directoryCandidate.upsert({
         where: { sourceFingerprint: fingerprint },
         update: { sourceId: source.id, normalizedName: normalizeDirectoryText(publicProduct.name), searchText: directorySearchText({ ...fields, description: publicProduct.description, searchTerms: [] }), itemType: "PRODUCT", name: publicProduct.name, category: fields.category, subcategory: fields.subcategory, description: publicProduct.description, attributes: toJson(attributes), unitOfMeasure: fields.unitOfMeasure, purchaseUnit: fields.purchaseUnit, images: toJson([]), searchTerms: toJson([]), sourceSnapshot: toJson({ classification: "MASKED_PUBLIC_PRODUCT", receivingRecordId: record.id }), reviewStatus: "APPROVED", reviewNote: "Published as a masked product for the hotel request list.", reviewedAt: now, reviewedById: input.actor.id, deletedAt: null },
-        create: { sourceId: source.id, sourceRecordKey: observation.externalId, sourceFingerprint: fingerprint, normalizedName: normalizeDirectoryText(publicProduct.name), searchText: directorySearchText({ ...fields, description: publicProduct.description, searchTerms: [] }), itemType: "PRODUCT", name: publicProduct.name, category: fields.category, subcategory: fields.subcategory, description: publicProduct.description, attributes: toJson(attributes), unitOfMeasure: fields.unitOfMeasure, purchaseUnit: fields.purchaseUnit, images: toJson([]), searchTerms: toJson([]), sourceSnapshot: toJson({ classification: "MASKED_PUBLIC_PRODUCT", receivingRecordId: record.id }), reviewStatus: "APPROVED", reviewNote: "Published as a masked product for the hotel request list.", reviewedAt: now, reviewedById: input.actor.id },
+        create: { sourceId: source.id, sourceRecordKey, sourceFingerprint: fingerprint, normalizedName: normalizeDirectoryText(publicProduct.name), searchText: directorySearchText({ ...fields, description: publicProduct.description, searchTerms: [] }), itemType: "PRODUCT", name: publicProduct.name, category: fields.category, subcategory: fields.subcategory, description: publicProduct.description, attributes: toJson(attributes), unitOfMeasure: fields.unitOfMeasure, purchaseUnit: fields.purchaseUnit, images: toJson([]), searchTerms: toJson([]), sourceSnapshot: toJson({ classification: "MASKED_PUBLIC_PRODUCT", receivingRecordId: record.id }), reviewStatus: "APPROVED", reviewNote: "Published as a masked product for the hotel request list.", reviewedAt: now, reviewedById: input.actor.id },
       });
       await tx.directoryProfile.upsert({
         where: { candidateId: candidate.id },
