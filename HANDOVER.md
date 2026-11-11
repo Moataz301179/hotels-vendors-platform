@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## Production deploy run 42939432074 — 2026-11-11 03:35 Africa/Cairo
+
+- Verified: workflow `HotelsVendors Production Deploy` run `42939432074` failed on `main` at `3a2c8623d221bb57537d796a289a2f06d19ac806`. The only failed step was `Activate release and verify`. It exited 1 about two seconds after the remote script started, with no remote error text.
+- Cause: that commit is already the active release. The activator runs `test ! -e /var/www/hv-releases/github-$GITHUB_SHA` before it changes PM2, Nginx, or the database. The same SHA succeeded earlier in run `42932789017`.
+- Live check after the failure: `GET https://www.hotelsvendors.com/api/health` returned `ok: true`, `database: ready`, `authorization: configured`, and `releaseId` `github-3a2c8623d221bb57537d796a289a2f06d19ac806`.
+- The sign-in and company-page revision `f74e9d1` is not on `main`, so this run could not publish it. Next action: put a new commit on `main`, then run the production workflow once for that new SHA with confirmation `APPLY_AFTER_NEON_BACKUP`.
+
 ## Authentication handoff and company pages — 2026-11-11
 
 - Source: `cursor/auth-workspace-pages-d37d`, based on `3a2c862`. This change is not on production. The live site remains release `github-3a2c8623d221bb57537d796a289a2f06d19ac806` until this revision is on `main` and the owner runs HotelsVendors Production Deploy with the confirmation `APPLY_AFTER_NEON_BACKUP` and no extra spaces.
