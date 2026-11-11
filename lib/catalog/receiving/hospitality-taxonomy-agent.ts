@@ -70,9 +70,9 @@ const RULES: Rule[] = [
   {root:"FOOD_BEVERAGE",sub:"TABLE_SERVICE",pattern:/\b(porcelain|chinaware|crockery|glassware|cutlery|flatware|plate|bowl|cup and saucer|tumbler|wine glass)\b/i},
   {root:"FOOD_BEVERAGE",sub:"FOOD_PACKAGING",pattern:/\b(food container|takeaway|take.?away|packaging|microwave tray|foil container|cling film|paper cup|disposable tray|carton)\b/i},
   {root:"FOOD_BEVERAGE",sub:"HYGIENE_CONSUMABLES",pattern:/\b(food safe glove|food grade sanitizer|kitchen tissue|kitchen towel|food hygiene)\b/i},
-  {root:"FOOD_BEVERAGE",sub:"BAKERY_PASTRY",pattern:/\b(bakery|pastry|croissant|bread|cake|bakery oven|dough sheeter|proofer)\b/i},
+  {root:"FOOD_BEVERAGE",sub:"BAKERY_PASTRY",pattern:/\b(bakery|pastry|croissant|bread|cake|bakery oven|dough sheeter|proofer|puffs?|biscuit|wafer|cracker|snack|chocolate|hazelnut)\b/i},
   {root:"FOOD_BEVERAGE",sub:"KITCHEN_SMALLWARE",pattern:/\b(chef knife|knife set|saucepan|stock pot|frying pan|chopping board|kitchen utensil|ladle|tongs)\b/i},
-  {root:"FOOD_BEVERAGE",sub:"CHILLED_FROZEN",pattern:/\b(frozen|chilled|beef|angus|chicken|poultry|fish|salmon|seafood|shrimp|dairy|cheese|butter|frozen vegetable)\b/i},
+  {root:"FOOD_BEVERAGE",sub:"CHILLED_FROZEN",pattern:/\b(frozen|chilled|beef|angus|chicken|poultry|fish|salmon|seafood|shrimp|dairy|cheese|cheesy|butter|ghee|yogurt|yoghurt|labneh|laban|milk|cream|turkey|sandwich|frozen vegetable)\b/i},
   {root:"FOOD_BEVERAGE",sub:"BEVERAGES",pattern:/\b(mineral water|juice|soft drink|coffee bean|tea leaf|syrup|beverage|drink)\b/i},
   {root:"FOOD_BEVERAGE",sub:"DRY_GOODS",pattern:/\b(rice|flour|sugar|salt|spice|pasta|grain|canned|olive oil|cooking oil|sauce|condiment|legume|dry goods)\b/i},
 ];

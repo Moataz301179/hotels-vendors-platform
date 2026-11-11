@@ -7,8 +7,8 @@ import type { Prisma } from "@prisma/client";
  * to buyers.
  */
 export const PUBLIC_HORECA_DIRECTORY_SOURCE_TYPES = [
-  "INTERNAL_HOSPITALITY_SPECIFICATION",
   "VENDOR_AUTHORIZED_HORECA_CATALOG",
+  "MASKED_OBSERVED_SUPPLIER_PRODUCT",
 ] as const;
 
 export function isPublicHoRecaDirectorySourceType(sourceType: string): boolean {
