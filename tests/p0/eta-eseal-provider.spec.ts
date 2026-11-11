@@ -49,6 +49,14 @@ describe("local e-seal provider", () => {
     }
   });
 
+  it("uses the certificate that belongs to the signing key when the token also holds the authority certificate", async () => {
+    const { key, certificateDer } = testCertificate();
+    const document = Buffer.from("HotelsVendors local e-seal test\n");
+    const pkcs11 = fakePkcs11({ key, certificateDer, loginError: "", authorityFirst: true });
+    const signed = await signWithToken(document, "user-pin", pkcs11TokenConnection("/usr/local/lib/libeps2003csp11.dylib", pkcs11));
+    expect(signed.certificateFingerprint).toHaveLength(95);
+  });
+
   it("signs through the token session and reports a rejected PIN without echoing it", async () => {
     const { key, certificateDer } = testCertificate();
     const document = Buffer.from("HotelsVendors local e-seal test\n");
@@ -61,8 +69,9 @@ describe("local e-seal provider", () => {
   });
 });
 
-function fakePkcs11(input: { key: Buffer; certificateDer: Buffer; loginError: string }): Pkcs11Module & { loggedInWith: string; loginError: string } {
-  const state = { loggedInWith: "", loginError: input.loginError, find: 0 };
+function fakePkcs11(input: { key: Buffer; certificateDer: Buffer; loginError: string; authorityFirst?: boolean }): Pkcs11Module & { loggedInWith: string; loginError: string } {
+  const leafId = Buffer.from("leaf-key");
+  const state = { loggedInWith: "", loginError: input.loginError, template: [] as Array<{ type: number; value?: unknown }> };
   class PKCS11 {
     load() {}
     C_Initialize() {}
@@ -75,8 +84,14 @@ function fakePkcs11(input: { key: Buffer; certificateDer: Buffer; loginError: st
     }
     C_Logout() {}
     C_CloseSession() {}
-    C_FindObjectsInit() { state.find += 1; }
-    C_FindObjects() { return [Buffer.from(state.find % 2 === 1 ? "key" : "cert")]; }
+    C_FindObjectsInit(_session: Buffer, template: Array<{ type: number; value?: unknown }>) { state.template = template; }
+    C_FindObjects() {
+      const wantsKey = state.template.some((attribute) => attribute.value === 3);
+      if (wantsKey) return [Buffer.from("key")];
+      const requestedId = state.template.find((attribute) => attribute.type === 258)?.value;
+      if (Buffer.isBuffer(requestedId) && requestedId.equals(leafId)) return [Buffer.from("leaf-cert")];
+      return input.authorityFirst ? [Buffer.from("authority-cert")] : [Buffer.from("leaf-cert")];
+    }
     C_FindObjectsFinal() {}
     C_SignInit() {}
     C_Sign(_session: Buffer, data: Buffer) {
@@ -84,7 +99,11 @@ function fakePkcs11(input: { key: Buffer; certificateDer: Buffer; loginError: st
       signer.update(data);
       return signer.sign(input.key);
     }
-    C_GetAttributeValue() { return [{ type: 17, value: input.certificateDer }]; }
+    C_GetAttributeValue(_session: Buffer, object: Buffer, template: Array<{ type: number }>) {
+      if (object.equals(Buffer.from("key"))) return [{ type: 258, value: leafId }];
+      if (object.equals(Buffer.from("authority-cert"))) return [{ type: 17, value: Buffer.from("authority-certificate") }];
+      return [{ type: template[0]?.type ?? 17, value: input.certificateDer }];
+    }
   }
   return {
     CKF_SERIAL_SESSION: 4,
@@ -92,6 +111,7 @@ function fakePkcs11(input: { key: Buffer; certificateDer: Buffer; loginError: st
     CKO_PRIVATE_KEY: 3,
     CKO_CERTIFICATE: 1,
     CKA_CLASS: 0,
+    CKA_ID: 258,
     CKA_SIGN: 1,
     CKA_VALUE: 17,
     CKM_SHA256_RSA_PKCS: 64,

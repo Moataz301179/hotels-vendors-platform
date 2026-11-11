@@ -8,6 +8,7 @@ export type Pkcs11Module = {
   CKO_PRIVATE_KEY: number;
   CKO_CERTIFICATE: number;
   CKA_CLASS: number;
+  CKA_ID: number;
   CKA_SIGN: number;
   CKA_VALUE: number;
   CKM_SHA256_RSA_PKCS: number;
@@ -61,7 +62,9 @@ export function pkcs11TokenConnection(libraryPath: string, pkcs11: Pkcs11Module)
         loggedIn = true;
         const key = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_PRIVATE_KEY }, { type: pkcs11.CKA_SIGN, value: true }]);
         if (!key) throw new Error("ESEAL_SIGNING_KEY_NOT_FOUND");
-        const certificate = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_CERTIFICATE }]);
+        const keyId = session.C_GetAttributeValue(open, key, [{ type: pkcs11.CKA_ID }])[0]?.value;
+        if (!Buffer.isBuffer(keyId) || !keyId.length) throw new Error("ESEAL_KEY_ID_MISSING");
+        const certificate = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_CERTIFICATE }, { type: pkcs11.CKA_ID, value: keyId }]);
         if (!certificate) throw new Error("ESEAL_CERTIFICATE_NOT_FOUND");
         const certificateDer = session.C_GetAttributeValue(open, certificate, [{ type: pkcs11.CKA_VALUE }])[0]?.value;
         if (!Buffer.isBuffer(certificateDer) || !certificateDer.length) throw new Error("ESEAL_CERTIFICATE_UNREADABLE");
