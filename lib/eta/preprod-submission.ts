@@ -29,8 +29,6 @@ export type PreprodSendResult = {
 export type PreprodDocumentInput = {
   issuerId: string;
   issuerName: string;
-  receiverId: string;
-  receiverName: string;
   activityCode: string;
   internalId: string;
   issuedAt: Date;
@@ -65,9 +63,7 @@ export function preprodInternalId(date: Date): string {
 
 export function buildPreprodDocument(input: PreprodDocumentInput): Record<string, unknown> {
   const issuerId = taxId(input.issuerId);
-  const receiverId = taxId(input.receiverId);
   const issuerName = requiredName(input.issuerName);
-  const receiverName = requiredName(input.receiverName);
   if (!/^\d{4}$/.test(input.activityCode)) throw new Error("ETA_ACTIVITY_CODE_REQUIRED");
   if (!/^HV-PREPROD-[A-Za-z0-9-]{4,40}$/.test(input.internalId)) throw new Error("ETA_INTERNAL_ID_INVALID");
   return {
@@ -79,9 +75,8 @@ export function buildPreprodDocument(input: PreprodDocumentInput): Record<string
     },
     receiver: {
       address: address(),
-      type: "B",
-      id: receiverId,
-      name: receiverName,
+      type: "P",
+      name: "Preprod test buyer",
     },
     documentType: "I",
     documentTypeVersion: "1.0",

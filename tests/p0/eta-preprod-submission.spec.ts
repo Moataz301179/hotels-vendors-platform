@@ -46,8 +46,6 @@ function document() {
   return buildPreprodDocument({
     issuerId: "123456789",
     issuerName: "Hotels Vendors Test",
-    receiverId: "987654321",
-    receiverName: "Preprod Receiver",
     activityCode: "4620",
     internalId: "HV-PREPROD-TEST01",
     issuedAt: ISSUED_AT,
@@ -124,6 +122,8 @@ describe("ETA preprod submission", () => {
       });
       const sent = JSON.parse(submissionBody) as { documents: Array<Record<string, unknown>> };
       const signature = (sent.documents[0].signatures as Array<{ signatureType: string; value: string }>)[0];
+      expect(sent.documents[0].receiver).toEqual({ address: expect.any(Object), type: "P", name: "Preprod test buyer" });
+      expect(JSON.stringify(sent.documents[0].receiver)).not.toContain("123456789");
       const canonical = canonicalizeEtaPayload(document());
       expect(signature.signatureType).toBe("I");
       expect(submissionBody).not.toContain(SECRET);
@@ -206,8 +206,6 @@ function documentInput() {
   return {
     issuerId: "123456789",
     issuerName: "Hotels Vendors Test",
-    receiverId: "987654321",
-    receiverName: "Preprod Receiver",
     activityCode: "4620",
     internalId: "HV-PREPROD-TEST01",
     issuedAt: ISSUED_AT,

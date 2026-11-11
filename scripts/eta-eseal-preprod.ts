@@ -22,15 +22,11 @@ async function submit(): Promise<void> {
   const credentials = preprodCredentials();
   const issuerId = process.env.ETA_ISSUER_ID?.trim() ?? "";
   const issuerName = process.env.ETA_ISSUER_NAME?.trim() ?? "";
-  const receiverId = process.env.ETA_RECEIVER_ID?.trim() ?? "";
-  const receiverName = process.env.ETA_RECEIVER_NAME?.trim() ?? "";
   const activityCode = process.env.ETA_ACTIVITY_CODE?.trim() ?? "";
   const issuedAt = new Date();
   const document = buildPreprodDocument({
     issuerId,
     issuerName,
-    receiverId,
-    receiverName,
     activityCode,
     internalId: preprodInternalId(issuedAt),
     issuedAt,
