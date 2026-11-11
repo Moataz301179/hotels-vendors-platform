@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import type { TokenConnection, TokenSignature } from "@/lib/eta/eseal-provider";
 
 type Attribute = { type: number; value?: unknown };
@@ -32,13 +33,14 @@ type Pkcs11Session = {
   C_GetAttributeValue(session: Buffer, object: Buffer, template: Attribute[]): Attribute[];
 };
 
-export async function loadPkcs11Module(): Promise<Pkcs11Module> {
+export function loadPkcs11Module(projectRoot = process.cwd()): Pkcs11Module {
+  const require = createRequire(`${projectRoot}/package.json`);
   try {
-    const load = new Function("name", "return import(name)") as (name: string) => Promise<{ default?: Pkcs11Module }>;
-    const loaded = await load("pkcs11js");
-    return (loaded.default ?? loaded) as Pkcs11Module;
-  } catch {
-    throw new Error("ESEAL_PKCS11_PACKAGE_MISSING");
+    return require("pkcs11js") as Pkcs11Module;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("Cannot find module")) throw new Error("ESEAL_PKCS11_PACKAGE_MISSING");
+    throw error;
   }
 }
 

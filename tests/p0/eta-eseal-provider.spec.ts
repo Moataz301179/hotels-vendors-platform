@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { assertNoPinInput, assertPinNotInEnvironment, resolveEsealLibrary, signWithToken, verifiedTokenSignature } from "@/lib/eta/eseal-provider";
-import { pkcs11TokenConnection, type Pkcs11Module } from "@/lib/eta/eseal-pkcs11";
+import { loadPkcs11Module, pkcs11TokenConnection, type Pkcs11Module } from "@/lib/eta/eseal-pkcs11";
 
 function testCertificate() {
   const directory = mkdtempSync(join(tmpdir(), "eseal-"));
@@ -27,6 +27,12 @@ describe("local e-seal provider", () => {
     expect(signed.algorithm).toBe("SHA256-RSA-PKCS");
     expect(signed.certificateFingerprint).toMatch(/^(?:[A-F0-9]{2}:){31}[A-F0-9]{2}$/);
     expect(() => verifiedTokenSignature(document, { signature: Buffer.from("not-the-signature"), certificateDer })).toThrow("ESEAL_SIGNATURE_NOT_VERIFIED");
+  });
+
+  it("reports a missing token package from the project folder", () => {
+    const directory = mkdtempSync(join(tmpdir(), "eseal-pkg-"));
+    writeFileSync(join(directory, "package.json"), "{}\n");
+    expect(() => loadPkcs11Module(directory)).toThrow("ESEAL_PKCS11_PACKAGE_MISSING");
   });
 
   it("refuses a PIN supplied in the signing request or the environment", () => {
