@@ -1,5 +1,30 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN architecture review — 2026-11-12 01:25 Africa/Cairo
+
+- Source read: `mobile/` on `cursor/eseal-local-signer-d37d` at the review time, plus `/api/v2/mobile/receipts` and `/api/v2/grn`. No device or store build was run.
+- Keep HOVIN as the hotel receiving companion on the shared `/api/v2` session. Do not rebuild it as a four-pillar mobile platform. Supplier, carrier, and funder work stays in the web workspaces.
+- The server already limits the phone to an authorized hotel receiver and omits supplier, price, invoice, and source fields. `DEPARTMENT_HEAD` is refused with `RECEIVING_ROLE_REQUIRED`. The allowed organization roles are owner, regional GM, GM, financial controller, and receiving clerk, and the account must also hold `order:update`.
+- Open gaps: no signed store release, no photo upload, the camera count is separate from the receipt, and the empty queue opens the full web orders workspace. The legacy `hotels-vendors-mobile` repository stays out of release.
+- Next action: assign the hotel receiving role before any device test, then finish receipt evidence on this same app. Do not add purchasing, pricing, or the other three pillars to the phone.
+
+## Local USB e-seal signer — 2026-11-11 13:45 Africa/Cairo
+
+- Source branch: `cursor/eseal-local-signer-d37d`. Not deployed. The website still cannot file a VAT invoice.
+- `npm run eta:eseal-sign-test` runs on the laptop that has the USB token. It asks for the token user PIN on that laptop, signs one local test line through the token library, and checks the signature against the certificate that belongs to that signing key. It does not send the document to the tax authority and it does not accept a PIN from the request or the environment.
+- The token library package `pkcs11js` is installed on that laptop with `npm install --no-save pkcs11js`. The loader reads that package from the project folder. On this Apple Silicon Mac the installed ePass library is Intel-only, so the test must be run with the separate Intel Node in `$HOME/node-x64`.
+- Verification on the owner’s laptop at 14:10 Africa/Cairo: `npm run eta:eseal-sign-test`, under that Intel Node, printed `Signed with the USB token` and `Algorithm: SHA256-RSA-PKCS`. The signature matched the certificate on the stick. No document was sent to the tax authority.
+- Operator result at 14:16 Africa/Cairo: `npm run eta:eseal-sign-invoice` printed `Signed local invoice HV-LOCAL-SIGNING-TEST`, the same certificate fingerprint, `Algorithm: SHA256-RSA-PKCS`, and `Submitted to the tax authority: no`. This session did not re-run the stick. That raw signature is not the invoice form the tax authority accepts.
+- `npm run eta:eseal-sign-cades` asks for the token PIN, signs the same local invoice as a detached CAdES-BES signature, and still does not send it. OpenSSL verified that structure in `tests/p0/eta-eseal-provider.spec.ts`.
+- Operator result at 14:22 Africa/Cairo: `npm run eta:eseal-sign-cades` printed `Signed local invoice HV-LOCAL-SIGNING-TEST in CAdES-BES form`, the same certificate fingerprint, `Algorithm: CAdES-BES`, and `Submitted to the tax authority: no`. This session did not re-run the stick.
+- The laptop signing steps are complete. The website still cannot file. The client ID and secret stored in the GitHub production environment belong to the live system and must not be used for this test.
+- `npm run eta:eseal-preprod-health` checks the test system without credentials or an invoice. `npm run eta:eseal-submit-preprod` signs one preprod invoice with the USB token and sends it only to `https://api.preprod.invoicing.eta.gov.eg/api/v1.0/documentsubmissions`. Any live-system address is refused before a network call.
+- Verification at 23:08 Africa/Cairo: the live test identity service returned HTTP 400 and the submission route returned HTTP 401, which is the expected unauthenticated response. `npx vitest run tests/p0/eta-preprod-submission.spec.ts tests/p0/eta-eseal-provider.spec.ts tests/p0/eta-unsigned-submission.spec.ts` passed, 3 files, 14 tests. A local stand-in accepted one signed document with HTTP 202, submission ID `SUB-100`, and UUID `DOC-100`. No invoice was sent to the tax authority.
+- Operator result at 23:56 Africa/Cairo: on the laptop, under the Intel Node, `npm run eta:eseal-preprod-health` printed identity HTTP 400, submission route HTTP 401, and `Preprod responding: yes`. `npm run eta:eseal-submit-preprod` then printed `ETA_PREPROD_NOT_CONFIGURED` and sent nothing. The test-system client ID and secret were not present in that terminal.
+- The preprod test invoice names the USB taxpayer as the issuer and a person, “Preprod test buyer”, as the receiver. The receiver has no tax number. The issuer’s tax number is not copied into the receiver. The invoice total is 1 EGP.
+- Operator result at 01:20 Africa/Cairo on 12 Nov 2026: the USB token accepted the PIN. `npm run eta:eseal-submit-preprod` then stopped with `ETA_PREPROD_AUTH_FAILED:400`. The test identity service rejected the ERP client ID and secret. No invoice was submitted.
+- Next action: retry only with the client ID and secret issued for the test system. A live ERP pair is rejected by that service. Do not paste the secret into chat.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.
