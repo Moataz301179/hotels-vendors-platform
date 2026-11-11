@@ -7,8 +7,10 @@
 - The token library package `pkcs11js` is installed on that laptop with `npm install --no-save pkcs11js`. The loader reads that package from the project folder. On this Apple Silicon Mac the installed ePass library is Intel-only, so the test must be run with the separate Intel Node in `$HOME/node-x64`.
 - Verification on the owner’s laptop at 14:10 Africa/Cairo: `npm run eta:eseal-sign-test`, under that Intel Node, printed `Signed with the USB token` and `Algorithm: SHA256-RSA-PKCS`. The signature matched the certificate on the stick. No document was sent to the tax authority.
 - Operator result at 14:16 Africa/Cairo: `npm run eta:eseal-sign-invoice` printed `Signed local invoice HV-LOCAL-SIGNING-TEST`, the same certificate fingerprint, `Algorithm: SHA256-RSA-PKCS`, and `Submitted to the tax authority: no`. This session did not re-run the stick. That raw signature is not the invoice form the tax authority accepts.
-- `npm run eta:eseal-sign-cades` asks for the token PIN, signs the same local invoice as a detached CAdES-BES signature, and still does not send it. OpenSSL verified that structure in `tests/p0/eta-eseal-provider.spec.ts`. Acceptance by the tax authority’s test system is still unproven.
-- Next action: on the laptop, with the Intel Node and the stick, pull this branch and run `npm run eta:eseal-sign-cades`. Filing stays off until the tax authority’s test system accepts one invoice.
+- `npm run eta:eseal-sign-cades` asks for the token PIN, signs the same local invoice as a detached CAdES-BES signature, and still does not send it. OpenSSL verified that structure in `tests/p0/eta-eseal-provider.spec.ts`.
+- Operator result at 14:22 Africa/Cairo: `npm run eta:eseal-sign-cades` printed `Signed local invoice HV-LOCAL-SIGNING-TEST in CAdES-BES form`, the same certificate fingerprint, `Algorithm: CAdES-BES`, and `Submitted to the tax authority: no`. This session did not re-run the stick.
+- The laptop signing steps are complete. The website still cannot file. The client ID and secret stored in the GitHub production environment belong to the live system and must not be used for this test.
+- Next action: send one invoice from the laptop to the tax authority’s test system only, at `api.preprod.invoicing.eta.gov.eg`. Do not submit this signature to the live system.
 
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
