@@ -48,6 +48,35 @@ export type ReceiptSubmission = {
   evidenceUrls?: string[];
 };
 
+export type MobileWorkspace = 'hotel-field' | 'carrier-field' | 'supplier-field' | 'web-only';
+
+export type MobileModule = {
+  id: string;
+  title: string;
+  purpose: string;
+  surface: 'phone' | 'web';
+};
+
+export type MobilePlan = {
+  workspace: MobileWorkspace;
+  title: string;
+  summary: string;
+  deskPath: string;
+  modules: MobileModule[];
+  withheld: string[];
+  account: { platformRole: string; role: string };
+};
+
+export type FieldTask = {
+  id: string;
+  module: 'arrivals' | 'exceptions' | 'assignments' | 'movements' | 'fulfillment';
+  title: string;
+  detail: string;
+  status: string;
+  action: 'receive' | 'review' | 'respond' | 'none';
+  targetId: string;
+};
+
 export type CountableProduct = {
   id: string;
   name: string;
@@ -132,6 +161,13 @@ export function createHovinClient(getToken: () => Promise<string | null>) {
 
   return {
     identity: () => request<{ user: MobileIdentity }>('/api/v2/me'),
+    session: () => request<MobilePlan>('/api/v2/mobile/session'),
+    tasks: () => request<{ workspace: MobileWorkspace; tasks: FieldTask[] }>('/api/v2/mobile/tasks'),
+    respondToAssignment: (id: string, status: 'ACCEPTED' | 'REJECTED') => request<{ updated: boolean }>('/api/v2/carrier-assignments', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    }),
     handoffs: () => request<{ handoffs: ReceivingHandoff[] }>('/api/v2/mobile/receipts'),
     receiptContext: (orderId: string) => request<ReceiptContext>(`/api/v2/mobile/receipts/${encodeURIComponent(orderId)}`),
     submitReceipt: (payload: ReceiptSubmission, idempotencyKey: string) => request<{ grn: { id: string; grnNumber: string; status: string }; idempotent?: boolean }>('/api/v2/grn', {

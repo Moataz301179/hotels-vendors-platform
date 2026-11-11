@@ -6,7 +6,8 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import * as SQLite from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
 
-import { createHovinClient, HovinApiError, isRetryableReceiptFailure, resolveOrigin, type CountableProduct, type ReceiptContext, type ReceivingHandoff, type ReceiptSubmission } from '../src/api/hovin';
+import { createHovinClient, HovinApiError, isRetryableReceiptFailure, resolveOrigin, type CountableProduct, type FieldTask, type MobilePlan, type ReceiptContext, type ReceivingHandoff, type ReceiptSubmission } from '../src/api/hovin';
+import { FieldHome } from '../src/shell/FieldHome';
 import { enqueueGrn, flushGrns, getOutboxSummary, initializeOutbox, recordSuccessfulSync, type OutboxSummary } from '../src/sync/offlineQueue';
 
 type OutboxState = 'checking' | 'ready' | 'error';
@@ -14,8 +15,8 @@ type ConnectionState = 'connected' | 'offline';
 type ReceiptDraft = Record<string, { received: string; accepted: string; reason: string; notes: string }>;
 
 /**
- * HOVIN is a receiving companion, not a catalogue or a second purchasing
- * system. It renders only the signed-in hotel's authorized handoffs.
+ * HOVIN is the field layer for the signed-in account. The server decides
+ * which modules belong on the phone. Commercial decisions stay on the desk.
  */
 export default function ReceivingHome() {
   const [outboxState, setOutboxState] = useState<OutboxState>('checking');
@@ -24,6 +25,9 @@ export default function ReceivingHome() {
   const [connectionState, setConnectionState] = useState<ConnectionState>('connected');
   const [outboxSummary, setOutboxSummary] = useState<OutboxSummary>({ queued: 0, lastSyncAt: null });
   const [handoffs, setHandoffs] = useState<ReceivingHandoff[]>([]);
+  const [plan, setPlan] = useState<MobilePlan | null>(null);
+  const [tasks, setTasks] = useState<FieldTask[]>([]);
+  const [fieldMode, setFieldMode] = useState<'home' | 'receipt' | 'count'>('home');
   const [selected, setSelected] = useState<ReceiptContext | null>(null);
   const [draft, setDraft] = useState<ReceiptDraft>({});
   const [loading, setLoading] = useState(false);
@@ -137,8 +141,66 @@ export default function ReceivingHome() {
     }
   }
 
+  async function loadField() {
+    if (!isSignedIn || !api) return;
+    setLoading(true);
+    setMessage(null);
+    try {
+      const nextPlan = await api.session();
+      setPlan(nextPlan);
+      if (nextPlan.workspace === 'web-only') {
+        setTasks([]);
+        setConnectionState('connected');
+        return;
+      }
+      const nextTasks = await api.tasks();
+      setTasks(nextTasks.tasks);
+      setConnectionState('connected');
+      if (nextPlan.workspace === 'hotel-field') await loadHandoffs();
+    } catch (error) {
+      if (isRetryableReceiptFailure(error)) {
+        setConnectionState('offline');
+        if (database) setOutboxSummary(await getOutboxSummary(database, null));
+      } else {
+        setMessage(receiptMessage(error));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function respondToAssignment(task: FieldTask, status: 'ACCEPTED' | 'REJECTED') {
+    if (!api) return;
+    setMessage(null);
+    try {
+      await api.respondToAssignment(task.targetId, status);
+      setMessage(status === 'ACCEPTED' ? 'Assignment accepted.' : 'Assignment declined.');
+      await loadField();
+    } catch (error) {
+      setMessage(receiptMessage(error));
+    }
+  }
+
+  function openDesk() {
+    if (!plan?.deskPath.startsWith('/') || plan.deskPath.startsWith('//')) return;
+    void Linking.openURL(`https://www.hotelsvendors.com${plan.deskPath}`).catch(() => {
+      setMessage('The desk could not be opened. Check this device connection and try again.');
+    });
+  }
+
+  function openPhone(moduleId: string) {
+    if (moduleId === 'count') {
+      setFieldMode('count');
+      setScannerOpen(true);
+      return;
+    }
+    setScannerOpen(false);
+    setSelected(null);
+    setFieldMode('receipt');
+  }
+
   useEffect(() => {
-    if (isSignedIn && outboxState === 'ready') void loadHandoffs();
+    if (isSignedIn && outboxState === 'ready') void loadField();
   // The refresh trigger is intentionally session and local-storage readiness only.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, outboxState]);
@@ -201,14 +263,6 @@ export default function ReceivingHome() {
     }
   }
 
-  async function openWorkspace() {
-    try {
-      await Linking.openURL('https://www.hotelsvendors.com/login?redirect_url=%2Forders');
-    } catch {
-      setMessage('The protected workspace could not be opened. Check this device connection and try again.');
-    }
-  }
-
   async function authenticate() {
     setMessage(null);
     try {
@@ -246,9 +300,9 @@ export default function ReceivingHome() {
         <ScrollView contentContainerStyle={styles.content}>
           <BrandBar />
           <View style={styles.hero}>
-            <Text style={styles.eyebrow}>HotelsVendors receiving companion</Text>
-            <Text style={styles.title}>Accept a delivery with the record, not a workaround.</Text>
-            <Text style={styles.body}>Sign in with the invited hotel receiving account. HOVIN never shows supplier, pricing, invoice, or catalogue data.</Text>
+            <Text style={styles.eyebrow}>HotelsVendors field layer</Text>
+            <Text style={styles.title}>The phone does the field work. The desk keeps the decision.</Text>
+            <Text style={styles.body}>Sign in with the organization account. HOVIN opens only the modules that account is allowed to use, and it keeps prices, invoices, and supplier identity off the hotel phone.</Text>
             <Pressable accessibilityRole="button" style={styles.primaryAction} onPress={authenticate}>
               <Text style={styles.primaryActionText}>Secure sign in</Text>
             </Pressable>
@@ -260,21 +314,44 @@ export default function ReceivingHome() {
     );
   }
 
+  if (fieldMode === 'home') {
+    if (!plan) {
+      if (connectionState === 'offline') return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadField()} loading={loading} />;
+      return <LoadingScreen label="Opening the field workspace" />;
+    }
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <FieldHome
+          plan={plan}
+          tasks={tasks}
+          email={user?.primaryEmailAddress?.emailAddress ?? 'Signed-in account'}
+          loading={loading}
+          message={message}
+          onRefresh={() => void loadField()}
+          onSignOut={() => void signOut()}
+          onOpenPhone={openPhone}
+          onOpenDesk={openDesk}
+          onRespond={(task, status) => void respondToAssignment(task, status)}
+        />
+      </SafeAreaView>
+    );
+  }
+
   if (connectionState === 'offline' && !selected && !scannerOpen) {
-    return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadHandoffs()} loading={loading} />;
+    return <OfflineReceivingState summary={outboxSummary} onRetry={() => void loadField()} loading={loading} />;
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.topline}><BrandBar /><Pressable onPress={() => void signOut()} accessibilityRole="button"><Text style={styles.signOut}>Sign out</Text></Pressable></View>
+        <View style={styles.topline}><Pressable accessibilityRole="button" onPress={() => { setFieldMode('home'); setScannerOpen(false); setSelected(null); }}><Text style={styles.signOut}>‹ Field home</Text></Pressable><Pressable onPress={() => void signOut()} accessibilityRole="button"><Text style={styles.signOut}>Sign out</Text></Pressable></View>
 
         <View style={styles.identityBar}><Text style={styles.identityText}>{user?.primaryEmailAddress?.emailAddress ?? 'Signed-in receiver'}</Text><Text style={styles.identityContext}>Authorized receiving only</Text></View>
 
-        {scannerOpen ? <PhysicalCountScanner api={api} onClose={() => setScannerOpen(false)} onMessage={setMessage} /> : selected ? <ReceiptEditor context={selected} draft={draft} onChange={changeDraft} onCancel={() => setSelected(null)} onSubmit={() => void submitReceipt()} submitting={submitting} /> : <>
+        {scannerOpen ? <PhysicalCountScanner api={api} onClose={() => { setScannerOpen(false); if (fieldMode === 'count') setFieldMode('home'); }} onMessage={setMessage} /> : selected ? <ReceiptEditor context={selected} draft={draft} onChange={changeDraft} onCancel={() => setSelected(null)} onSubmit={() => void submitReceipt()} submitting={submitting} /> : <>
           <View style={styles.sectionHeader}><View><Text style={styles.eyebrow}>Today’s controlled handoffs</Text><Text style={styles.sectionTitle}>Receiving queue</Text></View><Pressable accessibilityRole="button" onPress={() => void loadHandoffs()} style={styles.textAction}><Text style={styles.textActionLabel}>{loading ? 'Refreshing' : 'Refresh'}</Text></Pressable></View>
           {loading ? <LoadingScreen label="Loading assigned handoffs" compact /> : null}
-          {!loading && handoffs.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No receivable orders assigned</Text><Text style={styles.emptyText}>A receiving handoff appears here only after an authorized hotel order reaches its controlled delivery state.</Text><Pressable accessibilityRole="button" style={styles.secondaryAction} onPress={openWorkspace}><Text style={styles.secondaryActionText}>Open workspace</Text></Pressable></View> : null}
+          {!loading && handoffs.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No receivable orders assigned</Text><Text style={styles.emptyText}>A receiving handoff appears here only after an authorized hotel order reaches its controlled delivery state.</Text><Pressable accessibilityRole="button" style={styles.secondaryAction} onPress={() => setFieldMode('home')}><Text style={styles.secondaryActionText}>Back to field home</Text></Pressable></View> : null}
           {handoffs.map((handoff) => <Pressable accessibilityRole="button" key={handoff.orderId} style={styles.handoffCard} onPress={() => void openHandoff(handoff)}><View><Text style={styles.handoffNumber}>{handoff.orderNumber}</Text><Text style={styles.handoffMeta}>{handoff.lineCount} lines · {handoff.remainingQuantity} remaining</Text></View><Text style={styles.handoffOpen}>Open ›</Text></Pressable>)}
           <Pressable accessibilityRole="button" style={styles.scanAction} onPress={() => setScannerOpen(true)}><Text style={styles.scanActionLabel}>Open camera verification</Text><Text style={styles.scanActionMeta}>Barcode · QR · explicit physical count</Text></Pressable>
           <ControlSequence />
