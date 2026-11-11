@@ -405,12 +405,20 @@
 }
 .thumb {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   flex: none;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--paper-100);
+}
+.identity em {
+  display: block;
+  margin-top: 2px;
+  color: #3d4b54;
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.4;
 }
 .thumb img {
   width: 100%;

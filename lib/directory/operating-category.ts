@@ -39,16 +39,8 @@ export const OPERATING_GROUPS = [
   "Uniforms & workwear",
 ] as const;
 
-export function operatingCategory(code: string | null | undefined, name = ""): OperatingArea {
+export function operatingCategory(code: string | null | undefined, _name = ""): OperatingArea {
   const normalized = (code ?? "").trim().toUpperCase().replace(/[\s-]+/g, "_");
-  if (normalized === "FOOD_BEVERAGE") {
-    const kitchen = /pan|storage|container|kitchen/.test(name.toLowerCase());
-    return {
-      code: normalized,
-      group: "Restaurants & bars",
-      subcategory: kitchen ? "Kitchen equipment & food preparation" : "Table service, buffetware & bar supplies",
-    };
-  }
   const known = AREAS[normalized as keyof typeof AREAS];
   if (known) return { code: normalized, ...known };
   return { code: normalized || "UNMATCHED", group: "Other operating needs", subcategory: "Reviewed requirement" };

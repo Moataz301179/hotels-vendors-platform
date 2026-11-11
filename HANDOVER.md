@@ -583,3 +583,13 @@ The live marketplace showed 15 records because that was the only reviewed direct
 - Local apply created 179 profiles and updated 30. `http://127.0.0.1:3000/marketplace` returned HTTP 200 with 209 Add to list controls.
 - The next production workflow publishes this catalog to Neon through an existing platform administrator, then the same release serves it. The page reads up to 1,000 published records.
 - `npx vitest run tests/p0/operating-catalog.spec.ts tests/p0/internal-directory-batch.spec.ts` passed, 3 tests.
+
+## Food listings and pictures — 2026-11-11 2:55 AM Africa/Cairo
+
+The live catalogue already contained 20 food and beverage specifications, but they were filed under “Restaurants & bars” after six other sections, and every row was text only.
+
+- The marketplace now labels that area “Food & beverage”, places it first, and lists edible items before kitchen equipment.
+- Each food specification has a local item photograph. Other rows use the area cover. No Unsplash or Wikimedia URL is sent to the browser.
+- The 20 food specifications also show an Arabic name. `npx vitest run tests/p0/listing-visual.spec.ts tests/p0/operating-category.spec.ts tests/p0/operating-catalog.spec.ts tests/p0/marketplace-sourcing-areas.spec.ts` passed.
+- Local `http://127.0.0.1:3000/marketplace` showed the food section first, rice/chicken/juice photographs, Arabic names, and the rice detail photograph. This revision is not on the live site yet.
+- Next action: merge this branch and run the production workflow from `main` with `APPLY_AFTER_NEON_BACKUP`. The same run republishes the Arabic names.

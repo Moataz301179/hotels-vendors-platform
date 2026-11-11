@@ -183,11 +183,35 @@ const rows = [
   ["uni-socks", "Work socks", "UNIFORMS", "Footwear", "pair", "Generic sock specification for hotel work uniforms."],
 ];
 
+const foodArabic = {
+  "Long-grain white rice": "أرز أبيض طويل الحبة",
+  "Wheat flour, all purpose": "دقيق قمح متعدد الاستخدام",
+  "White crystal sugar": "سكر أبيض",
+  "Iodized table salt": "ملح طعام مدعم باليود",
+  "Sunflower cooking oil": "زيت دوار الشمس للطبخ",
+  "Tomato paste": "معجون طماطم",
+  "Dry durum pasta": "مكرونة قمح قاسي",
+  "UHT whole milk": "حليب كامل الدسم طويل الأجل",
+  "Salted butter": "زبدة مملحة",
+  "Fresh shell eggs": "بيض طازج",
+  "Frozen chicken breast": "صدور دجاج مجمدة",
+  "Frozen beef cubes": "مكعبات لحم بقري مجمدة",
+  "Frozen white fish fillet": "فيليه سمك أبيض مجمد",
+  "Black tea leaves": "أوراق شاي أسود",
+  "Roasted coffee beans": "بن محمص",
+  "Still mineral water, 330 ml": "مياه معدنية ساكنة، ٣٣٠ مل",
+  "Orange juice": "عصير برتقال",
+  "White vinegar": "خل أبيض",
+  "Ground black pepper": "فلفل أسود مطحون",
+  "Sliced white bread": "خبز أبيض شرائح",
+};
+
 const services = new Set(rows.filter((row) => row[2] === "SERVICES").map((row) => row[0]));
 const records = rows.map(([sourceRecordKey, name, category, subcategory, unitOfMeasure, description]) => ({
   sourceRecordKey,
   itemType: services.has(sourceRecordKey) ? "SERVICE" : "PRODUCT",
   name,
+  ...(foodArabic[name] ? { nameAr: foodArabic[name] } : {}),
   category,
   subcategory,
   description,

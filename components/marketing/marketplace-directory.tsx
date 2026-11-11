@@ -8,20 +8,9 @@ import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
 import { MarketplaceCarousel } from './marketplace-carousel';
 import { operatingCategory } from '@/lib/directory/operating-category';
+import { APPROVED_COVERS, canonicalOperatingGroup, edibleRank, groupLabel, listingArabicName, listingImage, orderedOperatingGroups } from '@/lib/directory/listing-visual';
 import { addCatalogReferenceToBasket, persistCatalogReferenceBasket, readCatalogReferenceBasket, setCatalogReferenceBasketQuantity, type CatalogReferenceBasketItem } from '@/lib/procurement/catalog-reference-basket';
 import { BuyingPath } from '@/components/procurement/buying-path';
-
-// Approved category artwork for the public catalogue card. Used whenever a
-// record has no reviewed first-party product photograph, so no card renders as
-// an empty gradient block.
-const APPROVED_COVERS: Record<string, { image: string; detail: string }> = {
-  'Restaurants & bars': { image: '/category-food-beverage.png', detail: 'Food, beverage, kitchen and table service' },
-  'Housekeeping & laundry': { image: '/category-housekeeping.png', detail: 'Linen, cleaning and room turnover' },
-  'Guest rooms & amenities': { image: '/category-guest-supplies.png', detail: 'In-room amenities and replenishment' },
-  'Engineering & maintenance': { image: '/category-engineering-ffe.png', detail: 'Property systems, parts and maintenance' },
-  'Furniture, fixtures & outdoor': { image: '/category-furniture-fixtures.jpg', detail: 'Rooms, public areas and outdoor furniture' },
-  'Hotel services': { image: '/category-supplier-catalogue.png', detail: 'Specialist operating services' },
-};
 
 export type MarketplaceDirectoryEntry = {
   id: string;
@@ -32,6 +21,7 @@ export type MarketplaceDirectoryEntry = {
   unitOfMeasure: string | null;
   purchaseUnit?: string | null;
   image: string | null;
+  nameAr?: string | null;
   description: string | null;
 };
 
@@ -64,7 +54,7 @@ function taxonomyFor(entry: MarketplaceDirectoryEntry): Taxonomy {
 }
 
 export function MarketplaceDirectory({ entries, initialCategory }: { entries: MarketplaceDirectoryEntry[]; initialCategory?: string }) {
-  const [activeCategory, setActiveCategory] = useState(initialCategory ?? 'All');
+  const [activeCategory, setActiveCategory] = useState(canonicalOperatingGroup(initialCategory ?? 'All'));
   const [activeSubcategory, setActiveSubcategory] = useState('All');
   const [query, setQuery] = useState('');
   const [basket, setBasket] = useState<CatalogReferenceBasketItem[]>([]);
@@ -79,14 +69,14 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     });
     return () => { active = false; };
   }, []);
-  const categories = useMemo(() => ['All', ...Array.from(new Set(entries.map(entry => taxonomyFor(entry).group))).sort()], [entries]);
+  const categories = useMemo(() => ['All', ...orderedOperatingGroups(entries.map(entry => taxonomyFor(entry).group))], [entries]);
   const selectedCategory = categories.includes(activeCategory) ? activeCategory : 'All';
   const subcategories = useMemo(() => ['All', ...Array.from(new Set(entries.filter(entry => selectedCategory === 'All' || taxonomyFor(entry).group === selectedCategory).map(entry => taxonomyFor(entry).subcategory))).sort()], [selectedCategory, entries]);
   const visibleEntries = useMemo(() => entries.filter(entry => {
     const taxonomy = taxonomyFor(entry);
     const matchesCategory = selectedCategory === 'All' || taxonomy.group === selectedCategory;
     const matchesSubcategory = activeSubcategory === 'All' || taxonomy.subcategory === activeSubcategory;
-    const haystack = `${entry.name} ${taxonomy.group} ${taxonomy.subcategory} ${entry.description ?? ''}`.toLowerCase();
+    const haystack = `${entry.name} ${listingArabicName(entry.name, entry.nameAr) ?? ''} ${taxonomy.group} ${groupLabel(taxonomy.group)} ${taxonomy.subcategory} ${entry.subcategory ?? ''} ${entry.description ?? ''}`.toLowerCase();
     return matchesCategory && matchesSubcategory && haystack.includes(query.trim().toLowerCase());
   }), [selectedCategory, activeSubcategory, entries, query]);
   const listedUnits = basket.reduce((total, item) => total + item.quantity, 0);
@@ -106,11 +96,15 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     setQuantities((current) => ({ ...current, [id]: quantity }));
   }
 
-  const covers = Object.entries(APPROVED_COVERS).map(([title, cover]) => ({ title, detail: cover.detail, image: cover.image }));
+  const covers = Object.entries(APPROVED_COVERS).map(([id, cover]) => ({ id, title: groupLabel(id), detail: cover.detail, image: cover.image }));
   const grouped = categories.filter((category) => category !== 'All').map((group) => ({
     group,
     cover: APPROVED_COVERS[group]?.image ?? null,
-    entries: visibleEntries.filter((entry) => taxonomyFor(entry).group === group),
+    entries: visibleEntries.filter((entry) => taxonomyFor(entry).group === group).sort((left, right) => {
+      const leftSubcategory = left.subcategory || taxonomyFor(left).subcategory;
+      const rightSubcategory = right.subcategory || taxonomyFor(right).subcategory;
+      return edibleRank(leftSubcategory) - edibleRank(rightSubcategory) || left.name.localeCompare(right.name);
+    }),
   })).filter((group) => group.entries.length);
 
   return <section className={styles.directory} aria-labelledby="directory-title">
@@ -118,8 +112,8 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     <div className="shell">
     <div className={styles.toolbar}>
       <div>
-        <p className={styles.eyebrow}>{selectedCategory === 'All' ? 'Reviewed directory' : `${selectedCategory} catalogue`}</p>
-        <h2 id="directory-title">{selectedCategory === 'All' ? 'Select specifications. Send them from the hotel list.' : selectedCategory}</h2>
+        <p className={styles.eyebrow}>{selectedCategory === 'All' ? 'Reviewed directory' : `${groupLabel(selectedCategory)} catalogue`}</p>
+        <h2 id="directory-title">{selectedCategory === 'All' ? 'Select specifications. Send them from the hotel list.' : groupLabel(selectedCategory)}</h2>
         <p>Each row is a supplier-neutral specification. Set a quantity and add it to the hotel list. Prices, stock and vendor names stay out of this directory.</p>
       </div>
       <div className={styles.count} aria-live="polite"><ClipboardCheck size={18}/><strong>{visibleEntries.length}</strong><span>available records</span></div>
@@ -127,7 +121,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
 
     <div className={styles.controls}>
       <label className={styles.search}><Search size={18} aria-hidden="true"/><span className="sr-only">Search reviewed directory</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search a product, service or category" /></label>
-      <div className={styles.filters} aria-label="Filter by operating area"><SlidersHorizontal size={16} aria-hidden="true"/>{categories.map(category => <button key={category} type="button" aria-pressed={selectedCategory === category} onClick={() => { setActiveCategory(category); setActiveSubcategory('All'); }}>{category}</button>)}</div>
+      <div className={styles.filters} aria-label="Filter by operating area"><SlidersHorizontal size={16} aria-hidden="true"/>{categories.map(category => <button key={category} type="button" aria-pressed={selectedCategory === category} onClick={() => { setActiveCategory(category); setActiveSubcategory('All'); }}>{category === 'All' ? category : groupLabel(category)}</button>)}</div>
       {selectedCategory !== 'All' && subcategories.length > 2 && <div className={styles.subfilters} aria-label="Filter by subcategory">{subcategories.map(subcategory => <button key={subcategory} type="button" aria-pressed={activeSubcategory === subcategory} onClick={() => setActiveSubcategory(subcategory)}>{subcategory}</button>)}</div>}
     </div>
 
@@ -135,7 +129,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     {grouped.length ? grouped.map((group) => <section key={group.group} aria-labelledby={`album-${group.group}`}>
       <header className={styles.album} id={`album-${group.group}`}>
         {group.cover ? <Image src={group.cover} alt="" width={120} height={80} /> : <span className={styles.albumMark}>No approved cover</span>}
-        <div><h3>{group.group}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. The cover is the only approved image for this area.</p></div>
+        <div><h3>{groupLabel(group.group)}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. {group.group === 'Restaurants & bars' ? 'Food and beverage items are listed before kitchen equipment.' : 'Each row shows an item picture or the area cover.'}</p></div>
       </header>
       <div className={styles.list} role="table" aria-label={group.group}>
       <div className={styles.listHead} role="row"><span>Specification</span><span>Unit</span><span>How it is bought</span><span>Quantity</span><span>List</span></div>
@@ -145,10 +139,14 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
         const saved = listedQuantity(entry.id);
         const draft = draftQuantity(entry.id);
         const unchanged = saved > 0 && draft === saved;
+        const image = listingImage(entry.name, entry.category);
+        const arabic = listingArabicName(entry.name, entry.nameAr);
         return <article className={styles.row} role="row" key={entry.id}>
           <div className={styles.identity}>
+            <span className={styles.thumb}>{image ? <Image src={image} alt="" width={72} height={72} /> : null}</span>
             <span>
               <Link href={`/marketplace/${entry.id}`}>{entry.name}</Link>
+              {arabic ? <em lang="ar" dir="rtl">{arabic}</em> : null}
               <small><Icon size={14} aria-hidden={true} />{entry.subcategory || taxonomy.subcategory}</small>
             </span>
           </div>
@@ -166,7 +164,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
         </article>;
       })}
       </div>
-    </section>) : <div className={styles.empty}><h3>{selectedCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${selectedCategory} yet.`}</h3><p>{selectedCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{selectedCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
+    </section>) : <div className={styles.empty}><h3>{selectedCategory === 'All' ? 'No records match this selection.' : `No reviewed records are available in ${groupLabel(selectedCategory)} yet.`}</h3><p>{selectedCategory === 'All' ? 'Clear the search or choose another operating category. If the item is absent, a hotel can still create a structured requirement.' : 'This is a category-specific view. You can return to all sourcing areas or create a controlled requirement for the exact item.'}</p><button type="button" onClick={() => { setActiveCategory('All'); setActiveSubcategory('All'); setQuery(''); }}>{selectedCategory === 'All' ? 'Show all records' : 'Show all sourcing areas'}</button></div>}
     <BuyingPath />
     </div>
   </section>;

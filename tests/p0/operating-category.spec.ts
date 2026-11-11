@@ -12,6 +12,11 @@ describe("operating category crosswalk", () => {
     expect(operatingCategory("SAFETY_SECURITY").group).toBe("Safety & compliance");
     expect(operatingCategory("ICT_AV").group).toBe("Hotel technology");
     expect(operatingCategory("UNIFORMS").group).toBe("Uniforms & workwear");
+    expect(operatingCategory("FOOD_BEVERAGE", "Long-grain white rice")).toEqual({
+      code: "FOOD_BEVERAGE",
+      group: "Restaurants & bars",
+      subcategory: "Food, beverage & kitchen operations",
+    });
   });
 
   it("keeps an unknown code out of a guessed commercial category", () => {
