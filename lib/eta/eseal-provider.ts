@@ -22,6 +22,7 @@ export type TokenSignature = {
 
 export type TokenConnection = {
   sign(document: Buffer, pin: string): Promise<TokenSignature>;
+  signPrepared(pin: string, buildDocument: (certificateDer: Buffer) => Buffer): Promise<TokenSignature>;
 };
 
 export function assertNoPinInput(value: unknown): void {

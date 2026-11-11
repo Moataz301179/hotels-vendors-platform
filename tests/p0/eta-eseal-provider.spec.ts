@@ -4,6 +4,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { canonicalizeEtaPayload } from "@/lib/eta/canonicalizer";
+import { assertDetachedCades, signLocalInvoiceCades } from "@/lib/eta/eseal-cades";
+import { LOCAL_SIGNING_INVOICE } from "@/lib/eta/eseal-invoice";
 import { assertNoPinInput, assertPinNotInEnvironment, resolveEsealLibrary, signWithToken, verifiedTokenSignature } from "@/lib/eta/eseal-provider";
 import { signLocalInvoice } from "@/lib/eta/eseal-invoice";
 import { loadPkcs11Module, pkcs11TokenConnection, type Pkcs11Module } from "@/lib/eta/eseal-pkcs11";
@@ -14,7 +17,7 @@ function testCertificate() {
   const certPath = join(directory, "cert.pem");
   execFileSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-keyout", keyPath, "-out", certPath, "-days", "1", "-nodes", "-subj", "/CN=HV Test Token"], { stdio: "ignore" });
   const certificateDer = execFileSync("openssl", ["x509", "-in", certPath, "-outform", "DER"]);
-  return { key: readFileSync(keyPath), certificateDer };
+  return { key: readFileSync(keyPath), certificateDer, certPath };
 }
 
 describe("local e-seal provider", () => {
@@ -36,6 +39,29 @@ describe("local e-seal provider", () => {
     const signed = await signLocalInvoice(pkcs11TokenConnection("/usr/local/lib/libeps2003csp11.dylib", pkcs11), "user-pin");
     expect(signed).toMatchObject({ internalId: "HV-LOCAL-SIGNING-TEST", algorithm: "SHA256-RSA-PKCS", submitted: false });
     expect(signed.canonicalSha256).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("builds a detached CAdES-BES invoice signature and does not submit it", () => {
+    const { key, certificateDer, certPath } = testCertificate();
+    const pkcs11 = fakePkcs11({ key, certificateDer, loginError: "" });
+    const signedAt = new Date("2026-11-11T12:16:00.000Z");
+    return signLocalInvoiceCades(pkcs11TokenConnection("/usr/local/lib/libeps2003csp11.dylib", pkcs11), "user-pin", signedAt).then((signed) => {
+      const canonical = canonicalizeEtaPayload({ ...LOCAL_SIGNING_INVOICE, invoiceLines: LOCAL_SIGNING_INVOICE.invoiceLines.map((line) => ({ ...line })) });
+      const document = Buffer.from(canonical.canonicalString, "utf8");
+      expect(signed).toMatchObject({ internalId: "HV-LOCAL-SIGNING-TEST", algorithm: "CAdES-BES", submitted: false });
+      assertDetachedCades(document, signed.cmsDer, signedAt);
+      const directory = mkdtempSync(join(tmpdir(), "eseal-cades-"));
+      const cmsPath = join(directory, "invoice.cms");
+      const contentPath = join(directory, "invoice.bin");
+      writeFileSync(cmsPath, signed.cmsDer);
+      writeFileSync(contentPath, document);
+      try {
+        const verified = execFileSync("openssl", ["cms", "-verify", "-binary", "-inform", "DER", "-in", cmsPath, "-content", contentPath, "-certfile", certPath, "-noverify"], { encoding: "utf8" });
+        expect(verified).toBe(canonical.canonicalString);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
   });
 
   it("reports a missing token package from the project folder", () => {

@@ -2,6 +2,7 @@ import { createInterface } from "node:readline";
 import { ReadStream, WriteStream } from "node:tty";
 import { openSync } from "node:fs";
 import { validateSignRequest } from "@/lib/eta/signer-gateway-contract";
+import { signLocalInvoiceCades } from "@/lib/eta/eseal-cades";
 import { signLocalInvoice } from "@/lib/eta/eseal-invoice";
 import { assertNoPinInput, assertPinNotInEnvironment, resolveEsealLibrary, signWithToken } from "@/lib/eta/eseal-provider";
 import { loadPkcs11Module, pkcs11TokenConnection } from "@/lib/eta/eseal-pkcs11";
@@ -51,6 +52,11 @@ async function main() {
   const pin = await promptTokenPin();
   try {
     const token = pkcs11TokenConnection(resolveEsealLibrary(), loadPkcs11Module());
+    if (process.argv.includes("--sign-cades")) {
+      const signed = await signLocalInvoiceCades(token, pin);
+      process.stderr.write(`Signed local invoice ${signed.internalId} in CAdES-BES form with the USB token.\nCertificate fingerprint: ${signed.certificateFingerprint}\nAlgorithm: ${signed.algorithm}\nSubmitted to the tax authority: no\n`);
+      return;
+    }
     if (process.argv.includes("--sign-invoice")) {
       const signed = await signLocalInvoice(token, pin);
       process.stderr.write(`Signed local invoice ${signed.internalId} with the USB token.\nCertificate fingerprint: ${signed.certificateFingerprint}\nAlgorithm: ${signed.algorithm}\nSubmitted to the tax authority: no\n`);

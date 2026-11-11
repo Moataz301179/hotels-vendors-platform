@@ -46,45 +46,63 @@ export function loadPkcs11Module(projectRoot = process.cwd()): Pkcs11Module {
 
 export function pkcs11TokenConnection(libraryPath: string, pkcs11: Pkcs11Module): TokenConnection {
   return {
-    async sign(document: Buffer, pin: string): Promise<TokenSignature> {
-      const session = new pkcs11.PKCS11();
-      let open: Buffer | null = null;
-      let loggedIn = false;
-      session.load(libraryPath);
-      session.C_Initialize();
-      try {
-        const slots = session.C_GetSlotList(true);
-        if (!slots.length) throw new Error("ESEAL_TOKEN_NOT_FOUND");
-        open = session.C_OpenSession(slots[0], pkcs11.CKF_SERIAL_SESSION);
-        try {
-          session.C_Login(open, pkcs11.CKU_USER, pin);
-        } catch (error) {
-          throw loginError(error);
-        }
-        loggedIn = true;
-        const key = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_PRIVATE_KEY }, { type: pkcs11.CKA_SIGN, value: true }]);
-        if (!key) throw new Error("ESEAL_SIGNING_KEY_NOT_FOUND");
-        const keyId = session.C_GetAttributeValue(open, key, [{ type: pkcs11.CKA_ID }])[0]?.value;
-        if (!Buffer.isBuffer(keyId) || !keyId.length) throw new Error("ESEAL_KEY_ID_MISSING");
-        const certificate = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_CERTIFICATE }, { type: pkcs11.CKA_ID, value: keyId }]);
-        if (!certificate) throw new Error("ESEAL_CERTIFICATE_NOT_FOUND");
-        const certificateDer = session.C_GetAttributeValue(open, certificate, [{ type: pkcs11.CKA_VALUE }])[0]?.value;
-        if (!Buffer.isBuffer(certificateDer) || !certificateDer.length) throw new Error("ESEAL_CERTIFICATE_UNREADABLE");
-        session.C_SignInit(open, { mechanism: pkcs11.CKM_SHA256_RSA_PKCS }, key);
-        const signature = session.C_Sign(open, document, Buffer.alloc(1024));
-        if (!Buffer.isBuffer(signature) || !signature.length) throw new Error("ESEAL_TOKEN_ERROR");
-        return { signature, certificateDer };
-      } finally {
-        if (open && loggedIn) {
-          try { session.C_Logout(open); } catch { /* The token session is already closing. */ }
-        }
-        if (open) {
-          try { session.C_CloseSession(open); } catch { /* The token session is already closed. */ }
-        }
-        try { session.C_Finalize(); } catch { /* The library is already shut down. */ }
-      }
+    sign(document: Buffer, pin: string) {
+      return withToken(libraryPath, pkcs11, pin, (materials) => materials.sign(document));
+    },
+    signPrepared(pin: string, buildDocument: (certificateDer: Buffer) => Buffer) {
+      return withToken(libraryPath, pkcs11, pin, (materials) => materials.sign(buildDocument(materials.certificateDer)));
     },
   };
+}
+
+async function withToken(
+  libraryPath: string,
+  pkcs11: Pkcs11Module,
+  pin: string,
+  produceSignature: (materials: { certificateDer: Buffer; sign: (document: Buffer) => Buffer }) => Buffer,
+): Promise<TokenSignature> {
+  const session = new pkcs11.PKCS11();
+  let open: Buffer | null = null;
+  let loggedIn = false;
+  session.load(libraryPath);
+  session.C_Initialize();
+  try {
+    const slots = session.C_GetSlotList(true);
+    if (!slots.length) throw new Error("ESEAL_TOKEN_NOT_FOUND");
+    open = session.C_OpenSession(slots[0], pkcs11.CKF_SERIAL_SESSION);
+    try {
+      session.C_Login(open, pkcs11.CKU_USER, pin);
+    } catch (error) {
+      throw loginError(error);
+    }
+    loggedIn = true;
+    const key = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_PRIVATE_KEY }, { type: pkcs11.CKA_SIGN, value: true }]);
+    if (!key) throw new Error("ESEAL_SIGNING_KEY_NOT_FOUND");
+    const keyId = session.C_GetAttributeValue(open, key, [{ type: pkcs11.CKA_ID }])[0]?.value;
+    if (!Buffer.isBuffer(keyId) || !keyId.length) throw new Error("ESEAL_KEY_ID_MISSING");
+    const certificate = findOne(session, open, [{ type: pkcs11.CKA_CLASS, value: pkcs11.CKO_CERTIFICATE }, { type: pkcs11.CKA_ID, value: keyId }]);
+    if (!certificate) throw new Error("ESEAL_CERTIFICATE_NOT_FOUND");
+    const certificateDer = session.C_GetAttributeValue(open, certificate, [{ type: pkcs11.CKA_VALUE }])[0]?.value;
+    if (!Buffer.isBuffer(certificateDer) || !certificateDer.length) throw new Error("ESEAL_CERTIFICATE_UNREADABLE");
+    const signature = produceSignature({
+      certificateDer,
+      sign(document: Buffer) {
+        session.C_SignInit(open as Buffer, { mechanism: pkcs11.CKM_SHA256_RSA_PKCS }, key);
+        const signed = session.C_Sign(open as Buffer, document, Buffer.alloc(1024));
+        if (!Buffer.isBuffer(signed) || !signed.length) throw new Error("ESEAL_TOKEN_ERROR");
+        return signed;
+      },
+    });
+    return { signature, certificateDer };
+  } finally {
+    if (open && loggedIn) {
+      try { session.C_Logout(open); } catch { /* The token session is already closing. */ }
+    }
+    if (open) {
+      try { session.C_CloseSession(open); } catch { /* The token session is already closed. */ }
+    }
+    try { session.C_Finalize(); } catch { /* The library is already shut down. */ }
+  }
 }
 
 function findOne(session: Pkcs11Session, open: Buffer, template: Attribute[]): Buffer | null {
