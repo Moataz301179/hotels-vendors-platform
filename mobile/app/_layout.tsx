@@ -1,47 +1,75 @@
-import { ClerkProvider } from '@clerk/expo';
-import { tokenCache } from '@clerk/expo/token-cache';
-import { SplashScreen, Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { ClerkProvider } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+import { SplashScreen, Stack } from "expo-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { AccessibilityInfo, View } from "react-native";
+import { LocaleProvider, useLocale } from "../src/i18n";
+import { PhoneProvider } from "../src/session/usePhone";
+import { ConfigSurface } from "../src/screens/surfaces";
+import { colors } from "../src/theme";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const visualReview = process.env.EXPO_PUBLIC_HOVIN_VISUAL_REVIEW === "1";
 
-/**
- * Missing identity configuration must fail closed: show a clear error instead
- * of mounting a tree whose useAuth() calls would throw.
- */
-function ConfigurationRequired() {
+function Direction({ children }: { children: ReactNode }) {
+  const { isRtl } = useLocale();
+  return <View style={{ flex: 1, direction: isRtl ? "rtl" : "ltr" }}>{children}</View>;
+}
+
+function AppStack() {
+  const { t } = useLocale();
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    void SplashScreen.hideAsync();
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => subscription.remove();
+  }, []);
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#0A0A0A' }}>
-      <Text style={{ color: '#FFFFFF', fontSize: 17, textAlign: 'center', lineHeight: 24 }}>
-        HOVIN is not configured.
-      </Text>
-      <Text style={{ color: '#B7BCC2', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 19 }}>
-        Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY and rebuild the app.
-      </Text>
-    </View>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.chrome },
+        headerTintColor: colors.chromeText,
+        headerTitleStyle: { color: colors.chromeText },
+        contentStyle: { backgroundColor: colors.paper },
+        animation: reduceMotion ? "fade" : "slide_from_right",
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+      <Stack.Screen name="(phone)" options={{ headerShown: false }} />
+      <Stack.Screen name="review" options={{ headerShown: false, animation: "none" }} />
+      <Stack.Screen name="catalog" options={{ title: t("catalog.title") }} />
+      <Stack.Screen name="quotes" options={{ title: t("quotes.title") }} />
+      <Stack.Screen name="orders" options={{ title: t("orders.title") }} />
+      <Stack.Screen name="requests" options={{ title: t("work.requests") }} />
+      <Stack.Screen name="order/[id]" options={{ title: t("tracking.referred") }} />
+      <Stack.Screen name="receive/[orderId]" options={{ title: t("receive.title") }} />
+      <Stack.Screen name="respond/[rfqId]" options={{ title: t("respond.title") }} />
+      <Stack.Screen name="desk" options={{ title: t("desk.title"), headerShown: false }} />
+    </Stack>
   );
 }
 
 export default function RootLayout() {
-  // The native launch view is intentionally branded, but it must never remain
-  // above the receiving application after React has mounted. This explicit
-  // dismissal is required for the direct Xcode Release build used by HOVIN.
-  useEffect(() => {
-    void SplashScreen.hideAsync();
-  }, []);
-
+  const tree = (
+    <LocaleProvider>
+      <Direction>
+        <AppStack />
+      </Direction>
+    </LocaleProvider>
+  );
+  if (visualReview) return tree;
   if (!publishableKey) {
-    return <ConfigurationRequired />;
+    return (
+      <LocaleProvider>
+        <ConfigSurface />
+      </LocaleProvider>
+    );
   }
-
   return (
-    <ClerkProvider
-      publishableKey={publishableKey}
-      tokenCache={tokenCache}
-      __experimental_disableNativeClientSync
-    >
-      <Stack screenOptions={{ headerShown: false }} />
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache} __experimental_disableNativeClientSync>
+      <PhoneProvider>{tree}</PhoneProvider>
     </ClerkProvider>
   );
 }

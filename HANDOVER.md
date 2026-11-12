@@ -1,5 +1,17 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN phone workspace — 2026-11-12
+
+- Branch: `cursor/hovin-intelligence-168e`, based on `main` `6dfc41fe`. Server workspace commit `b02e74365ef184db15e8fdf5b73a300dbc217bc5`. Not merged. Not deployed. No production migration was applied. No production data was written. No EAS build and no store submission.
+- Scope: a new phone interface for hotels and suppliers, plus order tracking and the delivery confirmation code referred from the carrier portal. Accept and decline stay on the web portal. Department head, funder, and administrator work stays on the desk. Quote acceptance, which names the supplier, stays on the hotel desk.
+- The rejected dark receiving shell in `mobile/app/index.tsx` is replaced. The phone uses the site paper, charcoal, and medium blue, and the approved HOViN wordmark.
+- Server: `GET /api/v2/mobile/session`, `/home`, `/orders`, `/orders/:id`, and delivery-code get/confirm. Receipt photos are stored only for a hotel receiving role with `order:update`. EXIF is stripped before storage and the upload fails closed if metadata remains. Administrators and carriers cannot upload or read another tenant's file. Confirming a code records `deliveryConfirmation: MATCHED` and does not change order status or payment. GRN now honors `x-idempotency-key` and private evidence file ids.
+- Migration on the branch only: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code`. Next production deploy needs Moataz's explicit approval and a verified Neon backup. `npx prisma generate` was run locally for types. `prisma migrate` was not run.
+- Verification: `npx vitest run tests/p0/hovin-phone.spec.ts tests/p0/grn-route-auth.spec.ts tests/p0/applied-migration-source-history.spec.ts` passed. Mobile `npx vitest run src/api/hovin.spec.ts src/sync/offlineQueue.spec.ts src/session/accountField.spec.ts src/intelligence/quotes.spec.ts` passed, 17 tests. `npx tsc --noEmit` passed for the repo and for `mobile/`. `npm run test:mobile-source` passed.
+- Visual review used `EXPO_PUBLIC_HOVIN_VISUAL_REVIEW=1` on Expo web at 390×844. Those screens are watermarked samples, not a signed-in account. Hosted Clerk was not completed on a real iOS or Android device in this environment. There is no iOS simulator here. Passing tests and the web gallery are not acceptance.
+- Gaps: a generative model is not in the request path. The next action copies server facts and names the server as the authority. Reanimated is not linked in the existing native binary, so motion is the native stack slide, press opacity, and a short vibration. `react-native-web` was added so the review gallery can run; the product target remains iOS and Android. Physical count is not a phone screen. New hotel users stay on the desk until an operating role other than department head is assigned.
+- Next action: Moataz reviews the pull request visually and on a device with hosted Clerk. Do not merge, deploy, or apply the migration without that approval.
+
 ## Listing pictures are live — 2026-11-11 04:36 Africa/Cairo
 
 - Verified: workflow run `42946581440` concluded success for `f7cc07eaaeb703805c1e567297e333573a4f9ead`. An earlier dispatch, run `42946412139`, was cancelled before this one.
