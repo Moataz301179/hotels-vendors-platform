@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Local role sandbox — 2026-11-12 03:50 Africa/Cairo
+
+- Source: `cursor/local-sandbox-actors-d37d`. This does not change production and it does not create accounts on https://www.hotelsvendors.com.
+- `node scripts/sandbox-actors.mjs` refuses any database that is not on this machine and refuses any Clerk key that is not a development key. It then creates five development-only sign-ins: hotel, supplier, administrator, carrier, and funder. The addresses use `+clerk_test`, so Clerk does not send mail. The script prints a new password each time it runs. The email verification code for these addresses is `424242`.
+- The local database rows are active and tax-verified for this practice graph only: one hotel, one supplier, one towel reference, one carrier profile, and one funding desk. The commercial gates are unchanged.
+- Verification: `npx vitest run tests/p0/sandbox-actors-guard.spec.ts` passed, 4 tests. The script created the five users on local Postgres and the development Clerk instance. Chrome signed in as the hotel account at `http://127.0.0.1:3000/login` and landed on `http://127.0.0.1:3000/dashboard` with the heading Portfolio control.
+- Next action: use these local accounts for the practice purchase. Do not invite an outside hotel, supplier, carrier, or funder into a live purchase.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.
