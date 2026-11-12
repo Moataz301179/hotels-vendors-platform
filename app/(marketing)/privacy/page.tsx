@@ -15,7 +15,7 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="hv-public-page">
+    <div className="hv-public-page">
       <section className="hv-public-hero">
         <div className="shell hv-public-hero-inner">
           <div>
@@ -46,6 +46,6 @@ export default function PrivacyPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

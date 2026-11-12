@@ -130,6 +130,16 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 
 /* Mobile release page: same light/gray/blue/black palette, with the editorial
    spacing and image-free clarity used by the reference screens. */
+.hv-download-qr{display:flex;flex-direction:column;align-items:center;gap:10px}
+.hv-download-qr-frame{padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--paper-0);box-shadow:0 10px 24px rgba(28,40,49,.08)}
+.hv-download-qr-placeholder{border-radius:8px;background:var(--paper-200)}
+.hv-download-qr-label{max-width:220px;text-align:center;color:var(--muted);font-size:11px;font-weight:600;line-height:1.45}
+.hv-hovin-download{display:grid;gap:10px;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--paper-0);box-shadow:0 14px 32px rgba(28,40,49,.06)}
+.hv-hovin-download-kicker{margin:0;color:var(--cobalt-700);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hv-hovin-download strong{font-family:var(--font-heading);font-size:22px;letter-spacing:-.03em;color:var(--ink)}
+.hv-hovin-download p{margin:0;max-width:520px;color:var(--muted);font-size:13px;line-height:1.7}
+.hv-hovin-download-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.hv-hovin-download-status{color:var(--muted);font-size:11px;line-height:1.55}
 .mobile-release-page{background:var(--bg);min-height:calc(100vh - 150px)}
 .mobile-release-hero{background:var(--paper-100);color:var(--ink);padding:86px 0 82px}
 .mobile-release-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:56px;align-items:center}

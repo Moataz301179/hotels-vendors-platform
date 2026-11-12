@@ -15,7 +15,7 @@ const routes = [
 
 export default function ContactPage() {
   return (
-    <main className="hv-public-page">
+    <div className="hv-public-page">
       <section className="hv-public-hero">
         <div className="shell hv-public-hero-inner">
           <div>
@@ -52,6 +52,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

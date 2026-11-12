@@ -10,17 +10,16 @@ export const metadata: Metadata = {
     "Hotel procurement in Egypt: connect a requirement to supplier terms, purchase approval and receiving evidence in a protected organization workspace.",
   keywords: [
     "B2B hospitality procurement Egypt",
-    "automated factoring lines Cairo",
     "hotel supply chain management Egypt",
     "ETA e-invoicing compliance",
     "hospitality vendor marketplace",
-    " Sharm El-Sheikh hotel suppliers",
+    "Sharm El-Sheikh hotel suppliers",
     "Hurghada resort procurement",
     "digital invoice Egypt",
+    "hotel receiving evidence",
     "تجهيزات الفنادق بالجملة",
     "منصة المشتريات الفندقية مصر",
     "الفوترة الإلكترونية هيئة الضرائب",
-    "تمويل فندقي مصر",
     "سلسلة التوريد الفندقية",
   ],
   openGraph: {
@@ -114,8 +113,8 @@ const JSON_LD = {
   "knowsAbout": [
     "B2B Hospitality Procurement",
     "Egyptian Tax Authority E-Invoicing",
-    "Reverse Factoring",
     "Hotel Supply Chain Management",
+    "Goods Receipt Evidence",
     "Coastal Logistics Egypt"
   ]
     }

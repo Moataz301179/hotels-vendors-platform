@@ -16,7 +16,7 @@ const sections = [
 
 export default function TermsPage() {
   return (
-    <main className="hv-public-page">
+    <div className="hv-public-page">
       <section className="hv-public-hero">
         <div className="shell hv-public-hero-inner">
           <div>
@@ -43,6 +43,6 @@ export default function TermsPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

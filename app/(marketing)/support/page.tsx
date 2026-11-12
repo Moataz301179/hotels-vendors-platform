@@ -15,7 +15,7 @@ const paths = [
 
 export default function SupportPage() {
   return (
-    <main className="hv-public-page">
+    <div className="hv-public-page">
       <section className="hv-public-hero">
         <div className="shell hv-public-hero-inner">
           <div>
@@ -55,6 +55,6 @@ export default function SupportPage() {
           <Link className="btn btn-blue" href="/contact">Contact the team <ArrowRight size={16} /></Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
