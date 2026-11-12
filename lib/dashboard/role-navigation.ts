@@ -45,3 +45,8 @@ export function navigationForRole(role: string): NavigationGroup[] {
 export function roleDisplayName(role: string): string {
   return ({ HOTEL: 'Hotel', SUPPLIER: 'Vendor', SHIPPING: 'Carrier', FACTORING: 'Funder', ADMIN: 'Administrator' } as Record<string, string>)[role] ?? 'Workspace';
 }
+
+export function workspaceContextLabel(role: string): string {
+  const name = ({ HOTEL: 'Hotel', SUPPLIER: 'Vendor', SHIPPING: 'Carrier', FACTORING: 'Funder', ADMIN: 'Administrator' } as Record<string, string>)[role];
+  return name ? `${name} workspace` : 'Organization';
+}

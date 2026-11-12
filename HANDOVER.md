@@ -1,5 +1,26 @@
 # HotelsVendors — Production-Ready Handover
 
+## Operating audit — 2026-11-12 05:40 Africa/Cairo
+
+- Source branch: `cursor/production-onboarding-d37d`. Not deployed. The live site is still the 11 November release.
+- The signed-in header now names the organization, for example “Hotel workspace”. A pending account uses the onboarding identity for that label. Protected APIs still require an active account.
+- The browser policy now sends `object-src 'none'`, `base-uri 'none'`, and `frame-ancestors 'none'`, with HSTS `includeSubDomains`, `nosniff`, and `strict-origin-when-cross-origin`. Script sources stay nonced. Clerk still needs inline styles.
+- Public text that failed WCAG 2.2 AA was darkened: the amber eyebrows, the sign-in legal line, organization descriptions, the HOVIN release page, and the numbered principles. Marketplace category dots are 24 by 24 pixels. Off-screen cover slides are removed from the keyboard. Directory rows are no longer marked up as a table. The workspace button is white on blue, and the side labels clear 4.5:1. Catalogue category chips are buttons, not a list.
+- Verification: `npx vitest run tests/p0/readiness-audit.spec.ts` passed, 9 tests. axe-core 4.10.3 against WCAG 2.2 A and AA returned no violations on the public pages, one catalogue detail, the signed-in hotel dashboard, orders, approvals, receiving, sourcing, intelligence, connections, volume planning, funding, onboarding, and security. `curl -sI http://127.0.0.1:3000/login` showed the header controls above. The hotel sandbox account remains active.
+- HOVIN on this branch is the field layer: a receiving hotel gets arrivals, a physical count, and exceptions; a carrier gets assigned movements without rates; a supplier gets fulfillment quantities only; a funder, administrator, or department head stays on the desk. Receipt photos can be stored and attached. That work is not a finished phone release. There is no signed Android or iOS package, the public page still says “Not published”, the photo table is not applied to production, and no device camera session was run.
+- Unresolved: this is not an OWASP ASVS Level 2 certificate. The signed-in scan used the local hotel sandbox only. Supplier, carrier, funder, and administrator desks were not scanned in a browser. Production deploy, the receipt-photo migration, a signed HOVIN build, and ETA filing remain outside this change.
+- Next action: keep this branch off production until the owner runs the deploy handshake. Before any store build, open HOVIN on a device against the configured API origin with a receiving account.
+
+## Organization release — 2026-11-12 04:08 Africa/Cairo
+
+- Source branch: `cursor/production-onboarding-d37d`, based on the field-layer revision. Not deployed.
+- A person who registers a hotel or supplier is the organization owner. A hotel owner receives request, approval, rejection, and receipt permissions. Approving that hotel creates an owner approval rule for the organization, capped at 10,000,000.
+- Checking the tax identity on approval marks the supplier record verified, which is what quote submission requires. Approving a carrier marks that carrier profile verified so it can be assigned a movement. Financial actions still require the tax decision. Payment guarantee, quote acceptance, and tax filing are unchanged.
+- The submitted onboarding screen tells each role what that review opens.
+- Verification: `npx vitest run tests/p0/pending-user-review.spec.ts tests/p0/founder-access.spec.ts tests/p0/onboarding-hotel-link.spec.ts tests/p0/auth-handoff.spec.ts` passed, 4 files, 14 tests. `npx tsc --noEmit` passed.
+- Still outside this change: production deploy, the receipt-photo migration, a signed HOVIN store build, and ETA invoice filing.
+- Next action: an administrator verifies one practice hotel and one practice supplier on the local system, then walks a sealed request between them.
+
 ## Desk path and receipt photo — 2026-11-12 01:45 Africa/Cairo
 
 - Source branch: `cursor/hovin-field-layer-d37d`. Not deployed. The new `ReceiptEvidenceFile` table is not applied to production.

@@ -131,8 +131,8 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
         {group.cover ? <Image src={group.cover} alt="" width={120} height={80} /> : <span className={styles.albumMark}>No approved cover</span>}
         <div><h3>{groupLabel(group.group)}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. {group.group === 'Restaurants & bars' ? 'Food and beverage items are listed before kitchen equipment.' : 'Each row shows an item picture or the area cover.'}</p></div>
       </header>
-      <div className={styles.list} role="table" aria-label={group.group}>
-      <div className={styles.listHead} role="row"><span>Specification</span><span>Unit</span><span>How it is bought</span><span>Quantity</span><span>List</span></div>
+      <div className={styles.list} role="region" aria-label={group.group}>
+      <div className={styles.listHead}><span>Specification</span><span>Unit</span><span>How it is bought</span><span>Quantity</span><span>List</span></div>
       {group.entries.map(entry => {
         const taxonomy = taxonomyFor(entry);
         const Icon = taxonomy.icon;
@@ -141,7 +141,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
         const unchanged = saved > 0 && draft === saved;
         const image = listingImage(entry.name, entry.category);
         const arabic = listingArabicName(entry.name, entry.nameAr);
-        return <article className={styles.row} role="row" key={entry.id}>
+        return <article className={styles.row} key={entry.id}>
           <div className={styles.identity}>
             <span className={styles.thumb}>{image ? <Image src={image} alt="" width={72} height={72} /> : null}</span>
             <span>

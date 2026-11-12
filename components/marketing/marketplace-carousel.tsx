@@ -33,7 +33,7 @@ export function MarketplaceCarousel({ slides, onSelect }: { slides: CoverSlide[]
   return <section className={styles.carousel} aria-roledescription="carousel" aria-label="Approved category covers">
     <div className={styles.viewport}>
       <div className={styles.track} style={{ transform: `translateX(-${index * 100}%)` }}>
-        {slides.map((slide, slideIndex) => <button type="button" className={styles.slide} key={slide.id} onClick={() => onSelect(slide.id)} aria-label={`Show ${slide.title}`} aria-hidden={slideIndex !== index}>
+        {slides.map((slide, slideIndex) => <button type="button" className={styles.slide} key={slide.id} onClick={() => onSelect(slide.id)} aria-label={`Show ${slide.title}`} aria-hidden={slideIndex !== index} tabIndex={slideIndex === index ? 0 : -1}>
           <Image src={slide.image} alt="" fill sizes="100vw" priority={slideIndex === 0} />
           <span><small>Category cover</small><strong>{slide.title}</strong><em>{slide.detail}</em></span>
         </button>)}

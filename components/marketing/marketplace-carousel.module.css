@@ -65,11 +65,11 @@
   gap: 6px;
 }
 .dots button {
-  width: 8px;
-  height: 8px;
+  width: 24px;
+  height: 24px;
   border: 0;
   border-radius: 99px;
   background: rgba(255,255,255,.45);
   cursor: pointer;
 }
-.dots button[aria-selected="true"] { background: #fff; width: 18px; }
+.dots button[aria-selected="true"] { background: #fff; }

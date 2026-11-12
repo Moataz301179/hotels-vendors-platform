@@ -3,6 +3,8 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import type { PlatformRole, User } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { founderOperatingRole, founderPermissionCodes } from "@/lib/onboarding/founder-access";
+import { ensureRolePermissions } from "@/lib/onboarding/release-organization";
 
 export async function getActor(): Promise<User | null> {
   return getActorInternal(false);
@@ -90,38 +92,8 @@ async function getActorInternal(allowPending: boolean): Promise<User | null> {
     // The lifecycle route still enforces supplier binding, payment guarantee,
     // and the allowed state transition; these permissions do not grant access
     // to another tenant's records.
-    const permissionCodes = platformRole === "SUPPLIER"
-      ? ["order:read", "quote:submit", "order:confirm", "order:update"]
-      : ["order:read", "order:create"];
-    for (const code of permissionCodes) {
-      const permission = await tx.permission.upsert({
-        where: { code },
-        update: {},
-        create: {
-          code,
-          name: ({
-            "order:read": "View Orders",
-            "order:create": "Create Purchase Orders",
-            "quote:submit": "Submit Supplier Quotes",
-            "order:confirm": "Confirm Approved Orders",
-            "order:update": "Update Delivery Status",
-          } as Record<string, string>)[code] ?? code,
-          description: ({
-            "order:read": "View assigned procurement requests, quotes, and orders",
-            "order:create": "Create procurement orders from approved commercial terms",
-            "quote:submit": "Submit a fixed response to an explicitly granted RFQ",
-            "order:confirm": "Confirm an order after the hotel records payment authority",
-            "order:update": "Record delivery progress for the bound supplier order",
-          } as Record<string, string>)[code] ?? "Organization-scoped procurement permission",
-        },
-      });
-      await tx.rolePermission.upsert({
-        where: { roleId_permissionId: { roleId: role.id, permissionId: permission.id } },
-        update: {},
-        create: { roleId: role.id, permissionId: permission.id },
-      });
-    }
-    return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,clerkUserId: userId,platformRole,tenantId:tenant.id,roleId:role.id,status:"PENDING_VERIFICATION"}});
+    await ensureRolePermissions(tx, role.id, founderPermissionCodes(platformRole));
+    return tx.user.upsert({where:{email},update:{},create:{email,name:[cu.firstName,cu.lastName].filter(Boolean).join(" ")||email,clerkUserId: userId,platformRole,tenantId:tenant.id,roleId:role.id,role:founderOperatingRole(platformRole),status:"PENDING_VERIFICATION"}});
   });
   // Another request may have inserted this email after the initial lookup.
   // Never rebind that identity, and apply the same checks to the upsert result.
