@@ -43,8 +43,9 @@ export function buildClerkContentSecurityPolicy(publishableKey: string | undefin
     "img-src 'self' data: blob: https: https://img.clerk.com",
     `connect-src 'self' ${configuredClerkOrigins} https://*.clerk.accounts.dev https://api.clerk.com https://api.clerk.dev https://clerk-telemetry.com wss://*.clerk.accounts.dev https://api.oliv.finance https://sandbox.oliv.finance https://invoicing.eta.gov.eg https://api.fawry.com https://*.protect.clerk.com:*`,
     `frame-src 'self' ${configuredClerkOrigins} https://*.clerk.accounts.dev https://challenges.cloudflare.com ${CLERK_PROTECT}`,
+    "object-src 'none'",
     "frame-ancestors 'none'",
-    "base-uri 'self'",
+    "base-uri 'none'",
     "form-action 'self'",
   ].join("; ");
 }
