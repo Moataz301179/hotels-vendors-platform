@@ -17,7 +17,7 @@ export function PendingUserReview() {
   async function decide(userId: string, decision: 'APPROVE' | 'REJECT') {
     if (reviewNote.trim().length < 10) { setMessage('Record a review note of at least 10 characters before submitting a decision.'); return; }
     setBusy(userId);
-    try { await requestJson('/api/v2/admin/pending-users', { method: 'PATCH', body: JSON.stringify({ userId, decision, taxVerification: decision === 'REJECT' ? 'REJECT' : taxVerification, reviewNote }) }); setMessage(`Registration ${decision === 'APPROVE' ? 'approved' : 'rejected'}. Financial activity remains blocked unless the tax ID was verified.`); await load(); }
+    try { await requestJson('/api/v2/admin/pending-users', { method: 'PATCH', body: JSON.stringify({ userId, decision, taxVerification: decision === 'REJECT' ? 'REJECT' : taxVerification, reviewNote }) }); setMessage(decision === 'APPROVE' ? 'Registration approved. Financial activity opens only when the tax identity was checked. An approved carrier can receive assigned movements.' : 'Registration rejected.'); await load(); }
     catch (e) { setMessage(e instanceof Error ? e.message : 'Unable to update registration.'); }
     finally { setBusy(''); setReviewing(null); setReviewNote(''); setTaxVerification('PENDING'); }
   }
