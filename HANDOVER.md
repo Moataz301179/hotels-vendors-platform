@@ -2,7 +2,7 @@
 
 ## HOVIN phone workspace — 2026-11-12
 
-- Branch: `cursor/hovin-intelligence-168e`, based on `main` `6dfc41fe`. Server workspace commit `b02e74365ef184db15e8fdf5b73a300dbc217bc5`. Not merged. Not deployed. No production migration was applied. No production data was written. No EAS build and no store submission.
+- Branch: `cursor/hovin-intelligence-168e`, based on `main` `6dfc41fe`. Server workspace `b02e74365ef184db15e8fdf5b73a300dbc217bc5`. Phone interface `e744900dc3830dbbce7ec51b5333bc69e1a9772c`. Not merged. Not deployed. No production migration was applied. No production data was written. No EAS build and no store submission.
 - Scope: a new phone interface for hotels and suppliers, plus order tracking and the delivery confirmation code referred from the carrier portal. Accept and decline stay on the web portal. Department head, funder, and administrator work stays on the desk. Quote acceptance, which names the supplier, stays on the hotel desk.
 - The rejected dark receiving shell in `mobile/app/index.tsx` is replaced. The phone uses the site paper, charcoal, and medium blue, and the approved HOViN wordmark.
 - Server: `GET /api/v2/mobile/session`, `/home`, `/orders`, `/orders/:id`, and delivery-code get/confirm. Receipt photos are stored only for a hotel receiving role with `order:update`. EXIF is stripped before storage and the upload fails closed if metadata remains. Administrators and carriers cannot upload or read another tenant's file. Confirming a code records `deliveryConfirmation: MATCHED` and does not change order status or payment. GRN now honors `x-idempotency-key` and private evidence file ids.
