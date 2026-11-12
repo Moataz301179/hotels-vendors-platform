@@ -142,6 +142,10 @@ export async function saveDraft(db: SQLiteDatabase, accountId: string, key: stri
   );
 }
 
+export async function deleteDraft(db: SQLiteDatabase, accountId: string, key: string): Promise<void> {
+  await db.runAsync('DELETE FROM hovin_draft WHERE draft_key = ? AND account_id = ?', `${accountId}:${key}`, accountId);
+}
+
 export async function readDraft<T>(db: SQLiteDatabase, accountId: string, key: string): Promise<T | null> {
   const row = await db.getFirstAsync<{ payload: string; account_id: string }>(
     'SELECT payload, account_id FROM hovin_draft WHERE draft_key = ?',

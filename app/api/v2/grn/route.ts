@@ -140,6 +140,16 @@ export async function POST(req: Request) {
         if (!etaClearance) return { error: "ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY", status: 409 as const };
       }
 
+      // Missing, deleted, or other-tenant files must fail before the receipt is inserted.
+      // A later return would commit the goods receipt without its evidence.
+      const evidenceFiles = evidenceFileIds.length
+        ? await tx.receiptEvidenceFile.findMany({
+            where: { id: { in: evidenceFileIds }, tenantId: actor.tenantId, deletedAt: null },
+            select: { id: true, sha256: true },
+          })
+        : [];
+      if (evidenceFiles.length !== evidenceFileIds.length) return { error: "RECEIPT_EVIDENCE_NOT_FOUND", status: 404 as const };
+
       const now = new Date();
       const grn = await tx.goodsReceiptNote.create({
         data: {
@@ -170,13 +180,6 @@ export async function POST(req: Request) {
         },
         include: { lineItems: true },
       });
-      const evidenceFiles = evidenceFileIds.length
-        ? await tx.receiptEvidenceFile.findMany({
-            where: { id: { in: evidenceFileIds }, tenantId: actor.tenantId, deletedAt: null },
-            select: { id: true, sha256: true },
-          })
-        : [];
-      if (evidenceFiles.length !== evidenceFileIds.length) return { error: "RECEIPT_EVIDENCE_NOT_FOUND", status: 404 as const };
       const evidence = await Promise.all(evidenceUrls.map((sourceUrl) => tx.evidenceRecord.create({
         data: {
           tenantId: order.tenantId,

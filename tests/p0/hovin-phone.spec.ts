@@ -125,4 +125,21 @@ describe("receipt photo EXIF policy", () => {
     expect(read).toContain('actor.platformRole !== "HOTEL"');
     expect(read).toContain("tenantId: actor.tenantId");
   });
+
+  it("rejects unknown receipt evidence before the goods receipt is inserted", () => {
+    const source = readFileSync(new URL("../../app/api/v2/grn/route.ts", import.meta.url), "utf8");
+    const lookup = source.indexOf("receiptEvidenceFile.findMany");
+    const create = source.indexOf("goodsReceiptNote.create");
+    expect(lookup).toBeGreaterThan(-1);
+    expect(create).toBeGreaterThan(lookup);
+  });
+
+  it("requires order read permission before loading one phone order", () => {
+    const source = readFileSync(new URL("../../app/api/v2/mobile/orders/[orderId]/route.ts", import.meta.url), "utf8");
+    const gate = source.indexOf("ORDER_READ_PERMISSION_REQUIRED");
+    const load = source.indexOf("await loadPhoneOrder");
+    expect(gate).toBeGreaterThan(-1);
+    expect(load).toBeGreaterThan(gate);
+    expect(source).toContain('session.plan.workspace !== "carrier-code"');
+  });
 });

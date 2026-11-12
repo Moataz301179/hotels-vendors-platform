@@ -5,7 +5,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Crypto from "expo-crypto";
 import { confirmPulse } from "../../src/feedback/haptic";
 import { HovinApiError, isRetryableReceiptFailure, type ReceiptContext, type ReceiptSubmission } from "../../src/api/hovin";
-import { enqueueGrn, readDraft, saveDraft } from "../../src/sync/offlineQueue";
+import { deleteDraft, enqueueGrn, readDraft, saveDraft } from "../../src/sync/offlineQueue";
 import { useLocale } from "../../src/i18n";
 import { usePhoneContext } from "../../src/session/usePhone";
 import { ReceiveSurface } from "../../src/screens/surfaces";
@@ -13,6 +13,15 @@ import { Button, ScreenState } from "../../src/components/ui";
 import { colors } from "../../src/theme";
 
 type LineDraft = { received: string; accepted: string; reason: string; notes: string };
+
+function openLines(loaded: ReceiptContext): Record<string, LineDraft> {
+  return Object.fromEntries(loaded.order.items.map((item) => [item.id, {
+    received: String(item.remainingQuantity),
+    accepted: String(item.remainingQuantity),
+    reason: "",
+    notes: "",
+  }]));
+}
 type StoredDraft = { lines: Record<string, LineDraft>; photoUri: string | null; idempotencyKey: string };
 
 export default function Receive() {
@@ -28,6 +37,7 @@ export default function Receive() {
   const [note, setNote] = useState<string | undefined>();
   const [phase, setPhase] = useState<"loading" | "ready" | "offline" | "error">("loading");
   const [key, setKey] = useState(() => Crypto.randomUUID());
+  const busy = useRef(false);
 
   useEffect(() => {
     if (!orderId || !phone.database || !phone.accountId) return;
@@ -122,7 +132,10 @@ export default function Receive() {
         setCameraOpen(true);
       }}
       onSubmit={() => {
+        if (busy.current) return;
+        busy.current = true;
         const body = payload();
+        const submittedKey = key;
         const tenantId = phone.home?.account.tenantId;
         void (async () => {
           try {
@@ -132,17 +145,29 @@ export default function Receive() {
               evidenceFileIds = [uploaded.id];
             }
             const submission = { ...body, evidenceFileIds };
-            await phone.client().submitReceipt(submission, key);
+            await phone.client().submitReceipt(submission, submittedKey);
             confirmPulse();
+            if (phone.database && phone.accountId && orderId) await deleteDraft(phone.database, phone.accountId, `receipt:${orderId}`);
+            setPhotoUri(null);
+            setKey(Crypto.randomUUID());
             setNote(t("receive.saved"));
+            try {
+              const loaded = await phone.client().receiptContext(orderId);
+              setContext(loaded);
+              setLines(openLines(loaded));
+            } catch {
+              setLines({});
+            }
           } catch (error) {
             const retryable = isRetryableReceiptFailure(error) || (error instanceof HovinApiError && error.status === 0);
             if (retryable && !photoUri && phone.database && tenantId) {
-              await enqueueGrn(phone.database, tenantId, key, body);
+              await enqueueGrn(phone.database, tenantId, submittedKey, body);
               setNote(t("receive.queued"));
               return;
             }
             setNote(error instanceof HovinApiError ? error.message : t("state.error"));
+          } finally {
+            busy.current = false;
           }
         })();
       }}
