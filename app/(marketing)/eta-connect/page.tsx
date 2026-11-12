@@ -36,7 +36,7 @@ const steps = [
 
 export default function EtaConnectPage() {
   return (
-    <main className="hv-public-page">
+    <div className="hv-public-page">
       <section className="hv-public-hero">
         <div className="shell">
           <span className="eyebrow">Organization-authorized e-invoicing</span>
@@ -132,6 +132,6 @@ export default function EtaConnectPage() {
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

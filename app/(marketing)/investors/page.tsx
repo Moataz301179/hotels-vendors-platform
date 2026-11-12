@@ -59,7 +59,7 @@ function Section({ icon, eyebrow, title, intro, items }: {
 
 export default function InvestorsPage() {
   const liveSource = "available at /api/health";
-  return <main className="hv-public-page">
+  return <div className="hv-public-page">
     <section className="hv-public-hero"><div className="shell hv-public-hero-inner"><div><p className="eyebrow">Investor briefing · 2026</p><h1>The operating layer for hospitality supply.</h1><p>HOTELSVENDORS is building a reviewable procurement network for the work behind every hotel stay: requirements, supplier terms, approvals, delivery and receiving evidence.</p><div className="hv-public-actions"><Link href="/register" className="btn btn-blue">Explore the workspace <ArrowRight size={16}/></Link><Link href="/contact" className="hv-public-text-link">Talk to the team</Link></div></div></div></section>
 
     <Section icon={<Building2 size={21} className="text-blue-600"/>} eyebrow="Company profile" title="What HOTELSVENDORS is." intro="A hospitality procurement network connecting hotels, suppliers, carriers and external funders. The platform is operated by an Egyptian entity and serves properties across the country." items={pillars} />
@@ -75,5 +75,5 @@ export default function InvestorsPage() {
     <section className="hv-public-section"><div className="shell"><div className="hv-public-section-heading"><div><p className="eyebrow">Current evidence boundary</p><h2>What can be verified today.</h2></div><p>Public pages explain the product. Authenticated workspaces protect organization records. Production enforces supplier eligibility and source-evidence review before a listing can become visible; private pricing, RFQs and purchasing decisions remain workspace-scoped.</p></div><div className="grid gap-3 md:grid-cols-3"><div className="card p-5"><ShieldCheck size={20}/><strong className="mt-3 block">Release identity</strong><span className="mt-2 block text-sm text-slate-600">Live source: {liveSource}</span></div><div className="card p-5"><ShieldCheck size={20}/><strong className="mt-3 block">Workflow scope</strong><span className="mt-2 block text-sm text-slate-600">Requirements → comparison → approval → receiving</span></div><div className="card p-5"><ShieldCheck size={20}/><strong className="mt-3 block">Data discipline</strong><span className="mt-2 block text-sm text-slate-600">A public listing requires an active verified supplier and resolved evidence for its exact source; no placeholders.</span></div></div></div></section>
 
     <section className="hv-public-section"><div className="shell hv-public-final"><h2>Review the product in context.</h2><p>Start with the public workflow, then request a controlled workspace walkthrough for procurement, supplier or partner operations.</p><div className="hv-public-actions"><Link href="/marketplace" className="btn btn-blue">Open supplier catalogue <ArrowRight size={16}/></Link><Link href="/contact" className="hv-public-text-link">Request an investor walkthrough</Link></div></div></section>
-  </main>;
+  </div>;
 }

@@ -11,6 +11,7 @@ import { operatingCategory } from '@/lib/directory/operating-category';
 import { APPROVED_COVERS, canonicalOperatingGroup, edibleRank, groupLabel, listingArabicName, listingImage, orderedOperatingGroups } from '@/lib/directory/listing-visual';
 import { addCatalogReferenceToBasket, persistCatalogReferenceBasket, readCatalogReferenceBasket, setCatalogReferenceBasketQuantity, type CatalogReferenceBasketItem } from '@/lib/procurement/catalog-reference-basket';
 import { BuyingPath } from '@/components/procurement/buying-path';
+import { PROCUREMENT_JOURNEY } from '@/lib/marketing/procurement-journey';
 
 export type MarketplaceDirectoryEntry = {
   id: string;
@@ -27,7 +28,7 @@ export type MarketplaceDirectoryEntry = {
 
 function HotelListLink({ count }: { count: number }) {
   const { isLoaded, isSignedIn } = useAuth();
-  const href = '/workspace/marketplace/basket';
+  const href = PROCUREMENT_JOURNEY.hotelList.href;
   const label = count ? `Open hotel list (${count})` : 'Open hotel list';
   if (isLoaded && isSignedIn) return <Link className={styles.listContinue} href={href}>{label}</Link>;
   return <SignInButton mode="modal" forceRedirectUrl={href} signUpForceRedirectUrl={href}><button type="button" className={styles.listContinue}>{label}</button></SignInButton>;
@@ -53,12 +54,27 @@ function taxonomyFor(entry: MarketplaceDirectoryEntry): Taxonomy {
   return { group: area.group, subcategory: area.subcategory, icon: GROUP_ICONS[area.group] ?? ClipboardCheck };
 }
 
-export function MarketplaceDirectory({ entries, initialCategory }: { entries: MarketplaceDirectoryEntry[]; initialCategory?: string }) {
+export function MarketplaceDirectory({
+  entries,
+  initialCategory,
+  initialQuery = '',
+}: {
+  entries: MarketplaceDirectoryEntry[];
+  initialCategory?: string;
+  initialQuery?: string;
+}) {
   const [activeCategory, setActiveCategory] = useState(canonicalOperatingGroup(initialCategory ?? 'All'));
   const [activeSubcategory, setActiveSubcategory] = useState('All');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [basket, setBasket] = useState<CatalogReferenceBasketItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  useEffect(() => {
+    setActiveCategory(canonicalOperatingGroup(initialCategory ?? 'All'));
+    setActiveSubcategory('All');
+  }, [initialCategory]);
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
   useEffect(() => {
     let active = true;
     Promise.resolve().then(() => {

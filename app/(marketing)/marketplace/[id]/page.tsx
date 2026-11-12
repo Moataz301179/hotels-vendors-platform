@@ -34,7 +34,7 @@ export default async function MarketplaceReferencePage({ params }: { params: Pro
   const image = listingImage(fields.name, fields.category);
   const arabic = listingArabicName(fields.name, fields.nameAr);
 
-  return <main className="hv-public-page hv-marketplace-reference">
+  return <div className="hv-public-page hv-marketplace-reference">
     <section className="hv-public-section"><div className="shell">
       <Link href="/marketplace" className="hv-public-text-link"><ArrowLeft size={16} /> Back to catalogue</Link>
       <div className="hv-reference-layout">
@@ -56,5 +56,5 @@ export default async function MarketplaceReferencePage({ params }: { params: Pro
         </div>
       </div>
     </div></section>
-  </main>;
+  </div>;
 }

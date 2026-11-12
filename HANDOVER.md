@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Marketplace / public / HOVIN coherence — 2026-11-12 Africa/Cairo
+
+- Source branch: `cursor/marketplace-public-hovin-coherence-064d` (not deployed).
+- Corrective scope: one procurement journey shared by home, catalogue, solutions, footer/nav and HOVIN. Marketplace accepts `?q=` to match SearchAction. Home mounts the HOVIN receiving preview and the full approved operating-area map. Solutions deep-link to public role pages only. HOVIN states receiving-role requirements honestly and no longer implies store installs. Fake App Store / Play badges were replaced with env-gated install CTAs. Nested `<main>` landmarks were removed from marketing pages.
+- Verification: `npx vitest run tests/p0/public-header-contract.spec.ts tests/p0/marketplace-hovin-coherence.spec.ts tests/p0/marketplace-sourcing-areas.spec.ts tests/p0/listing-visual.spec.ts tests/p0/commercial-controls.spec.ts` passed.
+- Still open: signed Android/iOS HOVIN distribution; receiving-role provisioning for new hotel accounts; production deploy of this revision.
+- Next action: merge to `main`, then run HotelsVendors Production Deploy once with `APPLY_AFTER_NEON_BACKUP`.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.

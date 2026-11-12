@@ -1,8 +1,7 @@
 "use client";
 
-/* DownloadQR — renders a real scannable QR code (qrcode lib, client-side) for
-   the HOVIN mobile app. Target is the /hovin page until the App Store / Play
-   Store listings are published; we do not invent store IDs. */
+/* DownloadQR — scannable QR for HOVIN. Target is the verified install URL when
+   configured; otherwise the public HOVIN info page. Never invent store IDs. */
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
@@ -10,10 +9,12 @@ export function DownloadQR({
   value,
   size = 132,
   label,
+  alt = "QR code for the HOVIN receiving page",
 }: {
   value: string;
   size?: number;
   label?: string;
+  alt?: string;
 }) {
   const [src, setSrc] = useState<string>("");
   useEffect(() => {
@@ -29,16 +30,16 @@ export function DownloadQR({
   }, [value, size]);
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
+    <div className="hv-download-qr">
+      <div className="hv-download-qr-frame">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} width={size} height={size} alt="QR code to download the HOVIN app" />
+          <img src={src} width={size} height={size} alt={alt} />
         ) : (
-          <div style={{ width: size, height: size }} className="bg-slate-100 rounded-lg" />
+          <div className="hv-download-qr-placeholder" style={{ width: size, height: size }} aria-hidden="true" />
         )}
       </div>
-      {label ? <span className="text-[10px] font-medium text-[#646367]">{label}</span> : null}
+      {label ? <span className="hv-download-qr-label">{label}</span> : null}
     </div>
   );
 }
