@@ -1,11 +1,18 @@
 # HotelsVendors — Production-Ready Handover
 
+## Listing pictures are live — 2026-11-11 04:36 Africa/Cairo
+
+- Verified: workflow run `42946581440` concluded success for `f7cc07eaaeb703805c1e567297e333573a4f9ead`. An earlier dispatch, run `42946412139`, was cancelled before this one.
+- Live check at 04:36 Africa/Cairo: `GET https://www.hotelsvendors.com/api/health` returned `ok: true`, `database: ready`, `authorization: configured`, and `releaseId` `github-f7cc07eaaeb703805c1e567297e333573a4f9ead`.
+- Live `/marketplace` HTML contains the food and beverage label and the rice listing image.
+- Next action: none for this release. Do not rerun the workflow for this same SHA.
+
 ## Listing pictures — 2026-11-11 04:25 Africa/Cairo
 
 - Source: `cursor/listing-images-d37d`, cherry-picked onto live `main` `7fb77ae`. Not deployed.
 - Every public directory row now has a 72px picture. The edible specifications use item photographs under `public/catalog/`. Every other row uses its approved operating-area cover. The row still has no vendor, price, stock, or binding offer.
 - Verification: `npx vitest run tests/p0/listing-visual.spec.ts tests/p0/marketplace-sourcing-areas.spec.ts tests/p0/operating-category.spec.ts tests/p0/commercial-controls.spec.ts` passed, 4 files, 8 tests. Local `/marketplace` rendered 209 rows. The rice thumbnail request returned HTTP 200 JPEG, and the image was present in the mobile row.
-- Next action: merge this revision to `main`, then run HotelsVendors Production Deploy once with `APPLY_AFTER_NEON_BACKUP` and no extra spaces.
+- Deployed by run `42946581440`. Live release `github-f7cc07eaaeb703805c1e567297e333573a4f9ead`.
 
 ## Production deploy succeeded — 2026-11-11 03:56 Africa/Cairo
 
