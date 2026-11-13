@@ -1,5 +1,14 @@
 # HotelsVendors — Production-Ready Handover
 
+## Homepage carousel tray/lamp rejection — 2026-11-13 (23:25 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77 (also carries brand-first hero shell copy).
+- Rejected carousel stills removed: `/catalog/gastronorm-pan.jpg` (tray) and `/catalog/led-lamp.jpg` (lamp).
+- Replacement slides: `/category-food-beverage.png`, `/catalog/bed-linen.jpg`, `/catalog/lobby-armchair.jpg`, `/hovin-receiving-field.jpg`.
+- Catalog listing-visual rules for gastronorm/lamp SKUs unchanged (marketplace only).
+- Verification: vitest carousel + OLED specs passed; Playwright confirmed four slide srcs with zero tray/lamp hits.
+- Next action: wait CI green on #77, merge, then owner deploy when stack is on `main`.
+
 ## Solutions + About + footer partner labels — 2026-11-13
 
 - Branch: `cursor/solutions-about-footer-168e`. Rebuilt `/solutions/carriers` and `/solutions/funders` with verified “built today” vs “not connected” honesty.
