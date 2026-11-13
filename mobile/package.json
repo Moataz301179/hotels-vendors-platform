@@ -1,6 +1,6 @@
 {
   "name": "hovin-mobile",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -8,7 +8,12 @@
     "typecheck": "tsc --noEmit",
     "android": "node scripts/with-hv-public-env.mjs expo run:android",
     "ios": "node scripts/with-hv-public-env.mjs expo run:ios",
-    "export:ios": "node scripts/with-hv-public-env.mjs expo export --platform ios --output-dir dist/ios"
+    "export:ios": "node scripts/with-hv-public-env.mjs expo export --platform ios --output-dir dist/ios",
+    "release:check": "node scripts/release-readiness.mjs",
+    "eas:build:ios": "eas build --platform ios --profile production",
+    "eas:build:android": "eas build --platform android --profile production",
+    "eas:submit:ios": "eas submit --platform ios --profile production",
+    "eas:submit:android": "eas submit --platform android --profile production"
   },
   "dependencies": {
     "@clerk/expo": "^4.15.1",
@@ -38,6 +43,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "eas-cli": "^27.9.0",
     "typescript": "~5.9.2"
   }
 }

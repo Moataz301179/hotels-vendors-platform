@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN production release engineering — 2026-11-13
+
+- Branch: `cursor/hovin-motion-system-168e`. Added `mobile/eas.json`, production `app.json` (1.0.0), store icons, `mobile/scripts/release-readiness.mjs`, CI workflow `hovin-mobile.yml`, and runbook `docs/hovin-production-release.md`.
+- **Not a live store release.** No `EXPO_TOKEN` / Apple / Play credentials in this Cloud Agent. EAS `projectId` is still a placeholder until `eas init` on an authenticated Expo account. Android release signing still uses the debug keystore locally — EAS credentials must replace that for Play.
+- Owner actions required: add Expo/Apple/Play secrets, run simulator builds on the Mac, `eas init` + production builds/submit, set store URLs, merge PR stack to `main`, Neon backup + `APPLY_AFTER_NEON_BACKUP`, then production web deploy.
+- This agent cannot merge GitHub PRs (write merge unavailable) or apply production Neon migrations without that confirmation string.
+
 ## HOVIN motion system — 2026-11-13
 
 - Branch: `cursor/hovin-motion-system-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed. No EAS build.

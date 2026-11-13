@@ -1,0 +1,43 @@
+name: HOVIN Mobile
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - ".github/workflows/hovin-mobile.yml"
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+
+concurrency:
+  group: hovin-mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx expo config --type public
+      - name: Release readiness (warn-only until EAS project id is set)
+        run: node scripts/release-readiness.mjs || true
+      - name: Fail closed once EAS project id is configured
+        run: |
+          PROJECT_ID=$(node -e "const a=require('./app.json'); process.stdout.write(a.expo?.extra?.eas?.projectId||'')")
+          if [ "$PROJECT_ID" != "" ] && [ "$PROJECT_ID" != "REPLACE_WITH_EAS_PROJECT_ID" ]; then
+            node scripts/release-readiness.mjs
+          else
+            echo "EAS projectId still placeholder — readiness hard-fail deferred"
+          fi
