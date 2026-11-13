@@ -1,25 +1,27 @@
 /**
  * Owner tokens:
- * - Main field `#262A32` with white type
+ * - Main field: neutral grey (no blue cast), white type
  * - Accent / pill fill `#5B92FE` with black type
+ *
+ * `#262A32` was rejected as too blue (B > R/G). Neutral greys keep the same depth.
  */
 export const colors = {
-  paper: "#262A32",
-  paperRaised: "#2E333C",
-  card: "#303541",
-  chrome: "#262A32",
+  paper: "#2A2A2A",
+  paperRaised: "#333333",
+  card: "#363636",
+  chrome: "#2A2A2A",
   chromeText: "#ffffff",
   ink: "#ffffff",
-  muted: "#a8adb6",
-  line: "#3a404b",
-  lineSoft: "#343a45",
+  muted: "#a8a8a8",
+  line: "#454545",
+  lineSoft: "#3d3d3d",
   /** Accent and pill / panel fill — black type on this fill. */
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",
   onBlue: "#000000",
   ice: "#5B92FE",
-  iceWash: "#1e2f4d",
+  iceWash: "#3a3a3a",
   yellow: "#f5b820",
   yellowSoft: "#3a3018",
   green: "#3f9a63",
