@@ -204,7 +204,7 @@ export function StorefrontClient({ initialCategory }: { initialCategory?: string
                   </button>
                   {isActive && (
                     <div className="pl-3 mt-1 space-y-0.5">
-                      {["ALL", ...c.examples].map((sub) => (
+                      {["ALL", ...(c.subcategories?.length ? c.subcategories : c.examples)].map((sub) => (
                         <button key={sub} onClick={() => setActiveSub(sub)} className={`block w-full text-left text-xs px-2 py-1 rounded ${activeSub === sub ? "text-[#314B43] font-semibold" : "text-slate-500 hover:text-slate-700"}`}>
                           {sub === "ALL" ? "All in " + c.label : sub}
                         </button>

@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { SignInButton, useAuth } from '@clerk/nextjs';
-import { Armchair, BedDouble, ClipboardCheck, Search, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
+import { Armchair, BedDouble, ClipboardCheck, Monitor, Search, Shirt, SlidersHorizontal, Sparkles, UtensilsCrossed, Wrench } from 'lucide-react';
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
 import { MarketplaceCarousel } from './marketplace-carousel';
 import { operatingCategory } from '@/lib/directory/operating-category';
+import { canonicalizeSubcategory, subcategoriesForGroup } from '@/lib/directory/hospitality-taxonomy';
 import { APPROVED_COVERS, canonicalOperatingGroup, edibleRank, groupLabel, listingArabicName, listingImage, orderedOperatingGroups } from '@/lib/directory/listing-visual';
 import { addCatalogReferenceToBasket, persistCatalogReferenceBasket, readCatalogReferenceBasket, setCatalogReferenceBasketQuantity, type CatalogReferenceBasketItem } from '@/lib/procurement/catalog-reference-basket';
 import { BuyingPath } from '@/components/procurement/buying-path';
@@ -43,14 +44,25 @@ const GROUP_ICONS: Record<string, ComponentType<{ size?: number; 'aria-hidden'?:
   'Furniture, fixtures & outdoor': Armchair,
   'Hotel services': ClipboardCheck,
   'Safety & compliance': ClipboardCheck,
-  'Hotel technology': ClipboardCheck,
-  'Uniforms & workwear': ClipboardCheck,
+  'Hotel technology': Monitor,
+  'Uniforms & workwear': Shirt,
 };
 
 function taxonomyFor(entry: MarketplaceDirectoryEntry): Taxonomy {
-  if (entry.itemType === 'SERVICE') return { group: 'Hotel services', subcategory: 'Maintenance, compliance & specialist services', icon: ClipboardCheck };
+  if (entry.itemType === 'SERVICE') {
+    const subcategory = canonicalizeSubcategory(entry.subcategory) || 'Building services';
+    return { group: 'Hotel services', subcategory, icon: ClipboardCheck };
+  }
   const area = operatingCategory(entry.category, entry.name);
-  return { group: area.group, subcategory: area.subcategory, icon: GROUP_ICONS[area.group] ?? ClipboardCheck };
+  const subcategory = canonicalizeSubcategory(entry.subcategory) || canonicalizeSubcategory(area.subcategory) || area.subcategory;
+  return { group: area.group, subcategory, icon: GROUP_ICONS[area.group] ?? ClipboardCheck };
+}
+
+function orderedSubcategories(group: string, present: Iterable<string>) {
+  const seen = new Set(present);
+  const canonical = subcategoriesForGroup(group).filter((item) => seen.has(item));
+  const extras = [...seen].filter((item) => !canonical.includes(item)).sort();
+  return [...canonical, ...extras];
 }
 
 export function MarketplaceDirectory({ entries, initialCategory }: { entries: MarketplaceDirectoryEntry[]; initialCategory?: string }) {
@@ -71,7 +83,11 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
   }, []);
   const categories = useMemo(() => ['All', ...orderedOperatingGroups(entries.map(entry => taxonomyFor(entry).group))], [entries]);
   const selectedCategory = categories.includes(activeCategory) ? activeCategory : 'All';
-  const subcategories = useMemo(() => ['All', ...Array.from(new Set(entries.filter(entry => selectedCategory === 'All' || taxonomyFor(entry).group === selectedCategory).map(entry => taxonomyFor(entry).subcategory))).sort()], [selectedCategory, entries]);
+  const subcategories = useMemo(() => {
+    if (selectedCategory === 'All') return ['All'];
+    const present = new Set(entries.filter((entry) => taxonomyFor(entry).group === selectedCategory).map((entry) => taxonomyFor(entry).subcategory));
+    return ['All', ...orderedSubcategories(selectedCategory, present)];
+  }, [selectedCategory, entries]);
   const visibleEntries = useMemo(() => entries.filter(entry => {
     const taxonomy = taxonomyFor(entry);
     const matchesCategory = selectedCategory === 'All' || taxonomy.group === selectedCategory;

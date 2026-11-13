@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Suite Atmosphere homepage + catalog taxonomy — 2026-11-13
+
+- Branch: `cursor/suite-atmosphere-catalog-37bc`. Homepage hero switched to Option C (Suite Atmosphere): brand-first wordmark, one headline, one lead, primary CTA + text secondary, full-bleed photo with a single vignette (OLED texture/sheen/signal chip removed).
+- Catalog taxonomy expanded for hotel-buyer browse: F&B food/beverage subcategories (fresh produce, meat, poultry, fish & seafood, frozen, bakery, soft drinks, juices, spirits, etc.), furniture item families, Hotel technology distinct from engineering (property software, guest apps & lockers, speakers & sound systems).
+- Marketplace directory filters now prefer each record’s `subcategory` (canonicalized) instead of the coarse code fallback. Operating catalog grown to 200 supplier-neutral specs (`hospitality-operating-catalog.v1.json`).
+- Verification: `npm test -- tests/p0/homepage-hero-oled.spec.ts tests/p0/hospitality-taxonomy.spec.ts tests/p0/operating-category.spec.ts tests/p0/operating-catalog.spec.ts tests/p0/marketplace-sourcing-areas.spec.ts tests/p0/listing-visual.spec.ts` passed after `npx prisma generate`.
+- Next owner action: review PR; republish internal directory batches to production so new subcategories appear in live `/marketplace` profiles.
+
 ## Solutions + About + footer partner labels — 2026-11-13
 
 - Branch: `cursor/solutions-about-footer-168e`. Rebuilt `/solutions/carriers` and `/solutions/funders` with verified “built today” vs “not connected” honesty.

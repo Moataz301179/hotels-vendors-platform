@@ -49,7 +49,7 @@
 .journeyStep small{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.45}
 .journeySignal{display:flex;align-items:center;gap:9px;margin-top:18px;padding:13px;border-radius:10px;background:var(--ice-100);color:var(--cobalt-700);font-size:12px;font-weight:600}
 .categories,.mobile{background:var(--paper-100)}
-.categoryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.categoryGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .categoryCard{display:flex;min-width:0;flex-direction:column;border:1px solid var(--line);border-radius:14px;background:var(--paper-0);color:var(--ink);overflow:hidden;text-decoration:none;transition:transform .18s,border-color .18s,box-shadow .18s}
 .categoryCard:hover{transform:translateY(-4px);border-color:var(--cobalt-600);box-shadow:0 16px 34px rgba(15,20,25,.10)}
 .categoryCard figure{position:relative;aspect-ratio:1.55;margin:0;overflow:hidden;background:var(--paper-200)}

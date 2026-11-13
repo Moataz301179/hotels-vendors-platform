@@ -3,13 +3,14 @@ import Image from "next/image";
 import {
   ArrowRight,
   Building2,
+  Monitor,
   PackageCheck,
   PackageSearch,
   ScanLine,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
-  Truck,
+  Wrench,
 } from "lucide-react";
 
 import { HeroCarousel } from "@/components/marketing/hero-carousel";
@@ -17,11 +18,12 @@ import heroStyles from "./public-home-hero.module.css";
 import styles from "./public-home.module.css";
 
 const categories = [
-  { title: "Restaurants & bars", body: "Ingredients, beverage operations, table service and kitchen needs.", image: "/category-food-beverage.png", alt: "Hotel food and beverage operating area", group: "Restaurants & bars", icon: ShoppingBag },
+  { title: "Food & beverage", body: "Food, frozen and fresh lines, beverages, bakery, kitchen and table service.", image: "/category-food-beverage.png", alt: "Hotel food and beverage operating area", group: "Restaurants & bars", icon: ShoppingBag },
   { title: "Housekeeping & laundry", body: "Cleaning consumables, linen, textile care and daily turnover.", image: "/category-housekeeping.png", alt: "Hotel housekeeping room with linen and cleaning supplies", group: "Housekeeping & laundry", icon: Sparkles },
   { title: "Guest rooms & amenities", body: "In-room amenities, replenishment and guest-facing operating supplies.", image: "/category-guest-supplies.png", alt: "Hotel guest amenities prepared for operational use", group: "Guest rooms & amenities", icon: PackageCheck },
-  { title: "Engineering & maintenance", body: "Property systems, replacement parts, tools and planned maintenance.", image: "/category-engineering-ffe.png", alt: "Hotel engineering components on a workbench", group: "Engineering & maintenance", icon: Truck },
-  { title: "Furniture, fixtures & outdoor", body: "Rooms, lobby, pool, beach and outdoor furnishing requirements.", image: "/category-furniture-fixtures.jpg", alt: "Hotel lobby with sofa seating and fixtures", group: "Furniture, fixtures & outdoor", icon: PackageSearch },
+  { title: "Engineering & maintenance", body: "Indoor and outdoor building systems, parts and planned maintenance—not guest technology.", image: "/category-engineering-ffe.png", alt: "Hotel engineering components on a workbench", group: "Engineering & maintenance", icon: Wrench },
+  { title: "Furniture, fixtures & outdoor", body: "Beds, seating, lobby, banquet, pool and outdoor furnishings by item family.", image: "/category-furniture-fixtures.jpg", alt: "Hotel lobby with sofa seating and fixtures", group: "Furniture, fixtures & outdoor", icon: PackageSearch },
+  { title: "Hotel technology", body: "Property software, lockers and apps, sound systems, guest-room and network systems.", image: "/catalog/guest-tv.jpg", alt: "Hotel guest-room technology display", group: "Hotel technology", icon: Monitor },
   { title: "Hotel services", body: "Specialist scopes for maintenance, compliance and operating support.", image: "/hv-workspace-team.webp", alt: "Hotel operations team coordinating service requirements", group: "Hotel services", icon: ShieldCheck },
 ];
 
@@ -67,34 +69,24 @@ export default function MarketingPage() {
                 sizes="100vw"
               />
             </figure>
-            <div className={heroStyles.oled} />
-            <div className={heroStyles.oledTexture} />
-            <div className={heroStyles.oledSheen} />
             <div className={heroStyles.fade} />
           </div>
           <div className={heroStyles.shell}>
             <div className={heroStyles.copy}>
-              <p className={heroStyles.eyebrow}>Hospitality operating network · Egypt</p>
-              <h1>
-                Technology reimagined for hotel procurement.
-                <em> Every decision connected. Every handoff accountable.</em>
-              </h1>
+              <p className={heroStyles.brand}>HotelsVendors</p>
+              <h1>The operating network behind every hotel stay.</h1>
               <p className={heroStyles.lead}>
-                One protected SaaS record for sourcing, approvals, delivery and receipt evidence—
-                so Egyptian hotel teams control spend without losing the operating trail.
+                Procurement as considered as guest service—accountable from requirement to receipt,
+                with vendor identity sealed until the authorized stage.
               </p>
               <div className={heroStyles.actions}>
                 <Link href="/platform" className={heroStyles.primary}>
                   Explore the platform <ArrowRight size={17} />
                 </Link>
                 <Link href="/hotels/signup" className={heroStyles.secondary}>
-                  Start a hotel workspace
+                  Register a hotel
                 </Link>
               </div>
-              <p className={heroStyles.signal}>
-                <span className={heroStyles.signalDot} aria-hidden="true" />
-                Built for operators — not a public product catalogue
-              </p>
             </div>
           </div>
         </div>

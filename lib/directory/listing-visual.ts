@@ -125,11 +125,22 @@ const FOOD_ARABIC: Record<string, string> = {
 
 const EDIBLE_SUBCATEGORIES = new Set([
   "Dry grocery",
-  "Cooking fats",
+  "Fresh produce",
+  "Dairy & eggs",
   "Dairy",
+  "Meat",
+  "Poultry",
+  "Fish & seafood",
+  "Frozen foods",
   "Protein",
-  "Beverage",
   "Bakery",
+  "Cooking fats & oils",
+  "Cooking fats",
+  "Soft drinks",
+  "Juices",
+  "Hot beverages",
+  "Spirit drinks",
+  "Beverage",
   "Food, beverage & kitchen operations",
 ]);
 

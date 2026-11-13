@@ -14,6 +14,8 @@ export interface HotelCategory {
   color: string; // tailwind color class for badges
   examples: string[];
   keywords: string[]; // for search matching
+  /** Buyer-facing browse filters for the catalog cover page. */
+  subcategories?: string[];
 }
 
 export const HOTEL_CATEGORIES: HotelCategory[] = [
@@ -27,6 +29,24 @@ export const HOTEL_CATEGORIES: HotelCategory[] = [
     color: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     examples: ["Beef Cuts", "Fresh Produce", "Kitchen Equipment", "Glassware", "Coffee Machines"],
     keywords: ["food", "beverage", "kitchen", "restaurant", "bar", "catering", "chef", "dining"],
+    subcategories: [
+      "Dry grocery",
+      "Fresh produce",
+      "Dairy & eggs",
+      "Meat",
+      "Poultry",
+      "Fish & seafood",
+      "Frozen foods",
+      "Bakery",
+      "Cooking fats & oils",
+      "Soft drinks",
+      "Juices",
+      "Hot beverages",
+      "Spirit drinks",
+      "Kitchen equipment",
+      "Table service",
+      "Food packaging",
+    ],
   },
   {
     id: "hk",
@@ -49,6 +69,16 @@ export const HOTEL_CATEGORIES: HotelCategory[] = [
     color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     examples: ["Beds & Mattresses", "Lobby Sofas", "Lighting Fixtures", "Bathroom Vanities", "Curtains"],
     keywords: ["furniture", "fixture", "bed", "sofa", "light", "lamp", "mirror", "cabinet"],
+    subcategories: [
+      "Beds & mattresses",
+      "Guest room seating & desks",
+      "Storage & wardrobes",
+      "Bathroom fixtures",
+      "Lobby & lounge",
+      "Banquet & events",
+      "Outdoor & pool",
+      "Window treatments",
+    ],
   },
   {
     id: "ose",
@@ -110,11 +140,23 @@ export const HOTEL_CATEGORIES: HotelCategory[] = [
     code: "IT",
     label: "IT & Technology",
     labelAr: "تكنولوجيا المعلومات",
-    description: "TVs, WiFi equipment, POS systems, key card systems, cabling, and hotel tech infrastructure",
+    description: "Property software, guest apps and lockers, sound systems, TVs, POS, and hotel tech—separate from engineering MRO",
     icon: "Monitor",
     color: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
-    examples: ["Smart TVs", "WiFi Access Points", "POS Terminals", "Key Card Encoders", "Network Cables"],
-    keywords: ["it", "tech", "computer", "tv", "wifi", "network", "pos", "software", "hardware"],
+    examples: ["Property software", "Guest lockers", "Sound systems", "Smart TVs", "POS Terminals"],
+    keywords: ["it", "tech", "computer", "tv", "wifi", "network", "pos", "software", "hardware", "locker", "speaker", "app"],
+    subcategories: [
+      "Property software",
+      "Guest apps & lockers",
+      "Speakers & sound systems",
+      "Guest room systems",
+      "Network & connectivity",
+      "Access control hardware",
+      "Meeting AV",
+      "Office systems",
+      "POS & restaurant systems",
+      "Security systems",
+    ],
   },
   {
     id: "sec",
