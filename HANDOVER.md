@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Catalog imagery + approved theme palette — 2026-11-13
+
+- Branch: `cursor/catalog-images-themes-168e`. Marketplace listings no longer use repeated scenic `category-*.png` covers as row thumbs. Rows resolve to `/public/catalog/*.jpg` product-family photographs (37 unique images across 209 rows; 0 category-cover hits).
+- New/expanded catalog assets include bath towels, bed linen, guest amenities, cleaning supplies, gastronorm pans, LED lamps, lobby armchair, fire extinguisher, plus focused family variants for TV, network, uniforms, safety, mattress, outdoor furniture, and services.
+- Web theme tokens aligned to the approved website sample: action `#5B92FE`, chrome `#303234`. Light/dark `data-theme` modes both use that palette (dark uses charcoal field + white type).
+- Void placeholder `/images/placeholder.jpg` removed from `product-card` fallback. Assistant contract tests updated for public LLM scope.
+- Verification: listing-visual + marketplace-sourcing-areas + assistant-contract/honesty vitest passed. HF generation quota limited further unique service/uniform shots; family photos still shared within a category where a dedicated shoot was unavailable.
+
 ## Plus Jakarta Sans + AI Assistant — 2026-11-13
 
 - Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.

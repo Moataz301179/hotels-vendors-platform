@@ -19,20 +19,16 @@ export function getStoredMode(): "dark" | "light" {
 export function setThemeMode(mode: "dark" | "light") {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  if (mode === "light") {
-    root.setAttribute("data-theme", "light");
-  } else {
-    root.removeAttribute("data-theme");
-  }
+  root.setAttribute("data-theme", mode);
   try {
     localStorage.setItem(STORAGE_KEY, mode);
   } catch {
     // ignore
   }
-  // Update meta theme-color
+  // Update meta theme-color — charcoal field in dark, paper in light.
   const meta = document.getElementById("theme-color-meta") as HTMLMetaElement | null;
   if (meta) {
-    meta.setAttribute("content", mode === "light" ? "#f8f9fa" : "#121212");
+    meta.setAttribute("content", mode === "light" ? "#f1f0e8" : "#303234");
   }
 }
 

@@ -122,7 +122,7 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
             >
               <Icon size={24} color="#e3eef7" strokeWidth={2} />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#2f6fb0] border-2 border-[#3d4a56] animate-pulse" />
+            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#5B92FE] border-2 border-[#3d4a56] animate-pulse" />
             <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#3d4a56] border border-white/10 text-[11px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               {config.tooltip}
             </div>

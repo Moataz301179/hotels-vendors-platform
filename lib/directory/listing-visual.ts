@@ -1,22 +1,29 @@
 import { OPERATING_GROUPS, operatingCategory } from "@/lib/directory/operating-category";
 
+/**
+ * Marketplace listing imagery.
+ * Prefer product-family photographs under /public/catalog over repeated scenic
+ * operating-area covers. Covers remain only as a last-resort fallback.
+ */
 export const APPROVED_COVERS: Record<string, { image: string; detail: string }> = {
-  "Restaurants & bars": { image: "/category-food-beverage.png", detail: "Food, beverage, kitchen and table service" },
-  "Housekeeping & laundry": { image: "/category-housekeeping.png", detail: "Linen, cleaning and room turnover" },
-  "Guest rooms & amenities": { image: "/category-guest-supplies.png", detail: "In-room amenities and replenishment" },
-  "Engineering & maintenance": { image: "/category-engineering-ffe.png", detail: "Property systems, parts and maintenance" },
-  "Furniture, fixtures & outdoor": { image: "/category-furniture-fixtures.jpg", detail: "Rooms, public areas and outdoor furniture" },
-  "Hotel services": { image: "/category-supplier-catalogue.png", detail: "Specialist operating services" },
-  "Safety & compliance": { image: "/catalog/safety.jpg", detail: "Detection, protection and response" },
-  "Hotel technology": { image: "/catalog/technology.jpg", detail: "Rooms, meetings and property systems" },
-  "Uniforms & workwear": { image: "/catalog/uniforms.jpg", detail: "Kitchen, housekeeping and front office clothing" },
+  "Restaurants & bars": { image: "/catalog/gastronorm-pan.jpg", detail: "Food, beverage, kitchen and table service" },
+  "Housekeeping & laundry": { image: "/catalog/cleaning-supplies.jpg", detail: "Linen, cleaning and room turnover" },
+  "Guest rooms & amenities": { image: "/catalog/guest-amenities.jpg", detail: "In-room amenities and replenishment" },
+  "Engineering & maintenance": { image: "/catalog/electrical-fixture.jpg", detail: "Property systems, parts and maintenance" },
+  "Furniture, fixtures & outdoor": { image: "/catalog/lobby-armchair.jpg", detail: "Rooms, public areas and outdoor furniture" },
+  "Hotel services": { image: "/catalog/facility-service.jpg", detail: "Specialist operating services" },
+  "Safety & compliance": { image: "/catalog/fire-extinguisher.jpg", detail: "Detection, protection and response" },
+  "Hotel technology": { image: "/catalog/guest-tv.jpg", detail: "Rooms, meetings and property systems" },
+  "Uniforms & workwear": { image: "/catalog/chef-uniform.jpg", detail: "Kitchen, housekeeping and front office clothing" },
 };
 
 const GROUP_LABELS: Record<string, string> = {
   "Restaurants & bars": "Food & beverage",
 };
 
-const FOOD_IMAGES: { test: RegExp; image: string }[] = [
+/** Ordered specific → family matches. First hit wins. */
+const ITEM_IMAGES: { test: RegExp; image: string }[] = [
+  // Food & beverage edibles
   { test: /\brice\b/i, image: "/catalog/rice.jpg" },
   { test: /\bflour\b/i, image: "/catalog/flour.jpg" },
   { test: /\boil\b/i, image: "/catalog/oil.jpg" },
@@ -32,6 +39,41 @@ const FOOD_IMAGES: { test: RegExp; image: string }[] = [
   { test: /\bbread\b/i, image: "/catalog/bread.jpg" },
   { test: /\bpasta\b/i, image: "/catalog/pasta.jpg" },
   { test: /\b(sugar|salt|pepper|tomato paste|vinegar)\b/i, image: "/catalog/pantry.jpg" },
+  // Kitchenware
+  { test: /\bgastronorm|food pan\b/i, image: "/catalog/gastronorm-pan.jpg" },
+  { test: /\bstorage container|food container|compostable food\b/i, image: "/catalog/food-storage.jpg" },
+  { test: /\btumbler|glass\b/i, image: "/catalog/water-tumbler.jpg" },
+  // Linen & textiles
+  { test: /\b(bath towel|hand towel|face towel|bath mat)\b/i, image: "/catalog/bath-towel.jpg" },
+  { test: /\b(bed sheet|duvet|pillowcase|fitted)\b/i, image: "/catalog/bed-linen.jpg" },
+  { test: /\bpillow\b/i, image: "/catalog/bed-linen.jpg" },
+  { test: /\bmattress|bed base|headboard\b/i, image: "/catalog/hotel-mattress.jpg" },
+  // Housekeeping
+  { test: /\b(microfiber|mop|cleaner|detergent|softener|cloth)\b/i, image: "/catalog/cleaning-supplies.jpg" },
+  { test: /\blaundry detergent|fabric softener\b/i, image: "/catalog/laundry-detergent.jpg" },
+  // Guest amenities
+  { test: /\b(shampoo|conditioner|body wash|soap|lotion|dental|sewing kit|amenity dispenser)\b/i, image: "/catalog/guest-amenities.jpg" },
+  { test: /\bsewing kit\b/i, image: "/catalog/guest-sewing-kit.jpg" },
+  // Engineering
+  { test: /\b(led|lamp|light|lighting)\b/i, image: "/catalog/led-lamp.jpg" },
+  { test: /\b(switch|socket|fuse|paint|door closer)\b/i, image: "/catalog/electrical-fixture.jpg" },
+  // Furniture
+  { test: /\b(armchair|lounge chair)\b/i, image: "/catalog/lobby-armchair.jpg" },
+  { test: /\b(outdoor|luggage rack|nightstand)\b/i, image: "/catalog/outdoor-furniture.jpg" },
+  // Safety
+  { test: /\bfire extinguisher\b/i, image: "/catalog/fire-extinguisher.jpg" },
+  { test: /\bsmoke detector|emergency lighting|exit sign|fire hose|fire blanket\b/i, image: "/catalog/smoke-detector.jpg" },
+  { test: /\bfirst aid|spill kit\b/i, image: "/catalog/first-aid.jpg" },
+  // Uniforms
+  { test: /\b(chef|kitchen bib|kitchen chef|apron)\b/i, image: "/catalog/chef-uniform.jpg" },
+  { test: /\b(housekeeping|tunic|work trousers)\b/i, image: "/catalog/housekeeping-uniform.jpg" },
+  { test: /\b(reception|blazer|shirt|service waist)\b/i, image: "/catalog/uniforms.jpg" },
+  // Technology
+  { test: /\b(television|tv|remote)\b/i, image: "/catalog/guest-tv.jpg" },
+  { test: /\b(network|switch|patch|rack|access point|display screen)\b/i, image: "/catalog/network-equipment.jpg" },
+  // Services
+  { test: /\bpest control\b/i, image: "/catalog/pest-control.jpg" },
+  { test: /\b(laundry service|linen rental|waste|hvac|hood cleaning|elevator|inspection|maintenance service)\b/i, image: "/catalog/facility-service.jpg" },
 ];
 
 const FOOD_ARABIC: Record<string, string> = {
@@ -90,11 +132,9 @@ export function edibleRank(subcategory: string | null | undefined) {
 }
 
 export function listingImage(name: string, category: string | null | undefined) {
+  const match = ITEM_IMAGES.find((visual) => visual.test.test(name));
+  if (match) return match.image;
   const area = operatingCategory(category, name);
-  if (area.group === "Restaurants & bars") {
-    const match = FOOD_IMAGES.find((visual) => visual.test.test(name));
-    if (match) return match.image;
-  }
   return APPROVED_COVERS[area.group]?.image ?? null;
 }
 
