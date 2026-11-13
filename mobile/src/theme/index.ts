@@ -1,24 +1,25 @@
 /**
- * HOVIN dark field — matched to the travel-app reference:
- * deep charcoal page, elevated grey cards, electric-blue CTA, gold secondary.
+ * Owner tokens:
+ * - Main field `#262A32` with white type
+ * - Accent / pill fill `#5B92FE` with black type
  */
 export const colors = {
-  paper: "#16181d",
-  paperRaised: "#1c1f26",
-  card: "#23262f",
-  chrome: "#12141a",
+  paper: "#262A32",
+  paperRaised: "#2E333C",
+  card: "#303541",
+  chrome: "#262A32",
   chromeText: "#ffffff",
   ink: "#ffffff",
-  muted: "#a0a3a6",
-  line: "#2e323c",
-  lineSoft: "#2a2e38",
-  /** Electric blue — primary CTA / active. */
-  blue: "#6fa8ef",
-  blueStrong: "#5a8dee",
-  blueBright: "#8eb5f7",
-  ice: "#9dc3e6",
-  iceWash: "#1e2a3d",
-  /** Gold — secondary accent (ratings, market prices, promo badges). */
+  muted: "#a8adb6",
+  line: "#3a404b",
+  lineSoft: "#343a45",
+  /** Accent and pill / panel fill — black type on this fill. */
+  blue: "#5B92FE",
+  blueStrong: "#5B92FE",
+  blueBright: "#5B92FE",
+  onBlue: "#000000",
+  ice: "#5B92FE",
+  iceWash: "#1e2f4d",
   yellow: "#f5b820",
   yellowSoft: "#3a3018",
   green: "#3f9a63",
@@ -36,7 +37,6 @@ export const space = {
   xl: 32,
 } as const;
 
-/** Geometric sans hierarchy — SF / Inter-like proportions on the system face. */
 export const type = {
   hero: { fontSize: 30, lineHeight: 36, fontWeight: "700" as const, letterSpacing: -0.5 },
   title: { fontSize: 22, lineHeight: 28, fontWeight: "700" as const, letterSpacing: -0.3 },

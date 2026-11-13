@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Image, Platform, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
+import { Image, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useLocale } from "../i18n";
 import { colors, radius, space, type as typeScale } from "../theme";
 import type { MessageKey } from "../i18n/messages";
@@ -31,7 +31,7 @@ export function T({
   const { isRtl } = useLocale();
   const color = tone === "chrome" ? colors.chromeText
     : tone === "muted" ? colors.muted
-      : tone === "blue" ? colors.blueBright
+      : tone === "blue" ? colors.blue
         : tone === "yellow" ? colors.yellow
           : tone === "danger" ? colors.danger
             : colors.ink;
@@ -49,13 +49,6 @@ function ctaFill(tone: "blue" | "chrome" | "quiet" | "yellow") {
   if (tone === "yellow") return { backgroundColor: colors.yellow };
   if (tone === "chrome") return { backgroundColor: colors.card };
   if (tone === "quiet") return { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line };
-  // Electric blue CTA — horizontal gradient on web (matches reference), solid on native.
-  if (Platform.OS === "web") {
-    return {
-      backgroundColor: colors.blue,
-      backgroundImage: `linear-gradient(90deg, ${colors.blueBright} 0%, ${colors.blueStrong} 100%)`,
-    } as ViewStyle;
-  }
   return { backgroundColor: colors.blue };
 }
 
@@ -72,7 +65,8 @@ export function Button({
   disabled?: boolean;
   testID?: string;
 }) {
-  const color = tone === "yellow" ? colors.chrome : colors.ink;
+  // Blue pill fill uses black type. Yellow uses black. Quiet / chrome stay white on dark cards.
+  const color = tone === "blue" || tone === "yellow" ? colors.onBlue : colors.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -170,8 +164,8 @@ export function Row({
 }
 
 export function Status({ label, tone }: { label: string; tone: "blue" | "amber" | "green" | "yellow" }) {
-  const background = tone === "green" ? "#14301f" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.iceWash;
-  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? colors.yellow : colors.blueBright;
+  const background = tone === "green" ? "#14301f" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.blue;
+  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? colors.yellow : colors.onBlue;
   return (
     <View style={{ alignSelf: "flex-start", backgroundColor: background, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5 }}>
       <Text allowFontScaling style={[typeScale.caption, { color }]}>{label}</Text>
