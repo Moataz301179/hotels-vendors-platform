@@ -24,12 +24,17 @@ export function T({
   style,
 }: {
   kind?: keyof typeof typeScale;
-  tone?: "ink" | "muted" | "chrome" | "blue" | "danger";
+  tone?: "ink" | "muted" | "chrome" | "blue" | "danger" | "yellow";
   children: string;
   style?: ViewStyle | object;
 }) {
   const { isRtl } = useLocale();
-  const color = tone === "chrome" ? colors.chromeText : tone === "muted" ? colors.muted : tone === "blue" ? colors.blue : tone === "danger" ? colors.danger : colors.ink;
+  const color = tone === "chrome" ? colors.chromeText
+    : tone === "muted" ? colors.muted
+      : tone === "blue" ? colors.blue
+        : tone === "yellow" ? colors.yellow
+          : tone === "danger" ? colors.danger
+            : colors.ink;
   return (
     <Text
       allowFontScaling
@@ -49,12 +54,15 @@ export function Button({
 }: {
   label: string;
   onPress: () => void;
-  tone?: "blue" | "chrome" | "quiet";
+  tone?: "blue" | "chrome" | "quiet" | "yellow";
   disabled?: boolean;
   testID?: string;
 }) {
-  const background = tone === "blue" ? colors.blue : tone === "chrome" ? colors.chrome : colors.card;
-  const color = tone === "quiet" ? colors.ink : colors.chromeText;
+  const background = tone === "blue" ? colors.blue
+    : tone === "yellow" ? colors.yellow
+      : tone === "chrome" ? colors.paperRaised
+        : colors.card;
+  const color = tone === "quiet" || tone === "chrome" ? colors.ink : colors.paper;
   return (
     <Pressable
       accessibilityRole="button"
@@ -153,9 +161,9 @@ export function Row({
   );
 }
 
-export function Status({ label, tone }: { label: string; tone: "blue" | "amber" | "green" }) {
-  const background = tone === "green" ? "#e7f2eb" : tone === "amber" ? colors.amberSoft : colors.iceWash;
-  const color = tone === "green" ? colors.green : tone === "amber" ? colors.amber : colors.blueStrong;
+export function Status({ label, tone }: { label: string; tone: "blue" | "amber" | "green" | "yellow" }) {
+  const background = tone === "green" ? "#14301f" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.iceWash;
+  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? colors.yellow : colors.blue;
   return (
     <View style={{ alignSelf: "flex-start", backgroundColor: background, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
       <Text allowFontScaling style={[typeScale.caption, { color }]}>{label}</Text>

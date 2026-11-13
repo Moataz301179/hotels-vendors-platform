@@ -5,12 +5,18 @@ import { recordedQuoteSpan, type RecordedQuote } from "../intelligence/quotes";
 import { useLocale } from "../i18n";
 import type { MessageKey } from "../i18n/messages";
 import { colors, space } from "../theme";
+import { CommodityStrap } from "../components/CommodityStrap";
 import { Button, Field, Group, Notice, Row, Status, T, Wordmark, factLabel } from "../components/ui";
+import { reviewBundlePromotions, type BundlePromotion } from "../market/commodities";
 
 export function ChromeBar() {
   return (
-    <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingVertical: space.md }}>
-      <Wordmark />
+    <View>
+      <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingVertical: space.md }}>
+        <Wordmark />
+      </View>
+      <View style={{ height: 2, backgroundColor: colors.blue }} />
+      <View style={{ height: 2, backgroundColor: colors.yellow }} />
     </View>
   );
 }
@@ -43,8 +49,8 @@ export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; 
   const title = t(`proposal.${proposal.action}.title` as MessageKey);
   const reason = t(`proposal.${proposal.action}.reason` as MessageKey);
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.lineSoft, borderStartWidth: 3, borderStartColor: colors.blue, padding: space.lg, gap: space.md }}>
-      <T kind="caption" tone="blue">{t("proposal.kicker")}</T>
+    <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.lineSoft, borderStartWidth: 3, borderStartColor: colors.yellow, padding: space.lg, gap: space.md }}>
+      <T kind="caption" tone="yellow">{t("proposal.kicker")}</T>
       <T kind="title">{title}</T>
       <T kind="body" tone="muted">{reason}</T>
       <View style={{ gap: space.sm }}>
@@ -85,6 +91,7 @@ export function HomeSurface({
     <Page testID={testID} refreshing={refreshing} onRefresh={onRefresh}>
       {review ? <Notice>{t("state.review")}</Notice> : null}
       {queued ? <Notice>{`${queued} · ${t("home.queued")}`}</Notice> : null}
+      {home.plan.workspace === "hotel" || home.plan.workspace === "supplier" ? <CommodityStrap /> : null}
       <View style={{ gap: space.xs }}>
         <T kind="caption" tone="muted">{t(workspaceTitle(home.plan.workspace))}</T>
         <T kind="hero">{home.account.name || home.account.email || home.account.role}</T>
@@ -222,6 +229,8 @@ export function CatalogSurface({
   onRequest,
   busy,
   note,
+  promotions = reviewBundlePromotions,
+  onOpenPromotion,
   testID = "screen-catalog",
 }: {
   products: Array<{ id: string; name: string; category: string; unitOfMeasure: string }>;
@@ -232,13 +241,49 @@ export function CatalogSurface({
   onRequest: (productId: string) => void;
   busy?: boolean;
   note?: string;
+  promotions?: BundlePromotion[];
+  onOpenPromotion?: (promotion: BundlePromotion) => void;
   testID?: string;
 }) {
-  const { t } = useLocale();
+  const { t, language } = useLocale();
+  const arabic = language === "ar";
   return (
     <Page testID={testID}>
       <T kind="title">{t("catalog.title")}</T>
-      <Notice>{t("catalog.anonymous")}</Notice>
+      <View style={{ gap: space.sm }}>
+        <View style={{ flexDirection: arabic ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" }}>
+          <T kind="caption" tone="yellow">{t("catalog.promotions")}</T>
+          <T kind="caption" tone="muted">{t("catalog.anonymousShort")}</T>
+        </View>
+        {promotions.map((promo) => (
+          <View
+            key={promo.id}
+            style={{
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.lineSoft,
+              borderStartWidth: 3,
+              borderStartColor: colors.blue,
+              padding: space.lg,
+              gap: space.sm,
+            }}
+          >
+            <Status label={arabic ? promo.badgeAr : promo.badgeEn} tone="yellow" />
+            <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
+            <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
+            <T kind="label" tone="blue">{arabic ? promo.itemsAr : promo.itemsEn}</T>
+            <T kind="caption" tone="muted">{arabic ? promo.unitHintAr : promo.unitHintEn}</T>
+            <Button
+              label={t("catalog.request")}
+              tone="blue"
+              onPress={() => (onOpenPromotion ? onOpenPromotion(promo) : products[0] ? onRequest(products[0].id) : undefined)}
+              disabled={busy || (!onOpenPromotion && products.length === 0)}
+              testID={`promo-${promo.id}`}
+            />
+          </View>
+        ))}
+      </View>
       <Field label={t("catalog.search")} value={query} onChangeText={onQuery} />
       <Field label={t("catalog.quantity")} value={quantity} onChangeText={onQuantity} keyboardType="number-pad" />
       {note ? <Notice tone="danger">{note}</Notice> : null}
@@ -503,6 +548,8 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
       <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: space.lg }}>
         <Wordmark />
       </View>
+      <View style={{ height: 2, backgroundColor: colors.blue }} />
+      <View style={{ height: 2, backgroundColor: colors.yellow }} />
       <View style={{ padding: space.lg, gap: space.lg }}>
         <T kind="caption" tone="blue">{t("signin.kicker")}</T>
         <T kind="hero">{t("signin.title")}</T>
