@@ -15,7 +15,7 @@
 @font-face{font-family:'SF Pro Text';font-weight:300;font-style:normal;src:url('/fonts/SF-Pro-Text-Light.woff2') format('opentype')};
 
 :root{
-  /* Reference grade: warm paper page, near-white cards, charcoal chrome, cobalt action. */
+  /* Reference grade: warm paper page, near-white cards, OLED chrome, cobalt action. */
   --paper-0:#ffffff;
   --paper-50:#f7f7f0;
   --paper-100:#f1f0e8;
@@ -38,8 +38,9 @@
   --cobalt-700:#3f78e0;
   --green-600:#2f7d4f;
   --red-600:#b0432f;
-  /* Chrome matches the approved website footer / HOVIN field charcoal. */
+  /* Mid charcoal for labels / field accents; chrome uses a darker OLED grey. */
   --charcoal:#303234;
+  --chrome-oled:#141516;
   --ink:#1a222b;
   --muted:#5f6b73;
   --line:#d7dbd9;
@@ -47,7 +48,7 @@
   /* Semantic roles: components consume these aliases, not arbitrary colors. */
   --bg:var(--paper-100);--surface:var(--paper-0);--surface-raised:#ffffff;
   --blue:var(--cobalt-600);--blue-strong:var(--cobalt-700);
-  --chrome:var(--charcoal);--chrome-text:#ffffff;--accent-wash:var(--ice-100);
+  --chrome:var(--chrome-oled);--chrome-text:#ffffff;--accent-wash:var(--ice-100);
   --green:var(--green-600);--danger:var(--red-600);--focus:var(--cobalt-600);
   /* Single typeface for the whole product: Plus Jakarta Sans.
      Titles use medium (500) and bold (700). SF Pro remains a system fallback. */
@@ -254,10 +255,10 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 
 .nav .hv-brand-lockup>img,.app-top .hv-brand-lockup>img,.hv-auth-story .hv-brand-lockup>img,.hv-site-footer .hv-brand-lockup>img{filter:brightness(0) invert(1)}
 
-/* Keep the public chrome on one charcoal surface across every route. */
-.nav,.hv-site-footer{background-color:#303234}
-.nav,.app-top,.hv-site-footer{background-color:#303234;color:#fff}
-.nav-links.nav-links-open{background:#303234}
+/* Keep the public chrome on one OLED-dark grey across every route. */
+.nav,.hv-site-footer{background-color:var(--chrome)}
+.nav,.app-top,.hv-site-footer{background-color:var(--chrome);color:#fff}
+.nav-links.nav-links-open{background:var(--chrome)}
 .nav-links,.nav-links a,.nav-dropdown summary,.app-top-links a,.hv-site-footer nav a,.hv-site-footer h3,.hv-site-footer .hv-footer-bottom{color:#fff}
 .nav-links a:hover,.nav-links a:focus-visible,.nav-dropdown[open] summary,.app-top-links a:hover,.hv-site-footer nav a:hover{color:#fff}
 /* Titles stay one ink tone; cobalt is reserved for CTAs and signals (DESIGN.md). */
@@ -347,7 +348,7 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
   --workspace-success:#2f7d4f;
   background:var(--workspace-canvas);
 }
-.app-shell .app-top{height:72px;min-height:72px;background:#303234;border-bottom-color:#293b48;padding-inline:max(20px,calc((100vw - 1440px)/2));}
+.app-shell .app-top{height:72px;min-height:72px;background:var(--chrome);border-bottom-color:#1f2022;padding-inline:max(20px,calc((100vw - 1440px)/2));}
 .app-shell .app-top-links{gap:18px}.app-shell .app-top-links a{min-height:44px;display:inline-flex;align-items:center;padding:0 4px;color:#d9e2e8;font-weight:650}.app-shell .app-top-links a:hover{color:#fff}
 @media(max-width:600px){.app-shell .app-top-links>a{display:none}}
 .app-shell .side-layout{grid-template-columns:256px minmax(0,1fr)}
@@ -664,7 +665,7 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 @media(max-width:560px){.hv-register-choice{grid-template-columns:1fr}}
 
 /* Theme modes — both use the approved action/chrome palette.
-   Light: warm paper pages + charcoal chrome.
+   Light: warm paper pages + OLED-dark chrome.
    Dark: HOVIN charcoal field + raised pans + same #5B92FE CTAs. */
 html[data-theme="light"],html:not([data-theme]){
   color-scheme:light;
@@ -682,7 +683,7 @@ html[data-theme="dark"]{
   --muted:#c5c6c7;
   --line:rgba(255,255,255,.14);
   --line-soft:rgba(255,255,255,.08);
-  --chrome:#303234;
+  --chrome:var(--chrome-oled);
   --chrome-text:#ffffff;
   --blue-title:#ffffff;
   --charcoal:#303234;

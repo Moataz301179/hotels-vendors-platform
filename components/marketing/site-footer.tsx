@@ -15,6 +15,6 @@ export function SiteFooter() {
       <div><div className={headClass}>Partners</div><ul className="flex flex-col gap-2 text-sm"><li><Link href="/solutions/suppliers" className={linkClass}>Vendors</Link></li><li><Link href="/solutions/carriers" className={linkClass}>Logistics</Link></li><li><Link href="/solutions/funders" className={linkClass}>Finance</Link></li><li><Link href="/contact" className={linkClass}>Partner enquiries</Link></li></ul></div>
       <div><div className={headClass}>Company</div><ul className="flex flex-col gap-2 text-sm"><li><Link href="/about" className={linkClass}>About</Link></li><li><Link href="/investors" className={linkClass}>Investors</Link></li><li><Link href="/support" className={linkClass}>Support</Link></li><li><Link href="/contact" className={linkClass}>Contact</Link></li></ul></div>
       <div><div className={headClass}>Legal</div><ul className="flex flex-col gap-2 text-sm"><li><Link href="/privacy" className={linkClass}>Privacy policy</Link></li><li><Link href="/terms" className={linkClass}>Terms of use</Link></li></ul></div>
-    </div><div className="pt-6 border-t text-xs text-[#7d8890]" style={{ borderColor: "#2a3238" }}>&copy; {new Date().getFullYear()} Restaurants for E-Marketing. All rights reserved.</div>
+    </div><div className="pt-6 border-t text-xs text-[#7d8890]" style={{ borderColor: "rgba(255,255,255,.12)" }}>&copy; {new Date().getFullYear()} Restaurants for E-Marketing. All rights reserved.</div>
   </div></footer>;
 }

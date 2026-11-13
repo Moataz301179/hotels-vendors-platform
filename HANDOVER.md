@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## OLED chrome for header/footer — 2026-11-13 (23:45 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected mid charcoal `#303234` on public toolbar + footer.
+- New token `--chrome-oled:#141516`; `--chrome` points there. `--charcoal:#303234` remains for labels/metadata.
+- Verification: vitest public-header-contract + join; Playwright nav/footer bg `rgb(20,21,22)`.
+
 ## Join section charcoal fill rejected — 2026-11-13 (23:43 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
