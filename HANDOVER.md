@@ -1,5 +1,15 @@
 # HotelsVendors — Production-Ready Handover
 
+## AI Assistant model + carousel image match — 2026-11-14 (00:00 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Symptom: FAB opened but model looked “broken” — no LLM provider in Cloud Agent env → `/api/v2/assistant` 503; tiny local models also over-refused marketing questions.
+- Fix: OLED FAB chrome; honest 503 UX with public actions; public system prompt answers product questions directly; local verify with Ollama `llama3.2:3b` (`OLLAMA_URL` + `OLLAMA_MODEL`).
+- Carousel stills rematched to slide copy: F&B `/category-food-beverage.png`, HK `/category-housekeeping.png`, Eng `/category-engineering-ffe.png`, HOVIN `/hovin-receiving-field.jpg` (no tray/lamp/armchair mismatches).
+- Verification: vitest public-assistant + honesty + widget + failure + hero-carousel-imagery (18 passed); Playwright FAB reply + Register as a hotel action; API `provider=ollama`.
+- Unresolved: production still needs `GROQ_API_KEY` (or reachable Ollama) on the VPS runtime for live answers. Local Clerk uses preview placeholders; live `pk_live_` rejects non-hotelsvendors.com origins in the browser.
+- Next action: CI green on #77 → merge → owner sets LLM secret → `APPLY_AFTER_NEON_BACKUP` deploy.
+
 ## Sealed-requirement strip rewrite — 2026-11-13 (23:46 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.

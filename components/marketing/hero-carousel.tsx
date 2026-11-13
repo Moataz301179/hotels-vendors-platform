@@ -23,8 +23,8 @@ const slides = [
     description: "Find reference products for linen, cleaning consumables, guest amenities and room readiness.",
     href: "/marketplace?category=Housekeeping%20%26%20laundry",
     action: "Explore housekeeping",
-    image: "/catalog/bed-linen.jpg",
-    alt: "Hotel bed linen prepared for guest-room turnover",
+    image: "/category-housekeeping.png",
+    alt: "Hotel housekeeping room prepared for guest-room turnover",
   },
   {
     eyebrow: "Engineering & furniture",
@@ -32,8 +32,8 @@ const slides = [
     description: "Move technical requirements into a controlled sourcing request without turning discovery into a public offer.",
     href: "/marketplace?category=Engineering%20%26%20maintenance",
     action: "Explore engineering",
-    image: "/catalog/lobby-armchair.jpg",
-    alt: "Hotel lobby seating ready for guest areas",
+    image: "/category-engineering-ffe.png",
+    alt: "Hotel engineering bench with property maintenance components",
   },
   {
     eyebrow: "HOVIN receiving",
