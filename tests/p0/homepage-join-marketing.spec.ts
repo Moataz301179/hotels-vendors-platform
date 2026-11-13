@@ -14,13 +14,21 @@ describe("homepage join marketing", () => {
     expect(page).not.toContain("Receiving operator");
     expect(page).not.toContain("View HOVIN workflow");
 
-    expect(page).toContain("Can&apos;t find the right product yet?");
-    expect(page).toContain("Start a sealed requirement");
+    expect(page).not.toContain("Can&apos;t find the right product yet?");
+    expect(page).not.toContain("Custom demand");
+    expect(page).toContain("When the catalogue ends, keep the trail intact.");
+    expect(page).toContain("Open a sealed requirement");
     expect(page).toContain("Join the network");
     expect(page).toContain("Register your hotel");
     expect(page).toContain("Register as a vendor");
     expect(page).toContain("See how HOVIN works");
     expect(page).toContain("Vendor identity stays sealed until the authorized stage");
+  });
+
+  it("presents the sealed-requirement CTA as a ledger strip, not a wash card", () => {
+    expect(css).toMatch(/\.requirement\{[^}]*background:transparent/s);
+    expect(css).toMatch(/\.requirement\{[^}]*border-top:1px solid var\(--line\)/s);
+    expect(css).not.toMatch(/\.requirement\{[^}]*linear-gradient/s);
   });
 
   it("keeps hotel and vendor self-serve registration destinations", () => {

@@ -122,14 +122,14 @@ export default function MarketingPage() {
             ))}
           </div>
 
-          <aside className={styles.requirement} aria-label="Custom sourcing request">
+          <aside className={styles.requirement} aria-label="Sealed requirement">
             <div className={styles.requirementCopy}>
-              <p className={styles.requirementEyebrow}>Custom demand</p>
-              <h3>Can&apos;t find the right product yet?</h3>
-              <p>Write the specification once. Quantity, delivery context and authority stay on the same sealed record—so your team never chases an informal request outside the network.</p>
+              <p className={styles.requirementEyebrow}>Sealed requirement</p>
+              <h3>When the catalogue ends, keep the trail intact.</h3>
+              <p>Capture quantity, delivery context and authority on one protected record—before vendor identity is disclosed.</p>
             </div>
             <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.requirementCta}>
-              Start a sealed requirement <ArrowRight size={16} />
+              Open a sealed requirement <ArrowRight size={16} />
             </Link>
           </aside>
         </div>

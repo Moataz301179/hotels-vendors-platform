@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## Sealed-requirement strip rewrite — 2026-11-13 (23:46 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected: “Custom demand / Can't find the right product yet?” wash-card presentation.
+- Replacement: ledger strip with “When the catalogue ends, keep the trail intact.” + “Open a sealed requirement”.
+- Verification: vitest homepage-join-marketing (4 passed); Playwright transparent strip + new copy.
+
 ## OLED chrome for header/footer — 2026-11-13 (23:45 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.

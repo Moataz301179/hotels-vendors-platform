@@ -60,11 +60,12 @@
 .categoryBody h3{margin:8px 0 0;font-size:18px}
 .categoryBody p{flex:1;margin:6px 0 12px;color:var(--muted);font-size:12.5px;line-height:1.6}
 .categoryBody b{display:inline-flex;align-items:center;gap:7px;color:var(--cobalt-700);font-size:12px;font-weight:700}
-.requirement{display:flex;align-items:center;justify-content:space-between;gap:32px;margin-top:28px;padding:clamp(28px,3vw,36px);border:0;border-radius:0;background:linear-gradient(135deg,rgba(91,146,254,.12),rgba(48,50,52,.06));box-shadow:inset 0 0 0 1px rgba(48,50,52,.08)}
+/* Ledger strip — no wash card / soft blue panel for this CTA. */
+.requirement{display:flex;align-items:center;justify-content:space-between;gap:clamp(24px,4vw,48px);margin-top:36px;padding:clamp(22px,3vw,28px) 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
 .requirementCopy{max-width:720px}
-.requirementEyebrow{margin:0 0 10px;color:var(--cobalt-700);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.requirementEyebrow{margin:0 0 10px;color:var(--charcoal)!important;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
 .requirement h3{margin:0;font-family:var(--font-heading),'Plus Jakarta Sans',sans-serif;font-size:clamp(22px,2.4vw,30px);font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--ink)}
-.requirement p{max-width:640px;margin:12px 0 0;color:var(--muted);font-size:15px;line-height:1.7}
+.requirement p{max-width:52ch;margin:12px 0 0;color:var(--muted);font-size:15px;line-height:1.7}
 .requirementCta{display:inline-flex;flex:none;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:1px solid var(--cobalt-600);border-radius:9px;background:var(--cobalt-600);color:#fff;font-size:14px;font-weight:700;text-decoration:none;transition:background .18s,border-color .18s}
 .requirementCta:hover{background:var(--cobalt-700);border-color:var(--cobalt-700)}
 .textLink{display:inline-flex;flex:none;align-items:center;gap:8px;color:var(--cobalt-700);font-size:14px;font-weight:700;text-decoration:none}
@@ -156,7 +157,7 @@
 .journeySteps{padding:12px 20px}
 .journeyStep{padding:18px 0}
 .journeyStep strong{font-size:16px}
-.requirement{flex-direction:column;align-items:flex-start;padding:24px}
+.requirement{flex-direction:column;align-items:flex-start;padding-top:22px}
 .requirementCta{width:100%}
 .controlNav{grid-template-columns:1fr 1fr}
 .controlNav span:nth-child(3){border-left:0;border-top:1px solid var(--line)}
