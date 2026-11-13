@@ -2,14 +2,6 @@ import "react-native-gesture-handler";
 import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-  useFonts as useManrope,
-} from "@expo-google-fonts/manrope";
-import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
   PlusJakartaSans_600SemiBold,
@@ -65,20 +57,13 @@ function AppStack() {
 }
 
 export default function RootLayout() {
-  const [manropeLoaded] = useManrope({
-    Manrope_400Regular,
-    Manrope_500Medium,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-    Manrope_800ExtraBold,
-  });
   const [jakartaLoaded] = useJakarta({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
   });
-  const fontsLoaded = manropeLoaded && jakartaLoaded;
+  const fontsLoaded = jakartaLoaded;
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();

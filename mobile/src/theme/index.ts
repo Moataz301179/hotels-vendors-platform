@@ -11,9 +11,8 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
  * - Yellow type / yellow backfill rejected
  * - Large widgets stay short — title / facts / action
  *
- * Typeface (HotelsVendors design system):
- * - Display: Manrope
- * - Body: Plus Jakarta Sans
+ * Typeface (owner rule): Plus Jakarta Sans for the whole app.
+ * Titles use medium (500) and bold (700).
  */
 export const colors = {
   paper: "#303234",
@@ -61,19 +60,19 @@ export const space = {
 } as const;
 
 export const fonts = {
-  displayRegular: "Manrope_400Regular",
-  displayMedium: "Manrope_500Medium",
-  displaySemibold: "Manrope_600SemiBold",
-  displayBold: "Manrope_700Bold",
-  displayExtraBold: "Manrope_800ExtraBold",
+  displayRegular: "PlusJakartaSans_400Regular",
+  displayMedium: "PlusJakartaSans_500Medium",
+  displaySemibold: "PlusJakartaSans_600SemiBold",
+  displayBold: "PlusJakartaSans_700Bold",
+  displayExtraBold: "PlusJakartaSans_700Bold",
   bodyRegular: "PlusJakartaSans_400Regular",
   bodyMedium: "PlusJakartaSans_500Medium",
   bodySemibold: "PlusJakartaSans_600SemiBold",
   bodyBold: "PlusJakartaSans_700Bold",
   regular: "PlusJakartaSans_400Regular",
   medium: "PlusJakartaSans_500Medium",
-  semibold: "Manrope_600SemiBold",
-  bold: "Manrope_700Bold",
+  semibold: "PlusJakartaSans_600SemiBold",
+  bold: "PlusJakartaSans_700Bold",
 } as const;
 
 export const type = {
@@ -85,10 +84,10 @@ export const type = {
     letterSpacing: -0.6,
   },
   title: {
-    fontFamily: fonts.displaySemibold,
+    fontFamily: fonts.displayBold,
     fontSize: 22,
     lineHeight: 28,
-    fontWeight: Platform.OS === "web" ? ("600" as const) : undefined,
+    fontWeight: Platform.OS === "web" ? ("700" as const) : undefined,
     letterSpacing: -0.35,
   },
   headline: {
