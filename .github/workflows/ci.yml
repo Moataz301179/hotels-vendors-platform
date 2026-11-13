@@ -84,12 +84,21 @@ jobs:
           HV_RELEASE_SMOKE=1 HV_PUBLIC_ORIGIN=http://127.0.0.1:3100 PORT=3100 HOSTNAME=127.0.0.1 node release/server.js >/tmp/hv-smoke.log 2>&1 &
           server_pid=$!
           trap 'status=$?; cat /tmp/hv-smoke.log; kill "$server_pid" 2>/dev/null || true; exit "$status"' EXIT
+          # Wait until the homepage itself answers HTTP 200. Health alone can
+          # race cold standalone startup; backoff avoids flaking on slow boots.
           ready=0
-          for attempt in $(seq 1 30); do
-            if curl -fsS --max-time 2 http://127.0.0.1:3100/api/health >/tmp/hv-health.json; then ready=1; break; fi
-            sleep 1
+          delay=1
+          for attempt in $(seq 1 45); do
+            set +e
+            status=$(curl -sS --max-time 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/)
+            curl_exit=$?
+            set -e
+            if [ "$curl_exit" -eq 0 ] && [ "$status" = '200' ]; then ready=1; break; fi
+            sleep "$delay"
+            if [ "$delay" -lt 5 ]; then delay=$((delay + 1)); fi
           done
-          if [ "$ready" -ne 1 ]; then cat /tmp/hv-smoke.log; exit 1; fi
+          if [ "$ready" -ne 1 ]; then echo "Homepage never became ready on :3100"; cat /tmp/hv-smoke.log; exit 1; fi
+          curl -fsS --max-time 5 http://127.0.0.1:3100/api/health >/tmp/hv-health.json
           grep -q '"ok":true' /tmp/hv-health.json
           for path in / /login /register /walkthrough /getting-started /marketplace /platform /solutions /security-overview /hotels/signup /suppliers/signup /carriers/portal /funders/portal /solutions/hotels /solutions/suppliers /solutions/carriers /solutions/funders; do
             set +e
@@ -99,12 +108,11 @@ jobs:
             if [ "$curl_exit" -ne 0 ] || [ "$status" != '200' ]; then echo "Unexpected HTTP ${status:-none} for $path (curl exit $curl_exit)"; cat /tmp/hv-smoke.log; exit 1; fi
           done
           curl -fsS --max-time 10 http://127.0.0.1:3100/ -o /tmp/hv-home.html
-          # Assert current, user-visible homepage markers rather than stale
-          # launch copy. This confirms the packaged route rendered without
-          # tying the release gate to an obsolete marketing sentence.
-          grep -Fq 'Technology reimagined for hotel procurement' /tmp/hv-home.html
-          grep -Fq 'Every decision connected. Every handoff accountable' /tmp/hv-home.html
-          grep -Fq 'Egyptian hotel teams control spend' /tmp/hv-home.html
+          # Assert current Suite Atmosphere homepage markers rather than stale
+          # OLED-hero copy. Confirms the packaged route rendered the live hero.
+          grep -Fq 'HotelsVendors' /tmp/hv-home.html
+          grep -Fq 'The operating network behind every hotel stay.' /tmp/hv-home.html
+          grep -Fq 'vendor identity sealed until the authorized stage' /tmp/hv-home.html
           for path in /audit /security; do
             test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3100$path")" = '307'
           done
