@@ -65,28 +65,37 @@ describe("AI procurement assistant contract", () => {
     m.hasPermission.mockResolvedValue(true);
   });
 
-  it("returns public guidance without executing tenant tools for an anonymous visitor", async () => {
+  it("answers anonymous visitors with the public LLM path and no tenant tools", async () => {
     m.actor.mockResolvedValue(null);
+    m.llm.mockResolvedValue({
+      content: "HotelsVendors seals vendor identity until authorized stages. Register as a hotel or supplier to continue.",
+      provider: "groq",
+      model: "llama-3.3-70b-versatile",
+      tokensUsed: 40,
+      latencyMs: 12,
+      available: true,
+    });
     const response = await POST(request({ question: "Can you help with procurement?" }));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ scope: "public-guidance", toolsUsed: [] });
+    const body = await response.json();
+    expect(body).toMatchObject({ scope: "public-llm", toolsUsed: [] });
+    expect(Array.isArray(body.actions)).toBe(true);
+    expect(body.actions.length).toBeGreaterThan(0);
     expect(m.productCount).not.toHaveBeenCalled();
-    expect(m.llm).not.toHaveBeenCalled();
+    expect(m.llm).toHaveBeenCalled();
     expect(m.conversationCreate).not.toHaveBeenCalled();
   });
 
-  it("keeps anonymous public guidance deterministic even when the configured provider is unavailable", async () => {
+  it("returns an honest unavailable error when the public LLM chain cannot be reached", async () => {
     m.actor.mockResolvedValue(null);
     m.llm.mockResolvedValue({ content: "AI service temporarily unavailable. No model provider could be reached.", available: false });
     const response = await POST(request({ question: "Where can I find delivery ETA help?" }));
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(503);
     const body = await response.json();
-    expect(body).toMatchObject({ scope: "public-guidance", toolsUsed: [] });
-    // Anonymous visitors get one honest statement; no keyword-matched answer
-    // is presented as if it came from the model.
-    expect(body.text).toContain("No model was consulted for this message.");
-    expect(body.text).not.toContain("committed delivery time");
-    expect(m.llm).not.toHaveBeenCalled();
+    expect(body).toMatchObject({ code: "AI_PROVIDER_UNAVAILABLE" });
+    expect(Array.isArray(body.actions)).toBe(true);
+    expect(m.llm).toHaveBeenCalled();
+    expect(m.productCount).not.toHaveBeenCalled();
   });
 
   it("returns every grounded tool and its source evidence", async () => {
