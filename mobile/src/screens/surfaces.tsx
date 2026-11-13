@@ -512,8 +512,7 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
         <Wordmark width={132} />
       </View>
       <View style={{ flex: 1, paddingHorizontal: space.lg, paddingBottom: space.xl, justifyContent: "center" }}>
-        <BluePan style={{ gap: space.lg }}>
-          <Text allowFontScaling style={[onBlueType, { fontSize: 22, lineHeight: 28 }]}>{t("signin.title")}</Text>
+        <BluePan style={{ gap: space.md }}>
           {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
           <Button label={t("action.signIn")} tone="inset" onPress={onSignIn} testID="sign-in" />
         </BluePan>
