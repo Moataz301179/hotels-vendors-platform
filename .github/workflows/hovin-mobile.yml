@@ -17,23 +17,34 @@ concurrency:
 jobs:
   mobile-gates:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: mobile
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npx expo config --type public
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+      - name: Install root vitest runner
+        run: npm ci --legacy-peer-deps --ignore-scripts
+      - name: Typecheck mobile app sources
+        working-directory: mobile
+        run: npx tsc --noEmit
+      - name: Expo config resolves
+        working-directory: mobile
+        run: npx expo config --type public
+      - name: Mobile unit specs
+        run: npx vitest run --config vitest.mobile.config.ts
       - name: Release readiness (warn-only until EAS project id is set)
+        working-directory: mobile
         run: node scripts/release-readiness.mjs || true
       - name: Fail closed once EAS project id is configured
+        working-directory: mobile
         run: |
           PROJECT_ID=$(node -e "const a=require('./app.json'); process.stdout.write(a.expo?.extra?.eas?.projectId||'')")
           if [ "$PROJECT_ID" != "" ] && [ "$PROJECT_ID" != "REPLACE_WITH_EAS_PROJECT_ID" ]; then
