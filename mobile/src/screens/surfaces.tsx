@@ -4,18 +4,18 @@ import type { PhoneCheckpoint, PhoneHome, PhoneNotification, PhoneOrder, PhoneOr
 import { recordedQuoteSpan, type RecordedQuote } from "../intelligence/quotes";
 import { useLocale } from "../i18n";
 import type { MessageKey } from "../i18n/messages";
-import { colors, space } from "../theme";
+import { colors, radius, space } from "../theme";
 import { CommodityStrap } from "../components/CommodityStrap";
-import { Button, Field, Group, Notice, Row, Status, T, Wordmark, factLabel } from "../components/ui";
+import { Button, Field, Group, Notice, Pan, Row, Status, T, Wordmark, factLabel } from "../components/ui";
 import { reviewBundlePromotions, type BundlePromotion } from "../market/commodities";
 
 export function ChromeBar() {
   return (
-    <View>
-      <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingVertical: space.md }}>
-        <Wordmark />
+    <View style={{ backgroundColor: colors.chrome }}>
+      <View style={{ paddingHorizontal: space.lg, paddingVertical: 20, alignItems: "center" }}>
+        <Wordmark width={124} />
       </View>
-      <View style={{ height: 1, backgroundColor: colors.lineSoft }} />
+      <View style={{ height: 1, backgroundColor: colors.lineSoft, opacity: 0.55 }} />
     </View>
   );
 }
@@ -34,8 +34,9 @@ export function Page({
   return (
     <ScrollView
       testID={testID}
-      contentContainerStyle={{ padding: space.lg, gap: space.lg, backgroundColor: colors.paper }}
+      contentContainerStyle={{ paddingHorizontal: space.lg, paddingTop: space.md + 4, paddingBottom: space.xl + 12, gap: 22, backgroundColor: colors.paper }}
       style={{ flex: 1, backgroundColor: colors.paper }}
+      showsVerticalScrollIndicator={false}
       refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} /> : undefined}
     >
       {children}
@@ -48,13 +49,13 @@ export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; 
   const title = t(`proposal.${proposal.action}.title` as MessageKey);
   const reason = t(`proposal.${proposal.action}.reason` as MessageKey);
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: space.lg, gap: space.md }}>
+    <Pan style={{ gap: space.md }}>
       <T kind="caption" tone="yellow">{t("proposal.kicker")}</T>
       <T kind="title">{title}</T>
       <T kind="body" tone="muted">{reason}</T>
-      <View style={{ gap: space.sm }}>
+      <View style={{ gap: space.sm, paddingVertical: space.xs }}>
         {proposal.evidence.map((fact) => (
-          <View key={`${fact.key}-${fact.value}`} style={{ flexDirection: "row", justifyContent: "space-between", gap: space.md }}>
+          <View key={`${fact.key}-${fact.value}`} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: space.md }}>
             <T kind="label" tone="muted">{t(factLabel(fact.key))}</T>
             <T kind="headline">{fact.value}</T>
           </View>
@@ -62,7 +63,7 @@ export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; 
       </View>
       {proposal.action === "wait" ? null : <Button label={t("action.continue")} onPress={onPress} testID="proposal-continue" />}
       <T kind="caption" tone="muted">{t("proposal.authority")}</T>
-    </View>
+    </Pan>
   );
 }
 
@@ -255,15 +256,7 @@ export function CatalogSurface({
           <T kind="caption" tone="muted">{t("catalog.anonymousShort")}</T>
         </View>
         {promotions.map((promo) => (
-          <View
-            key={promo.id}
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 24,
-              padding: space.lg,
-              gap: space.sm,
-            }}
-          >
+          <Pan key={promo.id} style={{ gap: space.sm }}>
             <Status label={arabic ? promo.badgeAr : promo.badgeEn} tone="yellow" />
             <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
             <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
@@ -276,7 +269,7 @@ export function CatalogSurface({
               disabled={busy || (!onOpenPromotion && products.length === 0)}
               testID={`promo-${promo.id}`}
             />
-          </View>
+          </Pan>
         ))}
       </View>
       <Field label={t("catalog.search")} value={query} onChangeText={onQuery} />
@@ -393,7 +386,7 @@ export function TrackingSurface({
       </Group>
       <Notice>{t("tracking.portal")}</Notice>
       {detail.deliveryCode.available ? (
-        <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: space.lg, gap: space.md }}>
+        <Pan style={{ gap: space.md }}>
           <T kind="caption" tone="muted">{t("tracking.code")}</T>
           <T kind="hero">{detail.deliveryCode.code}</T>
           {detail.deliveryCode.confirmedAt ? <Status label={t("tracking.confirm")} tone="green" /> : canConfirm ? (
@@ -402,7 +395,7 @@ export function TrackingSurface({
               <Button label={t("tracking.confirm")} onPress={onConfirm} testID="confirm-code" />
             </>
           ) : null}
-        </View>
+        </Pan>
       ) : <Notice>{t("tracking.unavailable")}</Notice>}
       {note ? <Notice tone="danger">{note}</Notice> : null}
     </Page>
@@ -540,16 +533,19 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
   const { t } = useLocale();
   return (
     <View testID={testID} style={{ flex: 1, backgroundColor: colors.paper }}>
-      <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: space.lg }}>
-        <Wordmark />
+      <View style={{ paddingHorizontal: space.lg, paddingTop: space.xl + 8, paddingBottom: space.md }}>
+        <Wordmark width={148} />
       </View>
-      <View style={{ height: 1, backgroundColor: colors.lineSoft }} />
-      <View style={{ padding: space.lg, gap: space.lg }}>
-        <T kind="caption">{t("signin.kicker")}</T>
-        <T kind="hero">{t("signin.title")}</T>
-        <T kind="body">{t("signin.body")}</T>
-        {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
-        <Button label={t("action.signIn")} onPress={onSignIn} testID="sign-in" />
+      <View style={{ flex: 1, paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: space.xl, gap: space.lg, justifyContent: "space-between" }}>
+        <View style={{ gap: space.md, maxWidth: 420 }}>
+          <T kind="caption" tone="muted">{t("signin.kicker")}</T>
+          <T kind="hero">{t("signin.title")}</T>
+          <T kind="body" tone="muted">{t("signin.body")}</T>
+          {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
+        </View>
+        <View style={{ gap: space.md }}>
+          <Button label={t("action.signIn")} onPress={onSignIn} testID="sign-in" />
+        </View>
       </View>
     </View>
   );

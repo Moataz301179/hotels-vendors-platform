@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, View, useWindowDimensions } from "react-native";
 import { hotelCommodityBoard, type CommodityQuote } from "../market/commodities";
 import { useLocale } from "../i18n";
-import { colors, radius, space, type as typeScale } from "../theme";
+import { chipStyle, colors, radius, space, type as typeScale } from "../theme";
 import { T } from "./ui";
 
 function Chip({ item, arabic }: { item: CommodityQuote; arabic: boolean }) {
@@ -11,18 +11,17 @@ function Chip({ item, arabic }: { item: CommodityQuote; arabic: boolean }) {
   const up = item.changePct >= 0;
   return (
     <View
-      style={{
-        flexDirection: arabic ? "row-reverse" : "row",
-        alignItems: "center",
-        gap: space.sm,
-        backgroundColor: colors.card,
-        borderRadius: radius.pill,
-        paddingHorizontal: space.md,
-        paddingVertical: 10,
-        marginEnd: space.sm,
-      }}
+      style={[
+        chipStyle,
+        {
+          flexDirection: arabic ? "row-reverse" : "row",
+          alignItems: "center",
+          gap: space.sm,
+          marginEnd: space.sm,
+        },
+      ]}
     >
-      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.yellow }} />
+      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.yellow }} />
       <Animated.Text
         allowFontScaling
         style={[typeScale.label, { color: colors.ink, writingDirection: arabic ? "rtl" : "ltr" }]}
@@ -77,7 +76,17 @@ export function CommodityStrap({
         <T kind="caption">{t("market.strap")}</T>
         <T kind="caption" tone="muted">{t("market.reference")}</T>
       </View>
-      <View style={{ overflow: "hidden", width: "100%", borderRadius: radius.lg, backgroundColor: colors.paperRaised, paddingVertical: space.sm }}>
+      <View
+        style={{
+          overflow: "hidden",
+          width: "100%",
+          borderRadius: radius.lg,
+          backgroundColor: colors.paperRaised,
+          paddingVertical: 12,
+          borderWidth: 1,
+          borderColor: colors.lineSoft,
+        }}
+      >
         <Animated.View
           onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
           style={{

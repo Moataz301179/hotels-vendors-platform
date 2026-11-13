@@ -4,7 +4,7 @@ import { useLocale } from "../../src/i18n";
 import { usePhoneContext } from "../../src/session/usePhone";
 import { ScreenState } from "../../src/components/ui";
 import { Wordmark } from "../../src/components/ui";
-import { colors } from "../../src/theme";
+import { colors, fonts } from "../../src/theme";
 
 export default function PhoneLayout() {
   const phone = usePhoneContext();
@@ -29,9 +29,10 @@ export default function PhoneLayout() {
         headerStyle: { backgroundColor: colors.chrome },
         headerTintColor: colors.chromeText,
         headerTitle: () => <Wordmark width={112} />,
-        tabBarStyle: { backgroundColor: colors.chrome, borderTopColor: colors.lineSoft },
+        tabBarStyle: { backgroundColor: colors.chrome, borderTopColor: colors.lineSoft, borderTopWidth: 1, height: 58, paddingBottom: 6, paddingTop: 4 },
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11, letterSpacing: 0.2 },
         sceneStyle: { backgroundColor: colors.paper },
       }}
     >

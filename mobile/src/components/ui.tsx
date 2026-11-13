@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Image, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useLocale } from "../i18n";
-import { colors, radius, space, type as typeScale } from "../theme";
+import { colors, fonts, panStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
 import type { MessageKey } from "../i18n/messages";
 
 const wordmark = require("../../assets/hovin-wordmark.png");
@@ -12,9 +12,13 @@ export function Wordmark({ width = 132 }: { width?: number }) {
       source={wordmark}
       accessibilityLabel="HOVIN"
       resizeMode="contain"
-      style={{ width, height: width * (49 / 132), backgroundColor: colors.chrome }}
+      style={{ width, height: width * (49 / 132), backgroundColor: "transparent" }}
     />
   );
+}
+
+export function Pan({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  return <View style={[panStyle, style]}>{children}</View>;
 }
 
 export function T({
@@ -24,7 +28,6 @@ export function T({
   style,
 }: {
   kind?: keyof typeof typeScale;
-  // Blue is fill-only. Do not expose a blue text tone on grey.
   tone?: "ink" | "muted" | "chrome" | "danger" | "yellow";
   children: string;
   style?: ViewStyle | object;
@@ -47,7 +50,7 @@ export function T({
 
 function ctaFill(tone: "blue" | "chrome" | "quiet" | "yellow") {
   if (tone === "yellow") return { backgroundColor: colors.yellow };
-  if (tone === "chrome") return { backgroundColor: colors.card };
+  if (tone === "chrome") return { backgroundColor: colors.paperRaised };
   if (tone === "quiet") return { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line };
   return { backgroundColor: colors.blue };
 }
@@ -65,7 +68,6 @@ export function Button({
   disabled?: boolean;
   testID?: string;
 }) {
-  // Blue pill fill uses black type. Yellow uses black. Quiet / chrome stay white on dark cards.
   const color = tone === "blue" || tone === "yellow" ? colors.onBlue : colors.ink;
   return (
     <Pressable
@@ -75,16 +77,15 @@ export function Button({
       onPress={onPress}
       testID={testID}
       style={({ pressed }) => ({
-        minHeight: 52,
-        paddingHorizontal: space.lg,
-        borderRadius: radius.pill,
+        ...pillCtaStyle,
         alignItems: "center",
         justifyContent: "center",
         ...ctaFill(tone),
-        opacity: disabled ? 0.45 : pressed ? 0.78 : 1,
+        opacity: disabled ? 0.45 : pressed ? 0.82 : 1,
+        transform: [{ scale: pressed && !disabled ? 0.985 : 1 }],
       })}
     >
-      <Text allowFontScaling style={[typeScale.headline, { color, letterSpacing: 0.2 }]}>{label}</Text>
+      <Text allowFontScaling style={[typeScale.headline, { color, letterSpacing: 0.2, fontFamily: fonts.displaySemibold }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -99,14 +100,15 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
         placeholderTextColor={colors.muted}
         {...props}
         style={{
-          minHeight: 52,
-          borderWidth: 0,
+          minHeight: 54,
+          borderWidth: 1,
+          borderColor: colors.lineSoft,
           borderRadius: radius.md,
           backgroundColor: colors.card,
           color: colors.ink,
           paddingHorizontal: space.md,
           fontSize: 16,
-          fontWeight: "500",
+          fontFamily: fonts.bodyMedium,
           textAlign: isRtl ? "right" : "left",
           writingDirection: isRtl ? "rtl" : "ltr",
         }}
@@ -117,7 +119,7 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
 
 export function Group({ children }: { children: ReactNode }) {
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, overflow: "hidden" }}>
+    <View style={[panStyle, { padding: 0, overflow: "hidden" }]}>
       {children}
     </View>
   );
@@ -139,7 +141,7 @@ export function Row({
   const { isRtl } = useLocale();
   const body = (
     <View style={{
-      minHeight: 60,
+      minHeight: 64,
       paddingHorizontal: space.md,
       paddingVertical: space.md,
       borderBottomWidth: hairline ? 1 : 0,
@@ -148,16 +150,16 @@ export function Row({
       alignItems: "center",
       gap: space.md,
     }}>
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, gap: 3 }}>
         <T kind="headline">{title}</T>
         {detail ? <T kind="body" tone="muted">{detail}</T> : null}
       </View>
-      {onPress ? <Text style={{ color: colors.muted, fontSize: 22 }}>{isRtl ? "‹" : "›"}</Text> : null}
+      {onPress ? <Text style={{ color: colors.muted, fontSize: 22, fontFamily: fonts.medium }}>{isRtl ? "‹" : "›"}</Text> : null}
     </View>
   );
   if (!onPress) return body;
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} testID={testID} style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}>
+    <Pressable accessibilityRole="button" onPress={onPress} testID={testID} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
       {body}
     </Pressable>
   );
@@ -167,15 +169,30 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "amber" 
   const background = tone === "green" ? "#14301f" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.blue;
   const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? colors.yellow : colors.onBlue;
   return (
-    <View style={{ alignSelf: "flex-start", backgroundColor: background, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5 }}>
-      <Text allowFontScaling style={[typeScale.caption, { color }]}>{label}</Text>
+    <View style={{
+      alignSelf: "flex-start",
+      backgroundColor: background,
+      borderRadius: radius.pill,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderWidth: tone === "blue" ? 0 : 1,
+      borderColor: tone === "green" ? "#1f4a30" : tone === "amber" || tone === "yellow" ? "#5a4c1c" : "transparent",
+    }}>
+      <Text allowFontScaling style={[typeScale.caption, { color, letterSpacing: 0.4 }]}>{label}</Text>
     </View>
   );
 }
 
 export function Notice({ children, tone = "paper" }: { children: string; tone?: "paper" | "danger" }) {
   return (
-    <View style={{ backgroundColor: tone === "danger" ? colors.dangerSoft : colors.paperRaised, borderRadius: radius.md, padding: space.md }}>
+    <View style={{
+      backgroundColor: tone === "danger" ? colors.dangerSoft : colors.paperRaised,
+      borderRadius: radius.md,
+      paddingHorizontal: space.md,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: tone === "danger" ? "#6a342c" : colors.lineSoft,
+    }}>
       <T kind="body" tone={tone === "danger" ? "danger" : "muted"}>{children}</T>
     </View>
   );
