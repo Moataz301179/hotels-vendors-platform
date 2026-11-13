@@ -21,8 +21,15 @@ const GROUP_LABELS: Record<string, string> = {
   "Restaurants & bars": "Food & beverage",
 };
 
-/** Ordered specific → family matches. First hit wins. */
-const ITEM_IMAGES: { test: RegExp; image: string }[] = [
+type ItemVisual = {
+  test: RegExp;
+  image: string;
+  /** When set, the rule only applies to these operating-catalog category codes. */
+  categories?: readonly string[];
+};
+
+/** Ordered specific → family matches. First eligible hit wins. */
+const ITEM_IMAGES: ItemVisual[] = [
   // Food & beverage edibles
   { test: /\brice\b/i, image: "/catalog/rice.jpg" },
   { test: /\bflour\b/i, image: "/catalog/flour.jpg" },
@@ -39,24 +46,44 @@ const ITEM_IMAGES: { test: RegExp; image: string }[] = [
   { test: /\bbread\b/i, image: "/catalog/bread.jpg" },
   { test: /\bpasta\b/i, image: "/catalog/pasta.jpg" },
   { test: /\b(sugar|salt|pepper|tomato paste|vinegar)\b/i, image: "/catalog/pantry.jpg" },
-  // Kitchenware
+  // Housekeeping chemicals before bare "glass" drinkware matches
+  { test: /\b(microfiber|mop|cleaner|detergent|softener|cloth)\b/i, image: "/catalog/cleaning-supplies.jpg" },
+  { test: /\blaundry detergent|fabric softener\b/i, image: "/catalog/laundry-detergent.jpg" },
+  // Kitchenware — never match glass cleaner via bare "glass"
   { test: /\bgastronorm|food pan\b/i, image: "/catalog/gastronorm-pan.jpg" },
   { test: /\bstorage container|food container|compostable food\b/i, image: "/catalog/food-storage.jpg" },
-  { test: /\btumbler|glass\b/i, image: "/catalog/water-tumbler.jpg" },
+  {
+    test: /\b(tumbler|drinking glass|water glass|glassware)\b/i,
+    image: "/catalog/water-tumbler.jpg",
+    categories: ["FOOD_BEVERAGE"],
+  },
   // Linen & textiles
   { test: /\b(bath towel|hand towel|face towel|bath mat)\b/i, image: "/catalog/bath-towel.jpg" },
   { test: /\b(bed sheet|duvet|pillowcase|fitted)\b/i, image: "/catalog/bed-linen.jpg" },
   { test: /\bpillow\b/i, image: "/catalog/bed-linen.jpg" },
   { test: /\bmattress|bed base|headboard\b/i, image: "/catalog/hotel-mattress.jpg" },
-  // Housekeeping
-  { test: /\b(microfiber|mop|cleaner|detergent|softener|cloth)\b/i, image: "/catalog/cleaning-supplies.jpg" },
-  { test: /\blaundry detergent|fabric softener\b/i, image: "/catalog/laundry-detergent.jpg" },
   // Guest amenities
   { test: /\b(shampoo|conditioner|body wash|soap|lotion|dental|sewing kit|amenity dispenser)\b/i, image: "/catalog/guest-amenities.jpg" },
   { test: /\bsewing kit\b/i, image: "/catalog/guest-sewing-kit.jpg" },
-  // Engineering
-  { test: /\b(led|lamp|light|lighting)\b/i, image: "/catalog/led-lamp.jpg" },
-  { test: /\b(switch|socket|fuse|paint|door closer)\b/i, image: "/catalog/electrical-fixture.jpg" },
+  // Technology before engineering so "network … switch" is not an electrical fixture
+  { test: /\b(television|tv|remote)\b/i, image: "/catalog/guest-tv.jpg" },
+  {
+    test: /\b(network|patch panel|patch cord|rack|access point|display screen)\b/i,
+    image: "/catalog/network-equipment.jpg",
+    categories: ["ICT_AV"],
+  },
+  {
+    test: /\bnetwork access switch\b|\baccess switch\b/i,
+    image: "/catalog/network-equipment.jpg",
+    categories: ["ICT_AV"],
+  },
+  // Engineering — wall switches before bare "light" lamp matches
+  {
+    test: /\b(wall light switch|light switch|socket|fuse|paint|door closer)\b/i,
+    image: "/catalog/electrical-fixture.jpg",
+    categories: ["ENGINEERING_MRO"],
+  },
+  { test: /\b(led|lamp|lighting)\b|\bled\s+light\b|\blight\s+fixture\b/i, image: "/catalog/led-lamp.jpg" },
   // Furniture
   { test: /\b(armchair|lounge chair)\b/i, image: "/catalog/lobby-armchair.jpg" },
   { test: /\b(outdoor|luggage rack|nightstand)\b/i, image: "/catalog/outdoor-furniture.jpg" },
@@ -68,9 +95,6 @@ const ITEM_IMAGES: { test: RegExp; image: string }[] = [
   { test: /\b(chef|kitchen bib|kitchen chef|apron)\b/i, image: "/catalog/chef-uniform.jpg" },
   { test: /\b(housekeeping|tunic|work trousers)\b/i, image: "/catalog/housekeeping-uniform.jpg" },
   { test: /\b(reception|blazer|shirt|service waist)\b/i, image: "/catalog/uniforms.jpg" },
-  // Technology
-  { test: /\b(television|tv|remote)\b/i, image: "/catalog/guest-tv.jpg" },
-  { test: /\b(network|switch|patch|rack|access point|display screen)\b/i, image: "/catalog/network-equipment.jpg" },
   // Services
   { test: /\bpest control\b/i, image: "/catalog/pest-control.jpg" },
   { test: /\b(laundry service|linen rental|waste|hvac|hood cleaning|elevator|inspection|maintenance service)\b/i, image: "/catalog/facility-service.jpg" },
@@ -131,8 +155,14 @@ export function edibleRank(subcategory: string | null | undefined) {
   return subcategory && EDIBLE_SUBCATEGORIES.has(subcategory) ? 0 : 1;
 }
 
+function visualMatches(visual: ItemVisual, name: string, category: string | null | undefined) {
+  if (!visual.test.test(name)) return false;
+  if (!visual.categories?.length) return true;
+  return Boolean(category && visual.categories.includes(category));
+}
+
 export function listingImage(name: string, category: string | null | undefined) {
-  const match = ITEM_IMAGES.find((visual) => visual.test.test(name));
+  const match = ITEM_IMAGES.find((visual) => visualMatches(visual, name, category));
   if (match) return match.image;
   const area = operatingCategory(category, name);
   return APPROVED_COVERS[area.group]?.image ?? null;

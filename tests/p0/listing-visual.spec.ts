@@ -18,6 +18,14 @@ describe("listing visuals", () => {
     expect(listingImage("White bath towel, 100 × 150 cm", "LINEN_TEXTILES")).not.toMatch(/category-/);
   });
 
+  it("does not map housekeeping glass cleaner or network switches to unrelated product photos", () => {
+    expect(listingImage("Glass and mirror cleaner", "HOUSEKEEPING")).toBe("/catalog/cleaning-supplies.jpg");
+    expect(listingImage("Glass and mirror cleaner", "HOUSEKEEPING")).not.toBe("/catalog/water-tumbler.jpg");
+    expect(listingImage("Network access switch", "ICT_AV")).toBe("/catalog/network-equipment.jpg");
+    expect(listingImage("Network access switch", "ICT_AV")).not.toBe("/catalog/electrical-fixture.jpg");
+    expect(listingImage("Wall light switch", "ENGINEERING_MRO")).toBe("/catalog/electrical-fixture.jpg");
+  });
+
   it("puts food and beverage first and shows its Arabic name", () => {
     expect(orderedOperatingGroups(["Engineering & maintenance", "Restaurants & bars", "Uniforms & workwear"])[0]).toBe("Restaurants & bars");
     expect(edibleRank("Dry grocery")).toBeLessThan(edibleRank("Kitchen food preparation"));
