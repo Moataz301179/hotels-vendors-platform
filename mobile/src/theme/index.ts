@@ -1,50 +1,51 @@
 import { Platform, type TextStyle, type ViewStyle } from "react-native";
 
 /**
- * Color allocation (owner rules):
- * - Page field `#303234` with darker grey fades — white type for primary copy
- * - `#5B92FE` — light-blue pan / CTA fills only; regular (non-bold) black type on the fill
- * - Blue pans carry a bottom frame-edge outline
- * - Blue is never used for text on grey
- * - Yellow type and yellow backfill under type are rejected
- * - Large widgets stay short — title / facts / action, not essays
+ * Color allocation (owner rules + travel-app reference sample):
+ * - Near-black field with soft grey fades
+ * - Grey pans/fields with a fine thin outline frame
+ * - `#5B92FE` for CTA fills only — regular (non-bold) black type on the fill
+ * - Blue is never used for text on grey, and never as a full content pan fill
+ * - Yellow type / yellow backfill rejected
+ * - Large widgets stay short — title / facts / action
  *
- * Typeface (HotelsVendors design system / reference sample):
- * - Display: Manrope (SF Pro Display fallback on Apple)
- * - Body: Plus Jakarta Sans (SF Pro Text fallback on Apple)
+ * Typeface (HotelsVendors design system):
+ * - Display: Manrope
+ * - Body: Plus Jakarta Sans
  */
 export const colors = {
-  paper: "#303234",
-  paperDeep: "#232526",
-  paperMid: "#2a2c2e",
-  paperRaised: "#3a3c3e",
-  card: "#3f4143",
-  chrome: "#303234",
+  paper: "#1c1d1f",
+  paperDeep: "#121314",
+  paperMid: "#242628",
+  paperRaised: "#2a2c2e",
+  card: "#2c2e30",
+  chrome: "#1c1d1f",
   chromeText: "#ffffff",
   ink: "#ffffff",
-  muted: "#d8d9da",
-  line: "#4a4c4e",
-  lineSoft: "#444648",
+  muted: "#a8aaac",
+  line: "rgba(255,255,255,0.14)",
+  lineSoft: "rgba(255,255,255,0.08)",
+  /** Fine thin outline frame on pans (reference sample). */
+  frame: "rgba(255,255,255,0.12)",
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",
-  blueEdge: "#1a3f8f",
   onBlue: "#000000",
   ice: "#5B92FE",
-  iceWash: "#3a3c3e",
+  iceWash: "#2a2c2e",
   green: "#3f9a63",
   danger: "#e0705c",
   dangerSoft: "#5a2a24",
 } as const;
 
-/** Soft field wash — darker greys fading into the page paper. */
-export const paperFade = ["#1b1c1e", colors.paperDeep, colors.paper, colors.paperDeep, "#1f2123"] as const;
+/** Soft field wash — darker greys with a cool lift, matching the sample fades. */
+export const paperFade = ["#0e0f10", "#16181a", "#1c1d1f", "#181a1c", "#101112"] as const;
 
 export const space = {
   xs: 4,
   sm: 8,
   md: 16,
-  lg: 24,
+  lg: 20,
   xl: 32,
 } as const;
 
@@ -58,7 +59,6 @@ export const fonts = {
   bodyMedium: "PlusJakartaSans_500Medium",
   bodySemibold: "PlusJakartaSans_600SemiBold",
   bodyBold: "PlusJakartaSans_700Bold",
-  /** @deprecated alias — prefer displaySemibold / bodyMedium */
   regular: "PlusJakartaSans_400Regular",
   medium: "PlusJakartaSans_500Medium",
   semibold: "Manrope_600SemiBold",
@@ -67,79 +67,63 @@ export const fonts = {
 
 export const type = {
   hero: {
-    fontFamily: fonts.displayExtraBold,
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: Platform.OS === "web" ? ("800" as const) : undefined,
-    letterSpacing: -0.9,
+    fontFamily: fonts.displayBold,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: Platform.OS === "web" ? ("700" as const) : undefined,
+    letterSpacing: -0.6,
   },
   title: {
-    fontFamily: fonts.displayBold,
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: Platform.OS === "web" ? ("700" as const) : undefined,
-    letterSpacing: -0.45,
+    fontFamily: fonts.displaySemibold,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: Platform.OS === "web" ? ("600" as const) : undefined,
+    letterSpacing: -0.35,
   },
   headline: {
-    fontFamily: fonts.displaySemibold,
-    fontSize: 17,
+    fontFamily: fonts.displayMedium,
+    fontSize: 16,
     lineHeight: 22,
-    fontWeight: Platform.OS === "web" ? ("600" as const) : undefined,
-    letterSpacing: -0.25,
+    fontWeight: Platform.OS === "web" ? ("500" as const) : undefined,
+    letterSpacing: -0.15,
   },
   body: {
     fontFamily: fonts.bodyRegular,
     fontSize: 15,
-    lineHeight: 23,
-    fontWeight: Platform.OS === "web" ? ("400" as const) : undefined,
+    lineHeight: 22,
+    fontWeight: "400",
     letterSpacing: -0.05,
   },
   label: {
-    fontFamily: fonts.bodySemibold,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: Platform.OS === "web" ? ("600" as const) : undefined,
-    letterSpacing: -0.05,
-  },
-  caption: {
-    fontFamily: fonts.bodyMedium,
+    fontFamily: fonts.bodyRegular,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: Platform.OS === "web" ? ("500" as const) : undefined,
-    letterSpacing: 0.35,
+    fontWeight: "400",
+    letterSpacing: 0.1,
+  },
+  caption: {
+    fontFamily: fonts.bodyRegular,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "400",
+    letterSpacing: 0.2,
   },
 } as const satisfies Record<string, TextStyle>;
 
 export const radius = {
-  sm: 14,
-  md: 20,
-  lg: 28,
+  sm: 12,
+  md: 16,
+  lg: 20,
   pill: 999,
 } as const;
 
-const softShadow = Platform.select({
-  ios: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.38,
-    shadowRadius: 24,
-  },
-  android: { elevation: 12 },
-  default: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.38,
-    shadowRadius: 24,
-  },
-});
-
-/** Soft floating pan — reference travel-app depth without harsh borders. */
+/** Reference pan — grey fill + fine thin outline frame. */
 export const panStyle: ViewStyle = {
   backgroundColor: colors.card,
   borderRadius: radius.lg,
   padding: space.lg,
-  borderWidth: Platform.OS === "web" ? 0 : 0,
-  ...softShadow,
+  borderWidth: 1,
+  borderColor: colors.frame,
 };
 
 export const chipStyle: ViewStyle = {
@@ -147,69 +131,18 @@ export const chipStyle: ViewStyle = {
   borderRadius: radius.pill,
   paddingHorizontal: space.md,
   paddingVertical: 10,
-  ...Platform.select({
-    ios: {
-      shadowColor: "#000000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.22,
-      shadowRadius: 8,
-    },
-    android: { elevation: 4 },
-    default: {
-      shadowColor: "#000000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.22,
-      shadowRadius: 8,
-    },
-  }),
-};
-
-/** Light-blue filled pan — soft lift; bottom frame edge drawn by BluePan. */
-export const bluePanStyle: ViewStyle = {
-  backgroundColor: colors.blue,
-  borderRadius: radius.lg,
-  padding: space.lg,
-  overflow: "hidden",
-  ...Platform.select({
-    ios: {
-      shadowColor: "#0d1a33",
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.4,
-      shadowRadius: 16,
-    },
-    android: { elevation: 8 },
-    default: {
-      shadowColor: "#0d1a33",
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.4,
-      shadowRadius: 16,
-    },
-  }),
+  borderWidth: 1,
+  borderColor: colors.frame,
 };
 
 export const pillCtaStyle: ViewStyle = {
-  minHeight: 54,
+  minHeight: 52,
   borderRadius: radius.pill,
   paddingHorizontal: space.lg,
-  overflow: "hidden",
-  ...Platform.select({
-    ios: {
-      shadowColor: "#0d1a33",
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.35,
-      shadowRadius: 10,
-    },
-    android: { elevation: 6 },
-    default: {
-      shadowColor: "#0d1a33",
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.35,
-      shadowRadius: 10,
-    },
-  }),
+  borderWidth: 0,
 };
 
-/** Regular (non-bold) black type on light-blue fills. */
+/** Regular (non-bold) black type on light-blue CTA fills. */
 export const onBlueType: TextStyle = {
   fontFamily: fonts.bodyRegular,
   fontSize: 16,

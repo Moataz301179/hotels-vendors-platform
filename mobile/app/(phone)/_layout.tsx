@@ -29,11 +29,11 @@ export default function PhoneLayout() {
         headerStyle: { backgroundColor: colors.chrome },
         headerTintColor: colors.chromeText,
         headerTitle: () => <Wordmark width={112} />,
-        tabBarStyle: { backgroundColor: colors.chrome, borderTopColor: colors.lineSoft, borderTopWidth: 1, height: 58, paddingBottom: 6, paddingTop: 4 },
+        tabBarStyle: { backgroundColor: colors.chrome, borderTopColor: colors.frame, borderTopWidth: 1, height: 58, paddingBottom: 6, paddingTop: 4 },
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11, letterSpacing: 0.2 },
-        sceneStyle: { backgroundColor: colors.paper },
+        tabBarLabelStyle: { fontFamily: fonts.bodyRegular, fontSize: 11, letterSpacing: 0.2 },
+        sceneStyle: { backgroundColor: colors.paperDeep },
       }}
     >
       <Tabs.Screen name="index" options={{ title: t("nav.today") }} />

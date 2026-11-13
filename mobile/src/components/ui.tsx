@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Image, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useLocale } from "../i18n";
-import { bluePanStyle, colors, fonts, onBlueType, panStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
+import { colors, fonts, onBlueType, panStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
 import type { MessageKey } from "../i18n/messages";
 
 const wordmark = require("../../assets/hovin-wordmark.png");
@@ -17,30 +17,9 @@ export function Wordmark({ width = 132 }: { width?: number }) {
   );
 }
 
+/** Grey pan with fine thin outline frame (travel-app sample). */
 export function Pan({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[panStyle, style]}>{children}</View>;
-}
-
-/** Light-blue action pan — bottom frame edge, regular black type for children via caller. */
-export function BluePan({ children, style }: { children: ReactNode; style?: ViewStyle }) {
-  return (
-    <View style={[bluePanStyle, style]}>
-      {children}
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 4,
-          backgroundColor: colors.blueEdge,
-          borderBottomLeftRadius: radius.lg,
-          borderBottomRightRadius: radius.lg,
-        }}
-      />
-    </View>
-  );
 }
 
 export function T({
@@ -69,25 +48,22 @@ export function T({
   );
 }
 
-function ctaFill(tone: "blue" | "chrome" | "quiet" | "inset") {
-  if (tone === "chrome") return { backgroundColor: colors.paperRaised, borderBottomWidth: 0 };
+function ctaFill(tone: "blue" | "chrome" | "quiet") {
+  if (tone === "chrome") {
+    return {
+      backgroundColor: "#e8e9ea",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.35)",
+    };
+  }
   if (tone === "quiet") {
     return {
       backgroundColor: colors.card,
       borderWidth: 1,
-      borderColor: colors.line,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.line,
+      borderColor: colors.frame,
     };
   }
-  if (tone === "inset") {
-    return {
-      backgroundColor: "rgba(0,0,0,0.14)",
-      borderBottomWidth: 3,
-      borderBottomColor: colors.blueEdge,
-    };
-  }
-  return { backgroundColor: colors.blue };
+  return { backgroundColor: colors.blue, borderWidth: 0 };
 }
 
 export function Button({
@@ -99,11 +75,11 @@ export function Button({
 }: {
   label: string;
   onPress: () => void;
-  tone?: "blue" | "chrome" | "quiet" | "inset";
+  tone?: "blue" | "chrome" | "quiet";
   disabled?: boolean;
   testID?: string;
 }) {
-  const blackType = tone === "blue" || tone === "inset";
+  const blackType = tone === "blue" || tone === "chrome";
   return (
     <Pressable
       accessibilityRole="button"
@@ -128,19 +104,6 @@ export function Button({
       >
         {label}
       </Text>
-      {blackType ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 4,
-            backgroundColor: colors.blueEdge,
-          }}
-        />
-      ) : null}
     </Pressable>
   );
 }
@@ -155,15 +118,16 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
         placeholderTextColor={colors.muted}
         {...props}
         style={{
-          minHeight: 54,
+          minHeight: 52,
           borderWidth: 1,
-          borderColor: colors.lineSoft,
+          borderColor: colors.frame,
           borderRadius: radius.md,
           backgroundColor: colors.card,
           color: colors.ink,
           paddingHorizontal: space.md,
-          fontSize: 16,
-          fontFamily: fonts.bodyMedium,
+          fontSize: 15,
+          fontFamily: fonts.bodyRegular,
+          fontWeight: "400",
           textAlign: isRtl ? "right" : "left",
           writingDirection: isRtl ? "rtl" : "ltr",
         }}
@@ -196,10 +160,10 @@ export function Row({
   const { isRtl } = useLocale();
   const body = (
     <View style={{
-      minHeight: 64,
+      minHeight: 60,
       paddingHorizontal: space.md,
       paddingVertical: space.md,
-      borderBottomWidth: hairline ? 1 : 0,
+      borderBottomWidth: hairline ? StyleHairline : 0,
       borderBottomColor: colors.lineSoft,
       flexDirection: isRtl ? "row-reverse" : "row",
       alignItems: "center",
@@ -207,9 +171,9 @@ export function Row({
     }}>
       <View style={{ flex: 1, gap: 3 }}>
         <T kind="headline">{title}</T>
-        {detail ? <T kind="body" tone="muted">{detail}</T> : null}
+        {detail ? <T kind="caption" tone="muted">{detail}</T> : null}
       </View>
-      {onPress ? <Text style={{ color: colors.muted, fontSize: 22, fontFamily: fonts.medium }}>{isRtl ? "‹" : "›"}</Text> : null}
+      {onPress ? <Text style={{ color: colors.muted, fontSize: 20, fontFamily: fonts.bodyRegular }}>{isRtl ? "‹" : "›"}</Text> : null}
     </View>
   );
   if (!onPress) return body;
@@ -219,6 +183,8 @@ export function Row({
     </Pressable>
   );
 }
+
+const StyleHairline = 1;
 
 export function Status({ label, tone }: { label: string; tone: "blue" | "green" | "quiet" }) {
   const background = tone === "green" ? "#14301f" : tone === "quiet" ? colors.paperRaised : colors.blue;
@@ -230,17 +196,15 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "green" 
       backgroundColor: background,
       borderRadius: radius.pill,
       paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderWidth: tone === "quiet" || tone === "green" ? 1 : 0,
-      borderColor: tone === "green" ? "#1f4a30" : tone === "quiet" ? colors.lineSoft : "transparent",
-      borderBottomWidth: isBlue ? 3 : tone === "quiet" || tone === "green" ? 1 : 0,
-      borderBottomColor: isBlue ? colors.blueEdge : tone === "green" ? "#1f4a30" : colors.lineSoft,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: isBlue ? "rgba(0,0,0,0.18)" : tone === "green" ? "#1f4a30" : colors.frame,
     }}>
       <Text
         allowFontScaling
         style={isBlue
           ? [onBlueType, { fontSize: 12, lineHeight: 16 }]
-          : [typeScale.caption, { color, letterSpacing: 0.4, fontFamily: fonts.bodyRegular, fontWeight: undefined }]}
+          : [typeScale.caption, { color, fontFamily: fonts.bodyRegular, fontWeight: "400" }]}
       >
         {label}
       </Text>
@@ -251,12 +215,12 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "green" 
 export function Notice({ children, tone = "paper" }: { children: string; tone?: "paper" | "danger" }) {
   return (
     <View style={{
-      backgroundColor: tone === "danger" ? colors.dangerSoft : colors.paperRaised,
+      backgroundColor: tone === "danger" ? colors.dangerSoft : colors.card,
       borderRadius: radius.md,
       paddingHorizontal: space.md,
-      paddingVertical: 14,
+      paddingVertical: 12,
       borderWidth: 1,
-      borderColor: tone === "danger" ? "#6a342c" : colors.lineSoft,
+      borderColor: tone === "danger" ? "#6a342c" : colors.frame,
     }}>
       <T kind="body" tone={tone === "danger" ? "danger" : "muted"}>{children}</T>
     </View>
@@ -265,7 +229,7 @@ export function Notice({ children, tone = "paper" }: { children: string; tone?: 
 
 export function ScreenState({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper, padding: space.lg, justifyContent: "center", gap: space.md }}>
+    <View style={{ flex: 1, backgroundColor: colors.paperDeep, padding: space.lg, justifyContent: "center", gap: space.md }}>
       <T kind="title">{title}</T>
       {action && onPress ? <Button label={action} onPress={onPress} /> : null}
     </View>

@@ -1,13 +1,13 @@
 import { type ReactNode } from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import type { PhoneCheckpoint, PhoneHome, PhoneNotification, PhoneOrder, PhoneOrderDetail, PhoneProposal, PhoneTask } from "../api/hovin";
 import { recordedQuoteSpan, type RecordedQuote } from "../intelligence/quotes";
 import { useLocale } from "../i18n";
 import type { MessageKey } from "../i18n/messages";
-import { colors, onBlueType, space } from "../theme";
+import { colors, space } from "../theme";
 import { CommodityStrap } from "../components/CommodityStrap";
 import { FieldShade } from "../components/FieldShade";
-import { BluePan, Button, Field, Group, Notice, Pan, Row, Status, T, Wordmark, factLabel } from "../components/ui";
+import { Button, Field, Group, Notice, Pan, Row, Status, T, Wordmark, factLabel } from "../components/ui";
 import { reviewBundlePromotions, type BundlePromotion } from "../market/commodities";
 
 export function ChromeBar() {
@@ -50,22 +50,22 @@ export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; 
   const { t } = useLocale();
   const title = t(`proposal.${proposal.action}.title` as MessageKey);
   return (
-    <BluePan style={{ gap: space.md }}>
-      <Text allowFontScaling style={[onBlueType, { fontSize: 20, lineHeight: 26 }]}>{title}</Text>
+    <Pan style={{ gap: space.md }}>
+      <T kind="title">{title}</T>
       {proposal.evidence.length ? (
-        <View style={{ gap: 6 }}>
+        <View style={{ gap: 8 }}>
           {proposal.evidence.map((fact) => (
             <View key={`${fact.key}-${fact.value}`} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: space.md }}>
-              <Text allowFontScaling style={[onBlueType, { fontSize: 13, lineHeight: 18, opacity: 0.72 }]}>{t(factLabel(fact.key))}</Text>
-              <Text allowFontScaling style={[onBlueType, { fontSize: 15, lineHeight: 20 }]}>{fact.value}</Text>
+              <T kind="label" tone="muted">{t(factLabel(fact.key))}</T>
+              <T kind="headline">{fact.value}</T>
             </View>
           ))}
         </View>
       ) : null}
       {proposal.action === "wait" ? null : (
-        <Button label={t("action.continue")} tone="inset" onPress={onPress} testID="proposal-continue" />
+        <Button label={t("action.continue")} onPress={onPress} testID="proposal-continue" />
       )}
-    </BluePan>
+    </Pan>
   );
 }
 
@@ -512,10 +512,10 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
         <Wordmark width={132} />
       </View>
       <View style={{ flex: 1, paddingHorizontal: space.lg, paddingBottom: space.xl, justifyContent: "center" }}>
-        <BluePan style={{ gap: space.md }}>
+        <Pan style={{ gap: space.md }}>
           {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
-          <Button label={t("action.signIn")} tone="inset" onPress={onSignIn} testID="sign-in" />
-        </BluePan>
+          <Button label={t("action.signIn")} onPress={onSignIn} testID="sign-in" />
+        </Pan>
       </View>
     </FieldShade>
   );
