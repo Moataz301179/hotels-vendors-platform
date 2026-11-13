@@ -66,7 +66,7 @@ export function HovinReceivingPreview() {
     <section className={styles.preview} aria-label="Interactive HOVIN mobile workflow preview">
       <div className={styles.copy}>
         <div className={styles.brandLine}>
-          <Image src="/logo-hovin.png" alt="HOVIN" width={46} height={46} />
+          <Image src="/brand/hovin/app-icon.jpg" alt="HOVIN" width={46} height={46} style={{ borderRadius: 10 }} />
           <span>HOVIN mobile companion</span>
         </div>
         <p className={styles.kicker}>Click-first field workflow</p>
