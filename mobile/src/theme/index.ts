@@ -2,7 +2,7 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
 
 /**
  * Color allocation (owner rules + travel-app reference sample):
- * - Near-black field with soft grey fades
+ * - Page field `#303234` — soft charcoal only; fading into black is rejected
  * - Grey pans/fields with a fine thin outline frame
  * - `#5B92FE` for CTA fills only — regular (non-bold) black type on the fill
  * - Blue is never used for text on grey, and never as a full content pan fill
@@ -14,15 +14,15 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
  * - Body: Plus Jakarta Sans
  */
 export const colors = {
-  paper: "#1c1d1f",
-  paperDeep: "#121314",
-  paperMid: "#242628",
-  paperRaised: "#2a2c2e",
-  card: "#2c2e30",
-  chrome: "#1c1d1f",
+  paper: "#303234",
+  paperDeep: "#303234",
+  paperMid: "#343638",
+  paperRaised: "#3a3c3e",
+  card: "#3a3c3e",
+  chrome: "#303234",
   chromeText: "#ffffff",
   ink: "#ffffff",
-  muted: "#a8aaac",
+  muted: "#c5c6c7",
   line: "rgba(255,255,255,0.14)",
   lineSoft: "rgba(255,255,255,0.08)",
   /** Fine thin outline frame on pans (reference sample). */
@@ -32,14 +32,14 @@ export const colors = {
   blueBright: "#5B92FE",
   onBlue: "#000000",
   ice: "#5B92FE",
-  iceWash: "#2a2c2e",
+  iceWash: "#3a3c3e",
   green: "#3f9a63",
   danger: "#e0705c",
   dangerSoft: "#5a2a24",
 } as const;
 
-/** Soft field wash — darker greys with a cool lift, matching the sample fades. */
-export const paperFade = ["#0e0f10", "#16181a", "#1c1d1f", "#181a1c", "#101112"] as const;
+/** Soft charcoal wash only — stays around `#303234`, never into black. */
+export const paperFade = ["#343638", "#303234", "#2e3032", "#303234"] as const;
 
 export const space = {
   xs: 4,
