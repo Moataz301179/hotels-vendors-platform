@@ -25,6 +25,23 @@ function receiptEvidenceUrls(value: unknown) {
   return urls as string[];
 }
 
+function receiptEvidenceFileIds(value: unknown) {
+  if (value === undefined || value === null) return [] as string[];
+  if (!Array.isArray(value) || value.length > 8) return null;
+  const ids = [...new Set(value)];
+  if (!ids.every((id) => typeof id === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(id))) return null;
+  return ids as string[];
+}
+
+const receiptIdempotencyKey = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,191}$/;
+
+function publicGrn<T extends { supplierId?: string; order?: unknown }>(grn: T) {
+  const copy = { ...grn } as Record<string, unknown>;
+  delete copy.supplierId;
+  delete copy.order;
+  return copy;
+}
+
 export async function POST(req: Request) {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
@@ -43,6 +60,12 @@ export async function POST(req: Request) {
   }
   const evidenceUrls = receiptEvidenceUrls(body.evidenceUrls);
   if (!evidenceUrls) return NextResponse.json({ error: "Receipt evidence must contain up to eight secure HTTPS URLs." }, { status: 400 });
+  const evidenceFileIds = receiptEvidenceFileIds(body.evidenceFileIds);
+  if (!evidenceFileIds) return NextResponse.json({ error: "RECEIPT_EVIDENCE_FILE_INVALID" }, { status: 400 });
+  const idempotencyKey = req.headers.get("x-idempotency-key")?.trim() || null;
+  if (idempotencyKey && !receiptIdempotencyKey.test(idempotencyKey)) {
+    return NextResponse.json({ error: "RECEIPT_IDEMPOTENCY_KEY_INVALID" }, { status: 400 });
+  }
   if (body.shipmentId !== undefined && (typeof body.shipmentId !== "string" || body.shipmentId.length === 0)) {
     return NextResponse.json({ error: "shipmentId must be a non-empty string when provided." }, { status: 400 });
   }
@@ -58,6 +81,13 @@ export async function POST(req: Request) {
         include: { items: { where: { deletedAt: null }, select: { id: true, productId: true, quantity: true, receivedQuantity: true } } },
       });
       if (!order) return { error: "ORDER_NOT_FOUND", status: 404 as const };
+      if (idempotencyKey) {
+        const existing = await tx.goodsReceiptNote.findFirst({
+          where: { tenantId: actor.tenantId, idempotencyKey, deletedAt: null },
+          include: { order: { select: { status: true } } },
+        });
+        if (existing) return { grn: existing, orderStatus: existing.order.status, idempotent: true as const };
+      }
       if (!order.paymentGuaranteed || !["IN_TRANSIT", "PARTIALLY_DELIVERED"].includes(order.status)) {
         return { error: "ORDER_NOT_RECEIVABLE", status: 409 as const };
       }
@@ -110,6 +140,16 @@ export async function POST(req: Request) {
         if (!etaClearance) return { error: "ETA_CLEARANCE_REQUIRED_BEFORE_DELIVERY", status: 409 as const };
       }
 
+      // Missing, deleted, or other-tenant files must fail before the receipt is inserted.
+      // A later return would commit the goods receipt without its evidence.
+      const evidenceFiles = evidenceFileIds.length
+        ? await tx.receiptEvidenceFile.findMany({
+            where: { id: { in: evidenceFileIds }, tenantId: actor.tenantId, deletedAt: null },
+            select: { id: true, sha256: true },
+          })
+        : [];
+      if (evidenceFiles.length !== evidenceFileIds.length) return { error: "RECEIPT_EVIDENCE_NOT_FOUND", status: 404 as const };
+
       const now = new Date();
       const grn = await tx.goodsReceiptNote.create({
         data: {
@@ -124,6 +164,7 @@ export async function POST(req: Request) {
           inspectedAt: now,
           acceptedAt: checked.grnStatus === "REJECTED" ? null : now,
           shipmentId,
+          idempotencyKey,
           lineItems: { create: checked.lines.map((line) => ({
             orderItemId: line.orderItemId,
             productId: line.productId,
@@ -152,6 +193,19 @@ export async function POST(req: Request) {
           status: "EXTRACTED",
         },
       })));
+      const fileEvidence = await Promise.all(evidenceFiles.map((file) => tx.evidenceRecord.create({
+        data: {
+          tenantId: order.tenantId,
+          entityId: grn.id,
+          entityName: "GOODS_RECEIPT_NOTE",
+          sourceReference: `receipt-evidence-file:${file.id}`,
+          rawEvidenceHash: file.sha256,
+          extractedFact: JSON.stringify({ grnNumber: grn.grnNumber, kind: "RECEIPT_EVIDENCE_FILE", exifStripped: true }),
+          provenanceClass: "USER_PROVIDED",
+          status: "EXTRACTED",
+        },
+      })));
+      evidence.push(...fileEvidence);
 
       for (const line of checked.lines) {
         const cumulativeAccepted = (prior[line.orderItemId] || 0) + line.acceptedQuantity;
@@ -196,8 +250,26 @@ export async function POST(req: Request) {
       return { grn, orderStatus: checked.orderStatus };
     });
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.status });
-    return NextResponse.json(result, { status: 201 });
-  } catch {
+    return NextResponse.json({
+      grn: publicGrn(result.grn),
+      orderStatus: result.orderStatus,
+      idempotent: "idempotent" in result && result.idempotent === true,
+    }, { status: "idempotent" in result && result.idempotent ? 200 : 201 });
+  } catch (error) {
+    const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
+    if (code === "P2002" && idempotencyKey) {
+      const existing = await prisma.goodsReceiptNote.findFirst({
+        where: { tenantId: actor.tenantId, idempotencyKey, deletedAt: null },
+        include: { order: { select: { status: true } } },
+      });
+      if (existing) {
+        return NextResponse.json({
+          grn: publicGrn(existing),
+          orderStatus: existing.order.status,
+          idempotent: true,
+        });
+      }
+    }
     return NextResponse.json({ error: "RECEIPT_COULD_NOT_BE_RECORDED" }, { status: 500 });
   }
 }

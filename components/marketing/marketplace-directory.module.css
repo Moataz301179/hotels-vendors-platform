@@ -11,7 +11,7 @@
 .eyebrow,
 .itemType {
   margin: 0;
-  color: #2f6fb0;
+  color: #5B92FE;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -40,7 +40,7 @@
   padding: 14px 16px;
   border: 1px solid var(--line);
   background:var(--surface-raised);
-  color: #2f6fb0;
+  color: #5B92FE;
   font-size: 12px;
 }
 .count strong {
@@ -95,8 +95,8 @@
   cursor: pointer;
 }
 .filters button[aria-pressed="true"] {
-  background:#245c96;
-  border-color: #245c96;
+  background:#3f78e0;
+  border-color: #3f78e0;
   color: #fff;
 }
 .subfilters {
@@ -107,9 +107,9 @@
   font-size: 11px;
 }
 .subfilters button[aria-pressed="true"] {
-  border-color: #2f6fb0;
+  border-color: #5B92FE;
   background:#e7f0f6;
-  color: #245c96;
+  color: #3f78e0;
 }
 .grid {
   display: grid;
@@ -170,7 +170,7 @@
   overflow: hidden;
   padding: 22px;
   background:linear-gradient(135deg, #eaf3f1 0%, #d8e8ec 48%, #b9d4df 100%);
-  color: #245c96;
+  color: #3f78e0;
 }
 .mediaFallback:before {
   position: absolute;
@@ -229,7 +229,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #245c96;
+  color: #3f78e0;
   font-size: 12px;
   font-weight: 800;
 }
@@ -301,7 +301,7 @@
   min-height: 44px;
   margin-top: auto;
   padding-top: 17px;
-  color: #245c96;
+  color: #3f78e0;
   font-size: 13px;
   font-weight: 800;
 }
@@ -336,7 +336,7 @@
   cursor: pointer;
 }
 .action:hover {
-  color: #245c96;
+  color: #3f78e0;
 }
 .empty {
   margin-top: 28px;
@@ -354,9 +354,9 @@
 .empty button {
   min-height: 42px;
   padding: 0 14px;
-  border: 1px solid #2f6fb0;
+  border: 1px solid #5B92FE;
   background:#fff;
-  color: #245c96;
+  color: #3f78e0;
   font-weight: 800;
   cursor: pointer;
 }
@@ -468,8 +468,8 @@
 .listContinue {
   min-height: 36px;
   padding: 0 10px;
-  border: 1px solid #245c96;
-  background: #245c96;
+  border: 1px solid #3f78e0;
+  background: #3f78e0;
   color: #fff;
   font-size: 13px;
   font-weight: 700;

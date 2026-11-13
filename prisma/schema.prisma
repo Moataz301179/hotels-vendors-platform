@@ -4891,3 +4891,39 @@ model CatalogAgentRun {
 
   @@index([batchId, stage, createdAt])
 }
+
+/// Private receipt photo for one hotel organization.
+/// EXIF is stripped before these bytes are stored. Apply this migration only
+/// with Moataz's explicit production approval and a verified Neon backup.
+model ReceiptEvidenceFile {
+  id           String    @id @default(cuid())
+  tenantId     String
+  uploadedById String
+  sha256       String
+  contentType  String
+  byteSize     Int
+  bytes        Bytes
+  exifStripped Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  @@index([tenantId, createdAt])
+}
+
+/// Dock-match code for a movement the carrier portal has already accepted.
+/// Both the hotel and the assigned carrier may display it. It does not accept
+/// an assignment and it does not change payment or order authority.
+model DeliveryConfirmationCode {
+  id                String    @id @default(cuid())
+  orderId           String    @unique
+  hotelTenantId     String
+  carrierTenantId   String
+  code              String
+  issuedAt          DateTime  @default(now())
+  confirmedAt       DateTime?
+  confirmedByUserId String?
+  deletedAt         DateTime?
+
+  @@index([hotelTenantId])
+  @@index([carrierTenantId])
+}

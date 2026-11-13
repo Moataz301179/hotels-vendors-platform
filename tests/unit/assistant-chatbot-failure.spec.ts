@@ -9,5 +9,6 @@ describe("assistant chatbot failure messages", () => {
 
   it("keeps unavailable-provider responses distinct from sign-in requirements", () => {
     expect(assistantFailureMessage(new Error("HTTP 503"))).toContain("temporarily unavailable");
+    expect(assistantFailureMessage(new Error("AI_PROVIDER_UNAVAILABLE"))).toContain("AI Assistant");
   });
 });

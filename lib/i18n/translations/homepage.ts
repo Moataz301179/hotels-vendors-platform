@@ -113,7 +113,7 @@ export const homepage = {
     "ai.badge": "AI-Powered",
     "ai.title": "Swarm Agents Handle the Complexity",
     "ai.subtitle": "You focus on hospitality. Our AI swarm handles compliance, documentation, vendor matching, spend forecasting, and factoring — automatically.",
-    "ai.onboarding.title": "AI Agent",
+    "ai.onboarding.title": "AI Assistant",
     "ai.onboarding.desc": "Guides hotels and vendors through ETA registration and document collection — conversationally.",
     "ai.forecast.title": "Spend Forecast Agent",
     "ai.forecast.desc": "Analyses historical orders to predict future costs and flag budget overruns before they happen.",
@@ -121,18 +121,18 @@ export const homepage = {
     "ai.compliance.desc": "Specialised agents audit every transaction against ETA and FRA standards, generating required documentation.",
     "ai.factoring.title": "Factoring Workflow Agent",
     "ai.factoring.desc": "Orchestrates reverse factoring end-to-end — request, approval, FRA validation, and 48h disbursement.",
-    "ai.chatbot.title": "AI Procurement Chatbot",
-    "ai.chatbot.desc": "Hotels describe needs in plain language. Chatbot searches INVO, compares vendors, generates ready-to-approve orders.",
+    "ai.chatbot.title": "AI Assistant",
+    "ai.chatbot.desc": "Ask product questions in plain language. The assistant answers from HotelsVendors facts and opens the next public action.",
     "ai.integration.title": "Integration Agent",
     "ai.integration.desc": "Connects to external marketplace APIs automatically, mapping catalogs into INVO's unified structure.",
 
     // ── Sandbox Demo ──
     "sandbox.badge": "Sandbox Demo",
     "sandbox.title": "Explore Before You Commit",
-    "sandbox.subtitle": "No account needed. Experience the hotel dashboard, vendor marketplace, and AI chatbot — all sandboxed.",
+    "sandbox.subtitle": "No account needed. Experience the hotel dashboard, vendor marketplace, and AI Assistant — all sandboxed.",
     "sandbox.tab1": "Hotel Dashboard",
     "sandbox.tab2": "INVO Marketplace",
-    "sandbox.tab3": "AI Chatbot",
+    "sandbox.tab3": "AI Assistant",
 
     // ── Hotel Dashboard Tab ──
     "hotel.title": "Meridian Hotels — Procurement Hub",
@@ -411,7 +411,7 @@ export const homepage = {
     "ai.badge": "مدعوم بالذكاء الاصطناعي",
     "ai.title": "كلاء المجمع يتعاملون مع التعقيد",
     "ai.subtitle": "انت تركز على الضيافة. وكلاء الذكاء الاصطناعي يتعاملون مع الامتثال والتوثيق ومطابقة الموردين والتنبؤ بالإنفاق وعمليات التمويل — تلقائياً.",
-    "ai.onboarding.title": "وكيل التسجيل",
+    "ai.onboarding.title": "المساعد الذكي",
     "ai.onboarding.desc": "يرشد الفنادق والموردين عبر تسجيل الهيئة الضريبية واستلام المستندات — بالمحادثة.",
     "ai.forecast.title": "وكيل التنبؤ بالإنفاق",
     "ai.forecast.desc": "يحلل الطلبات التاريخية للتنبأ بتكاليف المشتريات المستقبلية وتنبيهك قبل تجاوز الميزانية.",
@@ -419,18 +419,18 @@ export const homepage = {
     "ai.compliance.desc": "cluster من وكلاء متخصصين يفحص كل معاملة ضد معايير ETA و FRA ويوثق التوثيق المطلوب.",
     "ai.factoring.title": "وكيل التمويل العكسي",
     "ai.factoring.desc": "ينظم التمويل العكسي من الطلب إلى الصرف خلال 48 ساعة — مع التحقق الكامل من FRA.",
-    "ai.chatbot.title": "روبوت المشتريات",
-    "ai.chatbot.desc": "الفنادق تصف ما تحتاجه باللغة العادية. الروبوت يبحث في INVO ويقارن ويولّد طلب شراء جاهز.",
+    "ai.chatbot.title": "المساعد الذكي",
+    "ai.chatbot.desc": "اسأل عن المنصة بلغة واضحة. المساعد يجيب من حقائق HotelsVendors ويفتح الخطوة العامة التالية.",
     "ai.integration.title": "وكيل التكامل",
     "ai.integration.desc": "يتصل بـ APIs وأسواق شريكة تلقائياً وينقل كتالوجات الموردين إلى بنية INVO الموحدة.",
 
     // ── Sandbox Demo ──
     "sandbox.badge": "تجربة تجريبية",
     "sandbox.title": "استكشف قبل أن تلتزم",
-    "sandbox.subtitle": "بدون حساب. استكشف لوحة تحكم الفندق وسوق الموردين وروبوت المشتريات — كلها آمنة وتجريبية.",
+    "sandbox.subtitle": "بدون حساب. استكشف لوحة تحكم الفندق وسوق الموردين والمساعد الذكي — كلها آمنة وتجريبية.",
     "sandbox.tab1": "لوحة الفندق",
     "sandbox.tab2": "سوق INVO",
-    "sandbox.tab3": "روبوت الذكاء الاصطناعي",
+    "sandbox.tab3": "المساعد الذكي",
 
     // ── Hotel Dashboard Tab ──
     "hotel.title": "فنادق ميريديان — مركز المشتريات",

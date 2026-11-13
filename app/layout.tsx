@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import '@fontsource/manrope/400.css';
-import '@fontsource/manrope/600.css';
-import '@fontsource/manrope/700.css';
 import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import './globals.css';
@@ -33,5 +31,5 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({children}:{children:React.ReactNode}){
-  return <html lang="en"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
+  return <html lang="en" data-theme="light"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
 }

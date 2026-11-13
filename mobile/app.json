@@ -3,14 +3,28 @@
     "name": "HOVIN",
     "slug": "hovin-mobile",
     "scheme": "hovin",
+    "version": "1.0.0",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#303234",
+    "primaryColor": "#5B92FE",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "plugins": [
       "expo-router",
       "expo-sqlite",
       [
         "expo-camera",
         {
-          "cameraPermission": "HOVIN uses the camera only to scan an item code or delivery QR during an authorized receiving or physical-count task.",
+          "cameraPermission": "HOVIN uses the camera to photograph a goods receipt while a hotel receiver records what arrived. The server removes photo metadata before the file is stored.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
@@ -28,13 +42,41 @@
             "buildReactNativeFromSource": true
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "ios": {
-      "bundleIdentifier": "com.hotelsvendors.hovin"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hotelsvendors.hovin",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "HOVIN uses the camera to photograph a goods receipt while a hotel receiver records what arrived. The server removes photo metadata before the file is stored.",
+        "CFBundleDisplayName": "HOVIN"
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.hotelsvendors.hovin"
+      "package": "com.hotelsvendors.hovin",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2b2d2f"
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      },
+      "router": {}
     }
   }
 }

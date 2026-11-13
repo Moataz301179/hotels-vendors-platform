@@ -27,6 +27,12 @@ export async function initializeOutbox(db: SQLiteDatabase): Promise<void> {
   CREATE TABLE IF NOT EXISTS hovin_device_state (
     state_key TEXT PRIMARY KEY NOT NULL,
     state_value TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS hovin_draft (
+    draft_key TEXT PRIMARY KEY NOT NULL,
+    account_id TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
   );`);
   // An interrupted send is retried with the same idempotency key.
   await db.runAsync("UPDATE hovin_outbox SET state = 'pending' WHERE state = 'sending'");
@@ -103,3 +109,49 @@ export async function flushGrns(
   }
   return { sent, failed };
 }
+
+export async function readDeviceValue(db: SQLiteDatabase, key: string): Promise<string | null> {
+  const row = await db.getFirstAsync<{ state_value: string }>(
+    'SELECT state_value FROM hovin_device_state WHERE state_key = ?',
+    key,
+  );
+  return row?.state_value ?? null;
+}
+
+export async function writeDeviceValue(db: SQLiteDatabase, key: string, value: string): Promise<void> {
+  await db.runAsync(
+    'INSERT OR REPLACE INTO hovin_device_state(state_key, state_value) VALUES (?, ?)',
+    key,
+    value,
+  );
+}
+
+/** Drop queued receipts and drafts. Called only when the signed-in account changes. */
+export async function clearAccountFieldState(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync('DELETE FROM hovin_outbox; DELETE FROM hovin_draft;');
+}
+
+export async function saveDraft(db: SQLiteDatabase, accountId: string, key: string, payload: unknown): Promise<void> {
+  if (!accountId || !key) throw new Error('Account and draft key are required');
+  await db.runAsync(
+    'INSERT OR REPLACE INTO hovin_draft(draft_key, account_id, payload, updated_at) VALUES (?, ?, ?, ?)',
+    `${accountId}:${key}`,
+    accountId,
+    JSON.stringify(payload),
+    Date.now(),
+  );
+}
+
+export async function deleteDraft(db: SQLiteDatabase, accountId: string, key: string): Promise<void> {
+  await db.runAsync('DELETE FROM hovin_draft WHERE draft_key = ? AND account_id = ?', `${accountId}:${key}`, accountId);
+}
+
+export async function readDraft<T>(db: SQLiteDatabase, accountId: string, key: string): Promise<T | null> {
+  const row = await db.getFirstAsync<{ payload: string; account_id: string }>(
+    'SELECT payload, account_id FROM hovin_draft WHERE draft_key = ?',
+    `${accountId}:${key}`,
+  );
+  if (!row || row.account_id !== accountId) return null;
+  return JSON.parse(row.payload) as T;
+}
+

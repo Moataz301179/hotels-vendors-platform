@@ -1,47 +1,96 @@
-import { ClerkProvider } from '@clerk/expo';
-import { tokenCache } from '@clerk/expo/token-cache';
-import { SplashScreen, Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import "react-native-gesture-handler";
+import { ClerkProvider } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  useFonts as useJakarta,
+} from "@expo-google-fonts/plus-jakarta-sans";
+import { SplashScreen, Stack } from "expo-router";
+import { useEffect, type ReactNode } from "react";
+import { View } from "react-native";
+import { LocaleProvider, useLocale } from "../src/i18n";
+import { useReduceMotion } from "../src/motion";
+import { PhoneProvider } from "../src/session/usePhone";
+import { ConfigSurface } from "../src/screens/surfaces";
+import { colors, fonts } from "../src/theme";
+
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const visualReview = process.env.EXPO_PUBLIC_HOVIN_VISUAL_REVIEW === "1";
 
-/**
- * Missing identity configuration must fail closed: show a clear error instead
- * of mounting a tree whose useAuth() calls would throw.
- */
-function ConfigurationRequired() {
+function Direction({ children }: { children: ReactNode }) {
+  const { isRtl } = useLocale();
+  return <View style={{ flex: 1, direction: isRtl ? "rtl" : "ltr" }}>{children}</View>;
+}
+
+function AppStack() {
+  const { t } = useLocale();
+  const reduceMotion = useReduceMotion();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#0A0A0A' }}>
-      <Text style={{ color: '#FFFFFF', fontSize: 17, textAlign: 'center', lineHeight: 24 }}>
-        HOVIN is not configured.
-      </Text>
-      <Text style={{ color: '#B7BCC2', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 19 }}>
-        Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY and rebuild the app.
-      </Text>
-    </View>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.chrome },
+        headerTintColor: colors.chromeText,
+        headerTitleStyle: { color: colors.chromeText, fontFamily: fonts.displaySemibold },
+        contentStyle: { backgroundColor: colors.paper },
+        animation: reduceMotion ? "fade" : "slide_from_right",
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(phone)" options={{ headerShown: false }} />
+      <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+      <Stack.Screen name="review" options={{ headerShown: false, animation: "none" }} />
+      <Stack.Screen name="catalog" options={{ title: t("catalog.title") }} />
+      <Stack.Screen name="quotes" options={{ title: t("quotes.title") }} />
+      <Stack.Screen name="orders" options={{ title: t("orders.title") }} />
+      <Stack.Screen name="requests" options={{ title: t("work.requests") }} />
+      <Stack.Screen name="order/[id]" options={{ title: t("tracking.referred") }} />
+      <Stack.Screen name="receive/[orderId]" options={{ title: t("receive.title") }} />
+      <Stack.Screen name="respond/[rfqId]" options={{ title: t("respond.title") }} />
+      <Stack.Screen name="desk" options={{ title: t("desk.title"), headerShown: false }} />
+    </Stack>
   );
 }
 
 export default function RootLayout() {
-  // The native launch view is intentionally branded, but it must never remain
-  // above the receiving application after React has mounted. This explicit
-  // dismissal is required for the direct Xcode Release build used by HOVIN.
-  useEffect(() => {
-    void SplashScreen.hideAsync();
-  }, []);
+  const [jakartaLoaded] = useJakarta({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+  });
+  const fontsLoaded = jakartaLoaded;
 
-  if (!publishableKey) {
-    return <ConfigurationRequired />;
+  useEffect(() => {
+    if (fontsLoaded) void SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
   }
 
+  const tree = (
+    <LocaleProvider>
+      <Direction>
+        <AppStack />
+      </Direction>
+    </LocaleProvider>
+  );
+  if (visualReview) return tree;
+  if (!publishableKey) {
+    return (
+      <LocaleProvider>
+        <ConfigSurface />
+      </LocaleProvider>
+    );
+  }
   return (
-    <ClerkProvider
-      publishableKey={publishableKey}
-      tokenCache={tokenCache}
-      __experimental_disableNativeClientSync
-    >
-      <Stack screenOptions={{ headerShown: false }} />
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache} __experimental_disableNativeClientSync>
+      <PhoneProvider>{tree}</PhoneProvider>
     </ClerkProvider>
   );
 }

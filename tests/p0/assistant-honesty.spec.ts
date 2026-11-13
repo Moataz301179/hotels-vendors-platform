@@ -7,13 +7,14 @@ const route = readFileSync(
 );
 
 describe("assistant honesty contract", () => {
-  it("does not keyword-match anonymous questions into canned answers", () => {
-    // The anonymous path must be a single honest statement, not a decision tree
-    // that impersonates a model response.
-    expect(route).not.toContain("supplier|vendor|catalog");
-    expect(route).not.toContain("finance|fund|payment|settlement|invoice");
-    expect(route).not.toContain("logistics|delivery|eta|receiv|carrier");
-    expect(route).toContain("No model was consulted for this message.");
+  it("routes anonymous visitors through the grounded public LLM helper", () => {
+    // Answers come from executeLLM with PUBLIC_ASSISTANT_SYSTEM grounding.
+    // Navigation actions may be keyword-resolved, but prose is not canned.
+    expect(route).toContain("answerPublicAssistant");
+    expect(route).toContain("PUBLIC_ASSISTANT_SYSTEM");
+    expect(route).toContain("resolvePublicActions");
+    expect(route).toContain("scope: \"public-llm\"");
+    expect(route).not.toContain("No model was consulted for this message.");
   });
 
   it("consults a real provider for authenticated users", () => {

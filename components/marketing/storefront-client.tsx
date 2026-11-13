@@ -134,7 +134,7 @@ export function StorefrontClient({ initialCategory }: { initialCategory?: string
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
             <div>
               <div className={`${KICKER} mb-2`} style={{ color: P.gold }}><LayoutGrid size={12} /> Marketplace</div>
-              <h1 className="text-white text-2xl md:text-4xl font-bold tracking-tight leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>Everything a hotel buys, in one catalog</h1>
+              <h1 className="text-white text-2xl md:text-4xl font-bold tracking-tight leading-tight" style={{ fontFamily: "var(--font-heading), 'Plus Jakarta Sans', sans-serif" }}>Everything a hotel buys, in one catalog</h1>
               <p className="text-sm mt-2 max-w-xl" style={{ color: P.beige }}>Browse by category. Real supplier SKUs, smart search, cross-vendor pricing, and delivery to your property.</p>
             </div>
             <div className="relative md:w-96">
@@ -176,7 +176,7 @@ export function StorefrontClient({ initialCategory }: { initialCategory?: string
                     <img src={c.img} alt={c.label} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/25 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <div className="text-white text-[13px] font-semibold drop-shadow leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>{c.label}</div>
+                      <div className="text-white text-[13px] font-semibold drop-shadow leading-tight" style={{ fontFamily: "var(--font-heading), 'Plus Jakarta Sans', sans-serif" }}>{c.label}</div>
                       <div className="text-[10px] text-slate-200/90 mt-1 leading-snug line-clamp-2">{c.blurb}</div>
                     </div>
                   </button>
@@ -248,7 +248,7 @@ export function StorefrontClient({ initialCategory }: { initialCategory?: string
                     </div>
                     <div className="p-5 grid lg:grid-cols-2 gap-6">
                       <div>
-                        <h3 className="text-lg font-bold text-slate-900" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>{selected.name}</h3>
+                        <h3 className="text-lg font-bold text-slate-900" style={{ fontFamily: "var(--font-heading), 'Plus Jakarta Sans', sans-serif" }}>{selected.name}</h3>
                         <p className="text-3xl font-bold mt-1" style={{ color: P.green }}>EGP {selected.unitPrice.toLocaleString()} <span className="text-sm text-slate-400 font-normal">/{selected.unitOfMeasure}</span></p>
                         {selected.supplier?.name && <p className="text-xs text-slate-500 mt-2">Supplier: {selected.supplier.name}{selected.supplier.city ? ` · ${selected.supplier.city}` : ""}</p>}
                         {comps.length > 0 && <div className="mt-4"><div className="text-[10px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: P.gold }}>Often bought together</div><div className="flex flex-wrap gap-1.5">{comps.map((c) => <span key={c} className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">{c}</span>)}</div></div>}
@@ -299,7 +299,7 @@ export function StorefrontClient({ initialCategory }: { initialCategory?: string
                           <span className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded-full bg-white/90 text-slate-600 border border-slate-200">{categoryLabel(p.category)}</span>
                         </div>
                         <div className="p-3.5">
-                          <h4 className="text-[13px] font-semibold text-slate-900 line-clamp-1" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>{p.name}</h4>
+                          <h4 className="text-[13px] font-semibold text-slate-900 line-clamp-1" style={{ fontFamily: "var(--font-heading), 'Plus Jakarta Sans', sans-serif" }}>{p.name}</h4>
                           <div className="flex items-center justify-between mt-1.5">
                             <span className="text-sm font-bold" style={{ color: P.green }}>EGP {p.unitPrice.toLocaleString()}</span>
                             <span className="text-[10px] text-slate-400">/{p.unitOfMeasure}</span>

@@ -6,11 +6,11 @@ import { BaseOnboardingBot } from "./base-onboarding-chatbot";
 const config = {
   icon: Truck,
   accentVar: "--info" as const,
-  title: "AI Agent",
-  subtitle: "Shipping & Logistics",
-  tooltip: "Talk to our AI Agent",
+  title: "AI Assistant",
+  subtitle: "Carriers & logistics",
+  tooltip: "Talk to the AI Assistant",
   initialMessage:
-    "Hi! I'm the HOTELSVENDORS AI assistant for logistics. Ask me anything about fleet onboarding, delivery workflows, route optimization, or platform features.",
+    "Hi — I’m the HOTELSVENDORS AI Assistant for carriers. Ask about logistics onboarding, delivery workflows, or HOVIN tracking codes. Accept and decline stay on the carrier portal.",
 };
 
 export function ShippingOnboardingBot() {
