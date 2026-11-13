@@ -1,25 +1,25 @@
 /**
  * Owner tokens:
- * - Main field `#626262` with white type
+ * - Page field below pans/widgets `#303234` with white type
  * - Accent / pill fill `#5B92FE` with black type
  */
 export const colors = {
-  paper: "#626262",
-  paperRaised: "#6e6e6e",
-  card: "#555555",
-  chrome: "#626262",
+  paper: "#303234",
+  paperRaised: "#3a3c3e",
+  card: "#3f4143",
+  chrome: "#303234",
   chromeText: "#ffffff",
   ink: "#ffffff",
-  muted: "#d0d0d0",
-  line: "#7a7a7a",
-  lineSoft: "#707070",
+  muted: "#b5b7b9",
+  line: "#4a4c4e",
+  lineSoft: "#444648",
   /** Accent and pill / panel fill — black type on this fill. */
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",
   onBlue: "#000000",
   ice: "#5B92FE",
-  iceWash: "#555555",
+  iceWash: "#3a3c3e",
   yellow: "#f5b820",
   yellowSoft: "#4a4018",
   green: "#3f9a63",
