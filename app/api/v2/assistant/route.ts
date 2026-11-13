@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { executeLLM, type LLMMessage } from "@/lib/ai/llm";
+import { PUBLIC_ASSISTANT_SYSTEM, resolvePublicActions } from "@/lib/ai/public-assistant";
 import { getActor } from "@/lib/v2-auth";
 import { prisma } from "@/lib/prisma";
 import { calculateFullFeeBreakdown } from "@/lib/fintech/fee-math";
@@ -125,8 +126,42 @@ function feeCalculationTool(question: string): ToolSnapshot | null {
   }
 }
 
-function publicGuidance() {
-  return "The HOVIN assistant is available to signed-in members of a verified organization. Sign in to ask questions against your own authorized procurement records. No model was consulted for this message.";
+async function answerPublicAssistant(question: string, prior: LLMMessage[]) {
+  const actions = resolvePublicActions(question);
+  const system: LLMMessage = { role: "system", content: PUBLIC_ASSISTANT_SYSTEM };
+  const result = await executeLLM([system, ...prior, { role: "user", content: question }], {
+    temperature: 0.25,
+    maxTokens: 550,
+    timeoutMs: 40_000,
+    taskComplexity: "simple",
+  });
+  if (!result.available || !result.content) {
+    return NextResponse.json(
+      {
+        error: "No AI model provider could be reached in this environment.",
+        code: "AI_PROVIDER_UNAVAILABLE",
+        provider: result.provider ?? null,
+        model: result.model ?? null,
+        actions,
+      },
+      { status: 503 }
+    );
+  }
+  const scrubbed = scrubMessages([{ role: "assistant", content: result.content }]);
+  const content = scrubbed.messages[0]?.content ?? result.content;
+  return NextResponse.json(
+    {
+      text: content,
+      content,
+      scope: "public-llm",
+      toolsUsed: [],
+      actions,
+      provider: result.provider,
+      model: result.model,
+      warnings: { piiScrubbed: scrubbed.piiFound, injectionDetected: false },
+    },
+    { headers: { "Cache-Control": "private, no-store" } }
+  );
 }
 
 async function canUseTool(actor: { id: string; tenantId: string; platformRole: string }, toolName: string): Promise<boolean> {
@@ -247,10 +282,18 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "question and valid chat messages are required" }, { status: 400 });
 
   const actor = await getActor();
-  // Anonymous visitor: deterministic, public guidance, no model, no tools.
+  // Anonymous visitor: grounded public LLM answers + safe navigation actions.
+  // No tenant tools, no private commercial data.
   if (!actor) {
-    const content = publicGuidance();
-    return NextResponse.json({ text: content, content, scope: "public-guidance", toolsUsed: [] }, { headers: { "Cache-Control": "public, max-age=300" } });
+    const scrubbedQuestion = scrubMessages([{ role: "user", content: parsed.data.question }]);
+    const safeQuestion = scrubbedQuestion.messages[0]?.content ?? parsed.data.question;
+    const prior = scrubMessages(
+      parsed.data.messages
+        .filter((message): message is { role: "user"; content: string } => message.role === "user")
+        .slice(-8)
+        .map((message) => ({ role: "user" as const, content: message.content }))
+    ).messages.map((message) => ({ role: "user" as const, content: message.content }));
+    return answerPublicAssistant(safeQuestion, prior);
   }
   // Entry gate — at least one read permission. A denied actor gets 403; no DB access.
   // NOTE: Promise.any resolves with the first FULFILLED value even when it is
@@ -354,6 +397,7 @@ export async function POST(req: Request) {
     conversationId: conversation.id,
     toolsUsed: tools.map((t) => t.name),
     evidence: tools.map((t) => ({ tool: t.name, source: t.evidence.source, scope: t.evidence.scope, observedAt: t.evidence.observedAt })),
+    actions: resolvePublicActions(safeQuestion),
     provider: result.provider,
     model: result.model,
     warnings: {

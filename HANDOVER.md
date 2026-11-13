@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Plus Jakarta Sans + AI Assistant — 2026-11-13
+
+- Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
+- Floating marketing widget renamed to **AI Assistant**. Public `/api/v2/assistant` now calls the real LLM chain (Ollama → Groq → OpenRouter → xAI) with grounded product facts and returns safe navigation `actions` (register, solutions, HOVIN, sign-in, etc.). Tenant tools remain signed-in only.
+- Deploy workflow now forwards optional `GROQ_*` / `OPENROUTER_*` / `XAI_*` / `OLLAMA_*` into the production runtime env when present as GitHub secrets/vars.
+- Verification: `npx vitest run tests/p0/public-assistant.spec.ts tests/p0/assistant-widget-contract.spec.ts tests/unit/assistant-chatbot-failure.spec.ts` passed; `npx tsc --noEmit` and `mobile` tsc passed.
+- Unresolved: production still needs at least one LLM provider key configured for public answers after deploy. Neon backup + `APPLY_AFTER_NEON_BACKUP` still required before production deploy. Parent HOVIN PRs #66/#67 must land on `main` first if this stack is merged through them.
+
 ## HOVIN production release engineering — 2026-11-13
 
 - Branch: `cursor/hovin-motion-system-168e`. Added `mobile/eas.json`, production `app.json` (1.0.0), store icons, `mobile/scripts/release-readiness.mjs`, CI workflow `hovin-mobile.yml`, and runbook `docs/hovin-production-release.md`.

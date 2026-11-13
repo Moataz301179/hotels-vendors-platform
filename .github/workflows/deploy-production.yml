@@ -77,6 +77,14 @@ jobs:
       ETA_REGISTRATION_NUMBER: ${{ secrets.ETA_REGISTRATION_NUMBER }}
       ETA_ENVIRONMENT: ${{ vars.ETA_ENVIRONMENT }}
       ETA_SUBMISSION_ENABLED: ${{ vars.ETA_SUBMISSION_ENABLED }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+      XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+      XAI_MODEL: ${{ vars.XAI_MODEL }}
+      OLLAMA_URL: ${{ vars.OLLAMA_URL }}
+      OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL }}
       SESSION_SECRET: ci-only-not-used-by-clerk
       REDIS_URL: redis://127.0.0.1:6379
     services:
@@ -189,6 +197,15 @@ jobs:
             if [ -n "$ETA_REGISTRATION_NUMBER" ]; then printf 'ETA_REGISTRATION_NUMBER=%q\n' "$ETA_REGISTRATION_NUMBER"; fi
             case "$ETA_ENVIRONMENT" in preprod|production) printf 'ETA_ENVIRONMENT=%q\n' "$ETA_ENVIRONMENT" ;; "") ;; *) echo "ETA_ENVIRONMENT must be preprod or production" >&2; exit 1 ;; esac
             case "$ETA_SUBMISSION_ENABLED" in true|false|"") printf 'ETA_SUBMISSION_ENABLED=%q\n' "${ETA_SUBMISSION_ENABLED:-false}" ;; *) echo "ETA_SUBMISSION_ENABLED must be true or false" >&2; exit 1 ;; esac
+            # Optional AI Assistant providers — first available key in the LLM chain wins.
+            if [ -n "${GROQ_API_KEY:-}" ]; then printf 'GROQ_API_KEY=%q\n' "$GROQ_API_KEY"; fi
+            if [ -n "${GROQ_MODEL:-}" ]; then printf 'GROQ_MODEL=%q\n' "$GROQ_MODEL"; fi
+            if [ -n "${OPENROUTER_API_KEY:-}" ]; then printf 'OPENROUTER_API_KEY=%q\n' "$OPENROUTER_API_KEY"; fi
+            if [ -n "${OPENROUTER_MODEL:-}" ]; then printf 'OPENROUTER_MODEL=%q\n' "$OPENROUTER_MODEL"; fi
+            if [ -n "${XAI_API_KEY:-}" ]; then printf 'XAI_API_KEY=%q\n' "$XAI_API_KEY"; fi
+            if [ -n "${XAI_MODEL:-}" ]; then printf 'XAI_MODEL=%q\n' "$XAI_MODEL"; fi
+            if [ -n "${OLLAMA_URL:-}" ]; then printf 'OLLAMA_URL=%q\n' "$OLLAMA_URL"; fi
+            if [ -n "${OLLAMA_MODEL:-}" ]; then printf 'OLLAMA_MODEL=%q\n' "$OLLAMA_MODEL"; fi
           } > hv-runtime.env
           scp hv-runtime.env "$VPS_USER@$VPS_HOST:/tmp/hv-runtime-${GITHUB_SHA}.env"
           rm -f hv-runtime.env

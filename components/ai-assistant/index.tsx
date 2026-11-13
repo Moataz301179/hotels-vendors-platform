@@ -88,8 +88,8 @@ export default function SmartAssistant({ role, tenantId }: SmartAssistantProps) 
     <div className="rounded-xl border border-line bg-white/70 backdrop-blur bg-paper-50/80 border-paper-200 p-4">
       <div className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-500 mb-3 flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${loading ? "bg-signal animate-pulse" : ollamaAvailable ? "bg-ink-300" : "bg-red-500"}`} />
-        {ollamaAvailable ? "Smart Assistant — " + role : "AI AGENT (offline)"}
-        {!ollamaAvailable && <span className="text-xs text-red-600 font-normal">— Local LLM unavailable</span>}
+        {ollamaAvailable ? "AI Assistant — " + role : "AI Assistant (offline)"}
+        {!ollamaAvailable && <span className="text-xs text-red-600 font-normal">— Model unavailable</span>}
       </div>
       <div className="space-y-2 max-h-[16rem] overflow-y-auto text-sm leading-relaxed">
         {messages.map((m, i) => (
