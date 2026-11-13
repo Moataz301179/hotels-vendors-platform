@@ -92,11 +92,11 @@ export function HomeSurface({
       {review ? <Notice>{t("state.review")}</Notice> : null}
       {queued ? <Notice>{`${queued} · ${t("home.queued")}`}</Notice> : null}
       {home.plan.workspace === "hotel" || home.plan.workspace === "supplier" ? <CommodityStrap /> : null}
-      <View style={{ gap: space.xs }}>
+      <Pan style={{ gap: space.sm }}>
         <T kind="caption" tone="muted">{t(workspaceTitle(home.plan.workspace))}</T>
-        <T kind="hero">{home.account.name || home.account.email || home.account.role}</T>
-        <T kind="body">{t(workspaceSummary(home.plan.workspace))}</T>
-      </View>
+        <T kind="title">{home.account.name || home.account.email || home.account.role}</T>
+        <T kind="body" tone="muted">{t(workspaceSummary(home.plan.workspace))}</T>
+      </Pan>
       <ProposalBlock proposal={home.proposal} onPress={() => onOpenProposal(home.proposal)} />
       <View style={{ gap: space.sm }}>
         <T kind="caption" tone="muted">{t("home.queue")}</T>
@@ -534,18 +534,15 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
   return (
     <View testID={testID} style={{ flex: 1, backgroundColor: colors.paper }}>
       <View style={{ paddingHorizontal: space.lg, paddingTop: space.xl + 8, paddingBottom: space.md }}>
-        <Wordmark width={148} />
+        <Wordmark width={132} />
       </View>
-      <View style={{ flex: 1, paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: space.xl, gap: space.lg, justifyContent: "space-between" }}>
-        <View style={{ gap: space.md, maxWidth: 420 }}>
-          <T kind="caption" tone="muted">{t("signin.kicker")}</T>
-          <T kind="hero">{t("signin.title")}</T>
+      <View style={{ flex: 1, paddingHorizontal: space.lg, paddingBottom: space.xl, justifyContent: "center" }}>
+        <Pan style={{ gap: space.lg }}>
+          <T kind="title">{t("signin.title")}</T>
           <T kind="body" tone="muted">{t("signin.body")}</T>
           {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
-        </View>
-        <View style={{ gap: space.md }}>
           <Button label={t("action.signIn")} onPress={onSignIn} testID="sign-in" />
-        </View>
+        </Pan>
       </View>
     </View>
   );
