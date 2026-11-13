@@ -21,14 +21,14 @@ function Chip({ item, arabic }: { item: CommodityQuote; arabic: boolean }) {
         },
       ]}
     >
-      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.yellow }} />
+      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.ink }} />
       <Animated.Text
         allowFontScaling
         style={[typeScale.label, { color: colors.ink, writingDirection: arabic ? "rtl" : "ltr" }]}
       >
         {name}
       </Animated.Text>
-      <Animated.Text allowFontScaling style={[typeScale.headline, { color: colors.yellow }]}>
+      <Animated.Text allowFontScaling style={[typeScale.headline, { color: colors.ink }]}>
         {`${item.price} ${item.currency}`}
       </Animated.Text>
       <Animated.Text allowFontScaling style={[typeScale.caption, { color: colors.muted }]}>

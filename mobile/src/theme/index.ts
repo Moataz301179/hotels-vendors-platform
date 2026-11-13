@@ -5,6 +5,7 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
  * - Page field `#303234` — white type for primary copy
  * - `#5B92FE` — CTA / pan / pill fills only, with black type on the fill
  * - Blue is never used for text on grey
+ * - Yellow type and yellow backfill under type are rejected
  *
  * Typeface (HotelsVendors design system / reference sample):
  * - Display: Manrope (SF Pro Display fallback on Apple)
@@ -26,11 +27,7 @@ export const colors = {
   onBlue: "#000000",
   ice: "#5B92FE",
   iceWash: "#3a3c3e",
-  yellow: "#f5b820",
-  yellowSoft: "#4a4018",
   green: "#3f9a63",
-  amber: "#f5b820",
-  amberSoft: "#4a4018",
   danger: "#e0705c",
   dangerSoft: "#5a2a24",
 } as const;

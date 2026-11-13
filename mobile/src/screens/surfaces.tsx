@@ -50,7 +50,7 @@ export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; 
   const reason = t(`proposal.${proposal.action}.reason` as MessageKey);
   return (
     <Pan style={{ gap: space.md }}>
-      <T kind="caption" tone="yellow">{t("proposal.kicker")}</T>
+      <T kind="caption" tone="muted">{t("proposal.kicker")}</T>
       <T kind="title">{title}</T>
       <T kind="body" tone="muted">{reason}</T>
       <View style={{ gap: space.sm, paddingVertical: space.xs }}>
@@ -252,12 +252,12 @@ export function CatalogSurface({
       <T kind="title">{t("catalog.title")}</T>
       <View style={{ gap: space.sm }}>
         <View style={{ flexDirection: arabic ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" }}>
-          <T kind="caption" tone="yellow">{t("catalog.promotions")}</T>
+          <T kind="caption" tone="muted">{t("catalog.promotions")}</T>
           <T kind="caption" tone="muted">{t("catalog.anonymousShort")}</T>
         </View>
         {promotions.map((promo) => (
           <Pan key={promo.id} style={{ gap: space.sm }}>
-            <Status label={arabic ? promo.badgeAr : promo.badgeEn} tone="yellow" />
+            <Status label={arabic ? promo.badgeAr : promo.badgeEn} tone="quiet" />
             <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
             <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
             <T kind="label">{arabic ? promo.itemsAr : promo.itemsEn}</T>
