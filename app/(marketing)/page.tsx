@@ -55,22 +55,47 @@ const joinPaths = [
 export default function MarketingPage() {
   return (
     <main className={styles.home}>
-      <section className={heroStyles.hero}>
-        <div className={styles.shell}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>One commercial record · Hospitality sourcing network · Egypt</p>
-              <h1>Technology reimagined for hotel procurement.<em> Every decision connected. Every handoff accountable.</em></h1>
-              <p className={styles.lead}>HotelsVendors turns fragmented sourcing, approval, delivery and receipt evidence into one protected operating record—so Egyptian hotel teams can control spend and qualify local supply with confidence.</p>
-              <div className={styles.actions}>
-                <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
-                <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
-              </div>
-            </div>
-            <figure className={styles.heroVisual}>
-              <Image src="/hero-clean.jpeg" alt="Luxury hotel suite with a private balcony opening onto the sea" fill sizes="(max-width: 950px) calc(100vw - 48px), 44vw" />
-              <figcaption><span>Authorized hospitality imagery</span><small>HotelsVendors</small></figcaption>
+      <section className={heroStyles.hero} aria-label="HotelsVendors platform introduction">
+        <div className={heroStyles.stage}>
+          <div className={heroStyles.media} aria-hidden="true">
+            <figure className={heroStyles.mediaImage}>
+              <Image
+                src="/hero-clean.jpeg"
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+              />
             </figure>
+            <div className={heroStyles.oled} />
+            <div className={heroStyles.oledTexture} />
+            <div className={heroStyles.oledSheen} />
+            <div className={heroStyles.fade} />
+          </div>
+          <div className={heroStyles.shell}>
+            <div className={heroStyles.copy}>
+              <p className={heroStyles.eyebrow}>Hospitality operating network · Egypt</p>
+              <h1>
+                Technology reimagined for hotel procurement.
+                <em> Every decision connected. Every handoff accountable.</em>
+              </h1>
+              <p className={heroStyles.lead}>
+                One protected SaaS record for sourcing, approvals, delivery and receipt evidence—
+                so Egyptian hotel teams control spend without losing the operating trail.
+              </p>
+              <div className={heroStyles.actions}>
+                <Link href="/platform" className={heroStyles.primary}>
+                  Explore the platform <ArrowRight size={17} />
+                </Link>
+                <Link href="/hotels/signup" className={heroStyles.secondary}>
+                  Start a hotel workspace
+                </Link>
+              </div>
+              <p className={heroStyles.signal}>
+                <span className={heroStyles.signalDot} aria-hidden="true" />
+                Built for operators — not a public product catalogue
+              </p>
+            </div>
           </div>
         </div>
       </section>
