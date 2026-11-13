@@ -74,27 +74,23 @@ export default function MarketingPage() {
           </div>
           <div className={heroStyles.shell}>
             <div className={heroStyles.copy}>
-              <p className={heroStyles.eyebrow}>Hospitality operating network · Egypt</p>
+              <p className={heroStyles.brand}>HotelsVendors</p>
+              <p className={heroStyles.eyebrow}>Egypt · Hospitality procurement software</p>
               <h1>
-                Technology reimagined for hotel procurement.
-                <em> Every decision connected. Every handoff accountable.</em>
+                One operating record for hotel purchasing.
+                <em> From requirement to receipt.</em>
               </h1>
               <p className={heroStyles.lead}>
-                One protected SaaS record for sourcing, approvals, delivery and receipt evidence—
-                so Egyptian hotel teams control spend without losing the operating trail.
+                Source, approve, deliver and prove what arrived—on a sealed commercial trail your teams can trust.
               </p>
               <div className={heroStyles.actions}>
                 <Link href="/platform" className={heroStyles.primary}>
-                  Explore the platform <ArrowRight size={17} />
+                  See how it works <ArrowRight size={17} />
                 </Link>
                 <Link href="/hotels/signup" className={heroStyles.secondary}>
-                  Start a hotel workspace
+                  Register your hotel
                 </Link>
               </div>
-              <p className={heroStyles.signal}>
-                <span className={heroStyles.signalDot} aria-hidden="true" />
-                Built for operators — not a public product catalogue
-              </p>
             </div>
           </div>
         </div>

@@ -10,9 +10,13 @@ describe("homepage hero OLED fade", () => {
     expect(page).toContain("heroStyles.oled");
     expect(page).toContain("heroStyles.oledTexture");
     expect(page).toContain("heroStyles.fade");
-    expect(page).toContain("Explore the platform");
+    expect(page).toContain("HotelsVendors");
+    expect(page).toContain("One operating record for hotel purchasing");
+    expect(page).toContain("See how it works");
+    expect(page).not.toContain("Technology reimagined for hotel procurement");
+    expect(page).not.toContain("Hospitality operating network");
     expect(page).not.toContain("Authorized hospitality imagery");
-    expect(page).not.toContain("Open sourcing areas");
+    expect(page).not.toContain("Built for operators");
   });
 
   it("keeps the approved cobalt/charcoal palette in the OLED treatment", () => {

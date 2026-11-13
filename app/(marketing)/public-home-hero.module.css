@@ -93,18 +93,30 @@
   margin-inline: auto;
   display: grid;
   align-items: center;
+  justify-items: start;
   min-height: inherit;
   padding-block: clamp(56px, 8vw, 108px);
 }
 
 .copy {
-  max-width: 560px;
+  max-width: 34rem;
+  width: min(100%, 34rem);
   padding: 0;
   background: transparent;
 }
 
+.brand {
+  margin: 0 0 10px;
+  font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(28px, 3.2vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--ink);
+}
+
 .eyebrow {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   color: var(--cobalt-700);
   font-size: 11px;
   font-weight: 700;
@@ -113,12 +125,12 @@
 }
 
 .copy h1 {
-  max-width: 18ch;
+  max-width: 16ch;
   margin: 0;
   font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
   font-weight: 700;
-  font-size: clamp(34px, 4.2vw, 56px);
-  line-height: 1.06;
+  font-size: clamp(32px, 3.8vw, 50px);
+  line-height: 1.08;
   letter-spacing: -0.03em;
   text-wrap: balance;
   color: var(--ink);
@@ -131,11 +143,11 @@
 }
 
 .lead {
-  max-width: 46ch;
-  margin: 18px 0 0;
+  max-width: 38ch;
+  margin: 16px 0 0;
   color: var(--muted);
   font-size: 15.5px;
-  line-height: 1.7;
+  line-height: 1.65;
 }
 
 .actions {
@@ -185,24 +197,6 @@
   border-color: var(--charcoal);
 }
 
-.signal {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 22px;
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.02em;
-}
-
-.signalDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--cobalt-600);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--cobalt-600) 18%, transparent);
-}
-
 @media (max-width: 950px) {
   .stage {
     min-height: clamp(620px, 86vh, 780px);
@@ -241,9 +235,9 @@
     max-width: none;
   }
 
+  .brand,
   .copy h1,
-  .lead,
-  .signal {
+  .lead {
     text-shadow: 0 1px 0 color-mix(in srgb, var(--paper-100) 70%, transparent);
   }
 }
