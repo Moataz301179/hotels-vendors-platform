@@ -36,6 +36,8 @@
     "components/v2/**/*.tsx",
     "lib/prisma.ts",
     "lib/v2-auth.ts",
+    "lib/hovin-motion/**/*.ts",
+    "components/marketing/hovin-receiving-preview.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],

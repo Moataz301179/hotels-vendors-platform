@@ -1,9 +1,15 @@
 import { type ReactNode } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
-import type { PhoneCheckpoint, PhoneHome, PhoneNotification, PhoneOrder, PhoneOrderDetail, PhoneProposal, PhoneTask } from "../api/hovin";
+import type { PhoneHome, PhoneNotification, PhoneOrder, PhoneOrderDetail, PhoneProposal, PhoneTask } from "../api/hovin";
 import { recordedQuoteSpan, type RecordedQuote } from "../intelligence/quotes";
 import { useLocale } from "../i18n";
 import type { MessageKey } from "../i18n/messages";
+import {
+  CheckpointRail,
+  MotionEnter,
+  ProcurementStageRail,
+  procurementStageFromStatus,
+} from "../motion";
 import { colors, space } from "../theme";
 import { CommodityStrap } from "../components/CommodityStrap";
 import { FieldShade } from "../components/FieldShade";
@@ -109,19 +115,24 @@ export function HomeSurface({
       <ProposalBlock tone="white" proposal={home.proposal} onPress={() => onOpenProposal(home.proposal)} />
       <View style={{ gap: space.sm }}>
         <T kind="caption" tone="muted">{t("home.queue")}</T>
-        {home.tasks.length === 0 ? <Notice>{t("home.empty")}</Notice> : (
+        {home.tasks.length === 0 ? (
+          <MotionEnter>
+            <Notice>{t("home.empty")}</Notice>
+          </MotionEnter>
+        ) : (
           <Group>
             {home.tasks.map((task, index) => {
               const copy = taskCopy(task, t);
               return (
-              <Row
-                key={task.id}
-                title={copy.title}
-                detail={task.status}
-                onPress={() => onOpenTask(task)}
-                hairline={index < home.tasks.length - 1}
-                testID={`task-${task.id}`}
-              />
+                <MotionEnter key={task.id} index={index}>
+                  <Row
+                    title={copy.title}
+                    detail={task.status}
+                    onPress={() => onOpenTask(task)}
+                    hairline={index < home.tasks.length - 1}
+                    testID={`task-${task.id}`}
+                  />
+                </MotionEnter>
               );
             })}
           </Group>
@@ -179,16 +190,21 @@ export function AlertsSurface({
   return (
     <Page testID={testID} refreshing={refreshing} onRefresh={onRefresh}>
       <T kind="title">{t("alerts.title")}</T>
-      {notifications.length === 0 ? <Notice>{t("alerts.empty")}</Notice> : (
+      {notifications.length === 0 ? (
+        <MotionEnter>
+          <Notice>{t("alerts.empty")}</Notice>
+        </MotionEnter>
+      ) : (
         <Group>
           {notifications.map((note, index) => (
-            <Row
-              key={note.id}
-              title={note.subject || note.type}
-              detail={note.body || ""}
-              onPress={note.readAt ? undefined : () => onMark(note.id)}
-              hairline={index < notifications.length - 1}
-            />
+            <MotionEnter key={note.id} index={index}>
+              <Row
+                title={note.subject || note.type}
+                detail={note.body || ""}
+                onPress={note.readAt ? undefined : () => onMark(note.id)}
+                hairline={index < notifications.length - 1}
+              />
+            </MotionEnter>
           ))}
         </Group>
       )}
@@ -272,17 +288,22 @@ export function CatalogSurface({
       <Field label={t("catalog.search")} value={query} onChangeText={onQuery} />
       <Field label={t("catalog.quantity")} value={quantity} onChangeText={onQuantity} keyboardType="number-pad" />
       {note ? <Notice tone="danger">{note}</Notice> : null}
-      {products.length === 0 ? <Notice>{t("catalog.empty")}</Notice> : (
+      {products.length === 0 ? (
+        <MotionEnter>
+          <Notice>{t("catalog.empty")}</Notice>
+        </MotionEnter>
+      ) : (
         <Group>
           {products.map((product, index) => (
-            <Row
-              key={product.id}
-              title={product.name}
-              detail={`${product.category} · ${product.unitOfMeasure}`}
-              onPress={busy ? undefined : () => onRequest(product.id)}
-              hairline={index < products.length - 1}
-              testID={`catalog-${product.id}`}
-            />
+            <MotionEnter key={product.id} index={index}>
+              <Row
+                title={product.name}
+                detail={`${product.category} · ${product.unitOfMeasure}`}
+                onPress={busy ? undefined : () => onRequest(product.id)}
+                hairline={index < products.length - 1}
+                testID={`catalog-${product.id}`}
+              />
+            </MotionEnter>
           ))}
         </Group>
       )}
@@ -329,17 +350,22 @@ export function OrdersSurface({
   return (
     <Page testID={testID}>
       <T kind="title">{t("orders.title")}</T>
-      {orders.length === 0 ? <Notice>{t("orders.empty")}</Notice> : (
+      {orders.length === 0 ? (
+        <MotionEnter>
+          <Notice>{t("orders.empty")}</Notice>
+        </MotionEnter>
+      ) : (
         <Group>
           {orders.map((order, index) => (
-            <Row
-              key={order.id}
-              title={order.orderNumber}
-              detail={order.supplierName ? `${order.status} · ${order.supplierName}` : order.status}
-              onPress={() => onOpen(order.id)}
-              hairline={index < orders.length - 1}
-              testID={`order-${order.id}`}
-            />
+            <MotionEnter key={order.id} index={index}>
+              <Row
+                title={order.orderNumber}
+                detail={order.supplierName ? `${order.status} · ${order.supplierName}` : order.status}
+                onPress={() => onOpen(order.id)}
+                hairline={index < orders.length - 1}
+                testID={`order-${order.id}`}
+              />
+            </MotionEnter>
           ))}
         </Group>
       )}
@@ -366,21 +392,16 @@ export function TrackingSurface({
   testID?: string;
 }) {
   const { t } = useLocale();
+  const stage = procurementStageFromStatus(detail.status);
   return (
     <Page testID={testID}>
       <T kind="caption" tone="muted">{t("tracking.referred")}</T>
       <T kind="title">{detail.orderNumber}</T>
       <Status label={detail.status} tone="blue" />
-      <Group>
-        {detail.checkpoints.map((step, index) => (
-          <Row
-            key={step.key}
-            title={t(`checkpoint.${step.key}` as MessageKey)}
-            detail={checkpointDetail(step, t)}
-            hairline={index < detail.checkpoints.length - 1}
-          />
-        ))}
-      </Group>
+      <ProcurementStageRail stage={stage} />
+      <Pan>
+        <CheckpointRail checkpoints={detail.checkpoints} orderStatus={detail.status} />
+      </Pan>
       <Notice>{t("tracking.portal")}</Notice>
       {detail.deliveryCode.available ? (
         <Pan style={{ gap: space.md }}>
@@ -412,11 +433,6 @@ function taskCopy(task: PhoneTask, t: (key: MessageKey) => string) {
   if (task.module === "respond") return { title: task.title, detail: `${t("fact.quantity")} ${task.amount ?? 0}` };
   if (task.module === "tracking" || task.module === "code") return { title: task.title, detail: t("tracking.referred") };
   return { title: task.title, detail: task.detail };
-}
-
-function checkpointDetail(step: PhoneCheckpoint, t: (key: MessageKey) => string) {
-  const when = step.at ? step.at.slice(0, 16).replace("T", " ") : t(`checkpoint.${step.state}` as MessageKey);
-  return when;
 }
 
 export function DeskSurface({ deskPath, onOpen, onSignOut, testID = "screen-desk" }: { deskPath: string; onOpen: () => void; onSignOut?: () => void; testID?: string }) {
@@ -456,15 +472,18 @@ export function ReceiveSurface({
     <Page testID={testID}>
       <T kind="caption" tone="muted">{t("receive.title")}</T>
       <T kind="title">{orderNumber}</T>
-      {lines.map((line) => (
-        <View key={line.id} style={{ gap: space.sm }}>
-          <T kind="headline">{line.name}</T>
-          <T kind="body" tone="muted">{`${t("fact.remaining")} ${line.remaining}`}</T>
-          <Field label={t("receive.received")} value={line.received} onChangeText={(value) => onChange(line.id, "received", value)} keyboardType="number-pad" />
-          <Field label={t("receive.accepted")} value={line.accepted} onChangeText={(value) => onChange(line.id, "accepted", value)} keyboardType="number-pad" />
-          <Field label={t("receive.reason")} value={line.reason} onChangeText={(value) => onChange(line.id, "reason", value)} />
-          <Field label={t("receive.notes")} value={line.notes} onChangeText={(value) => onChange(line.id, "notes", value)} />
-        </View>
+      <ProcurementStageRail stage="delivery" />
+      {lines.map((line, index) => (
+        <MotionEnter key={line.id} index={index}>
+          <View style={{ gap: space.sm }}>
+            <T kind="headline">{line.name}</T>
+            <T kind="body" tone="muted">{`${t("fact.remaining")} ${line.remaining}`}</T>
+            <Field label={t("receive.received")} value={line.received} onChangeText={(value) => onChange(line.id, "received", value)} keyboardType="number-pad" />
+            <Field label={t("receive.accepted")} value={line.accepted} onChangeText={(value) => onChange(line.id, "accepted", value)} keyboardType="number-pad" />
+            <Field label={t("receive.reason")} value={line.reason} onChangeText={(value) => onChange(line.id, "reason", value)} />
+            <Field label={t("receive.notes")} value={line.notes} onChangeText={(value) => onChange(line.id, "notes", value)} />
+          </View>
+        </MotionEnter>
       ))}
       <Button label={photoReady ? t("receive.photoHeld") : t("receive.photo")} tone={photoReady ? "quiet" : "chrome"} onPress={onPhoto} testID="receipt-photo" />
       {note ? <Notice tone={note === t("receive.saved") || note === t("receive.queued") ? "paper" : "danger"}>{note}</Notice> : null}
@@ -501,11 +520,20 @@ export function RespondSurface({
     <Page testID={testID}>
       <T kind="title">{t("respond.title")}</T>
       <T kind="headline">{itemName}</T>
+      <ProcurementStageRail stage="review" />
       <Notice>{`${t("fact.quantity")} ${quantity}`}</Notice>
-      <Field label={t("respond.price")} value={unitPrice} onChangeText={(value) => onChange("unitPrice", value)} keyboardType="decimal-pad" />
-      <Field label={t("respond.delivery")} value={deliveryFee} onChangeText={(value) => onChange("deliveryFee", value)} keyboardType="decimal-pad" />
-      <Field label={t("respond.tax")} value={taxAmount} onChangeText={(value) => onChange("taxAmount", value)} keyboardType="decimal-pad" />
-      <Field label={t("respond.lead")} value={leadTime} onChangeText={(value) => onChange("leadTime", value)} keyboardType="number-pad" />
+      <MotionEnter index={0}>
+        <Field label={t("respond.price")} value={unitPrice} onChangeText={(value) => onChange("unitPrice", value)} keyboardType="decimal-pad" />
+      </MotionEnter>
+      <MotionEnter index={1}>
+        <Field label={t("respond.delivery")} value={deliveryFee} onChangeText={(value) => onChange("deliveryFee", value)} keyboardType="decimal-pad" />
+      </MotionEnter>
+      <MotionEnter index={2}>
+        <Field label={t("respond.tax")} value={taxAmount} onChangeText={(value) => onChange("taxAmount", value)} keyboardType="decimal-pad" />
+      </MotionEnter>
+      <MotionEnter index={3}>
+        <Field label={t("respond.lead")} value={leadTime} onChangeText={(value) => onChange("leadTime", value)} keyboardType="number-pad" />
+      </MotionEnter>
       {note ? <Notice>{note}</Notice> : null}
       <Button label={t("respond.submit")} onPress={onSubmit} testID="submit-response" />
     </Page>

@@ -1,3 +1,4 @@
+import "react-native-gesture-handler";
 import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
@@ -16,9 +17,10 @@ import {
   useFonts as useJakarta,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { SplashScreen, Stack } from "expo-router";
-import { useEffect, useState, type ReactNode } from "react";
-import { AccessibilityInfo, View } from "react-native";
+import { useEffect, type ReactNode } from "react";
+import { View } from "react-native";
 import { LocaleProvider, useLocale } from "../src/i18n";
+import { useReduceMotion } from "../src/motion";
 import { PhoneProvider } from "../src/session/usePhone";
 import { ConfigSurface } from "../src/screens/surfaces";
 import { colors, fonts } from "../src/theme";
@@ -35,12 +37,7 @@ function Direction({ children }: { children: ReactNode }) {
 
 function AppStack() {
   const { t } = useLocale();
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-    return () => subscription.remove();
-  }, []);
+  const reduceMotion = useReduceMotion();
   return (
     <Stack
       screenOptions={{

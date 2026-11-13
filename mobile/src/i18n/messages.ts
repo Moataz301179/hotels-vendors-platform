@@ -124,6 +124,8 @@ export const messages = {
     "checkpoint.done": "Done",
     "checkpoint.current": "Now",
     "checkpoint.waiting": "Waiting",
+    "checkpoint.delayed": "Delayed",
+    "checkpoint.exception": "Exception",
   },
   ar: {
     "nav.today": "اليوم",
@@ -250,6 +252,8 @@ export const messages = {
     "checkpoint.done": "تم",
     "checkpoint.current": "الآن",
     "checkpoint.waiting": "بانتظار",
+    "checkpoint.delayed": "متأخر",
+    "checkpoint.exception": "استثناء",
   },
 } as const;
 
