@@ -16,7 +16,7 @@ describe("DevOps recovery — CI workflow contract", () => {
     const yaml = readFileSync(join(REPO, ".github/workflows/ci.yml"), "utf8");
     expect(yaml).toContain("grep -Fq 'Technology reimagined for hotel procurement' /tmp/hv-home.html");
     expect(yaml).toContain("grep -Fq 'Every decision connected. Every handoff accountable' /tmp/hv-home.html");
-    expect(yaml).toContain("grep -Fq 'Egyptian hotel teams can control spend' /tmp/hv-home.html");
+    expect(yaml).toContain("grep -Fq 'Egyptian hotel teams control spend' /tmp/hv-home.html");
   });
 
   it("parses the deploy workflow YAML and asserts the migration confirmation gate", () => {

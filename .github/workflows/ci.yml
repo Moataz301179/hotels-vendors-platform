@@ -104,7 +104,7 @@ jobs:
           # tying the release gate to an obsolete marketing sentence.
           grep -Fq 'Technology reimagined for hotel procurement' /tmp/hv-home.html
           grep -Fq 'Every decision connected. Every handoff accountable' /tmp/hv-home.html
-          grep -Fq 'Egyptian hotel teams can control spend' /tmp/hv-home.html
+          grep -Fq 'Egyptian hotel teams control spend' /tmp/hv-home.html
           for path in /audit /security; do
             test "$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3100$path")" = '307'
           done
