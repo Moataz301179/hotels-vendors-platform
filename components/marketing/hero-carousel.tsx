@@ -14,8 +14,8 @@ const slides = [
     description: "Start with visual product references for food, beverage, table service and commercial kitchen operations.",
     href: "/marketplace?category=Restaurants%20%26%20bars",
     action: "Explore the sourcing area",
-    image: "/catalog/gastronorm-pan.jpg",
-    alt: "Stainless steel gastronorm pan for hotel kitchen sourcing",
+    image: "/category-food-beverage.png",
+    alt: "Hotel kitchen and dining operations ready for service",
   },
   {
     eyebrow: "Housekeeping & guest rooms",
@@ -23,8 +23,8 @@ const slides = [
     description: "Find reference products for linen, cleaning consumables, guest amenities and room readiness.",
     href: "/marketplace?category=Housekeeping%20%26%20laundry",
     action: "Explore housekeeping",
-    image: "/catalog/bath-towel.jpg",
-    alt: "Folded white hotel bath towels for housekeeping sourcing",
+    image: "/catalog/bed-linen.jpg",
+    alt: "Hotel bed linen prepared for guest-room turnover",
   },
   {
     eyebrow: "Engineering & furniture",
@@ -32,8 +32,8 @@ const slides = [
     description: "Move technical requirements into a controlled sourcing request without turning discovery into a public offer.",
     href: "/marketplace?category=Engineering%20%26%20maintenance",
     action: "Explore engineering",
-    image: "/catalog/led-lamp.jpg",
-    alt: "Guest-room LED lamp for engineering sourcing",
+    image: "/catalog/lobby-armchair.jpg",
+    alt: "Hotel lobby seating ready for guest areas",
   },
   {
     eyebrow: "HOVIN receiving",
@@ -41,7 +41,7 @@ const slides = [
     description: "HOVIN supports assigned receiving handoffs; people still confirm quantities and condition before a record moves on.",
     href: "/hovin",
     action: "Explore HOVIN",
-    image: "/hovin-delivery-verification.png",
+    image: "/hovin-receiving-field.jpg",
     alt: "Hotel receiving handoff verification on HOVIN",
   },
 ] as const;
