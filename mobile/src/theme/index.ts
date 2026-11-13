@@ -1,24 +1,31 @@
 export const colors = {
-  paper: "#0f1419",
-  paperRaised: "#171d24",
-  card: "#1a222b",
+  /** Page field — white, not charcoal. */
+  paper: "#ffffff",
+  /** Soft grey wells and notices. */
+  paperRaised: "#f4f4f4",
+  /** Content cards. */
+  card: "#ffffff",
+  /** Header / charcoal — same dark blue as the HOVIN chrome. */
   chrome: "#0f1419",
   chromeText: "#ffffff",
-  ink: "#ffffff",
-  muted: "#9aa3aa",
-  line: "#2c3640",
-  lineSoft: "#243039",
+  /** Primary type. */
+  ink: "#0f1419",
+  muted: "#6b7280",
+  line: "#e5e7eb",
+  lineSoft: "#f0f1f3",
+  /** Primary accent. */
   blue: "#9dc3e6",
-  blueStrong: "#7eb0d9",
+  blueStrong: "#6fa8d6",
   ice: "#9dc3e6",
-  iceWash: "#1e2f3d",
+  iceWash: "#e8f3fb",
+  /** Secondary accent. */
   yellow: "#e8c547",
-  yellowSoft: "#2a2618",
-  green: "#3f9a63",
+  yellowSoft: "#fbf6e0",
+  green: "#2f7d4f",
   amber: "#e8c547",
-  amberSoft: "#2a2618",
-  danger: "#e0705c",
-  dangerSoft: "#2a1816",
+  amberSoft: "#fbf6e0",
+  danger: "#b0432f",
+  dangerSoft: "#f8ebe7",
 } as const;
 
 export const space = {

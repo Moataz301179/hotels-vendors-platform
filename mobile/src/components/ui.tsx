@@ -60,9 +60,10 @@ export function Button({
 }) {
   const background = tone === "blue" ? colors.blue
     : tone === "yellow" ? colors.yellow
-      : tone === "chrome" ? colors.paperRaised
+      : tone === "chrome" ? colors.chrome
         : colors.card;
-  const color = tone === "quiet" || tone === "chrome" ? colors.ink : colors.paper;
+  // Light-blue and yellow fills need charcoal type. Quiet stays ink on white.
+  const color = tone === "quiet" ? colors.ink : tone === "chrome" ? colors.chromeText : colors.chrome;
   return (
     <Pressable
       accessibilityRole="button"
@@ -162,8 +163,8 @@ export function Row({
 }
 
 export function Status({ label, tone }: { label: string; tone: "blue" | "amber" | "green" | "yellow" }) {
-  const background = tone === "green" ? "#14301f" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.iceWash;
-  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? colors.yellow : colors.blue;
+  const background = tone === "green" ? "#e7f2eb" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.iceWash;
+  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? "#9a6a12" : colors.blueStrong;
   return (
     <View style={{ alignSelf: "flex-start", backgroundColor: background, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
       <Text allowFontScaling style={[typeScale.caption, { color }]}>{label}</Text>

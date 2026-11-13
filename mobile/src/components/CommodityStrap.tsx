@@ -49,7 +49,8 @@ export function CommodityStrap({
 }: {
   items?: CommodityQuote[];
 }) {
-  const { t } = useLocale();
+  const { t, isRtl } = useLocale();
+  // Commodity names and prices stay Arabic; chrome labels follow the UI locale.
   const arabic = true;
   const { width } = useWindowDimensions();
   const offset = useRef(new Animated.Value(0)).current;
@@ -62,7 +63,7 @@ export function CommodityStrap({
     const distance = trackWidth / 2;
     const animation = Animated.loop(
       Animated.timing(offset, {
-        toValue: -distance,
+        toValue: isRtl ? distance : -distance,
         duration: Math.max(18000, distance * 18),
         easing: Easing.linear,
         useNativeDriver: true,
@@ -70,11 +71,11 @@ export function CommodityStrap({
     );
     animation.start();
     return () => animation.stop();
-  }, [offset, trackWidth]);
+  }, [offset, trackWidth, isRtl]);
 
   return (
     <View style={{ gap: space.sm }} testID="commodity-strap">
-      <View style={{ flexDirection: arabic ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" }}>
+      <View style={{ flexDirection: isRtl ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" }}>
         <T kind="caption" tone="blue">{t("market.strap")}</T>
         <T kind="caption" tone="muted">{t("market.reference")}</T>
       </View>
@@ -82,7 +83,7 @@ export function CommodityStrap({
         <Animated.View
           onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
           style={{
-            flexDirection: arabic ? "row-reverse" : "row",
+            flexDirection: "row",
             transform: [{ translateX: offset }],
             paddingHorizontal: space.sm,
             minWidth: width,
