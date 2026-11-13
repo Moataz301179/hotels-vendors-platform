@@ -98,7 +98,7 @@ export function AISupportChat() {
           <Bot size={16} className="text-white" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-white leading-tight">HOVIN Support Assistant</p>
+          <p className="text-sm font-semibold text-white leading-tight">AI Assistant</p>
           <p className="text-[10px] text-white/75">Orders · Billing · Suppliers · ETA · Financing · Complaints</p>
         </div>
         <Sparkles size={15} className="text-white/60" />

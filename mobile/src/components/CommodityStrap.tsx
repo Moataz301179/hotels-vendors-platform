@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, View, useWindowDimensions } from "react-native";
 import { hotelCommodityBoard, type CommodityQuote } from "../market/commodities";
 import { useLocale } from "../i18n";
+import { useReduceMotion } from "../motion";
 import { chipStyle, colors, radius, space, type as typeScale } from "../theme";
 import { T } from "./ui";
 
@@ -41,21 +42,29 @@ function Chip({ item, arabic }: { item: CommodityQuote; arabic: boolean }) {
   );
 }
 
+/**
+ * Market-reference strap. Continuous scroll is decorative — disabled under reduce-motion.
+ * Prices are shown as static figures (never counting-up animation).
+ */
 export function CommodityStrap({
   items = hotelCommodityBoard,
 }: {
   items?: CommodityQuote[];
 }) {
   const { t, isRtl } = useLocale();
+  const reduceMotion = useReduceMotion();
   // Commodity names and prices stay Arabic; chrome labels follow the UI locale.
   const arabic = true;
   const { width } = useWindowDimensions();
   const offset = useRef(new Animated.Value(0)).current;
   const [trackWidth, setTrackWidth] = useState(0);
-  const loop = useMemo(() => [...items, ...items], [items]);
+  const loop = useMemo(() => (reduceMotion ? items : [...items, ...items]), [items, reduceMotion]);
 
   useEffect(() => {
-    if (trackWidth <= 0) return;
+    if (reduceMotion || trackWidth <= 0) {
+      offset.setValue(0);
+      return;
+    }
     offset.setValue(0);
     const distance = trackWidth / 2;
     const animation = Animated.loop(
@@ -68,7 +77,7 @@ export function CommodityStrap({
     );
     animation.start();
     return () => animation.stop();
-  }, [offset, trackWidth, isRtl]);
+  }, [offset, trackWidth, isRtl, reduceMotion]);
 
   return (
     <View style={{ gap: space.sm }} testID="commodity-strap">
@@ -91,9 +100,11 @@ export function CommodityStrap({
           onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
           style={{
             flexDirection: "row",
-            transform: [{ translateX: offset }],
+            flexWrap: reduceMotion ? "wrap" : "nowrap",
+            transform: reduceMotion ? undefined : [{ translateX: offset }],
             paddingHorizontal: space.sm,
-            minWidth: width,
+            minWidth: reduceMotion ? undefined : width,
+            gap: reduceMotion ? space.sm : 0,
           }}
         >
           {loop.map((item, index) => (

@@ -1,13 +1,6 @@
+import "react-native-gesture-handler";
 import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import {
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-  useFonts as useManrope,
-} from "@expo-google-fonts/manrope";
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
@@ -16,9 +9,10 @@ import {
   useFonts as useJakarta,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { SplashScreen, Stack } from "expo-router";
-import { useEffect, useState, type ReactNode } from "react";
-import { AccessibilityInfo, View } from "react-native";
+import { useEffect, type ReactNode } from "react";
+import { View } from "react-native";
 import { LocaleProvider, useLocale } from "../src/i18n";
+import { useReduceMotion } from "../src/motion";
 import { PhoneProvider } from "../src/session/usePhone";
 import { ConfigSurface } from "../src/screens/surfaces";
 import { colors, fonts } from "../src/theme";
@@ -35,12 +29,7 @@ function Direction({ children }: { children: ReactNode }) {
 
 function AppStack() {
   const { t } = useLocale();
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-    return () => subscription.remove();
-  }, []);
+  const reduceMotion = useReduceMotion();
   return (
     <Stack
       screenOptions={{
@@ -68,20 +57,13 @@ function AppStack() {
 }
 
 export default function RootLayout() {
-  const [manropeLoaded] = useManrope({
-    Manrope_400Regular,
-    Manrope_500Medium,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-    Manrope_800ExtraBold,
-  });
   const [jakartaLoaded] = useJakarta({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
   });
-  const fontsLoaded = manropeLoaded && jakartaLoaded;
+  const fontsLoaded = jakartaLoaded;
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();
