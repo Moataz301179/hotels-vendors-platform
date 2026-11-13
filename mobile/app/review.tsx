@@ -90,7 +90,7 @@ export default function Review() {
 
 function Frame({ children }: { children: ReactNode }) {
   return (
-    <View style={{ flex: 1, backgroundColor: colors.paper }}>
+    <View style={{ flex: 1, backgroundColor: colors.paperDeep }}>
       <ChromeBar />
       {children}
     </View>

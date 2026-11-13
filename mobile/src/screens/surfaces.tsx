@@ -1,12 +1,13 @@
 import { type ReactNode } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import type { PhoneCheckpoint, PhoneHome, PhoneNotification, PhoneOrder, PhoneOrderDetail, PhoneProposal, PhoneTask } from "../api/hovin";
 import { recordedQuoteSpan, type RecordedQuote } from "../intelligence/quotes";
 import { useLocale } from "../i18n";
 import type { MessageKey } from "../i18n/messages";
-import { colors, radius, space } from "../theme";
+import { colors, onBlueType, space } from "../theme";
 import { CommodityStrap } from "../components/CommodityStrap";
-import { Button, Field, Group, Notice, Pan, Row, Status, T, Wordmark, factLabel } from "../components/ui";
+import { FieldShade } from "../components/FieldShade";
+import { BluePan, Button, Field, Group, Notice, Pan, Row, Status, T, Wordmark, factLabel } from "../components/ui";
 import { reviewBundlePromotions, type BundlePromotion } from "../market/commodities";
 
 export function ChromeBar() {
@@ -32,38 +33,39 @@ export function Page({
   testID?: string;
 }) {
   return (
-    <ScrollView
-      testID={testID}
-      contentContainerStyle={{ paddingHorizontal: space.lg, paddingTop: space.md + 4, paddingBottom: space.xl + 12, gap: 22, backgroundColor: colors.paper }}
-      style={{ flex: 1, backgroundColor: colors.paper }}
-      showsVerticalScrollIndicator={false}
-      refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} /> : undefined}
-    >
-      {children}
-    </ScrollView>
+    <FieldShade style={{ flex: 1 }} testID={testID}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: space.lg, paddingTop: space.md + 4, paddingBottom: space.xl + 12, gap: 18 }}
+        style={{ flex: 1, backgroundColor: "transparent" }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} /> : undefined}
+      >
+        {children}
+      </ScrollView>
+    </FieldShade>
   );
 }
 
 export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; onPress: () => void }) {
   const { t } = useLocale();
   const title = t(`proposal.${proposal.action}.title` as MessageKey);
-  const reason = t(`proposal.${proposal.action}.reason` as MessageKey);
   return (
-    <Pan style={{ gap: space.md }}>
-      <T kind="caption" tone="muted">{t("proposal.kicker")}</T>
-      <T kind="title">{title}</T>
-      <T kind="body" tone="muted">{reason}</T>
-      <View style={{ gap: space.sm, paddingVertical: space.xs }}>
-        {proposal.evidence.map((fact) => (
-          <View key={`${fact.key}-${fact.value}`} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: space.md }}>
-            <T kind="label" tone="muted">{t(factLabel(fact.key))}</T>
-            <T kind="headline">{fact.value}</T>
-          </View>
-        ))}
-      </View>
-      {proposal.action === "wait" ? null : <Button label={t("action.continue")} onPress={onPress} testID="proposal-continue" />}
-      <T kind="caption" tone="muted">{t("proposal.authority")}</T>
-    </Pan>
+    <BluePan style={{ gap: space.md }}>
+      <Text allowFontScaling style={[onBlueType, { fontSize: 20, lineHeight: 26 }]}>{title}</Text>
+      {proposal.evidence.length ? (
+        <View style={{ gap: 6 }}>
+          {proposal.evidence.map((fact) => (
+            <View key={`${fact.key}-${fact.value}`} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: space.md }}>
+              <Text allowFontScaling style={[onBlueType, { fontSize: 13, lineHeight: 18, opacity: 0.72 }]}>{t(factLabel(fact.key))}</Text>
+              <Text allowFontScaling style={[onBlueType, { fontSize: 15, lineHeight: 20 }]}>{fact.value}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {proposal.action === "wait" ? null : (
+        <Button label={t("action.continue")} tone="inset" onPress={onPress} testID="proposal-continue" />
+      )}
+    </BluePan>
   );
 }
 
@@ -92,10 +94,9 @@ export function HomeSurface({
       {review ? <Notice>{t("state.review")}</Notice> : null}
       {queued ? <Notice>{`${queued} · ${t("home.queued")}`}</Notice> : null}
       {home.plan.workspace === "hotel" || home.plan.workspace === "supplier" ? <CommodityStrap /> : null}
-      <Pan style={{ gap: space.sm }}>
+      <Pan style={{ gap: 4 }}>
         <T kind="caption" tone="muted">{t(workspaceTitle(home.plan.workspace))}</T>
         <T kind="title">{home.account.name || home.account.email || home.account.role}</T>
-        <T kind="body" tone="muted">{t(workspaceSummary(home.plan.workspace))}</T>
       </Pan>
       <ProposalBlock proposal={home.proposal} onPress={() => onOpenProposal(home.proposal)} />
       <View style={{ gap: space.sm }}>
@@ -108,7 +109,7 @@ export function HomeSurface({
               <Row
                 key={task.id}
                 title={copy.title}
-                detail={`${copy.detail} · ${task.status}`}
+                detail={task.status}
                 onPress={() => onOpenTask(task)}
                 hairline={index < home.tasks.length - 1}
                 testID={`task-${task.id}`}
@@ -118,12 +119,6 @@ export function HomeSurface({
           </Group>
         )}
       </View>
-      {home.plan.workspace === "desk" ? null : (
-        <View style={{ gap: space.sm }}>
-          <T kind="caption" tone="muted">{t("home.withheld")}</T>
-          <Notice>{t(withheldKey(home.plan.workspace))}</Notice>
-        </View>
-      )}
     </Page>
   );
 }
@@ -139,20 +134,20 @@ export function WorkSurface({
 }) {
   const { t } = useLocale();
   const rows = workspace === "supplier"
-    ? [{ id: "requests" as const, title: t("work.requests"), detail: t("proposal.respond.reason") }, { id: "orders" as const, title: t("work.orders"), detail: t("orders.sealed") }]
+    ? [{ id: "requests" as const, title: t("work.requests") }, { id: "orders" as const, title: t("work.orders") }]
     : workspace === "carrier-code"
-      ? [{ id: "orders" as const, title: t("work.codes"), detail: t("tracking.portal") }]
+      ? [{ id: "orders" as const, title: t("work.codes") }]
       : [
-          { id: "catalog" as const, title: t("work.catalog"), detail: t("catalog.anonymous") },
-          { id: "quotes" as const, title: t("work.quotes"), detail: t("quotes.desk") },
-          { id: "orders" as const, title: t("work.orders"), detail: t("orders.sealed") },
+          { id: "catalog" as const, title: t("work.catalog") },
+          { id: "quotes" as const, title: t("work.quotes") },
+          { id: "orders" as const, title: t("work.orders") },
         ];
   return (
     <Page testID={testID}>
       <T kind="title">{t("nav.work")}</T>
       <Group>
         {rows.map((row, index) => (
-          <Row key={row.id} title={row.title} detail={row.detail} onPress={() => onOpen(row.id)} hairline={index < rows.length - 1} testID={`work-${row.id}`} />
+          <Row key={row.id} title={row.title} onPress={() => onOpen(row.id)} hairline={index < rows.length - 1} testID={`work-${row.id}`} />
         ))}
       </Group>
     </Page>
@@ -250,18 +245,12 @@ export function CatalogSurface({
   return (
     <Page testID={testID}>
       <T kind="title">{t("catalog.title")}</T>
+      <T kind="caption" tone="muted">{t("catalog.promotions")}</T>
       <View style={{ gap: space.sm }}>
-        <View style={{ flexDirection: arabic ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" }}>
-          <T kind="caption" tone="muted">{t("catalog.promotions")}</T>
-          <T kind="caption" tone="muted">{t("catalog.anonymousShort")}</T>
-        </View>
         {promotions.map((promo) => (
-          <Pan key={promo.id} style={{ gap: space.sm }}>
-            <Status label={arabic ? promo.badgeAr : promo.badgeEn} tone="quiet" />
+          <Pan key={promo.id} style={{ gap: space.md }}>
             <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
             <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
-            <T kind="label">{arabic ? promo.itemsAr : promo.itemsEn}</T>
-            <T kind="caption" tone="muted">{arabic ? promo.unitHintAr : promo.unitHintEn}</T>
             <Button
               label={t("catalog.request")}
               tone="blue"
@@ -409,20 +398,6 @@ function workspaceTitle(workspace: PhoneHome["plan"]["workspace"]): MessageKey {
   return "workspace.hotel.title";
 }
 
-function workspaceSummary(workspace: PhoneHome["plan"]["workspace"]): MessageKey {
-  if (workspace === "supplier") return "workspace.supplier.summary";
-  if (workspace === "carrier-code") return "workspace.carrier.summary";
-  if (workspace === "desk") return "workspace.desk.summary";
-  return "workspace.hotel.summary";
-}
-
-function withheldKey(workspace: PhoneHome["plan"]["workspace"]): MessageKey {
-  if (workspace === "supplier") return "withheld.supplier";
-  if (workspace === "carrier-code") return "withheld.carrier";
-  if (workspace === "desk") return "withheld.desk";
-  return "withheld.hotel";
-}
-
 function taskCopy(task: PhoneTask, t: (key: MessageKey) => string) {
   if (task.module === "quotes") return { title: t("work.quotes"), detail: `${t("fact.responses")} ${task.amount ?? 0}` };
   if (task.module === "receive") return { title: task.title, detail: `${t("fact.remaining")} ${task.amount ?? 0}` };
@@ -532,19 +507,18 @@ export function RespondSurface({
 export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: { onSignIn: () => void; failed?: boolean; testID?: string }) {
   const { t } = useLocale();
   return (
-    <View testID={testID} style={{ flex: 1, backgroundColor: colors.paper }}>
+    <FieldShade testID={testID} style={{ flex: 1 }}>
       <View style={{ paddingHorizontal: space.lg, paddingTop: space.xl + 8, paddingBottom: space.md }}>
         <Wordmark width={132} />
       </View>
       <View style={{ flex: 1, paddingHorizontal: space.lg, paddingBottom: space.xl, justifyContent: "center" }}>
-        <Pan style={{ gap: space.lg }}>
-          <T kind="title">{t("signin.title")}</T>
-          <T kind="body" tone="muted">{t("signin.body")}</T>
+        <BluePan style={{ gap: space.lg }}>
+          <Text allowFontScaling style={[onBlueType, { fontSize: 22, lineHeight: 28 }]}>{t("signin.title")}</Text>
           {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
-          <Button label={t("action.signIn")} onPress={onSignIn} testID="sign-in" />
-        </Pan>
+          <Button label={t("action.signIn")} tone="inset" onPress={onSignIn} testID="sign-in" />
+        </BluePan>
       </View>
-    </View>
+    </FieldShade>
   );
 }
 

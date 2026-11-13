@@ -2,10 +2,12 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
 
 /**
  * Color allocation (owner rules):
- * - Page field `#303234` — white type for primary copy
- * - `#5B92FE` — CTA / pan / pill fills only, with black type on the fill
+ * - Page field `#303234` with darker grey fades — white type for primary copy
+ * - `#5B92FE` — light-blue pan / CTA fills only; regular (non-bold) black type on the fill
+ * - Blue pans carry a bottom frame-edge outline
  * - Blue is never used for text on grey
  * - Yellow type and yellow backfill under type are rejected
+ * - Large widgets stay short — title / facts / action, not essays
  *
  * Typeface (HotelsVendors design system / reference sample):
  * - Display: Manrope (SF Pro Display fallback on Apple)
@@ -13,6 +15,8 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
  */
 export const colors = {
   paper: "#303234",
+  paperDeep: "#232526",
+  paperMid: "#2a2c2e",
   paperRaised: "#3a3c3e",
   card: "#3f4143",
   chrome: "#303234",
@@ -24,6 +28,7 @@ export const colors = {
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",
+  blueEdge: "#1a3f8f",
   onBlue: "#000000",
   ice: "#5B92FE",
   iceWash: "#3a3c3e",
@@ -31,6 +36,9 @@ export const colors = {
   danger: "#e0705c",
   dangerSoft: "#5a2a24",
 } as const;
+
+/** Soft field wash — darker greys fading into the page paper. */
+export const paperFade = ["#1b1c1e", colors.paperDeep, colors.paper, colors.paperDeep, "#1f2123"] as const;
 
 export const space = {
   xs: 4,
@@ -156,23 +164,57 @@ export const chipStyle: ViewStyle = {
   }),
 };
 
+/** Light-blue filled pan — soft lift; bottom frame edge drawn by BluePan. */
+export const bluePanStyle: ViewStyle = {
+  backgroundColor: colors.blue,
+  borderRadius: radius.lg,
+  padding: space.lg,
+  overflow: "hidden",
+  ...Platform.select({
+    ios: {
+      shadowColor: "#0d1a33",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+    },
+    android: { elevation: 8 },
+    default: {
+      shadowColor: "#0d1a33",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+    },
+  }),
+};
+
 export const pillCtaStyle: ViewStyle = {
   minHeight: 54,
   borderRadius: radius.pill,
   paddingHorizontal: space.lg,
+  overflow: "hidden",
   ...Platform.select({
     ios: {
-      shadowColor: colors.blue,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.42,
-      shadowRadius: 14,
+      shadowColor: "#0d1a33",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
     },
-    android: { elevation: 8 },
+    android: { elevation: 6 },
     default: {
-      shadowColor: colors.blue,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.42,
-      shadowRadius: 14,
+      shadowColor: "#0d1a33",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
     },
   }),
+};
+
+/** Regular (non-bold) black type on light-blue fills. */
+export const onBlueType: TextStyle = {
+  fontFamily: fonts.bodyRegular,
+  fontSize: 16,
+  lineHeight: 22,
+  fontWeight: "400",
+  letterSpacing: 0.05,
+  color: colors.onBlue,
 };

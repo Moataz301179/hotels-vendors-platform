@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Image, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useLocale } from "../i18n";
-import { colors, fonts, panStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
+import { bluePanStyle, colors, fonts, onBlueType, panStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
 import type { MessageKey } from "../i18n/messages";
 
 const wordmark = require("../../assets/hovin-wordmark.png");
@@ -19,6 +19,28 @@ export function Wordmark({ width = 132 }: { width?: number }) {
 
 export function Pan({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[panStyle, style]}>{children}</View>;
+}
+
+/** Light-blue action pan — bottom frame edge, regular black type for children via caller. */
+export function BluePan({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  return (
+    <View style={[bluePanStyle, style]}>
+      {children}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 4,
+          backgroundColor: colors.blueEdge,
+          borderBottomLeftRadius: radius.lg,
+          borderBottomRightRadius: radius.lg,
+        }}
+      />
+    </View>
+  );
 }
 
 export function T({
@@ -47,9 +69,24 @@ export function T({
   );
 }
 
-function ctaFill(tone: "blue" | "chrome" | "quiet") {
-  if (tone === "chrome") return { backgroundColor: colors.paperRaised };
-  if (tone === "quiet") return { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line };
+function ctaFill(tone: "blue" | "chrome" | "quiet" | "inset") {
+  if (tone === "chrome") return { backgroundColor: colors.paperRaised, borderBottomWidth: 0 };
+  if (tone === "quiet") {
+    return {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.line,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.line,
+    };
+  }
+  if (tone === "inset") {
+    return {
+      backgroundColor: "rgba(0,0,0,0.14)",
+      borderBottomWidth: 3,
+      borderBottomColor: colors.blueEdge,
+    };
+  }
   return { backgroundColor: colors.blue };
 }
 
@@ -62,11 +99,11 @@ export function Button({
 }: {
   label: string;
   onPress: () => void;
-  tone?: "blue" | "chrome" | "quiet";
+  tone?: "blue" | "chrome" | "quiet" | "inset";
   disabled?: boolean;
   testID?: string;
 }) {
-  const color = tone === "blue" ? colors.onBlue : colors.ink;
+  const blackType = tone === "blue" || tone === "inset";
   return (
     <Pressable
       accessibilityRole="button"
@@ -83,7 +120,27 @@ export function Button({
         transform: [{ scale: pressed && !disabled ? 0.985 : 1 }],
       })}
     >
-      <Text allowFontScaling style={[typeScale.headline, { color, letterSpacing: 0.2, fontFamily: fonts.displaySemibold }]}>{label}</Text>
+      <Text
+        allowFontScaling
+        style={blackType
+          ? onBlueType
+          : [typeScale.body, { color: colors.ink, fontFamily: fonts.bodyRegular, fontWeight: "400" }]}
+      >
+        {label}
+      </Text>
+      {blackType ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 4,
+            backgroundColor: colors.blueEdge,
+          }}
+        />
+      ) : null}
     </Pressable>
   );
 }
@@ -166,6 +223,7 @@ export function Row({
 export function Status({ label, tone }: { label: string; tone: "blue" | "green" | "quiet" }) {
   const background = tone === "green" ? "#14301f" : tone === "quiet" ? colors.paperRaised : colors.blue;
   const color = tone === "green" ? colors.green : tone === "quiet" ? colors.ink : colors.onBlue;
+  const isBlue = tone === "blue";
   return (
     <View style={{
       alignSelf: "flex-start",
@@ -175,8 +233,17 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "green" 
       paddingVertical: 7,
       borderWidth: tone === "quiet" || tone === "green" ? 1 : 0,
       borderColor: tone === "green" ? "#1f4a30" : tone === "quiet" ? colors.lineSoft : "transparent",
+      borderBottomWidth: isBlue ? 3 : tone === "quiet" || tone === "green" ? 1 : 0,
+      borderBottomColor: isBlue ? colors.blueEdge : tone === "green" ? "#1f4a30" : colors.lineSoft,
     }}>
-      <Text allowFontScaling style={[typeScale.caption, { color, letterSpacing: 0.4 }]}>{label}</Text>
+      <Text
+        allowFontScaling
+        style={isBlue
+          ? [onBlueType, { fontSize: 12, lineHeight: 16 }]
+          : [typeScale.caption, { color, letterSpacing: 0.4, fontFamily: fonts.bodyRegular, fontWeight: undefined }]}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
