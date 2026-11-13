@@ -17,7 +17,7 @@ Branch: `cursor/hovin-motion-system-168e` (based on `cursor/hovin-intelligence-1
 ### Mobile
 
 - `mobile/babel.config.js` — Reanimated Babel plugin
-- `mobile/app.json` — `react-native-reanimated` plugin
+- `mobile/app.json` — unchanged plugin list (Reanimated uses Babel + autolinking only; do not list it under `expo.plugins`)
 - `mobile/app/_layout.tsx` — gesture-handler import; shared `useReduceMotion`
 - `mobile/src/motion/*` — tokens, checkpoint helpers, `MotionEnter`, `CheckpointRail`, `ProcurementStageRail`, `FieldHighlight`, README
 - `mobile/src/screens/surfaces.tsx` — tracking rail, list/empty enter, receive/respond progressive reveal

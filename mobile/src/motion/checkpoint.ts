@@ -33,7 +33,8 @@ export function checkpointVisualState(
 export function procurementStageFromStatus(status: string | null | undefined): ProcurementStage {
   const value = (status ?? "").toUpperCase();
   if (/DELIVER|RECEIV|COMPLETE|FULFILL.*DONE/.test(value)) return "delivery";
-  if (/TRANSIT|SHIP|PICK|DISPATCH|FULFIL/.test(value)) return "fulfilment";
+  // CONFIRMED is post-approval + payment guarantee (vendor accepted) — not request.
+  if (/CONFIRMED|TRANSIT|SHIP|PICK|DISPATCH|FULFIL/.test(value)) return "fulfilment";
   if (/GUARANTEE|PAYMENT|FUND/.test(value)) return "payment-guarantee";
   if (/APPROV|AUTHORIZ/.test(value)) return "approval";
   if (/REVIEW|QUOTE|PROPOS|COMPAR/.test(value)) return "review";

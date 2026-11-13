@@ -8,7 +8,6 @@
     "backgroundColor": "#f1f0e8",
     "plugins": [
       "expo-router",
-      "react-native-reanimated",
       "expo-sqlite",
       [
         "expo-camera",

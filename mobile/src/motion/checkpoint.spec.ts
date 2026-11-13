@@ -43,6 +43,7 @@ describe("HotelsVendors motion — checkpoint helpers", () => {
     expect(procurementStageFromStatus("QUOTE_REVIEW")).toBe("review");
     expect(procurementStageFromStatus("APPROVED")).toBe("approval");
     expect(procurementStageFromStatus("PAYMENT_GUARANTEE")).toBe("payment-guarantee");
+    expect(procurementStageFromStatus("CONFIRMED")).toBe("fulfilment");
     expect(procurementStageFromStatus("IN_TRANSIT")).toBe("fulfilment");
     expect(procurementStageFromStatus("DELIVERED")).toBe("delivery");
   });
