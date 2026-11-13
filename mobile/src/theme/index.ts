@@ -1,31 +1,31 @@
+/**
+ * HOVIN dark field — matched to the travel-app reference:
+ * deep charcoal page, elevated grey cards, electric-blue CTA, gold secondary.
+ */
 export const colors = {
-  /** Page field — white, not charcoal. */
-  paper: "#ffffff",
-  /** Soft grey wells and notices. */
-  paperRaised: "#f4f4f4",
-  /** Content cards. */
-  card: "#ffffff",
-  /** Header / charcoal — same dark blue as the HOVIN chrome. */
-  chrome: "#0f1419",
+  paper: "#16181d",
+  paperRaised: "#1c1f26",
+  card: "#23262f",
+  chrome: "#12141a",
   chromeText: "#ffffff",
-  /** Primary type. */
-  ink: "#0f1419",
-  muted: "#6b7280",
-  line: "#e5e7eb",
-  lineSoft: "#f0f1f3",
-  /** Primary accent. */
-  blue: "#9dc3e6",
-  blueStrong: "#6fa8d6",
+  ink: "#ffffff",
+  muted: "#a0a3a6",
+  line: "#2e323c",
+  lineSoft: "#2a2e38",
+  /** Electric blue — primary CTA / active. */
+  blue: "#6fa8ef",
+  blueStrong: "#5a8dee",
+  blueBright: "#8eb5f7",
   ice: "#9dc3e6",
-  iceWash: "#e8f3fb",
-  /** Secondary accent. */
-  yellow: "#e8c547",
-  yellowSoft: "#fbf6e0",
-  green: "#2f7d4f",
-  amber: "#e8c547",
-  amberSoft: "#fbf6e0",
-  danger: "#b0432f",
-  dangerSoft: "#f8ebe7",
+  iceWash: "#1e2a3d",
+  /** Gold — secondary accent (ratings, market prices, promo badges). */
+  yellow: "#f5b820",
+  yellowSoft: "#3a3018",
+  green: "#3f9a63",
+  amber: "#f5b820",
+  amberSoft: "#3a3018",
+  danger: "#e0705c",
+  dangerSoft: "#2a1816",
 } as const;
 
 export const space = {
@@ -36,13 +36,19 @@ export const space = {
   xl: 32,
 } as const;
 
+/** Geometric sans hierarchy — SF / Inter-like proportions on the system face. */
 export const type = {
-  hero: { fontSize: 32, lineHeight: 38, fontWeight: "700" as const, letterSpacing: -0.6 },
+  hero: { fontSize: 30, lineHeight: 36, fontWeight: "700" as const, letterSpacing: -0.5 },
   title: { fontSize: 22, lineHeight: 28, fontWeight: "700" as const, letterSpacing: -0.3 },
   headline: { fontSize: 17, lineHeight: 22, fontWeight: "600" as const },
-  body: { fontSize: 16, lineHeight: 22, fontWeight: "400" as const },
+  body: { fontSize: 15, lineHeight: 22, fontWeight: "400" as const },
   label: { fontSize: 13, lineHeight: 18, fontWeight: "600" as const },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: "600" as const, letterSpacing: 0.4 },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: "600" as const, letterSpacing: 0.3 },
 } as const;
 
-export const radius = { sm: 8, md: 12, lg: 16 } as const;
+export const radius = {
+  sm: 12,
+  md: 18,
+  lg: 24,
+  pill: 999,
+} as const;

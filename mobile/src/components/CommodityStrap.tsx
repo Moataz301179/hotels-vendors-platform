@@ -16,11 +16,9 @@ function Chip({ item, arabic }: { item: CommodityQuote; arabic: boolean }) {
         alignItems: "center",
         gap: space.sm,
         backgroundColor: colors.card,
-        borderRadius: radius.md,
-        borderWidth: 1,
-        borderColor: colors.lineSoft,
+        borderRadius: radius.pill,
         paddingHorizontal: space.md,
-        paddingVertical: space.sm,
+        paddingVertical: 10,
         marginEnd: space.sm,
       }}
     >
@@ -79,7 +77,7 @@ export function CommodityStrap({
         <T kind="caption" tone="blue">{t("market.strap")}</T>
         <T kind="caption" tone="muted">{t("market.reference")}</T>
       </View>
-      <View style={{ overflow: "hidden", width: "100%", borderRadius: radius.md, backgroundColor: colors.paperRaised, borderWidth: 1, borderColor: colors.lineSoft, paddingVertical: space.sm }}>
+      <View style={{ overflow: "hidden", width: "100%", borderRadius: radius.lg, backgroundColor: colors.paperRaised, paddingVertical: space.sm }}>
         <Animated.View
           onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
           style={{

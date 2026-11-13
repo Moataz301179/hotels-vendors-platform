@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Image, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
+import { Image, Platform, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useLocale } from "../i18n";
 import { colors, radius, space, type as typeScale } from "../theme";
 import type { MessageKey } from "../i18n/messages";
@@ -31,7 +31,7 @@ export function T({
   const { isRtl } = useLocale();
   const color = tone === "chrome" ? colors.chromeText
     : tone === "muted" ? colors.muted
-      : tone === "blue" ? colors.blue
+      : tone === "blue" ? colors.blueBright
         : tone === "yellow" ? colors.yellow
           : tone === "danger" ? colors.danger
             : colors.ink;
@@ -43,6 +43,20 @@ export function T({
       {children}
     </Text>
   );
+}
+
+function ctaFill(tone: "blue" | "chrome" | "quiet" | "yellow") {
+  if (tone === "yellow") return { backgroundColor: colors.yellow };
+  if (tone === "chrome") return { backgroundColor: colors.card };
+  if (tone === "quiet") return { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line };
+  // Electric blue CTA — horizontal gradient on web (matches reference), solid on native.
+  if (Platform.OS === "web") {
+    return {
+      backgroundColor: colors.blue,
+      backgroundImage: `linear-gradient(90deg, ${colors.blueBright} 0%, ${colors.blueStrong} 100%)`,
+    } as ViewStyle;
+  }
+  return { backgroundColor: colors.blue };
 }
 
 export function Button({
@@ -58,12 +72,7 @@ export function Button({
   disabled?: boolean;
   testID?: string;
 }) {
-  const background = tone === "blue" ? colors.blue
-    : tone === "yellow" ? colors.yellow
-      : tone === "chrome" ? colors.chrome
-        : colors.card;
-  // Light-blue and yellow fills need charcoal type. Quiet stays ink on white.
-  const color = tone === "quiet" ? colors.ink : tone === "chrome" ? colors.chromeText : colors.chrome;
+  const color = tone === "yellow" ? colors.chrome : colors.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -72,18 +81,16 @@ export function Button({
       onPress={onPress}
       testID={testID}
       style={({ pressed }) => ({
-        minHeight: 48,
-        paddingHorizontal: space.md,
-        borderRadius: radius.md,
+        minHeight: 52,
+        paddingHorizontal: space.lg,
+        borderRadius: radius.pill,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: background,
-        borderWidth: tone === "quiet" ? 1 : 0,
-        borderColor: colors.line,
-        opacity: disabled ? 0.45 : pressed ? 0.72 : 1,
+        ...ctaFill(tone),
+        opacity: disabled ? 0.45 : pressed ? 0.78 : 1,
       })}
     >
-      <Text allowFontScaling style={[typeScale.headline, { color }]}>{label}</Text>
+      <Text allowFontScaling style={[typeScale.headline, { color, letterSpacing: 0.2 }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -98,14 +105,14 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
         placeholderTextColor={colors.muted}
         {...props}
         style={{
-          minHeight: 48,
-          borderWidth: 1,
-          borderColor: colors.line,
-          borderRadius: radius.sm,
+          minHeight: 52,
+          borderWidth: 0,
+          borderRadius: radius.md,
           backgroundColor: colors.card,
           color: colors.ink,
           paddingHorizontal: space.md,
           fontSize: 16,
+          fontWeight: "500",
           textAlign: isRtl ? "right" : "left",
           writingDirection: isRtl ? "rtl" : "ltr",
         }}
@@ -116,7 +123,7 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
 
 export function Group({ children }: { children: ReactNode }) {
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineSoft, overflow: "hidden" }}>
+    <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, overflow: "hidden" }}>
       {children}
     </View>
   );
@@ -138,9 +145,9 @@ export function Row({
   const { isRtl } = useLocale();
   const body = (
     <View style={{
-      minHeight: 56,
+      minHeight: 60,
       paddingHorizontal: space.md,
-      paddingVertical: space.sm,
+      paddingVertical: space.md,
       borderBottomWidth: hairline ? 1 : 0,
       borderBottomColor: colors.lineSoft,
       flexDirection: isRtl ? "row-reverse" : "row",
@@ -163,10 +170,10 @@ export function Row({
 }
 
 export function Status({ label, tone }: { label: string; tone: "blue" | "amber" | "green" | "yellow" }) {
-  const background = tone === "green" ? "#e7f2eb" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.iceWash;
-  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? "#9a6a12" : colors.blueStrong;
+  const background = tone === "green" ? "#14301f" : tone === "amber" || tone === "yellow" ? colors.yellowSoft : colors.iceWash;
+  const color = tone === "green" ? colors.green : tone === "amber" || tone === "yellow" ? colors.yellow : colors.blueBright;
   return (
-    <View style={{ alignSelf: "flex-start", backgroundColor: background, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
+    <View style={{ alignSelf: "flex-start", backgroundColor: background, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5 }}>
       <Text allowFontScaling style={[typeScale.caption, { color }]}>{label}</Text>
     </View>
   );

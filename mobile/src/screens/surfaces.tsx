@@ -15,8 +15,7 @@ export function ChromeBar() {
       <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingVertical: space.md }}>
         <Wordmark />
       </View>
-      <View style={{ height: 2, backgroundColor: colors.blue }} />
-      <View style={{ height: 2, backgroundColor: colors.yellow }} />
+      <View style={{ height: 1, backgroundColor: colors.lineSoft }} />
     </View>
   );
 }
@@ -49,7 +48,7 @@ export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; 
   const title = t(`proposal.${proposal.action}.title` as MessageKey);
   const reason = t(`proposal.${proposal.action}.reason` as MessageKey);
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.lineSoft, borderStartWidth: 3, borderStartColor: colors.yellow, padding: space.lg, gap: space.md }}>
+    <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: space.lg, gap: space.md }}>
       <T kind="caption" tone="yellow">{t("proposal.kicker")}</T>
       <T kind="title">{title}</T>
       <T kind="body" tone="muted">{reason}</T>
@@ -260,11 +259,7 @@ export function CatalogSurface({
             key={promo.id}
             style={{
               backgroundColor: colors.card,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.lineSoft,
-              borderStartWidth: 3,
-              borderStartColor: colors.blue,
+              borderRadius: 24,
               padding: space.lg,
               gap: space.sm,
             }}
@@ -398,7 +393,7 @@ export function TrackingSurface({
       </Group>
       <Notice>{t("tracking.portal")}</Notice>
       {detail.deliveryCode.available ? (
-        <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: space.lg, gap: space.md, borderWidth: 1, borderColor: colors.lineSoft }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: space.lg, gap: space.md }}>
           <T kind="caption" tone="muted">{t("tracking.code")}</T>
           <T kind="hero">{detail.deliveryCode.code}</T>
           {detail.deliveryCode.confirmedAt ? <Status label={t("tracking.confirm")} tone="green" /> : canConfirm ? (
@@ -548,8 +543,7 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
       <View style={{ backgroundColor: colors.chrome, paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: space.lg }}>
         <Wordmark />
       </View>
-      <View style={{ height: 2, backgroundColor: colors.blue }} />
-      <View style={{ height: 2, backgroundColor: colors.yellow }} />
+      <View style={{ height: 1, backgroundColor: colors.lineSoft }} />
       <View style={{ padding: space.lg, gap: space.lg }}>
         <T kind="caption" tone="blue">{t("signin.kicker")}</T>
         <T kind="hero">{t("signin.title")}</T>
