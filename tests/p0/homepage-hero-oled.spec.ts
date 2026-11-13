@@ -22,25 +22,33 @@ describe("homepage hero OLED fade", () => {
   it("keeps the approved cobalt/charcoal palette in the OLED treatment", () => {
     expect(css).toContain("rgba(48, 50, 52");
     expect(css).toContain("rgba(91, 146, 254");
-    expect(css).toContain("var(--paper-100)");
     expect(css).toContain("var(--cobalt-600)");
     expect(css).not.toMatch(/#7c3aed|#a855f7|purple/i);
   });
 
-  it("keeps hero type on ink/charcoal — cobalt only on the CTA", () => {
-    expect(css).toMatch(/\.brand\s*\{[^}]*color:\s*var\(--ink\)/s);
-    expect(css).toMatch(/\.eyebrow\s*\{[^}]*color:\s*var\(--charcoal\)\s*!important/s);
-    expect(css).toMatch(/\.copy h1\s*\{[^}]*color:\s*var\(--ink\)/s);
+  it("overlays hero type in white on a dark wash — cobalt only on the CTA", () => {
+    expect(css).toMatch(/\.brand\s*\{[^}]*color:\s*#fff/s);
+    expect(css).toMatch(/\.copy h1\s*\{[^}]*color:\s*#fff/s);
     expect(css).toMatch(/\.copy h1 em\s*\{[^}]*color:\s*inherit/s);
+    expect(css).toMatch(/\.eyebrow\s*\{[^}]*color:\s*rgba\(255,\s*255,\s*255/s);
     expect(css).toMatch(/\.primary\s*\{[^}]*background:\s*var\(--cobalt-600\)/s);
-    expect(css).not.toMatch(/\.eyebrow\s*\{[^}]*color:\s*var\(--cobalt/s);
+    expect(css).not.toMatch(/\.copy h1\s*\{[^}]*color:\s*var\(--ink\)/s);
     expect(css).not.toMatch(/\.copy h1 em\s*\{[^}]*color:\s*var\(--cobalt/s);
     expect(css).not.toMatch(/color:\s*var\(--amber\)/i);
   });
 
-  it("keeps an opaque paper band under bottom-aligned mobile copy", () => {
+  it("keeps a dark charcoal band under bottom-aligned mobile copy", () => {
     expect(css).toContain("Copy is bottom-aligned below 950px");
-    expect(css).toContain("var(--paper-100) 100%");
+    expect(css).toContain("#303234 100%");
     expect(css).toContain("align-items: end");
+  });
+
+  it("offers the Arabic 48-hour funder pathway without claiming HV lends", () => {
+    expect(page).toContain('lang="ar"');
+    expect(page).toContain('dir="rtl"');
+    expect(page).toContain("خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة");
+    expect(page).toContain("HotelsVendors does not lend");
+    expect(page).toContain("/solutions/funders");
+    expect(page).not.toMatch(/HotelsVendors disburses/i);
   });
 });

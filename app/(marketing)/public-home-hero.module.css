@@ -2,8 +2,8 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  color: var(--ink);
-  background: var(--paper-100);
+  color: #fff;
+  background: var(--charcoal);
 }
 
 .stage {
@@ -29,7 +29,7 @@
 .mediaImage img {
   object-fit: cover;
   object-position: 58% center;
-  filter: saturate(0.9) contrast(1.1) brightness(0.78);
+  filter: saturate(0.9) contrast(1.12) brightness(0.72);
   transform: scale(1.02);
 }
 
@@ -38,9 +38,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(95% 80% at 70% 45%, transparent 0%, rgba(48, 50, 52, 0.28) 48%, rgba(48, 50, 52, 0.78) 100%),
-    linear-gradient(180deg, rgba(48, 50, 52, 0.36) 0%, transparent 30%, transparent 58%, rgba(48, 50, 52, 0.62) 100%),
-    linear-gradient(90deg, rgba(48, 50, 52, 0.42) 0%, rgba(48, 50, 52, 0.1) 38%, transparent 58%);
+    radial-gradient(95% 80% at 70% 45%, transparent 0%, rgba(48, 50, 52, 0.34) 48%, rgba(48, 50, 52, 0.82) 100%),
+    linear-gradient(180deg, rgba(48, 50, 52, 0.42) 0%, transparent 30%, transparent 58%, rgba(48, 50, 52, 0.68) 100%),
+    linear-gradient(90deg, rgba(48, 50, 52, 0.58) 0%, rgba(48, 50, 52, 0.22) 38%, transparent 62%);
   mix-blend-mode: multiply;
 }
 
@@ -64,25 +64,24 @@
   opacity: 0.9;
 }
 
-/* Image extends under the title, dissolving into paper — no hard cream wall */
+/* Dark wash under white overlay title — image remains full-bleed */
 .fade {
   position: absolute;
   inset: 0;
   background:
     linear-gradient(
       90deg,
-      color-mix(in srgb, var(--paper-100) 94%, transparent) 0%,
-      color-mix(in srgb, var(--paper-100) 78%, transparent) 16%,
-      color-mix(in srgb, var(--paper-100) 48%, transparent) 34%,
-      color-mix(in srgb, var(--paper-100) 18%, transparent) 52%,
-      transparent 70%
+      rgba(48, 50, 52, 0.88) 0%,
+      rgba(48, 50, 52, 0.62) 22%,
+      rgba(48, 50, 52, 0.28) 48%,
+      transparent 72%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--paper-100) 42%, transparent) 0%,
-      transparent 24%,
-      transparent 76%,
-      color-mix(in srgb, var(--paper-100) 28%, transparent) 100%
+      rgba(48, 50, 52, 0.38) 0%,
+      transparent 26%,
+      transparent 72%,
+      rgba(48, 50, 52, 0.42) 100%
     );
 }
 
@@ -103,6 +102,7 @@
   width: min(100%, 34rem);
   padding: 0;
   background: transparent;
+  color: #fff;
 }
 
 .brand {
@@ -112,14 +112,14 @@
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
-  /* Titles stay ink/charcoal — cobalt is CTA/signal only (DESIGN.md). */
-  color: var(--ink);
+  color: #fff;
+  text-shadow: 0 1px 18px rgba(15, 18, 22, 0.35);
 }
 
 .eyebrow {
   margin: 0 0 18px;
-  /* Override global amber eyebrow force; charcoal metadata, not gold or cobalt. */
-  color: var(--charcoal) !important;
+  /* White metadata on the image overlay — not amber/cobalt type. */
+  color: rgba(255, 255, 255, 0.78) !important;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -135,12 +135,12 @@
   line-height: 1.08;
   letter-spacing: -0.03em;
   text-wrap: balance;
-  color: var(--ink);
-  text-shadow: 0 1px 0 color-mix(in srgb, var(--paper-100) 55%, transparent);
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(15, 18, 22, 0.4);
 }
 
 .copy h1 em {
-  /* One tone within the title — no colored emphasis words. */
+  /* One tone within the title — white overlay, no colored emphasis. */
   font-style: normal;
   color: inherit;
   -webkit-text-fill-color: currentColor;
@@ -148,11 +148,41 @@
 }
 
 .lead {
-  max-width: 38ch;
+  max-width: 42ch;
   margin: 16px 0 0;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.86);
   font-size: 15.5px;
   line-height: 1.65;
+}
+
+.funderOption {
+  max-width: 36ch;
+  margin: 18px 0 0;
+  color: #fff;
+  font-size: clamp(15px, 1.6vw, 17px);
+  font-weight: 600;
+  line-height: 1.7;
+  letter-spacing: 0;
+  text-shadow: 0 1px 14px rgba(15, 18, 22, 0.35);
+}
+
+.funderOptionNote {
+  max-width: 42ch;
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.funderOptionNote a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.funderOptionNote a:hover {
+  color: color-mix(in srgb, #fff 88%, var(--cobalt-600));
 }
 
 .actions {
@@ -192,14 +222,14 @@
 }
 
 .secondary {
-  border-color: var(--line);
-  background: color-mix(in srgb, var(--paper-0) 86%, transparent);
-  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .secondary:hover {
-  background: var(--paper-0);
-  border-color: var(--charcoal);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #fff;
 }
 
 @media (max-width: 950px) {
@@ -211,21 +241,21 @@
     object-position: 62% 30%;
   }
 
-  /* Copy is bottom-aligned below 950px — keep paper opaque under that band */
+  /* Copy is bottom-aligned below 950px — keep a dark band under white type */
   .fade {
     background:
       linear-gradient(
         180deg,
         transparent 0%,
-        transparent 28%,
-        color-mix(in srgb, var(--paper-100) 35%, transparent) 48%,
-        color-mix(in srgb, var(--paper-100) 78%, transparent) 68%,
-        color-mix(in srgb, var(--paper-100) 94%, transparent) 84%,
-        var(--paper-100) 100%
+        transparent 24%,
+        rgba(48, 50, 52, 0.28) 46%,
+        rgba(48, 50, 52, 0.72) 68%,
+        rgba(48, 50, 52, 0.92) 86%,
+        #303234 100%
       ),
       linear-gradient(
         90deg,
-        color-mix(in srgb, var(--paper-100) 28%, transparent) 0%,
+        rgba(48, 50, 52, 0.35) 0%,
         transparent 58%
       );
   }
@@ -242,8 +272,9 @@
 
   .brand,
   .copy h1,
-  .lead {
-    text-shadow: 0 1px 0 color-mix(in srgb, var(--paper-100) 70%, transparent);
+  .lead,
+  .funderOption {
+    text-shadow: 0 2px 18px rgba(15, 18, 22, 0.55);
   }
 }
 
@@ -257,7 +288,8 @@
     max-width: 20ch;
   }
 
-  .lead {
+  .lead,
+  .funderOption {
     font-size: 15px;
   }
 

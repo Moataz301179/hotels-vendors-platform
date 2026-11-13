@@ -1,11 +1,16 @@
 # HotelsVendors — Production-Ready Handover
 
+## Homepage hero white overlay + Arabic funder option — 2026-11-13 (23:41 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Hero title/brand/lead overlay in white on a charcoal wash (full-bleed image retained). Cobalt remains CTA-only.
+- Added Arabic vendor option: «خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة» with English note that HV does not lend + link to `/solutions/funders`.
+- Verification: vitest homepage-hero-oled (5 passed); Playwright white overlay colors + Arabic string present.
+
 ## Homepage hero type colors — 2026-11-13 (23:27 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
-- Violation: hero type used amber eyebrows (global `!important`) and cobalt on `h1 em`, against DESIGN.md (“one tone within the entire title; no colored emphasis words”) and the approved rule that `#5B92FE` is CTA/signal only.
-- Fix: brand + h1 + em → ink; eyebrow → charcoal; lead stays muted; primary CTA keeps cobalt. Global eyebrow force switched from amber to charcoal; public `em` title rules inherit ink.
-- Verification: vitest homepage-hero-oled (4 passed); Playwright computed colors brand/h1/em ink, eyebrow charcoal, primary `#5B92FE`.
+- Earlier pass removed amber eyebrows and cobalt `h1 em`. Superseded by white overlay above for the hero media stage.
 
 ## Homepage carousel tray/lamp rejection — 2026-11-13 (23:25 Africa/Cairo)
 
