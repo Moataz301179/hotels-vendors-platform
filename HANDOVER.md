@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## Join section charcoal fill rejected — 2026-11-13 (23:43 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected: Join the network band on `var(--charcoal)` / `#303234`.
+- Fix: warm `var(--paper-100)` surface with ink titles, charcoal labels, cobalt only on path actions/icons.
+- Verification: vitest homepage-join-marketing (3 passed); Playwright join bg `rgb(241,240,232)`.
+
 ## Homepage hero white overlay + Arabic funder option — 2026-11-13 (23:41 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.

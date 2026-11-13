@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const page = readFileSync("app/(marketing)/page.tsx", "utf8");
+const css = readFileSync("app/(marketing)/public-home.module.css", "utf8");
 
 describe("homepage join marketing", () => {
   it("replaces the rejected directory and operating-network copy", () => {
@@ -27,5 +28,11 @@ describe("homepage join marketing", () => {
     expect(page).toContain('href: "/suppliers/signup"');
     expect(page).toContain('href: "/hovin"');
     expect(page).toContain("/login?redirect_url=%2Fworkspace%2Fmarketplace");
+  });
+
+  it("uses warm paper for the join band — not the rejected charcoal fill", () => {
+    expect(css).toMatch(/\.join\{[^}]*background:var\(--paper-100\)/s);
+    expect(css).toMatch(/\.join h2\{[^}]*color:var\(--ink\)/s);
+    expect(css).not.toMatch(/\.join\{[^}]*background:var\(--charcoal\)/s);
   });
 });
