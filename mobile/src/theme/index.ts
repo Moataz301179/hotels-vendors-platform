@@ -4,7 +4,9 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
  * Color allocation (owner rules + travel-app reference sample):
  * - Page field `#303234` — soft charcoal only; fading into black is rejected
  * - Grey pans/fields with a fine thin outline frame
+ * - When a screen has two pans, the other (secondary) pan is white fill
  * - `#5B92FE` for CTA fills only — regular (non-bold) black type on the fill
+ * - Lime green secondary accent for special notifications only (minimal use)
  * - Blue is never used for text on grey, and never as a full content pan fill
  * - Yellow type / yellow backfill rejected
  * - Large widgets stay short — title / facts / action
@@ -19,20 +21,29 @@ export const colors = {
   paperMid: "#343638",
   paperRaised: "#3a3c3e",
   card: "#3a3c3e",
+  /** Secondary pan fill when two pans share a screen. */
+  cardWhite: "#ffffff",
   chrome: "#303234",
   chromeText: "#ffffff",
   ink: "#ffffff",
+  inkOnWhite: "#1a1b1c",
   muted: "#c5c6c7",
+  mutedOnWhite: "#5c5e60",
   line: "rgba(255,255,255,0.14)",
   lineSoft: "rgba(255,255,255,0.08)",
+  lineOnWhite: "rgba(0,0,0,0.1)",
   /** Fine thin outline frame on pans (reference sample). */
   frame: "rgba(255,255,255,0.12)",
+  frameOnWhite: "rgba(0,0,0,0.12)",
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",
   onBlue: "#000000",
   ice: "#5B92FE",
   iceWash: "#3a3c3e",
+  /** Secondary accent — special notifications only. */
+  lime: "#C6F34D",
+  onLime: "#000000",
   green: "#3f9a63",
   danger: "#e0705c",
   dangerSoft: "#5a2a24",
@@ -117,13 +128,22 @@ export const radius = {
   pill: 999,
 } as const;
 
-/** Reference pan — grey fill + fine thin outline frame. */
+/** Primary pan — charcoal fill + fine thin outline frame. */
 export const panStyle: ViewStyle = {
   backgroundColor: colors.card,
   borderRadius: radius.lg,
   padding: space.lg,
   borderWidth: 1,
   borderColor: colors.frame,
+};
+
+/** Secondary pan — white fill + fine thin outline (when two pans share a screen). */
+export const panWhiteStyle: ViewStyle = {
+  backgroundColor: colors.cardWhite,
+  borderRadius: radius.lg,
+  padding: space.lg,
+  borderWidth: 1,
+  borderColor: colors.frameOnWhite,
 };
 
 export const chipStyle: ViewStyle = {

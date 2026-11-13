@@ -46,11 +46,19 @@ export function Page({
   );
 }
 
-export function ProposalBlock({ proposal, onPress }: { proposal: PhoneProposal; onPress: () => void }) {
+export function ProposalBlock({
+  proposal,
+  onPress,
+  tone = "white",
+}: {
+  proposal: PhoneProposal;
+  onPress: () => void;
+  tone?: "dark" | "white";
+}) {
   const { t } = useLocale();
   const title = t(`proposal.${proposal.action}.title` as MessageKey);
   return (
-    <Pan style={{ gap: space.md }}>
+    <Pan tone={tone} style={{ gap: space.md }}>
       <T kind="title">{title}</T>
       {proposal.evidence.length ? (
         <View style={{ gap: 8 }}>
@@ -92,17 +100,17 @@ export function HomeSurface({
   return (
     <Page testID={testID} refreshing={refreshing} onRefresh={onRefresh}>
       {review ? <Notice>{t("state.review")}</Notice> : null}
-      {queued ? <Notice>{`${queued} · ${t("home.queued")}`}</Notice> : null}
+      {queued ? <Notice tone="special">{`${queued} · ${t("home.queued")}`}</Notice> : null}
       {home.plan.workspace === "hotel" || home.plan.workspace === "supplier" ? <CommodityStrap /> : null}
       <Pan style={{ gap: 4 }}>
         <T kind="caption" tone="muted">{t(workspaceTitle(home.plan.workspace))}</T>
         <T kind="title">{home.account.name || home.account.email || home.account.role}</T>
       </Pan>
-      <ProposalBlock proposal={home.proposal} onPress={() => onOpenProposal(home.proposal)} />
+      <ProposalBlock tone="white" proposal={home.proposal} onPress={() => onOpenProposal(home.proposal)} />
       <View style={{ gap: space.sm }}>
         <T kind="caption" tone="muted">{t("home.queue")}</T>
         {home.tasks.length === 0 ? <Notice>{t("home.empty")}</Notice> : (
-          <Group>
+          <Group tone="white">
             {home.tasks.map((task, index) => {
               const copy = taskCopy(task, t);
               return (
@@ -247,8 +255,8 @@ export function CatalogSurface({
       <T kind="title">{t("catalog.title")}</T>
       <T kind="caption" tone="muted">{t("catalog.promotions")}</T>
       <View style={{ gap: space.sm }}>
-        {promotions.map((promo) => (
-          <Pan key={promo.id} style={{ gap: space.md }}>
+        {promotions.map((promo, index) => (
+          <Pan key={promo.id} tone={index === 0 ? "dark" : "white"} style={{ gap: space.md }}>
             <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
             <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
             <Button

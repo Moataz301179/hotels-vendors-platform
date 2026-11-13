@@ -1,10 +1,13 @@
-import { type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { Image, Pressable, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useLocale } from "../i18n";
-import { colors, fonts, onBlueType, panStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
+import { colors, fonts, onBlueType, panStyle, panWhiteStyle, pillCtaStyle, radius, space, type as typeScale } from "../theme";
 import type { MessageKey } from "../i18n/messages";
 
 const wordmark = require("../../assets/hovin-wordmark.png");
+
+type PanSurface = "dark" | "light";
+const PanSurfaceContext = createContext<PanSurface>("dark");
 
 export function Wordmark({ width = 132 }: { width?: number }) {
   return (
@@ -17,9 +20,25 @@ export function Wordmark({ width = 132 }: { width?: number }) {
   );
 }
 
-/** Grey pan with fine thin outline frame (travel-app sample). */
-export function Pan({ children, style }: { children: ReactNode; style?: ViewStyle }) {
-  return <View style={[panStyle, style]}>{children}</View>;
+/**
+ * Primary pan = charcoal + thin outline.
+ * Secondary pan (`tone="white"`) = white fill when two pans share a screen.
+ */
+export function Pan({
+  children,
+  style,
+  tone = "dark",
+}: {
+  children: ReactNode;
+  style?: ViewStyle;
+  tone?: PanSurface | "white";
+}) {
+  const surface: PanSurface = tone === "white" || tone === "light" ? "light" : "dark";
+  return (
+    <PanSurfaceContext.Provider value={surface}>
+      <View style={[surface === "light" ? panWhiteStyle : panStyle, style]}>{children}</View>
+    </PanSurfaceContext.Provider>
+  );
 }
 
 export function T({
@@ -34,10 +53,12 @@ export function T({
   style?: ViewStyle | object;
 }) {
   const { isRtl } = useLocale();
-  const color = tone === "chrome" ? colors.chromeText
-    : tone === "muted" ? colors.muted
-      : tone === "danger" ? colors.danger
-        : colors.ink;
+  const surface = useContext(PanSurfaceContext);
+  const onLight = surface === "light";
+  const color = tone === "danger" ? colors.danger
+    : tone === "chrome" ? colors.chromeText
+      : tone === "muted" ? (onLight ? colors.mutedOnWhite : colors.muted)
+        : (onLight ? colors.inkOnWhite : colors.ink);
   return (
     <Text
       allowFontScaling
@@ -53,12 +74,12 @@ function ctaFill(tone: "blue" | "chrome" | "quiet") {
     return {
       backgroundColor: "#e8e9ea",
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.35)",
+      borderColor: "rgba(0,0,0,0.12)",
     };
   }
   if (tone === "quiet") {
     return {
-      backgroundColor: colors.card,
+      backgroundColor: "transparent",
       borderWidth: 1,
       borderColor: colors.frame,
     };
@@ -79,7 +100,9 @@ export function Button({
   disabled?: boolean;
   testID?: string;
 }) {
+  const surface = useContext(PanSurfaceContext);
   const blackType = tone === "blue" || tone === "chrome";
+  const quietOnLight = tone === "quiet" && surface === "light";
   return (
     <Pressable
       accessibilityRole="button"
@@ -92,6 +115,7 @@ export function Button({
         alignItems: "center",
         justifyContent: "center",
         ...ctaFill(tone),
+        ...(quietOnLight ? { borderColor: colors.frameOnWhite, backgroundColor: colors.cardWhite } : null),
         opacity: disabled ? 0.45 : pressed ? 0.82 : 1,
         transform: [{ scale: pressed && !disabled ? 0.985 : 1 }],
       })}
@@ -100,7 +124,11 @@ export function Button({
         allowFontScaling
         style={blackType
           ? onBlueType
-          : [typeScale.body, { color: colors.ink, fontFamily: fonts.bodyRegular, fontWeight: "400" }]}
+          : [typeScale.body, {
+            color: quietOnLight ? colors.inkOnWhite : colors.ink,
+            fontFamily: fonts.bodyRegular,
+            fontWeight: "400",
+          }]}
       >
         {label}
       </Text>
@@ -136,11 +164,20 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
   );
 }
 
-export function Group({ children }: { children: ReactNode }) {
+export function Group({
+  children,
+  tone = "dark",
+}: {
+  children: ReactNode;
+  tone?: PanSurface | "white";
+}) {
+  const surface: PanSurface = tone === "white" || tone === "light" ? "light" : "dark";
   return (
-    <View style={[panStyle, { padding: 0, overflow: "hidden" }]}>
-      {children}
-    </View>
+    <PanSurfaceContext.Provider value={surface}>
+      <View style={[surface === "light" ? panWhiteStyle : panStyle, { padding: 0, overflow: "hidden" }]}>
+        {children}
+      </View>
+    </PanSurfaceContext.Provider>
   );
 }
 
@@ -158,13 +195,16 @@ export function Row({
   testID?: string;
 }) {
   const { isRtl } = useLocale();
+  const surface = useContext(PanSurfaceContext);
+  const hair = surface === "light" ? colors.lineOnWhite : colors.lineSoft;
+  const chevron = surface === "light" ? colors.mutedOnWhite : colors.muted;
   const body = (
     <View style={{
       minHeight: 60,
       paddingHorizontal: space.md,
       paddingVertical: space.md,
-      borderBottomWidth: hairline ? StyleHairline : 0,
-      borderBottomColor: colors.lineSoft,
+      borderBottomWidth: hairline ? 1 : 0,
+      borderBottomColor: hair,
       flexDirection: isRtl ? "row-reverse" : "row",
       alignItems: "center",
       gap: space.md,
@@ -173,7 +213,7 @@ export function Row({
         <T kind="headline">{title}</T>
         {detail ? <T kind="caption" tone="muted">{detail}</T> : null}
       </View>
-      {onPress ? <Text style={{ color: colors.muted, fontSize: 20, fontFamily: fonts.bodyRegular }}>{isRtl ? "‹" : "›"}</Text> : null}
+      {onPress ? <Text style={{ color: chevron, fontSize: 20, fontFamily: fonts.bodyRegular }}>{isRtl ? "‹" : "›"}</Text> : null}
     </View>
   );
   if (!onPress) return body;
@@ -184,9 +224,22 @@ export function Row({
   );
 }
 
-const StyleHairline = 1;
-
-export function Status({ label, tone }: { label: string; tone: "blue" | "green" | "quiet" }) {
+export function Status({ label, tone }: { label: string; tone: "blue" | "green" | "quiet" | "lime" }) {
+  if (tone === "lime") {
+    return (
+      <View style={{
+        alignSelf: "flex-start",
+        backgroundColor: colors.lime,
+        borderRadius: radius.pill,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.14)",
+      }}>
+        <Text allowFontScaling style={[onBlueType, { fontSize: 12, lineHeight: 16, color: colors.onLime }]}>{label}</Text>
+      </View>
+    );
+  }
   const background = tone === "green" ? "#14301f" : tone === "quiet" ? colors.paperRaised : colors.blue;
   const color = tone === "green" ? colors.green : tone === "quiet" ? colors.ink : colors.onBlue;
   const isBlue = tone === "blue";
@@ -212,7 +265,26 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "green" 
   );
 }
 
-export function Notice({ children, tone = "paper" }: { children: string; tone?: "paper" | "danger" }) {
+export function Notice({ children, tone = "paper" }: { children: string; tone?: "paper" | "danger" | "special" }) {
+  if (tone === "special") {
+    return (
+      <View style={{
+        backgroundColor: colors.lime,
+        borderRadius: radius.md,
+        paddingHorizontal: space.md,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.14)",
+      }}>
+        <Text
+          allowFontScaling
+          style={[typeScale.body, { color: colors.onLime, fontFamily: fonts.bodyRegular, fontWeight: "400" }]}
+        >
+          {children}
+        </Text>
+      </View>
+    );
+  }
   return (
     <View style={{
       backgroundColor: tone === "danger" ? colors.dangerSoft : colors.card,
