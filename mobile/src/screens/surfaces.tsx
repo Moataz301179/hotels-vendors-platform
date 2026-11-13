@@ -110,7 +110,7 @@ export function HomeSurface({
       <View style={{ gap: space.sm }}>
         <T kind="caption" tone="muted">{t("home.queue")}</T>
         {home.tasks.length === 0 ? <Notice>{t("home.empty")}</Notice> : (
-          <Group tone="white">
+          <Group>
             {home.tasks.map((task, index) => {
               const copy = taskCopy(task, t);
               return (

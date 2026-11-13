@@ -164,17 +164,11 @@ export function Field({ label, ...props }: { label: string } & TextInputProps) {
   );
 }
 
-export function Group({
-  children,
-  tone = "dark",
-}: {
-  children: ReactNode;
-  tone?: PanSurface | "white";
-}) {
-  const surface: PanSurface = tone === "white" || tone === "light" ? "light" : "dark";
+/** List widget — charcoal frame only; white fill is for pans, not widgets. */
+export function Group({ children }: { children: ReactNode }) {
   return (
-    <PanSurfaceContext.Provider value={surface}>
-      <View style={[surface === "light" ? panWhiteStyle : panStyle, { padding: 0, overflow: "hidden" }]}>
+    <PanSurfaceContext.Provider value="dark">
+      <View style={[panStyle, { padding: 0, overflow: "hidden" }]}>
         {children}
       </View>
     </PanSurfaceContext.Provider>
