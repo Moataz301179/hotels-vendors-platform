@@ -24,17 +24,17 @@ export function T({
   style,
 }: {
   kind?: keyof typeof typeScale;
-  tone?: "ink" | "muted" | "chrome" | "blue" | "danger" | "yellow";
+  // Blue is fill-only. Do not expose a blue text tone on grey.
+  tone?: "ink" | "muted" | "chrome" | "danger" | "yellow";
   children: string;
   style?: ViewStyle | object;
 }) {
   const { isRtl } = useLocale();
   const color = tone === "chrome" ? colors.chromeText
     : tone === "muted" ? colors.muted
-      : tone === "blue" ? colors.blue
-        : tone === "yellow" ? colors.yellow
-          : tone === "danger" ? colors.danger
-            : colors.ink;
+      : tone === "yellow" ? colors.yellow
+        : tone === "danger" ? colors.danger
+          : colors.ink;
   return (
     <Text
       allowFontScaling

@@ -1,7 +1,9 @@
 /**
- * Owner tokens:
- * - Page field below pans/widgets `#303234` with white type
- * - Accent / pill fill `#5B92FE` with black type
+ * Color allocation (owner rules):
+ * - Page field `#303234` — white type for primary copy
+ * - `#5B92FE` — CTA / pan / pill fills only, with black type on the fill
+ * - Blue is never used for text on grey
+ * - Secondary copy uses light grey; prefer white when contrast matters
  */
 export const colors = {
   paper: "#303234",
@@ -10,10 +12,10 @@ export const colors = {
   chrome: "#303234",
   chromeText: "#ffffff",
   ink: "#ffffff",
-  muted: "#b5b7b9",
+  muted: "#d8d9da",
   line: "#4a4c4e",
   lineSoft: "#444648",
-  /** Accent and pill / panel fill — black type on this fill. */
+  /** Fill only — never for type on grey. Black type sits on this fill. */
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",

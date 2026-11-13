@@ -74,7 +74,7 @@ export function CommodityStrap({
   return (
     <View style={{ gap: space.sm }} testID="commodity-strap">
       <View style={{ flexDirection: isRtl ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" }}>
-        <T kind="caption" tone="blue">{t("market.strap")}</T>
+        <T kind="caption">{t("market.strap")}</T>
         <T kind="caption" tone="muted">{t("market.reference")}</T>
       </View>
       <View style={{ overflow: "hidden", width: "100%", borderRadius: radius.lg, backgroundColor: colors.paperRaised, paddingVertical: space.sm }}>

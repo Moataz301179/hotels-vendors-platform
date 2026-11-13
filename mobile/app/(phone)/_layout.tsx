@@ -30,7 +30,7 @@ export default function PhoneLayout() {
         headerTintColor: colors.chromeText,
         headerTitle: () => <Wordmark width={112} />,
         tabBarStyle: { backgroundColor: colors.chrome, borderTopColor: colors.lineSoft },
-        tabBarActiveTintColor: colors.blue,
+        tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
         sceneStyle: { backgroundColor: colors.paper },
       }}

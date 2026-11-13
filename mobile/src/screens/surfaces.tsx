@@ -36,7 +36,7 @@ export function Page({
       testID={testID}
       contentContainerStyle={{ padding: space.lg, gap: space.lg, backgroundColor: colors.paper }}
       style={{ flex: 1, backgroundColor: colors.paper }}
-      refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.blue} /> : undefined}
+      refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} /> : undefined}
     >
       {children}
     </ScrollView>
@@ -94,7 +94,7 @@ export function HomeSurface({
       <View style={{ gap: space.xs }}>
         <T kind="caption" tone="muted">{t(workspaceTitle(home.plan.workspace))}</T>
         <T kind="hero">{home.account.name || home.account.email || home.account.role}</T>
-        <T kind="body" tone="muted">{t(workspaceSummary(home.plan.workspace))}</T>
+        <T kind="body">{t(workspaceSummary(home.plan.workspace))}</T>
       </View>
       <ProposalBlock proposal={home.proposal} onPress={() => onOpenProposal(home.proposal)} />
       <View style={{ gap: space.sm }}>
@@ -267,7 +267,7 @@ export function CatalogSurface({
             <Status label={arabic ? promo.badgeAr : promo.badgeEn} tone="yellow" />
             <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
             <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
-            <T kind="label" tone="blue">{arabic ? promo.itemsAr : promo.itemsEn}</T>
+            <T kind="label">{arabic ? promo.itemsAr : promo.itemsEn}</T>
             <T kind="caption" tone="muted">{arabic ? promo.unitHintAr : promo.unitHintEn}</T>
             <Button
               label={t("catalog.request")}
@@ -378,7 +378,7 @@ export function TrackingSurface({
   const { t } = useLocale();
   return (
     <Page testID={testID}>
-      <T kind="caption" tone="blue">{t("tracking.referred")}</T>
+      <T kind="caption" tone="muted">{t("tracking.referred")}</T>
       <T kind="title">{detail.orderNumber}</T>
       <Status label={detail.status} tone="blue" />
       <Group>
@@ -478,7 +478,7 @@ export function ReceiveSurface({
   const { t } = useLocale();
   return (
     <Page testID={testID}>
-      <T kind="caption" tone="blue">{t("receive.title")}</T>
+      <T kind="caption" tone="muted">{t("receive.title")}</T>
       <T kind="title">{orderNumber}</T>
       {lines.map((line) => (
         <View key={line.id} style={{ gap: space.sm }}>
@@ -545,9 +545,9 @@ export function SignInSurface({ onSignIn, failed, testID = "screen-sign-in" }: {
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineSoft }} />
       <View style={{ padding: space.lg, gap: space.lg }}>
-        <T kind="caption" tone="blue">{t("signin.kicker")}</T>
+        <T kind="caption">{t("signin.kicker")}</T>
         <T kind="hero">{t("signin.title")}</T>
-        <T kind="body" tone="muted">{t("signin.body")}</T>
+        <T kind="body">{t("signin.body")}</T>
         {failed ? <Notice tone="danger">{t("signin.failed")}</Notice> : null}
         <Button label={t("action.signIn")} onPress={onSignIn} testID="sign-in" />
       </View>
@@ -560,7 +560,7 @@ export function ConfigSurface({ testID = "screen-config" }: { testID?: string })
   return (
     <View testID={testID} style={{ flex: 1, backgroundColor: colors.paper, padding: space.lg, justifyContent: "center", gap: space.md }}>
       <T kind="title">{t("config.title")}</T>
-      <T kind="body" tone="muted">{t("config.body")}</T>
+      <T kind="body">{t("config.body")}</T>
     </View>
   );
 }
