@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-11",
+  "version": "2026-11-13",
   "source": {
     "sourceUrl": "internal://hotelsvendors/hospitality-operating-catalog/v1",
     "sourceType": "INTERNAL_HOSPITALITY_SPECIFICATION",
@@ -91,7 +91,7 @@
       "name": "Sunflower cooking oil",
       "nameAr": "زيت دوار الشمس للطبخ",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Cooking fats",
+      "subcategory": "Cooking fats & oils",
       "description": "Generic cooking-oil specification for hotel kitchen preparation.",
       "attributes": {
         "use": "Cooking fats"
@@ -147,7 +147,7 @@
       "name": "UHT whole milk",
       "nameAr": "حليب كامل الدسم طويل الأجل",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Dairy",
+      "subcategory": "Dairy & eggs",
       "description": "Generic long-life milk specification for kitchen and breakfast service.",
       "attributes": {
         "use": "Dairy"
@@ -166,7 +166,7 @@
       "name": "Salted butter",
       "nameAr": "زبدة مملحة",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Dairy",
+      "subcategory": "Dairy & eggs",
       "description": "Generic butter specification for pastry and breakfast preparation.",
       "attributes": {
         "use": "Dairy"
@@ -184,7 +184,7 @@
       "name": "Fresh shell eggs",
       "nameAr": "بيض طازج",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Dairy",
+      "subcategory": "Dairy & eggs",
       "description": "Generic shell-egg specification for hotel breakfast and pastry preparation.",
       "attributes": {
         "use": "Dairy"
@@ -203,7 +203,7 @@
       "name": "Frozen chicken breast",
       "nameAr": "صدور دجاج مجمدة",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Protein",
+      "subcategory": "Frozen foods",
       "description": "Generic frozen poultry specification for hotel kitchen preparation.",
       "attributes": {
         "use": "Protein"
@@ -222,7 +222,7 @@
       "name": "Frozen beef cubes",
       "nameAr": "مكعبات لحم بقري مجمدة",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Protein",
+      "subcategory": "Frozen foods",
       "description": "Generic frozen beef specification for hotel kitchen preparation.",
       "attributes": {
         "use": "Protein"
@@ -241,7 +241,7 @@
       "name": "Frozen white fish fillet",
       "nameAr": "فيليه سمك أبيض مجمد",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Protein",
+      "subcategory": "Frozen foods",
       "description": "Generic frozen fish specification for hotel kitchen preparation.",
       "attributes": {
         "use": "Protein"
@@ -261,7 +261,7 @@
       "name": "Black tea leaves",
       "nameAr": "أوراق شاي أسود",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Beverage",
+      "subcategory": "Hot beverages",
       "description": "Generic tea specification for restaurant and room-service beverage preparation.",
       "attributes": {
         "use": "Beverage"
@@ -280,7 +280,7 @@
       "name": "Roasted coffee beans",
       "nameAr": "بن محمص",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Beverage",
+      "subcategory": "Hot beverages",
       "description": "Generic coffee specification for hotel beverage preparation.",
       "attributes": {
         "use": "Beverage"
@@ -299,7 +299,7 @@
       "name": "Still mineral water, 330 ml",
       "nameAr": "مياه معدنية ساكنة، ٣٣٠ مل",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Beverage",
+      "subcategory": "Soft drinks",
       "description": "Generic bottled-water specification for restaurant and room service.",
       "attributes": {
         "use": "Beverage"
@@ -319,7 +319,7 @@
       "name": "Orange juice",
       "nameAr": "عصير برتقال",
       "category": "FOOD_BEVERAGE",
-      "subcategory": "Beverage",
+      "subcategory": "Juices",
       "description": "Generic juice specification for breakfast and restaurant service.",
       "attributes": {
         "use": "Beverage"
@@ -1127,7 +1127,7 @@
       "itemType": "PRODUCT",
       "name": "LED lamp, E27, warm white",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Lighting",
+      "subcategory": "Lighting fixtures",
       "description": "Generic lamp specification for guest-room and corridor lighting.",
       "attributes": {
         "use": "Lighting"
@@ -1201,7 +1201,7 @@
       "itemType": "PRODUCT",
       "name": "Interior wall paint, white",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Finishes",
+      "subcategory": "Indoor finishes",
       "description": "Generic paint specification for guest-room and corridor refinishing.",
       "attributes": {
         "use": "Finishes"
@@ -1220,7 +1220,7 @@
       "itemType": "PRODUCT",
       "name": "Sanitary silicone sealant",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Finishes",
+      "subcategory": "Indoor finishes",
       "description": "Generic sealant specification for bathroom maintenance.",
       "attributes": {
         "use": "Finishes"
@@ -1364,7 +1364,7 @@
       "itemType": "PRODUCT",
       "name": "Assorted maintenance screw kit",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Hardware",
+      "subcategory": "Tools & hardware",
       "description": "Generic fastener specification for hotel maintenance.",
       "attributes": {
         "use": "Hardware"
@@ -1383,7 +1383,7 @@
       "itemType": "PRODUCT",
       "name": "Paint roller and frame",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Finishes",
+      "subcategory": "Indoor finishes",
       "description": "Generic roller specification for interior refinishing.",
       "attributes": {
         "use": "Finishes"
@@ -1402,7 +1402,7 @@
       "itemType": "PRODUCT",
       "name": "Paintable gap filler",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Finishes",
+      "subcategory": "Indoor finishes",
       "description": "Generic gap-filler specification for interior maintenance.",
       "attributes": {
         "use": "Finishes"
@@ -1457,7 +1457,7 @@
       "itemType": "PRODUCT",
       "name": "Cable tie assortment",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Hardware",
+      "subcategory": "Tools & hardware",
       "description": "Generic cable-tie specification for maintenance and low-voltage work.",
       "attributes": {
         "use": "Hardware"
@@ -1475,7 +1475,7 @@
       "itemType": "PRODUCT",
       "name": "Blank equipment tag",
       "category": "ENGINEERING_MRO",
-      "subcategory": "Hardware",
+      "subcategory": "Tools & hardware",
       "description": "Generic equipment-tag specification for maintenance identification.",
       "attributes": {
         "use": "Hardware"
@@ -1493,7 +1493,7 @@
       "itemType": "PRODUCT",
       "name": "Fibre guest pillow",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Beds & mattresses",
       "description": "Generic pillow specification for guest-room bedding.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1511,7 +1511,7 @@
       "itemType": "PRODUCT",
       "name": "Hotel mattress, king size",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Beds & mattresses",
       "description": "Generic mattress specification for king guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1530,7 +1530,7 @@
       "itemType": "PRODUCT",
       "name": "Guest-room bed base, king size",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Beds & mattresses",
       "description": "Generic bed-base specification for king guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1549,7 +1549,7 @@
       "itemType": "PRODUCT",
       "name": "Upholstered headboard, king size",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Beds & mattresses",
       "description": "Generic headboard specification for king guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1568,7 +1568,7 @@
       "itemType": "PRODUCT",
       "name": "Guest-room nightstand",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Guest room seating & desks",
       "description": "Generic nightstand specification for guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1586,7 +1586,7 @@
       "itemType": "PRODUCT",
       "name": "Guest-room writing desk",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Guest room seating & desks",
       "description": "Generic desk specification for guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1605,7 +1605,7 @@
       "itemType": "PRODUCT",
       "name": "Guest-room desk chair",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Guest room seating & desks",
       "description": "Generic chair specification for guest-room desks.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1624,7 +1624,7 @@
       "itemType": "PRODUCT",
       "name": "Guest-room wardrobe",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Storage & wardrobes",
       "description": "Generic wardrobe specification for guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1642,7 +1642,7 @@
       "itemType": "PRODUCT",
       "name": "Guest-room luggage bench",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Storage & wardrobes",
       "description": "Generic bench specification for guest rooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1661,7 +1661,7 @@
       "itemType": "PRODUCT",
       "name": "Guest bathroom mirror",
       "category": "FFE",
-      "subcategory": "Guest room furniture",
+      "subcategory": "Bathroom fixtures",
       "description": "Generic mirror specification for guest bathrooms.",
       "attributes": {
         "use": "Guest room furniture"
@@ -1715,7 +1715,7 @@
       "itemType": "PRODUCT",
       "name": "Banquet chair",
       "category": "FFE",
-      "subcategory": "Public area furniture",
+      "subcategory": "Banquet & events",
       "description": "Generic chair specification for banquet and meeting rooms.",
       "attributes": {
         "use": "Public area furniture"
@@ -1732,7 +1732,7 @@
       "itemType": "PRODUCT",
       "name": "Banquet table, 180 cm",
       "category": "FFE",
-      "subcategory": "Public area furniture",
+      "subcategory": "Banquet & events",
       "description": "Generic table specification for banquet and meeting rooms.",
       "attributes": {
         "use": "Public area furniture"
@@ -1750,7 +1750,7 @@
       "itemType": "PRODUCT",
       "name": "Bar stool",
       "category": "FFE",
-      "subcategory": "Public area furniture",
+      "subcategory": "Banquet & events",
       "description": "Generic stool specification for bar and lounge areas.",
       "attributes": {
         "use": "Public area furniture"
@@ -1767,7 +1767,7 @@
       "itemType": "PRODUCT",
       "name": "Lounge side table",
       "category": "FFE",
-      "subcategory": "Public area furniture",
+      "subcategory": "Lobby & lounge",
       "description": "Generic side-table specification for lobby and lounge areas.",
       "attributes": {
         "use": "Public area furniture"
@@ -1785,7 +1785,7 @@
       "itemType": "PRODUCT",
       "name": "Outdoor dining table",
       "category": "FFE",
-      "subcategory": "Outdoor furniture",
+      "subcategory": "Outdoor & pool",
       "description": "Generic table specification for pool and terrace dining.",
       "attributes": {
         "use": "Outdoor furniture"
@@ -1803,7 +1803,7 @@
       "itemType": "PRODUCT",
       "name": "Outdoor sun umbrella",
       "category": "FFE",
-      "subcategory": "Outdoor furniture",
+      "subcategory": "Outdoor & pool",
       "description": "Generic umbrella specification for pool and terrace areas.",
       "attributes": {
         "use": "Outdoor furniture"
@@ -1821,7 +1821,7 @@
       "itemType": "PRODUCT",
       "name": "Lobby two-seat sofa",
       "category": "FFE",
-      "subcategory": "Public area furniture",
+      "subcategory": "Lobby & lounge",
       "description": "Generic sofa specification for lobby seating.",
       "attributes": {
         "use": "Public area furniture"
@@ -1840,7 +1840,7 @@
       "itemType": "PRODUCT",
       "name": "Lobby coffee table",
       "category": "FFE",
-      "subcategory": "Public area furniture",
+      "subcategory": "Lobby & lounge",
       "description": "Generic table specification for lobby seating.",
       "attributes": {
         "use": "Public area furniture"
@@ -2271,7 +2271,7 @@
       "itemType": "PRODUCT",
       "name": "Illuminated exit sign",
       "category": "SAFETY_SECURITY",
-      "subcategory": "Signage",
+      "subcategory": "Emergency lighting",
       "description": "Generic exit-sign specification for hotel escape routes.",
       "attributes": {
         "use": "Signage"
@@ -2307,7 +2307,7 @@
       "itemType": "PRODUCT",
       "name": "Emergency lighting unit",
       "category": "SAFETY_SECURITY",
-      "subcategory": "Lighting",
+      "subcategory": "Emergency lighting",
       "description": "Generic emergency-light specification for escape routes.",
       "attributes": {
         "use": "Lighting"
@@ -2596,7 +2596,7 @@
       "itemType": "PRODUCT",
       "name": "Network access switch",
       "category": "ICT_AV",
-      "subcategory": "Network",
+      "subcategory": "Network & connectivity",
       "description": "Generic switch specification for hotel network rooms.",
       "attributes": {
         "use": "Network"
@@ -2614,7 +2614,7 @@
       "itemType": "PRODUCT",
       "name": "Network patch cable",
       "category": "ICT_AV",
-      "subcategory": "Network",
+      "subcategory": "Network & connectivity",
       "description": "Generic cable specification for hotel network rooms.",
       "attributes": {
         "use": "Network"
@@ -2632,7 +2632,7 @@
       "itemType": "PRODUCT",
       "name": "Network patch panel",
       "category": "ICT_AV",
-      "subcategory": "Network",
+      "subcategory": "Network & connectivity",
       "description": "Generic panel specification for hotel network rooms.",
       "attributes": {
         "use": "Network"
@@ -2650,7 +2650,7 @@
       "itemType": "PRODUCT",
       "name": "Network equipment rack",
       "category": "ICT_AV",
-      "subcategory": "Network",
+      "subcategory": "Network & connectivity",
       "description": "Generic rack specification for hotel network rooms.",
       "attributes": {
         "use": "Network"
@@ -2705,7 +2705,7 @@
       "itemType": "PRODUCT",
       "name": "Meeting-room projector",
       "category": "ICT_AV",
-      "subcategory": "Meeting systems",
+      "subcategory": "Meeting AV",
       "description": "Generic projector specification for meeting rooms.",
       "attributes": {
         "use": "Meeting systems"
@@ -2741,7 +2741,7 @@
       "itemType": "PRODUCT",
       "name": "Door-lock card encoder",
       "category": "ICT_AV",
-      "subcategory": "Access systems",
+      "subcategory": "Access control hardware",
       "description": "Generic encoder specification for guest-room door locks.",
       "attributes": {
         "use": "Access systems"
@@ -2760,7 +2760,7 @@
       "itemType": "PRODUCT",
       "name": "Door access controller",
       "category": "ICT_AV",
-      "subcategory": "Access systems",
+      "subcategory": "Access control hardware",
       "description": "Generic controller specification for staff door access.",
       "attributes": {
         "use": "Access systems"
@@ -2796,7 +2796,7 @@
       "itemType": "PRODUCT",
       "name": "Meeting-room speaker",
       "category": "ICT_AV",
-      "subcategory": "Meeting systems",
+      "subcategory": "Speakers & sound systems",
       "description": "Generic speaker specification for meeting rooms.",
       "attributes": {
         "use": "Meeting systems"
@@ -2814,7 +2814,7 @@
       "itemType": "PRODUCT",
       "name": "Meeting-room microphone",
       "category": "ICT_AV",
-      "subcategory": "Meeting systems",
+      "subcategory": "Speakers & sound systems",
       "description": "Generic microphone specification for meeting rooms.",
       "attributes": {
         "use": "Meeting systems"
@@ -2887,7 +2887,7 @@
       "itemType": "PRODUCT",
       "name": "Restaurant point-of-sale terminal",
       "category": "ICT_AV",
-      "subcategory": "Restaurant systems",
+      "subcategory": "POS & restaurant systems",
       "description": "Generic terminal specification for restaurant service.",
       "attributes": {
         "use": "Restaurant systems"
@@ -2906,7 +2906,7 @@
       "itemType": "PRODUCT",
       "name": "Network router",
       "category": "ICT_AV",
-      "subcategory": "Network",
+      "subcategory": "Network & connectivity",
       "description": "Generic router specification for hotel network rooms.",
       "attributes": {
         "use": "Network"
@@ -3287,6 +3287,409 @@
       "searchTerms": [
         "work",
         "socks"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-fresh-chicken-thigh",
+      "itemType": "PRODUCT",
+      "name": "Fresh chicken thighs",
+      "nameAr": "أفخاذ دجاج طازجة",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Poultry",
+      "description": "Generic fresh poultry specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Fresh poultry"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fresh",
+        "chicken",
+        "poultry"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-fresh-beef-striploin",
+      "itemType": "PRODUCT",
+      "name": "Fresh beef striploin",
+      "nameAr": "ستريبلوين لحم بقري طازج",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Meat",
+      "description": "Generic fresh beef specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Fresh meat"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fresh",
+        "beef",
+        "meat"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-fresh-shrimp",
+      "itemType": "PRODUCT",
+      "name": "Fresh shrimp",
+      "nameAr": "جمبري طازج",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Fish & seafood",
+      "description": "Generic fresh seafood specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Fresh seafood"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fresh",
+        "shrimp",
+        "seafood"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-mixed-salad-leaves",
+      "itemType": "PRODUCT",
+      "name": "Mixed salad leaves",
+      "nameAr": "أوراق سلطة مشكلة",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Fresh produce",
+      "description": "Generic fresh produce specification for hotel kitchen and buffet preparation.",
+      "attributes": {
+        "use": "Fresh produce"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "salad",
+        "leaves",
+        "vegetables",
+        "fresh"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-seasonal-fruit-mix",
+      "itemType": "PRODUCT",
+      "name": "Seasonal fruit mix",
+      "nameAr": "خلطة فواكه موسمية",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Fresh produce",
+      "description": "Generic fresh fruit specification for hotel kitchen and breakfast service.",
+      "attributes": {
+        "use": "Fresh fruit"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "fruit",
+        "seasonal",
+        "fresh"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-sparkling-soft-drink-330",
+      "itemType": "PRODUCT",
+      "name": "Sparkling soft drink, 330 ml",
+      "nameAr": "مشروب غازي، ٣٣٠ مل",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Soft drinks",
+      "description": "Generic soft-drink specification for hotel restaurant and minibar programs.",
+      "attributes": {
+        "use": "Soft drinks"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "case quantity set in the request",
+      "searchTerms": [
+        "soft",
+        "drink",
+        "sparkling"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-still-fruit-nectar",
+      "itemType": "PRODUCT",
+      "name": "Still fruit nectar",
+      "nameAr": "نكتار فواكه",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Juices",
+      "description": "Generic juice specification for hotel breakfast and banquet service.",
+      "attributes": {
+        "use": "Juices"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "nectar",
+        "juice",
+        "fruit"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-hotel-spirit-vodka",
+      "itemType": "PRODUCT",
+      "name": "Neutral spirit vodka, 700 ml",
+      "nameAr": "فودكا، ٧٠٠ مل",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Spirit drinks",
+      "description": "Generic spirit-drink specification for hotel bar programs under licensed operation.",
+      "attributes": {
+        "use": "Spirit drinks"
+      },
+      "unitOfMeasure": "bottle",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "vodka",
+        "spirit",
+        "bar"
+      ]
+    },
+    {
+      "sourceRecordKey": "ict-property-operations-software",
+      "itemType": "PRODUCT",
+      "name": "Property operations software licence",
+      "nameAr": "ترخيص برمجيات تشغيل الفندق",
+      "category": "ICT_AV",
+      "subcategory": "Property software",
+      "description": "Generic property software specification for hotel operations workflows. Distinct from building maintenance parts.",
+      "attributes": {
+        "use": "Property software"
+      },
+      "unitOfMeasure": "licence",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "software",
+        "property",
+        "operations"
+      ]
+    },
+    {
+      "sourceRecordKey": "ict-guest-digital-locker",
+      "itemType": "PRODUCT",
+      "name": "Guest digital locker unit",
+      "nameAr": "خزانة رقمية للضيوف",
+      "category": "ICT_AV",
+      "subcategory": "Guest apps & lockers",
+      "description": "Generic guest locker specification for spa and leisure areas, including app-linked access where required.",
+      "attributes": {
+        "use": "Guest lockers"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "locker",
+        "guest",
+        "app",
+        "digital"
+      ]
+    },
+    {
+      "sourceRecordKey": "ict-lobby-sound-speaker",
+      "itemType": "PRODUCT",
+      "name": "Lobby background sound speaker",
+      "nameAr": "سماعة صوت لبهو الفندق",
+      "category": "ICT_AV",
+      "subcategory": "Speakers & sound systems",
+      "description": "Generic sound-system speaker specification for lobby and public-area audio programs.",
+      "attributes": {
+        "use": "Sound systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "speaker",
+        "sound",
+        "lobby",
+        "audio"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-outdoor-irrigation-valve",
+      "itemType": "PRODUCT",
+      "name": "Outdoor irrigation valve",
+      "nameAr": "محبس ري خارجي",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Outdoor & grounds maintenance",
+      "description": "Generic outdoor maintenance part for hotel grounds irrigation systems.",
+      "attributes": {
+        "use": "Outdoor maintenance"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "irrigation",
+        "outdoor",
+        "grounds",
+        "valve"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-guest-bedside-armchair",
+      "itemType": "PRODUCT",
+      "name": "Guest-room bedside armchair",
+      "nameAr": "كرسي بجانب سرير الضيف",
+      "category": "FFE",
+      "subcategory": "Guest room seating & desks",
+      "description": "Generic guest-room seating specification for in-room lounge corners.",
+      "attributes": {
+        "use": "Guest room seating"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "armchair",
+        "guest room",
+        "seating"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-bathroom-vanity-unit",
+      "itemType": "PRODUCT",
+      "name": "Guest bathroom vanity unit",
+      "nameAr": "وحدة مغسلة حمام الضيوف",
+      "category": "FFE",
+      "subcategory": "Bathroom fixtures",
+      "description": "Generic bathroom fixture specification for guest bathroom refurbishment programs.",
+      "attributes": {
+        "use": "Bathroom fixtures"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "vanity",
+        "bathroom",
+        "fixture"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-pool-lounger",
+      "itemType": "PRODUCT",
+      "name": "Pool lounger",
+      "nameAr": "كرسي استرخاء للمسبح",
+      "category": "FFE",
+      "subcategory": "Outdoor & pool",
+      "description": "Generic outdoor furniture specification for pool-deck seating programs.",
+      "attributes": {
+        "use": "Pool furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "pool",
+        "lounger",
+        "outdoor"
+      ]
+    },
+    {
+      "sourceRecordKey": "ffe-banquet-round-table",
+      "itemType": "PRODUCT",
+      "name": "Banquet round table, 160 cm",
+      "nameAr": "طاولة مآدب مستديرة، ١٦٠ سم",
+      "category": "FFE",
+      "subcategory": "Banquet & events",
+      "description": "Generic banquet furniture specification for hotel events setups.",
+      "attributes": {
+        "use": "Banquet furniture"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "banquet",
+        "table",
+        "events"
+      ]
+    },
+    {
+      "sourceRecordKey": "ict-guest-mobile-key-app",
+      "itemType": "PRODUCT",
+      "name": "Guest mobile key application",
+      "nameAr": "تطبيق مفتاح الغرفة للضيوف",
+      "category": "ICT_AV",
+      "subcategory": "Guest apps & lockers",
+      "description": "Generic guest-app specification for mobile room-key programs. Distinct from mechanical door hardware.",
+      "attributes": {
+        "use": "Guest apps"
+      },
+      "unitOfMeasure": "licence",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "mobile",
+        "key",
+        "app",
+        "guest"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-frozen-mixed-vegetables",
+      "itemType": "PRODUCT",
+      "name": "Frozen mixed vegetables",
+      "nameAr": "خضروات مجمدة مشكلة",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Frozen foods",
+      "description": "Generic frozen-food specification for hotel kitchen preparation.",
+      "attributes": {
+        "use": "Frozen foods"
+      },
+      "unitOfMeasure": "kilogram",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "frozen",
+        "vegetables"
+      ]
+    },
+    {
+      "sourceRecordKey": "fnb-bakery-croissant",
+      "itemType": "PRODUCT",
+      "name": "Butter croissant",
+      "nameAr": "كرواسون بالزبدة",
+      "category": "FOOD_BEVERAGE",
+      "subcategory": "Bakery",
+      "description": "Generic bakery specification for hotel breakfast service.",
+      "attributes": {
+        "use": "Bakery"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "croissant",
+        "bakery",
+        "breakfast"
+      ]
+    },
+    {
+      "sourceRecordKey": "eng-indoor-wall-paint",
+      "itemType": "PRODUCT",
+      "name": "Indoor washable wall paint",
+      "nameAr": "دهان حوائط داخلي قابل للغسل",
+      "category": "ENGINEERING_MRO",
+      "subcategory": "Indoor finishes",
+      "description": "Generic indoor finish specification for guest-corridor and room maintenance.",
+      "attributes": {
+        "use": "Indoor finishes"
+      },
+      "unitOfMeasure": "litre",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "paint",
+        "indoor",
+        "finishes"
+      ]
+    },
+    {
+      "sourceRecordKey": "ict-sound-system-amplifier",
+      "itemType": "PRODUCT",
+      "name": "Public-area sound amplifier",
+      "nameAr": "مضخم صوت للمناطق العامة",
+      "category": "ICT_AV",
+      "subcategory": "Speakers & sound systems",
+      "description": "Generic sound-system amplifier specification for hotel public-area audio.",
+      "attributes": {
+        "use": "Sound systems"
+      },
+      "unitOfMeasure": "piece",
+      "purchaseUnit": "quantity set in the request",
+      "searchTerms": [
+        "amplifier",
+        "sound",
+        "audio"
       ]
     }
   ]
