@@ -34,7 +34,7 @@ export const colors = {
   lineOnWhite: "rgba(0,0,0,0.1)",
   /** Fine thin outline frame on pans (reference sample). */
   frame: "rgba(255,255,255,0.12)",
-  frameOnWhite: "rgba(0,0,0,0.12)",
+  frameOnWhite: "rgba(0,0,0,0.18)",
   blue: "#5B92FE",
   blueStrong: "#5B92FE",
   blueBright: "#5B92FE",

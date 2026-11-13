@@ -255,8 +255,8 @@ export function CatalogSurface({
       <T kind="title">{t("catalog.title")}</T>
       <T kind="caption" tone="muted">{t("catalog.promotions")}</T>
       <View style={{ gap: space.sm }}>
-        {promotions.map((promo, index) => (
-          <Pan key={promo.id} tone={index === 0 ? "dark" : "white"} style={{ gap: space.md }}>
+        {promotions.map((promo) => (
+          <Pan key={promo.id} style={{ gap: space.md }}>
             <T kind="headline">{arabic ? promo.titleAr : promo.titleEn}</T>
             <T kind="body" tone="muted">{arabic ? promo.detailAr : promo.detailEn}</T>
             <Button
