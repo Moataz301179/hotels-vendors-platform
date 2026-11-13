@@ -112,12 +112,14 @@
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
+  /* Titles stay ink/charcoal — cobalt is CTA/signal only (DESIGN.md). */
   color: var(--ink);
 }
 
 .eyebrow {
   margin: 0 0 18px;
-  color: var(--cobalt-700);
+  /* Override global amber eyebrow force; charcoal metadata, not gold or cobalt. */
+  color: var(--charcoal) !important;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -138,8 +140,11 @@
 }
 
 .copy h1 em {
+  /* One tone within the title — no colored emphasis words. */
   font-style: normal;
-  color: var(--cobalt-600);
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  background: none;
 }
 
 .lead {

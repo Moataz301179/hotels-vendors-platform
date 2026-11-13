@@ -27,6 +27,17 @@ describe("homepage hero OLED fade", () => {
     expect(css).not.toMatch(/#7c3aed|#a855f7|purple/i);
   });
 
+  it("keeps hero type on ink/charcoal — cobalt only on the CTA", () => {
+    expect(css).toMatch(/\.brand\s*\{[^}]*color:\s*var\(--ink\)/s);
+    expect(css).toMatch(/\.eyebrow\s*\{[^}]*color:\s*var\(--charcoal\)\s*!important/s);
+    expect(css).toMatch(/\.copy h1\s*\{[^}]*color:\s*var\(--ink\)/s);
+    expect(css).toMatch(/\.copy h1 em\s*\{[^}]*color:\s*inherit/s);
+    expect(css).toMatch(/\.primary\s*\{[^}]*background:\s*var\(--cobalt-600\)/s);
+    expect(css).not.toMatch(/\.eyebrow\s*\{[^}]*color:\s*var\(--cobalt/s);
+    expect(css).not.toMatch(/\.copy h1 em\s*\{[^}]*color:\s*var\(--cobalt/s);
+    expect(css).not.toMatch(/color:\s*var\(--amber\)/i);
+  });
+
   it("keeps an opaque paper band under bottom-aligned mobile copy", () => {
     expect(css).toContain("Copy is bottom-aligned below 950px");
     expect(css).toContain("var(--paper-100) 100%");

@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## Homepage hero type colors — 2026-11-13 (23:27 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Violation: hero type used amber eyebrows (global `!important`) and cobalt on `h1 em`, against DESIGN.md (“one tone within the entire title; no colored emphasis words”) and the approved rule that `#5B92FE` is CTA/signal only.
+- Fix: brand + h1 + em → ink; eyebrow → charcoal; lead stays muted; primary CTA keeps cobalt. Global eyebrow force switched from amber to charcoal; public `em` title rules inherit ink.
+- Verification: vitest homepage-hero-oled (4 passed); Playwright computed colors brand/h1/em ink, eyebrow charcoal, primary `#5B92FE`.
+
 ## Homepage carousel tray/lamp rejection — 2026-11-13 (23:25 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77 (also carries brand-first hero shell copy).
