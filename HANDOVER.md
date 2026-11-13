@@ -1,5 +1,14 @@
 # HotelsVendors — Production-Ready Handover
 
+## Solutions + About + footer partner labels — 2026-11-13
+
+- Branch: `cursor/solutions-about-footer-168e`. Rebuilt `/solutions/carriers` and `/solutions/funders` with verified “built today” vs “not connected” honesty.
+- Carriers: HV portal assignment/accept, shipment lifecycle, HOVIN delivery codes are live. Egypt registry (Bosta, Mylerz, 1Trolley, R2S, Sprint, Naqla, Aramex) is adapter-planned only—no live courier booking/POD feeds.
+- Funders: hard-gated referrals and status recording are live; HV is not a lender; Oliv/institutional APIs are not provisioned (empty connected set).
+- Footer Partners labels are one-word: Vendors, Logistics, Finance.
+- About recreated with company story plus founder Moataz Mohamed Abdel Ghani qualifications grounded in LinkedIn (`moatazabdelghani`): Alexandria University B.Acc., Deloitte, Better Homes Qatar, Al Manna Group, Oliv Finance partner, MozixWatt.
+- Verification: `npx vitest run tests/p0/solutions-carriers-funders.spec.ts tests/p0/public-header-contract.spec.ts` passed.
+
 ## Stack merged to main — deploy pending owner dispatch — 2026-11-13
 
 - Verified: GitHub stack merge landed on `main` as `25804b2d` (merge of PR #70 / downstack #66). Includes Plus Jakarta Sans, AI Assistant public LLM path, HOVIN phone/motion work, catalog product photographs, approved `#5B92FE` / `#303234` theme tokens, and ambiguous-image match fixes.

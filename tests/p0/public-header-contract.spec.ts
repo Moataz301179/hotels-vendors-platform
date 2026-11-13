@@ -16,10 +16,13 @@ describe('public header contract', () => {
     expect(nav).toContain('label: "Partners"');
     expect(nav).toContain('Sign in');
     expect(nav).toContain('Join the network');
-    expect(footer).toContain('For Vendors');
-    expect(footer).toContain('Logistics partners');
-    expect(footer).toContain('Finance partners');
+    expect(footer).toContain('>Vendors</Link>');
+    expect(footer).toContain('>Logistics</Link>');
+    expect(footer).toContain('>Finance</Link>');
     expect(footer).toContain('Partner enquiries');
+    expect(footer).not.toContain('For Vendors');
+    expect(footer).not.toContain('Logistics partners');
+    expect(footer).not.toContain('Finance partners');
     expect(footer).not.toContain('Carrier partner portal');
     expect(footer).not.toContain('Funder partner portal');
   });
