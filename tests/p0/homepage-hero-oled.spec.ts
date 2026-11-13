@@ -22,4 +22,10 @@ describe("homepage hero OLED fade", () => {
     expect(css).toContain("var(--cobalt-600)");
     expect(css).not.toMatch(/#7c3aed|#a855f7|purple/i);
   });
+
+  it("keeps an opaque paper band under bottom-aligned mobile copy", () => {
+    expect(css).toContain("Copy is bottom-aligned below 950px");
+    expect(css).toContain("var(--paper-100) 100%");
+    expect(css).toContain("align-items: end");
+  });
 });

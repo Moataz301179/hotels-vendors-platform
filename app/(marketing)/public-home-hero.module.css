@@ -212,19 +212,22 @@
     object-position: 62% 30%;
   }
 
+  /* Copy is bottom-aligned below 950px — keep paper opaque under that band */
   .fade {
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--paper-100) 88%, transparent) 0%,
-        color-mix(in srgb, var(--paper-100) 62%, transparent) 26%,
-        color-mix(in srgb, var(--paper-100) 28%, transparent) 48%,
-        transparent 68%
+        transparent 0%,
+        transparent 28%,
+        color-mix(in srgb, var(--paper-100) 35%, transparent) 48%,
+        color-mix(in srgb, var(--paper-100) 78%, transparent) 68%,
+        color-mix(in srgb, var(--paper-100) 94%, transparent) 84%,
+        var(--paper-100) 100%
       ),
       linear-gradient(
         90deg,
-        color-mix(in srgb, var(--paper-100) 40%, transparent) 0%,
-        transparent 60%
+        color-mix(in srgb, var(--paper-100) 28%, transparent) 0%,
+        transparent 58%
       );
   }
 
@@ -236,6 +239,12 @@
 
   .copy {
     max-width: none;
+  }
+
+  .copy h1,
+  .lead,
+  .signal {
+    text-shadow: 0 1px 0 color-mix(in srgb, var(--paper-100) 70%, transparent);
   }
 }
 
