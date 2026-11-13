@@ -1,47 +1,57 @@
 # HotelsVendors — Production-Ready Handover
 
+## Stack merged to main — deploy pending owner dispatch — 2026-11-13
+
+- Verified: GitHub stack merge landed on `main` as `25804b2d` (merge of PR #70 / downstack #66). Includes Plus Jakarta Sans, AI Assistant public LLM path, HOVIN phone/motion work, catalog product photographs, approved `#5B92FE` / `#303234` theme tokens, and ambiguous-image match fixes.
+- Live production still serves prior release `github-f7cc07eaaeb703805c1e567297e333573a4f9ead` (`GET /api/health` ok at 08:55 Africa/Cairo). New SHA is not live yet.
+- Recovery gate: `webPredeployReady: true` on `25804b2d`. Main CI `build` + `chromium` must be green on that SHA before deploy activation.
+- Deploy blocked for this Cloud Agent: `gh workflow run deploy-production.yml` returns HTTP 403 (`Resource not accessible by integration`). Owner must dispatch from GitHub Actions UI or an account with `actions: write`:
+  - Workflow: `HotelsVendors Production Deploy`
+  - Ref: `main`
+  - Input: `production_migration_confirmation=APPLY_AFTER_NEON_BACKUP` (only after a restorable Neon production branch exists)
+- Migration included: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code` will apply on that deploy.
+- Unresolved after deploy: configure at least one production LLM secret (`GROQ_API_KEY` preferred) so public AI Assistant answers are not 503.
+
 ## Catalog imagery + approved theme palette — 2026-11-13
 
-- Branch: `cursor/catalog-images-themes-168e`. Marketplace listings no longer use repeated scenic `category-*.png` covers as row thumbs. Rows resolve to `/public/catalog/*.jpg` product-family photographs (37 unique images across 209 rows; 0 category-cover hits).
-- New/expanded catalog assets include bath towels, bed linen, guest amenities, cleaning supplies, gastronorm pans, LED lamps, lobby armchair, fire extinguisher, plus focused family variants for TV, network, uniforms, safety, mattress, outdoor furniture, and services.
+- Merged via PR #70 into `main` (`25804b2d`). Marketplace listings no longer use repeated scenic `category-*.png` covers as row thumbs. Rows resolve to `/public/catalog/*.jpg` product-family photographs (37 unique images across 209 rows; 0 category-cover hits).
+- Ambiguous match fix: `Glass and mirror cleaner` → cleaning supplies; `Network access switch` → network equipment; `Wall light switch` stays electrical (category-scoped rules + regressions).
 - Web theme tokens aligned to the approved website sample: action `#5B92FE`, chrome `#303234`. Light/dark `data-theme` modes both use that palette (dark uses charcoal field + white type).
 - Void placeholder `/images/placeholder.jpg` removed from `product-card` fallback. Assistant contract tests updated for public LLM scope.
-- Verification: listing-visual + marketplace-sourcing-areas + assistant-contract/honesty vitest passed. HF generation quota limited further unique service/uniform shots; family photos still shared within a category where a dedicated shoot was unavailable.
+- Verification: listing-visual + marketplace-sourcing-areas + assistant-contract/honesty vitest passed.
 
 ## Plus Jakarta Sans + AI Assistant — 2026-11-13
 
-- Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
+- Merged to `main` with the HOVIN stack. Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
 - Floating marketing widget renamed to **AI Assistant**. Public `/api/v2/assistant` now calls the real LLM chain (Ollama → Groq → OpenRouter → xAI) with grounded product facts and returns safe navigation `actions` (register, solutions, HOVIN, sign-in, etc.). Tenant tools remain signed-in only.
 - Deploy workflow now forwards optional `GROQ_*` / `OPENROUTER_*` / `XAI_*` / `OLLAMA_*` into the production runtime env when present as GitHub secrets/vars.
 - Verification: `npx vitest run tests/p0/public-assistant.spec.ts tests/p0/assistant-widget-contract.spec.ts tests/unit/assistant-chatbot-failure.spec.ts` passed; `npx tsc --noEmit` and `mobile` tsc passed.
-- Unresolved: production still needs at least one LLM provider key configured for public answers after deploy. Neon backup + `APPLY_AFTER_NEON_BACKUP` still required before production deploy. Parent HOVIN PRs #66/#67 must land on `main` first if this stack is merged through them.
 
 ## HOVIN production release engineering — 2026-11-13
 
-- Branch: `cursor/hovin-motion-system-168e`. Added `mobile/eas.json`, production `app.json` (1.0.0), store icons, `mobile/scripts/release-readiness.mjs`, CI workflow `hovin-mobile.yml`, and runbook `docs/hovin-production-release.md`.
+- Source now on `main` (`25804b2d`). Added `mobile/eas.json`, production `app.json` (1.0.0), store icons, `mobile/scripts/release-readiness.mjs`, CI workflow `hovin-mobile.yml`, and runbook `docs/hovin-production-release.md`.
 - **Not a live store release.** No `EXPO_TOKEN` / Apple / Play credentials in this Cloud Agent. EAS `projectId` is still a placeholder until `eas init` on an authenticated Expo account. Android release signing still uses the debug keystore locally — EAS credentials must replace that for Play.
-- Owner actions required: add Expo/Apple/Play secrets, run simulator builds on the Mac, `eas init` + production builds/submit, set store URLs, merge PR stack to `main`, Neon backup + `APPLY_AFTER_NEON_BACKUP`, then production web deploy.
-- This agent cannot merge GitHub PRs (write merge unavailable) or apply production Neon migrations without that confirmation string.
+- Owner actions required: add Expo/Apple/Play secrets, run simulator builds on the Mac, `eas init` + production builds/submit, set store URLs, create a restorable Neon backup, then dispatch `deploy-production.yml` with `APPLY_AFTER_NEON_BACKUP` (this agent’s token cannot `workflow_dispatch`).
 
 ## HOVIN motion system — 2026-11-13
 
-- Branch: `cursor/hovin-motion-system-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed. No EAS build.
+- Merged to `main` via the HOVIN stack. Not yet in the live production release. No EAS build.
 - Added the HotelsVendors Motion System: Reanimated on mobile (Expo SDK 54), GSAP Flip/enter/progress on the HOVIN web receiving preview only. Tokens keep UI motion at 160–240ms (entry ≤280ms, 6–12px rise). Reduce-motion disables nonessential motion on device and via `prefers-reduced-motion` on web. Delivery uses a checkpoint rail (known states only); procurement stages get a calm strip; lists/empty states get capped enter; commodity strap loop pauses under reduce-motion. Financial figures are not counting-animated. Critical notices/actions are not delayed.
 - Packages: `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler` in `mobile/`. Root `gsap` / `@gsap/react` reused (no new web animation package).
 - Evidence: see `docs/hovin-motion-system.md`. Next action: device/visual review on the parent HOVIN PR stack; do not merge or deploy without owner approval.
 
 ## HOVIN phone workspace — 2026-11-13
 
-- Branch: `cursor/hovin-intelligence-168e`. Not merged. Not deployed. No production migration was applied. No production data was written. No EAS build and no store submission.
+- Merged to `main` (`25804b2d`). Not yet live in production. No production migration was applied until deploy runs. No production data was written. No EAS build and no store submission.
 - Scope: a new phone interface for hotels and suppliers, plus order tracking and the delivery confirmation code referred from the carrier portal. Accept and decline stay on the web portal. Department head, funder, and administrator work stays on the desk. Quote acceptance, which names the supplier, stays on the hotel desk.
-- Visual layer matches the attached travel-app sample pans: page field `#303234` (soft charcoal wash only — fading into black rejected); grey pans with a **fine thin outline frame**; when a screen has a primary+secondary **pan** pair, the secondary pan is white fill (not list Groups, chips, or same-role card stacks); `#5B92FE` only on CTA pills with regular (non-bold) black type; lime `#C6F34D` secondary accent for special notifications only (minimal). Yellow type/backfill rejected. Large widgets stay short. Typeface: **Manrope** display + **Plus Jakarta Sans** body. Phone copy is functional only. Home shows an Arabic market-reference commodity flicker strap. Catalogue opens on anonymous bundles; supplier identity stays sealed.
+- Visual layer matches the attached travel-app sample pans: page field `#303234` (soft charcoal wash only — fading into black rejected); grey pans with a **fine thin outline frame**; when a screen has a primary+secondary **pan** pair, the secondary pan is white fill (not list Groups, chips, or same-role card stacks); `#5B92FE` only on CTA pills with regular (non-bold) black type; lime `#C6F34D` secondary accent for special notifications only (minimal). Yellow type/backfill rejected. Large widgets stay short. Typeface on phone is **Plus Jakarta Sans** across roles (aligned with web). Phone copy is functional only. Home shows an Arabic market-reference commodity flicker strap. Catalogue opens on anonymous bundles; supplier identity stays sealed.
 - Server: `GET /api/v2/mobile/session`, `/home`, `/orders`, `/orders/:id`, and delivery-code get/confirm. Receipt photos are stored only for a hotel receiving role with `order:update`. EXIF is stripped before storage and the upload fails closed if metadata remains. Administrators and carriers cannot upload or read another tenant's file. Confirming a code records `deliveryConfirmation: MATCHED` and does not change order status or payment. GRN now honors `x-idempotency-key` and private evidence file ids.
-- Migration on the branch only: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code`. Next production deploy needs Moataz's explicit approval and a verified Neon backup. `npx prisma generate` was run locally for types. `prisma migrate` was not run.
+- Migration on `main`, not yet applied in production: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code`. Deploy applies it after Neon backup confirmation.
 - Verification: `npx vitest run tests/p0/hovin-phone.spec.ts tests/p0/grn-route-auth.spec.ts tests/p0/applied-migration-source-history.spec.ts` passed. Mobile `npx vitest run src/api/hovin.spec.ts src/sync/offlineQueue.spec.ts src/session/accountField.spec.ts src/intelligence/quotes.spec.ts` passed, 17 tests. `npx tsc --noEmit` passed for the repo and for `mobile/`. `npm run test:mobile-source` passed.
 - Visual review used `EXPO_PUBLIC_HOVIN_VISUAL_REVIEW=1` on Expo web at 390×844. Those screens are watermarked samples, not a signed-in account. Hosted Clerk was not completed on a real iOS or Android device in this environment. There is no iOS simulator here. Passing tests and the web gallery are not acceptance.
 - Gaps: a generative model is not in the request path. The next action copies server facts and names the server as the authority. Reanimated is now a mobile dependency (requires a fresh native rebuild / EAS build before device binaries include it). `react-native-web` was added so the review gallery can run; the product target remains iOS and Android. Physical count is not a phone screen. New hotel users stay on the desk until an operating role other than department head is assigned.
 - Review fix: a receipt's evidence files are checked before the goods receipt is inserted, so a missing file does not leave a committed receipt. A successful receipt deletes its draft and starts the next one with a new idempotency key. Opening one phone order requires the same order-read capability as the order list; the carrier code workspace remains able to open its accepted movements.
-- Next action: Moataz reviews the pull request visually and on a device with hosted Clerk. Do not merge, deploy, or apply the migration without that approval.
+- Next action: Moataz creates a restorable Neon backup, then dispatches HotelsVendors Production Deploy on main with APPLY_AFTER_NEON_BACKUP. Device/Clerk visual review of HOVIN phone remains recommended before treating the phone surfaces as accepted.
 
 ## Listing pictures are live — 2026-11-11 04:36 Africa/Cairo
 
