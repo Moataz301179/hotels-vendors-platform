@@ -19,7 +19,9 @@ export const TENANT_ASSISTANT_SYSTEM = [
   "Never invent supplier names, private commercial terms, stock levels, binding prices, savings percentages, approvals, or delivery dates.",
   "Buyer-facing discovery keeps vendor identity sealed until authorized execution and invoicing stages.",
   "When the user asks about opening a restaurant, bar, kitchen, or new outlet inside a hotel: outline a sourcing checklist (tableware, smallwares, disposables, cold chain, cleaning, FF&E), then route them to Source supplies / marketplace and sealed RFQ — do not pretend telemetry exists.",
-  "When recommending a next step, name the workspace path plainly (Source supplies, Approvals, Receiving, Market Compass, Volume planning).",
+  "After onboarding, the first commercial gate is funder credit-line legibility. Without a funder-approved credit line, orders cannot be placed and the full dashboard stays gated. Payment and credit approvals come solely from the funder; HotelsVendors only records clean status.",
+  "When tools/telemetry are empty or the user asks about buying/ordering without a facility: say honestly that credit eligibility / funder approval is required, and point to /credit-line — never invent an approved limit.",
+  "When recommending a next step, name the workspace path plainly (Credit line, Source supplies, Approvals, Receiving, Market Compass, Volume planning).",
   "Distinguish observed records from recommendations. If data is sparse, lead with guidance and product paths, not empty metrics.",
 ].join("\n");
 
@@ -34,77 +36,78 @@ const SIGNED_IN_ACTION_CATALOG: Array<{
     id: "source-supplies",
     label: "Source supplies",
     href: "/workspace/marketplace",
-    match: /\b(restaurant|kitchen|bar|outlet|opening|open(ing)?|ff&?e|tableware|smallwares|catalog|catalogue|marketplace|sourc|buy|purchase|procurement|supplies?|equipment|disposables?)\b/i,
+    match:
+      /\b(restaurants?|kitchens?|bars?|outlets?|openings?|open(ing)?|ff&?e|tableware|smallwares|catalogu?es?|marketplace|sourc(e|es|ing)|buy|purchases?|procurement|supplies?|equipment|disposables?)\b/i,
     roles: ["HOTEL", "ADMIN"],
   },
   {
     id: "restaurants-category",
     label: "Restaurants & bars catalogue",
     href: "/marketplace?category=Restaurants%20%26%20bars",
-    match: /\b(restaurant|bar|kitchen|f&?b|food.?beverage|outlet|dining)\b/i,
+    match: /\b(restaurants?|bars?|kitchens?|f&?b|food.?beverage|outlets?|dining)\b/i,
     roles: ["HOTEL", "ADMIN"],
   },
   {
     id: "approvals",
     label: "Review approvals",
     href: "/orders?view=approval",
-    match: /\b(approv|authority|purchase order|po\b|sign.?off)\b/i,
+    match: /\b(approv(e|ed|al|als|ing)|authority|purchase orders?|po\b|sign.?offs?)\b/i,
     roles: ["HOTEL", "ADMIN"],
   },
   {
     id: "receiving",
     label: "Receiving workspace",
     href: "/orders?view=receiving",
-    match: /\b(receiv|grn|goods.?receipt|delivery|hovin)\b/i,
+    match: /\b(receiv(e|ed|ing|ables?)|grn|goods.?receipts?|deliver(y|ies)|hovin)\b/i,
     roles: ["HOTEL", "ADMIN"],
   },
   {
     id: "market-compass",
     label: "Market Compass",
     href: "/intelligence",
-    match: /\b(intelligence|signal|compass|opportunit|virtual.?shadow|insight)\b/i,
+    match: /\b(intelligence|signals?|compass|opportunit(y|ies)|virtual.?shadow|insights?)\b/i,
     roles: ["HOTEL", "ADMIN"],
   },
   {
     id: "volume-planning",
     label: "Volume planning",
     href: "/demand-aggregation",
-    match: /\b(demand|volume|aggregat|plan(ning)?|forecast|repeat)\b/i,
+    match: /\b(demand|volumes?|aggregat(e|es|ed|ing|ion)|plan(ning)?|forecasts?|repeats?)\b/i,
     roles: ["HOTEL", "ADMIN"],
   },
   {
     id: "vendor-catalogue",
     label: "Catalogue & stock",
     href: "/suppliers",
-    match: /\b(catalog|catalogue|stock|sku|list(ing)?|product)\b/i,
+    match: /\b(catalogu?es?|stock|skus?|list(ing|ings)?|products?)\b/i,
     roles: ["SUPPLIER"],
   },
   {
     id: "vendor-orders",
     label: "Order fulfilment",
     href: "/orders",
-    match: /\b(order|fulfil|dispatch|rfq|quote)\b/i,
+    match: /\b(orders?|fulfil(ment|led|ling)?|dispatches?|rfqs?|quotes?)\b/i,
     roles: ["SUPPLIER"],
   },
   {
     id: "carrier-tasks",
     label: "Delivery tasks",
     href: "/carrier",
-    match: /\b(deliver|shipment|carrier|handoff|pickup)\b/i,
+    match: /\b(deliver(y|ies|ed|ing)?|shipments?|carriers?|handoffs?|pickups?)\b/i,
     roles: ["SHIPPING"],
   },
   {
     id: "funding",
     label: "Funding records",
     href: "/funding",
-    match: /\b(fund|factor|invoice|receivable|cash.?flow)\b/i,
+    match: /\b(fund(s|ing|ed)?|factor(s|ing|ed)?|invoices?|receivables?|cash.?flows?)\b/i,
     roles: ["FACTORING", "HOTEL", "SUPPLIER"],
   },
   {
     id: "dashboard",
     label: "Open dashboard",
     href: "/dashboard",
-    match: /\b(dashboard|today|workspace|home|overview)\b/i,
+    match: /\b(dashboards?|today|workspaces?|home|overviews?)\b/i,
   },
 ];
 
@@ -210,13 +213,19 @@ export function resolveTenantActions(question: string, platformRole: string): As
   if (actions.length === 0) {
     if (platformRole === "HOTEL") {
       actions.push(
+        { id: "credit-line", label: "Credit-line status", href: "/credit-line" },
         { id: "source-supplies", label: "Source supplies", href: "/workspace/marketplace" },
-        { id: "dashboard", label: "Open dashboard", href: "/dashboard" },
-        { id: "market-compass", label: "Market Compass", href: "/intelligence" }
+        { id: "dashboard", label: "Open dashboard", href: "/dashboard" }
       );
     } else if (platformRole === "SUPPLIER") {
       actions.push(
+        { id: "credit-line", label: "Credit-line status", href: "/credit-line" },
         { id: "vendor-catalogue", label: "Catalogue & stock", href: "/suppliers" },
+        { id: "dashboard", label: "Open dashboard", href: "/dashboard" }
+      );
+    } else if (platformRole === "FACTORING") {
+      actions.push(
+        { id: "credit-line", label: "Credit applications", href: "/credit-line" },
         { id: "dashboard", label: "Open dashboard", href: "/dashboard" }
       );
     } else {

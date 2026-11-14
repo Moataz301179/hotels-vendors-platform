@@ -66,4 +66,23 @@ describe("tenant assistant empty-tool honesty", () => {
     expect(actions.some((action) => action.href.includes("/marketplace"))).toBe(true);
     expect(actions.every((action) => !action.href.startsWith("/login"))).toBe(true);
   });
+
+  it("matches complete approval and receiving words, not truncated stems", () => {
+    const approvals = resolveTenantActions("Show pending approvals", "HOTEL");
+    expect(approvals.some((action) => action.href === "/orders?view=approval")).toBe(true);
+
+    const receiving = resolveTenantActions("Open receiving", "HOTEL");
+    expect(receiving.some((action) => action.href === "/orders?view=receiving")).toBe(true);
+  });
+
+  it("routes supplier orders, carrier deliveries, and funder funding phrases", () => {
+    const supplier = resolveTenantActions("Show orders", "SUPPLIER");
+    expect(supplier.some((action) => action.href === "/orders")).toBe(true);
+
+    const carrier = resolveTenantActions("Show my deliveries", "SHIPPING");
+    expect(carrier.some((action) => action.href === "/carrier")).toBe(true);
+
+    const funder = resolveTenantActions("Show funding records", "FACTORING");
+    expect(funder.some((action) => action.href === "/funding")).toBe(true);
+  });
 });
