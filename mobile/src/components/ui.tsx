@@ -72,7 +72,7 @@ export function T({
 function ctaFill(tone: "blue" | "chrome" | "quiet") {
   if (tone === "chrome") {
     return {
-      backgroundColor: "#e8e9ea",
+      backgroundColor: colors.ctaChrome,
       borderWidth: 1,
       borderColor: "rgba(0,0,0,0.12)",
     };
@@ -234,7 +234,7 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "green" 
       </View>
     );
   }
-  const background = tone === "green" ? "#14301f" : tone === "quiet" ? colors.paperRaised : colors.blue;
+  const background = tone === "green" ? colors.greenTone : tone === "quiet" ? colors.paperRaised : colors.blue;
   const color = tone === "green" ? colors.green : tone === "quiet" ? colors.ink : colors.onBlue;
   const isBlue = tone === "blue";
   return (
@@ -245,7 +245,7 @@ export function Status({ label, tone }: { label: string; tone: "blue" | "green" 
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderWidth: 1,
-      borderColor: isBlue ? "rgba(0,0,0,0.18)" : tone === "green" ? "#1f4a30" : colors.frame,
+      borderColor: isBlue ? "rgba(0,0,0,0.18)" : tone === "green" ? colors.greenToneBorder : colors.frame,
     }}>
       <Text
         allowFontScaling
@@ -286,7 +286,7 @@ export function Notice({ children, tone = "paper" }: { children: string; tone?: 
       paddingHorizontal: space.md,
       paddingVertical: 12,
       borderWidth: 1,
-      borderColor: tone === "danger" ? "#6a342c" : colors.frame,
+      borderColor: tone === "danger" ? colors.dangerBorder : colors.frame,
     }}>
       <T kind="body" tone={tone === "danger" ? "danger" : "muted"}>{children}</T>
     </View>
