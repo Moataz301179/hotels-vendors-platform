@@ -21,17 +21,24 @@ Owner-authorized path to ship HOVIN to TestFlight / Play and enable store links 
 
 ## Execute — Mac simulator (owner machine)
 
+Full troubleshooting for “Building • 451/455”, yellow RN warnings, “No script URL”, blank screens, and Apple Account simulator sheets: **`docs/hovin-simulator-runbook.md`**. Product is the native **HOVIN** client (`com.hotelsvendors.hovin`) — **not** Expo Go.
+
 ```bash
 cd mobile
-git checkout cursor/hovin-motion-system-168e
+git checkout cursor/hovin-simulator-fix-168e   # or cursor/hovin-intelligence-168e once merged
 npm ci
+# Pin Node for Xcode GUI (required — empty NODE_BINARY hangs late script phases):
+node -e "console.log(process.execPath)"   # paste into ios/.xcode.env.local as NODE_BINARY
+npx pod-install
+npm run doctor:ios
 export EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_…
 export EXPO_PUBLIC_HOVIN_API_ORIGIN=https://www.hotelsvendors.com
-npx expo run:ios
+npm start          # Terminal A — required for Debug
+npm run ios        # Terminal B
 npx expo run:android
 ```
 
-Fresh native rebuild is required after Reanimated was added.
+Fresh native rebuild is required after Reanimated was added. Prefer `npm run ios` over bare Xcode Run; if using Xcode, open `ios/HOVIN.xcworkspace` and keep Metro up for Debug.
 
 ## Execute — EAS signed builds
 

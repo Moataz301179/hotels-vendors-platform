@@ -1,5 +1,15 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN simulator / Xcode hang diagnosis — 2026-11-14
+
+- Branch: `cursor/hovin-simulator-fix-168e` (from `cursor/hovin-intelligence-168e`). PR #81 open. Not merged. Not deployed.
+- Owner report: HOVIN + simulator “don’t work”; Xcode screenshot showed **Building • 451/455**, 19 yellow warnings, destination **iPhone 17 Pro**, git branch in the Xcode chrome was `cursor/eseal-local-signer-d37d`. Follow-up: “where is hovin? … is it expo go or hovin?”
+- Verified facts: the product is the native **HOVIN** client at `mobile/` (Expo 54 / RN 0.81, bundle `com.hotelsvendors.hovin`, workspace `mobile/ios/HOVIN.xcworkspace`) — **not** the Expo Go store app. `ios.buildReactNativeFromSource=true` makes late compile/link steps slow. Scheme LaunchAction is **Debug**, which sets `SKIP_BUNDLING=1` (needs Metro). Versioned `ios/.xcode.env` previously used only `command -v node`, which is often empty under Xcode GUI and stalls script phases near the end of the build. Issue-navigator React-cxxreact / Hermes warnings are inherited CocoaPods noise and are not a red failure by themselves. Prior Mac evidence (HANDOVER 2026-11-04) already launched HOVIN on iPhone 17 Pro; Apple Account Verification on the simulator is host state.
+- Repo fixes: robust `mobile/ios/.xcode.env` Node resolution; removed phantom `HOVINTests` from `HOVIN.xcscheme`; `mobile/scripts/ios-sim-doctor.mjs` + `npm run doctor:ios`; visual-review path for `with-hv-public-env.mjs`; runbooks explicitly ban Expo Go (`docs/hovin-simulator-runbook.md`, `mobile/README.md`).
+- This Linux Cloud Agent cannot run Xcode or the simulator. Owner must pin `ios/.xcode.env.local`, run `npm run doctor:ios`, then `npm start` + `npm run ios` on the Mac so **HOVIN.app** installs (or Release for a packaged smoke test). Quit Expo Go if that is what is open.
+- Merge note: merged latest `cursor/hovin-intelligence-168e` (includes dashboard/credit-line #79 and WhatsApp #80); only `HANDOVER.md` conflicted — simulator + base product sections kept.
+- Next action: Moataz runs the Mac steps in `docs/hovin-simulator-runbook.md` on this branch; confirm the simulator icon says HOVIN; do not merge without that local confirmation.
+
 ## Dashboard AI UX + brand shell — 2026-11-14
 
 - Branch: `cursor/dashboard-ai-ux-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed.

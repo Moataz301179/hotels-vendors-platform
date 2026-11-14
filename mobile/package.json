@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit",
     "android": "node scripts/with-hv-public-env.mjs expo run:android",
     "ios": "node scripts/with-hv-public-env.mjs expo run:ios",
+    "doctor:ios": "node scripts/ios-sim-doctor.mjs",
     "export:ios": "node scripts/with-hv-public-env.mjs expo export --platform ios --output-dir dist/ios",
     "release:check": "node scripts/release-readiness.mjs",
     "eas:build:ios": "eas build --platform ios --profile production",
