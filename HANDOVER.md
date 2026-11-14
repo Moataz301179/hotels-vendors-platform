@@ -1,14 +1,20 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN Expo Go SDK 58 — 2026-11-14
+
+- Branch: `cursor/hovin-expo-go-sdk58-168e` (from `cursor/hovin-intelligence-168e`, includes PR #81). Not merged to `main`. Not deployed.
+- Owner root cause: store Expo Go is **58.x**; `mobile/` was SDK **54** → “Project is incompatible with this version of Expo Go”. HOVIN does not require APIs Expo Go lacks, so Expo Go is the primary launch path after upgrade.
+- Repo changes: Expo/`expo-*` → SDK 58, RN 0.88.1, Reanimated/Worklets aligned; added `expo-constants`; removed `eas-cli` from project deps; `FieldShade` uses `StyleSheet.absoluteFill`; clearer missing-`.env.local` Clerk error; runbooks/README/doctor now lead with Expo Go 58 steps. Committed `ios/` / `android/` / EAS left untouched (native regen is a separate PR).
+- Verification (Cloud Agent): `npx expo install --check`, `npx tsc --noEmit`, `npx expo-doctor`, `npx expo export --platform ios|android`, mobile unit tests — see PR.
+- Next action: Moataz updates Expo Go to 58.x, `npm ci` in `mobile/`, sets Clerk key, `npx expo login`, `npm start -- --tunnel`, scans QR; allow `exp://` in Clerk if needed. Do not route to Xcode-only for this.
+
 ## HOVIN simulator / Xcode hang diagnosis — 2026-11-14
 
-- Branch: `cursor/hovin-simulator-fix-168e` (from `cursor/hovin-intelligence-168e`). PR #81 open. Not merged. Not deployed.
+- Branch: `cursor/hovin-simulator-fix-168e` (from `cursor/hovin-intelligence-168e`). PR #81. Landed on intelligence base. Not on `main`. Not deployed.
 - Owner report: HOVIN + simulator “don’t work”; Xcode screenshot showed **Building • 451/455**, 19 yellow warnings, destination **iPhone 17 Pro**, git branch in the Xcode chrome was `cursor/eseal-local-signer-d37d`. Follow-up: “where is hovin? … is it expo go or hovin?”
-- Verified facts: the product is the native **HOVIN** client at `mobile/` (Expo 54 / RN 0.81, bundle `com.hotelsvendors.hovin`, workspace `mobile/ios/HOVIN.xcworkspace`) — **not** the Expo Go store app. `ios.buildReactNativeFromSource=true` makes late compile/link steps slow. Scheme LaunchAction is **Debug**, which sets `SKIP_BUNDLING=1` (needs Metro). Versioned `ios/.xcode.env` previously used only `command -v node`, which is often empty under Xcode GUI and stalls script phases near the end of the build. Issue-navigator React-cxxreact / Hermes warnings are inherited CocoaPods noise and are not a red failure by themselves. Prior Mac evidence (HANDOVER 2026-11-04) already launched HOVIN on iPhone 17 Pro; Apple Account Verification on the simulator is host state.
-- Repo fixes: robust `mobile/ios/.xcode.env` Node resolution; removed phantom `HOVINTests` from `HOVIN.xcscheme`; `mobile/scripts/ios-sim-doctor.mjs` + `npm run doctor:ios`; visual-review path for `with-hv-public-env.mjs`; runbooks explicitly ban Expo Go (`docs/hovin-simulator-runbook.md`, `mobile/README.md`).
-- This Linux Cloud Agent cannot run Xcode or the simulator. Owner must pin `ios/.xcode.env.local`, run `npm run doctor:ios`, then `npm start` + `npm run ios` on the Mac so **HOVIN.app** installs (or Release for a packaged smoke test). Quit Expo Go if that is what is open.
-- Merge note: merged latest `cursor/hovin-intelligence-168e` (includes dashboard/credit-line #79 and WhatsApp #80); only `HANDOVER.md` conflicted — simulator + base product sections kept.
-- Next action: Moataz runs the Mac steps in `docs/hovin-simulator-runbook.md` on this branch; confirm the simulator icon says HOVIN; do not merge without that local confirmation.
+- Verified facts (at the time): custom native client at `mobile/` (then Expo 54 / RN 0.81, bundle `com.hotelsvendors.hovin`, workspace `mobile/ios/HOVIN.xcworkspace`). `ios.buildReactNativeFromSource=true` makes late compile/link steps slow. Scheme LaunchAction is **Debug**, which sets `SKIP_BUNDLING=1` (needs Metro). Versioned `ios/.xcode.env` previously used only `command -v node`, which is often empty under Xcode GUI. Superseded for day-to-day launch by the Expo Go SDK 58 path above; Xcode remains optional advanced.
+- Repo fixes: robust `mobile/ios/.xcode.env` Node resolution; removed phantom `HOVINTests` from `HOVIN.xcscheme`; `mobile/scripts/ios-sim-doctor.mjs` + `npm run doctor:ios`; visual-review path for `with-hv-public-env.mjs`.
+- Next action for native-only work: Mac steps in the optional section of `docs/hovin-simulator-runbook.md`.
 
 ## Dashboard AI UX + brand shell — 2026-11-14
 

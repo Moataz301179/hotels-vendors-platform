@@ -24,7 +24,7 @@ if (!publishableKey?.startsWith('pk_')) {
     publishableKey = undefined;
   } else {
     throw new Error(
-      'A Clerk publishable key is required. Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY, or set EXPO_PUBLIC_HOVIN_VISUAL_REVIEW=1 for the watermarked gallery. See docs/hovin-simulator-runbook.md.',
+      'A Clerk publishable key is required. Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your shell, or NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in ../.env.local (file may be missing). For the watermarked gallery without Clerk, set EXPO_PUBLIC_HOVIN_VISUAL_REVIEW=1. See docs/hovin-simulator-runbook.md.',
     );
   }
 }
