@@ -31,7 +31,7 @@ describe("homepage hero OLED fade", () => {
     expect(css).not.toMatch(/\.brand\s*\{/);
     expect(css).toMatch(/\.copy h1\s*\{[^}]*color:\s*#fff/s);
     expect(css).toMatch(/\.copy h1 em\s*\{[^}]*color:\s*inherit/s);
-    expect(css).toMatch(/\.eyebrow\s*\{[^}]*color:\s*rgba\(255,\s*255,\s*255/s);
+    expect(css).toMatch(/\.eyebrow\s*\{[^}]*color:\s*rgba\(157,\s*195,\s*230/s);
     expect(css).toMatch(/\.primary\s*\{[^}]*background:\s*var\(--cobalt-600\)/s);
     expect(css).not.toMatch(/\.copy h1\s*\{[^}]*color:\s*var\(--ink\)/s);
     expect(css).not.toMatch(/\.copy h1 em\s*\{[^}]*color:\s*var\(--cobalt/s);

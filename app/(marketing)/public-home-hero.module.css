@@ -107,8 +107,8 @@
 
 .eyebrow {
   margin: 0 0 18px;
-  /* White metadata on the image overlay — not amber/cobalt type. */
-  color: rgba(255, 255, 255, 0.78) !important;
+  /* Muted light blue metadata on the image overlay — not amber or CTA cobalt. */
+  color: rgba(157, 195, 230, 0.88) !important;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
