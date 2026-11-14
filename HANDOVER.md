@@ -6,6 +6,7 @@
 - Owner root cause: store Expo Go is **58.x**; `mobile/` was SDK **54** → “Project is incompatible with this version of Expo Go”. HOVIN does not require APIs Expo Go lacks, so Expo Go is the primary launch path after upgrade.
 - Repo changes: Expo/`expo-*` → SDK 58, RN 0.88.1, Reanimated/Worklets aligned; added `expo-constants`; removed `eas-cli` from project deps; `FieldShade` uses `StyleSheet.absoluteFill`; clearer missing-`.env.local` Clerk error; runbooks/README/doctor now lead with Expo Go 58 steps. Committed `ios/` / `android/` / EAS left untouched (native regen is a separate PR).
 - Verification (Cloud Agent): `npx expo install --check`, `npx tsc --noEmit`, `npx expo-doctor`, `npx expo export --platform ios|android`, mobile unit tests — see PR.
+- CI fix (PR #82): first `mobile-gates` failed — lockfile built with `--legacy-peer-deps` omitted RN metro peer packages that strict `npm ci` requires; also CI Node 20 vs RN 0.88 engine `^22.13`. Regenerated lockfile with plain `npm install`; workflow Node → 22. Local `npm ci` + tsc + expo config + vitest.mobile pass.
 - Next action: Moataz updates Expo Go to 58.x, `npm ci` in `mobile/`, sets Clerk key, `npx expo login`, `npm start -- --tunnel`, scans QR; allow `exp://` in Clerk if needed. Do not route to Xcode-only for this.
 
 ## HOVIN simulator / Xcode hang diagnosis — 2026-11-14
