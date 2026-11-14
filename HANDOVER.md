@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Production deploy failed twice — same SHA already live — 2026-11-14 (03:32 Africa/Cairo)
+
+- Runs [`43540041524`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540041524) and [`43540648183`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540648183) both failed at **Activate release and verify** in ~2s with no remote stdout.
+- Head SHA for both: `c5456b61` — identical to live `/api/health` and to the last successful deploy `43392522982`.
+- Cause: activator `test ! -e /var/www/hv-releases/github-$GITHUB_SHA` (same class of failure as run `42939432074`). Redeploying an already-installed commit is refused by design.
+- Fix on #77: print an explicit refusal message naming the SHA/path instead of a silent `test` failure.
+- Next action: merge #77 so `main` gets a new SHA, then run Production Deploy once on that new SHA with `APPLY_AFTER_NEON_BACKUP`. Do not re-run deploy against `c5456b61`.
+
 ## Production deploy not stuck — failed confirmation — 2026-11-14 (03:16 Africa/Cairo)
 
 - No Actions run is currently `in_progress` or queued.
