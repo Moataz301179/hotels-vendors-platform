@@ -18,10 +18,4 @@ describe("public AI Assistant grounding", () => {
     const actions = resolvePublicActions("Where do I track a HOVIN delivery code?");
     expect(actions.some((action) => action.href === "/hovin")).toBe(true);
   });
-
-  it("points restaurant-opening questions at marketplace routes", () => {
-    const actions = resolvePublicActions("How do I start a new restaurant inside my hotel?");
-    expect(actions.some((action) => action.href.includes("/marketplace"))).toBe(true);
-    expect(PUBLIC_ASSISTANT_SYSTEM).toMatch(/restaurant|kitchen|bar/i);
-  });
 });

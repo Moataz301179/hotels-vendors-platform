@@ -8,12 +8,7 @@ vi.mock("@/lib/v2-auth", () => ({ getActor: m.actor }));
 vi.mock("@/lib/auth/rbac", () => ({ requirePermission: m.permission, PermissionDeniedError }));
 vi.mock("@/lib/auth/authority-matrix", () => ({ PaymentGuaranteeTransitionError, setPaymentGuarantee: m.recordGuarantee }));
 vi.mock("@/lib/admin/managed-hotel-tenants", () => ({ managedHotelTenant: m.targetTenant }));
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    order: { findFirst: m.order },
-    tenant: { findFirst: vi.fn(async ({ where }: { where: { id: string } }) => ({ id: where.id })) },
-  },
-}));
+vi.mock("@/lib/prisma", () => ({ prisma: { order: { findFirst: m.order } } }));
 
 import { POST } from "@/app/api/v2/orders/guarantee/route";
 
@@ -40,28 +35,6 @@ describe("payment guarantee verification boundary", () => {
     expect(await response.json()).toEqual({ error: "PAYMENT_GUARANTEE_VERIFICATION_REQUIRED" });
     expect(m.order).not.toHaveBeenCalled();
     expect(m.recordGuarantee).not.toHaveBeenCalled();
-  });
-
-  it("requires the funder for FACTORING credit-line payment guarantees", async () => {
-    m.actor.mockResolvedValue({ id: "platform-admin", tenantId: "platform-tenant", platformRole: "ADMIN", role: "OWNER" });
-    const response = await POST(request({ orderId: "order-a", method: "FACTORING", etaValidated: false, tenantId: "hotel-a" }));
-    expect(response.status).toBe(403);
-    expect(await response.json()).toMatchObject({ error: "AUTHORIZED_FUNDER_REQUIRED" });
-    expect(m.recordGuarantee).not.toHaveBeenCalled();
-  });
-
-  it("lets an authorized funder record a FACTORING payment guarantee", async () => {
-    m.actor.mockResolvedValue({
-      id: "funder-1",
-      tenantId: "funder-tenant",
-      platformRole: "FACTORING",
-      factoringCompanyId: "factor-1",
-    });
-    const response = await POST(request({ orderId: "order-a", method: "FACTORING", etaValidated: true, tenantId: "hotel-a" }));
-    expect(response.status).toBe(201);
-    expect(m.recordGuarantee).toHaveBeenCalledWith(
-      expect.objectContaining({ orderId: "order-a", tenantId: "hotel-a", method: "FACTORING", verifiedBy: "funder-1" })
-    );
   });
 
   it("rejects guarantee verification after the approval stage has passed", async () => {

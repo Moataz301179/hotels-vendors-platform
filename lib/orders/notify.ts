@@ -64,8 +64,7 @@ export async function notifyOrderTransition(input: OrderTransition): Promise<voi
   const subject = `${SUBJECTS[to] ?? "Order update"} — ${orderNumber}`;
   const body = `Order ${orderNumber} ${BODIES[to] ?? "changed status."} (${from} → ${to})`;
 
-  // Hotel requester: durable in-app record. Email + WhatsApp only when permitted.
-  // Copy stays buyer-safe (order number + status); supplier identity is never added here.
+  // Hotel requester: durable in-app record. Email only when permitted.
   try {
     await notify({
       tenantId,
@@ -80,24 +79,6 @@ export async function notifyOrderTransition(input: OrderTransition): Promise<voi
     });
   } catch (error) {
     console.error(`[notifications] hotel requester notification failed for order ${orderId}`, error);
-  }
-
-  if (allowExternal) {
-    try {
-      await notify({
-        tenantId,
-        userId: requesterId,
-        type,
-        channel: "WHATSAPP",
-        subject,
-        body,
-        entityType: "ORDER",
-        entityId: orderId,
-        suppressExternal: false,
-      });
-    } catch (error) {
-      console.error(`[notifications] hotel WhatsApp notification failed for order ${orderId}`, error);
-    }
   }
 
   // Supplier: in-app only, external suppressed until final release.

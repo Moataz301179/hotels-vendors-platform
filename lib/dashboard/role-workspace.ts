@@ -15,11 +15,11 @@ const hotelManagementWorkspace: RoleWorkspace = {
 const workspaces: Record<string, RoleWorkspace> = {
   HOTEL: {
     title: "Sourcing control",
-    description: "One dashboard for sealed sourcing, transaction handoffs, and intelligence screens—without inventing empty metrics.",
+    description: "Move a requirement from catalog discovery to a controlled RFQ and approval decision.",
     actions: [
-      { title: "Source supplies", description: "Search verified catalog records and request a quote without supplier disclosure.", href: "/workspace/marketplace" },
-      { title: "Follow approvals", description: "Track purchase orders waiting for an accountable decision.", href: "/orders?view=approval" },
-      { title: "Open Market Compass", description: "Inspect recorded opportunity signals before a commercial decision.", href: "/intelligence" },
+      { title: "Source catalog items", description: "Search verified catalog records and request a quote without supplier disclosure.", href: "/workspace/marketplace" },
+      { title: "Review comparable terms", description: "Compare recorded commercial terms before selecting a response for approval.", href: "/workspace/marketplace" },
+      { title: "Follow approvals", description: "Track purchase orders and their recorded approval state.", href: "/orders" },
     ],
   },
   SUPPLIER: {

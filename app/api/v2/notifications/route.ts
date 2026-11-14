@@ -4,7 +4,6 @@ import { getActor } from "@/lib/v2-auth";
 import { requirePermission } from "@/lib/auth/rbac";
 import { PermissionDeniedError } from "@/lib/auth/rbac";
 import { listNotifications, markNotificationRead, unreadCount } from "@/lib/notifications/service";
-import { isWhatsAppConfigured } from "@/lib/notifications/whatsapp";
 
 export async function GET() {
   const actor = await getActor();
@@ -29,8 +28,8 @@ export async function GET() {
   return NextResponse.json({
     notifications,
     unread,
-    // Honest channel readiness — WhatsApp flips on when Meta/Twilio env is present.
-    channels: { inApp: true, email: true, sms: false, whatsapp: isWhatsAppConfigured() },
+    // Honest: SMS/WhatsApp have no provider wired yet.
+    channels: { inApp: true, email: true, sms: false, whatsapp: false },
   });
 }
 

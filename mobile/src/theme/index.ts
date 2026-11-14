@@ -46,13 +46,6 @@ export const colors = {
   green: "#3f9a63",
   danger: "#e0705c",
   dangerSoft: "#5a2a24",
-  /** Light charcoal CTA fill used on the chrome header. */
-  ctaChrome: "#e8e9ea",
-  /** Green status pill: fill and hairline border on the dark field. */
-  greenTone: "#14301f",
-  greenToneBorder: "#1f4a30",
-  /** Danger notice hairline border on the dark field. */
-  dangerBorder: "#6a342c",
 } as const;
 
 /** Soft charcoal wash only — stays around `#303234`, never into black. */
