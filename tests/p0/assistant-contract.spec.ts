@@ -113,8 +113,22 @@ describe("AI procurement assistant contract", () => {
     expect(body.evidence).toHaveLength(6);
     expect(body.evidence[0]).toMatchObject({ tool: "catalog_snapshot", source: "prisma", scope: "verified active supplier catalog" });
     expect(body.evidence[0].observedAt).toEqual(expect.any(String));
-    expect(m.llm.mock.calls[0][0][0].content).toContain("inventory_alerts");
-    expect(m.llm.mock.calls[0][0][0].content).toContain("observedAt=");
+    const systemPrompt = m.llm.mock.calls[0][0][0].content as string;
+    expect(systemPrompt).toContain("inventory_alerts");
+    expect(systemPrompt).toContain("EMPTY");
+    expect(systemPrompt).not.toContain("observedAt=");
+  });
+
+  it("returns signed-in product actions for restaurant-opening questions", async () => {
+    const response = await POST(
+      request({ question: "We are starting a new restaurant in the hotel. What should we buy first?" })
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(Array.isArray(body.actions)).toBe(true);
+    expect(body.actions.some((action: { href: string }) => action.href === "/workspace/marketplace")).toBe(true);
+    const systemPrompt = m.llm.mock.calls[0][0][0].content as string;
+    expect(systemPrompt).toMatch(/EMPTY|hospitality procurement/i);
   });
 
   it("executes no query at all for a denied tool", async () => {

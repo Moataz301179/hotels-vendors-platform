@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { executeLLM, type LLMMessage } from "@/lib/ai/llm";
 import { PUBLIC_ASSISTANT_SYSTEM, resolvePublicActions } from "@/lib/ai/public-assistant";
+import {
+  buildTenantSystemPrompt,
+  resolveTenantActions,
+  type ToolSnapshot,
+} from "@/lib/ai/tenant-assistant";
 import { getActor } from "@/lib/v2-auth";
 import { prisma } from "@/lib/prisma";
 import { calculateFullFeeBreakdown } from "@/lib/fintech/fee-math";
@@ -45,12 +50,6 @@ const requestSchema = z.object({
   conversationId: z.string().trim().max(80).optional(),
   hotelId: z.string().trim().max(80).optional(),
 });
-
-type ToolSnapshot = {
-  name: string;
-  result: Record<string, unknown>;
-  evidence: { source: "prisma"; observedAt: string; scope: string };
-};
 
 function observedTool(name: string, result: Record<string, unknown>, scope: string): ToolSnapshot {
   return { name, result, evidence: { source: "prisma", observedAt: new Date().toISOString(), scope } };
@@ -336,18 +335,15 @@ export async function POST(req: Request) {
   const tools = await collectProcurementTools(actor.tenantId, actor);
   const feeTool = feeCalculationTool(safeQuestion);
   if (feeTool && (await canUseTool(actor, "fee_calculation"))) tools.push(feeTool);
-  const toolContext = tools.map((tool) => `${tool.name} [source=${tool.evidence.source}; scope=${tool.evidence.scope}; observedAt=${tool.evidence.observedAt}]: ${JSON.stringify(tool.result)}`).join("\n");
   const system: LLMMessage = {
     role: "system",
-    content: [
-      "You are HOVIN, the HOTELSVENDORS procurement assistant.",
-      `Authenticated role: ${actor.platformRole}; tenant scope: ${actor.tenantId}. Never reveal or infer data outside this tenant.`,
-      "Give concise, practical procurement guidance. Distinguish observed data from recommendations. Never invent supplier prices, listings, approvals, savings, or delivery dates.",
-      "When recommending an action, cite the relevant tool name and observedAt timestamp. If a tool has no records, say no records were observed; do not fill the gap with examples.",
-      "Available read-only tools were executed on the server; use only the following results and say when data is unavailable:",
-      toolContext,
-    ].join("\n"),
+    content: buildTenantSystemPrompt({
+      platformRole: actor.platformRole,
+      tenantId: actor.tenantId,
+      tools,
+    }),
   };
+  const tenantActions = resolveTenantActions(safeQuestion, actor.platformRole);
 
   const historyForModel = trustedHistory.length > 0 ? trustedHistory : safePrior;
   const result = await executeLLM([system, ...historyForModel, { role: "user", content: safeQuestion }], { temperature: 0.2, maxTokens: 700, timeoutMs: 45_000, taskComplexity: "medium" });
@@ -397,7 +393,7 @@ export async function POST(req: Request) {
     conversationId: conversation.id,
     toolsUsed: tools.map((t) => t.name),
     evidence: tools.map((t) => ({ tool: t.name, source: t.evidence.source, scope: t.evidence.scope, observedAt: t.evidence.observedAt })),
-    actions: resolvePublicActions(safeQuestion),
+    actions: tenantActions,
     provider: result.provider,
     model: result.model,
     warnings: {

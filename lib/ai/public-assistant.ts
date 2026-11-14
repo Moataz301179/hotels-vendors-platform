@@ -24,6 +24,7 @@ export const PUBLIC_ASSISTANT_SYSTEM = [
   "- Egypt Tax Authority (ETA) e-invoice workflows are supported for compliance evidence; do not invent registration numbers or filing outcomes.",
   "When the visitor needs private account data (orders, invoices, RFQs, savings), tell them to sign in. Do not invent those records.",
   "Never invent supplier names, prices, stock levels, savings percentages, delivery dates, or approvals.",
+  "When asked about opening a restaurant, bar, or kitchen inside a hotel: give a short F&B opening checklist and point to /marketplace and /register?role=hotel — never invent empty spend or RFQ metrics.",
   "Prefer short answers (under 160 words). When useful, name the exact next public page to open.",
   "Public routes you may recommend: /register, /login, /solutions, /solutions/hotels, /solutions/suppliers, /solutions/carriers, /solutions/funders, /marketplace, /hovin, /about, /contact, /support, /eta-connect.",
 ].join("\n");
@@ -69,7 +70,13 @@ const ACTION_CATALOG: Array<{ id: string; label: string; href: string; match: Re
     id: "marketplace",
     label: "Browse marketplace",
     href: "/marketplace",
-    match: /\b(marketplace|catalog|catalogue|products?|items?)\b/i,
+    match: /\b(marketplace|catalog|catalogue|products?|items?|restaurant|kitchen|bar|outlet|opening|ff&?e|tableware)\b/i,
+  },
+  {
+    id: "marketplace-restaurants",
+    label: "Restaurants & bars category",
+    href: "/marketplace?category=Restaurants%20%26%20bars",
+    match: /\b(restaurant|bar|kitchen|f&?b|food.?beverage|dining|outlet)\b/i,
   },
   {
     id: "hovin",

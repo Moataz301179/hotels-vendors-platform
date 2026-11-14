@@ -34,6 +34,12 @@ describe("assistant honesty contract", () => {
     expect(route).toContain("scope");
   });
 
+  it("uses the tenant assistant prompt builder instead of dumping empty tool timestamps", () => {
+    expect(route).toContain("buildTenantSystemPrompt");
+    expect(route).toContain("resolveTenantActions");
+    expect(route).not.toContain("cite the relevant tool name and observedAt timestamp");
+  });
+
   it("authorizes the actor before collecting any tool", () => {
     expect(route).toContain("hasPermission");
     expect(route).toContain("ASSISTANT_ENTRY_PERMISSIONS");
