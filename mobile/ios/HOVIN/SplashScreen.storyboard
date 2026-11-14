@@ -25,10 +25,10 @@
                                 <fontDescription key="fontDescription" type="system" weight="bold" pointSize="30"/>
                                 <color key="textColor" red="0.968627451" green="0.9607843137" blue="0.937254902" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="HotelsVendors · receiving companion" textAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HOVIN-Launch-Context">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="By HOTELSVENDORS" textAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HOVIN-Launch-Context">
                                 <rect key="frame" x="58" y="554" width="277" height="17"/>
                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="13"/>
-                                <color key="textColor" red="0.6117647059" green="0.8078431373" blue="0.937254902" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="textColor" red="0.7725490196" green="0.7764705882" blue="0.7803921569" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
