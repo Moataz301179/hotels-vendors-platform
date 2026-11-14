@@ -105,17 +105,6 @@
   color: #fff;
 }
 
-.brand {
-  margin: 0 0 10px;
-  font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(28px, 3.2vw, 40px);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: #fff;
-  text-shadow: 0 1px 18px rgba(15, 18, 22, 0.35);
-}
-
 .eyebrow {
   margin: 0 0 18px;
   /* White metadata on the image overlay — not amber/cobalt type. */
@@ -270,7 +259,6 @@
     max-width: none;
   }
 
-  .brand,
   .copy h1,
   .lead,
   .funderOption {

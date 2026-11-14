@@ -74,7 +74,6 @@ export default function MarketingPage() {
           </div>
           <div className={heroStyles.shell}>
             <div className={heroStyles.copy}>
-              <p className={heroStyles.brand}>HotelsVendors</p>
               <p className={heroStyles.eyebrow}>Egypt · Hospitality procurement software</p>
               <h1>We are the full operating network for hotel procurement.</h1>
               <p className={heroStyles.lead}>

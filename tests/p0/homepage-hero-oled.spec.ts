@@ -10,10 +10,10 @@ describe("homepage hero OLED fade", () => {
     expect(page).toContain("heroStyles.oled");
     expect(page).toContain("heroStyles.oledTexture");
     expect(page).toContain("heroStyles.fade");
-    expect(page).toContain("HotelsVendors");
     expect(page).toContain("We are the full operating network for hotel procurement.");
     expect(page).not.toContain("One operating record for hotel purchasing");
     expect(page).toContain("See how it works");
+    expect(page).not.toContain('heroStyles.brand');
     expect(page).not.toContain("Technology reimagined for hotel procurement");
     expect(page).not.toContain("Hospitality operating network");
     expect(page).not.toContain("Authorized hospitality imagery");
@@ -28,7 +28,7 @@ describe("homepage hero OLED fade", () => {
   });
 
   it("overlays hero type in white on a dark wash — cobalt only on the CTA", () => {
-    expect(css).toMatch(/\.brand\s*\{[^}]*color:\s*#fff/s);
+    expect(css).not.toMatch(/\.brand\s*\{/);
     expect(css).toMatch(/\.copy h1\s*\{[^}]*color:\s*#fff/s);
     expect(css).toMatch(/\.copy h1 em\s*\{[^}]*color:\s*inherit/s);
     expect(css).toMatch(/\.eyebrow\s*\{[^}]*color:\s*rgba\(255,\s*255,\s*255/s);
