@@ -9,8 +9,8 @@ import {
   useFonts as useJakarta,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { SplashScreen, Stack } from "expo-router";
-import { useEffect, type ReactNode } from "react";
-import { View } from "react-native";
+import { useEffect, useState, type ReactNode } from "react";
+import { Image, Text, View } from "react-native";
 import { LocaleProvider, useLocale } from "../src/i18n";
 import { useReduceMotion } from "../src/motion";
 import { PhoneProvider } from "../src/session/usePhone";
@@ -56,6 +56,27 @@ function AppStack() {
   );
 }
 
+/**
+ * Launch lockup supplied in the splash mockups: the approved HOVIN wordmark
+ * with the parent signature beneath it, on the brand charcoal field. It holds
+ * until Plus Jakarta Sans is ready, so the first painted frame is branded
+ * rather than a blank rectangle.
+ */
+function LaunchLockup() {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.paper, gap: 18 }}>
+      <Image
+        accessibilityLabel="HOVIN"
+        source={require("../assets/hovin-wordmark.png")}
+        style={{ width: 240, height: 89, resizeMode: "contain" }}
+      />
+      <Text style={{ color: colors.muted, fontSize: 11, letterSpacing: 2.8, textTransform: "uppercase" }}>
+        By HOTELSVENDORS
+      </Text>
+    </View>
+  );
+}
+
 export default function RootLayout() {
   const [jakartaLoaded] = useJakarta({
     PlusJakartaSans_400Regular,
@@ -64,13 +85,22 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
   });
   const fontsLoaded = jakartaLoaded;
+  const [launchHoldDone, setLaunchHoldDone] = useState(false);
+
+  useEffect(() => {
+    // Start the hold only once the brand font is ready. Measuring from mount
+    // lets a slow font load consume the window, so the lockup never paints.
+    if (!fontsLoaded) return;
+    const timer = setTimeout(() => setLaunchHoldDone(true), 900);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded]);
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
+  if (!fontsLoaded || !launchHoldDone) {
+    return <LaunchLockup />;
   }
 
   const tree = (
