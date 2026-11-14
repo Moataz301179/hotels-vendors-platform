@@ -1,5 +1,14 @@
 # HotelsVendors — Production-Ready Handover
 
+## Production deploy not stuck — failed confirmation — 2026-11-14 (03:16 Africa/Cairo)
+
+- No Actions run is currently `in_progress` or queued.
+- Latest production deploy run [`43534291413`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43534291413) (02:27 Africa/Cairo) **failed in ~3 minutes**, not hung.
+- Cause: confirmation input was `" APPLY_AFTER_NEON_BACKUP"` (leading space) vs required exact `APPLY_AFTER_NEON_BACKUP`.
+- Prior successful deploy: run `43392522982` at 10:20 Africa/Cairo on 2026-11-13; live `/api/health` still `c5456b61`.
+- Hardening on #77: trim whitespace on the confirmation input before compare.
+- Next action: merge #77 (for hero + trim), then re-run deploy with exact `APPLY_AFTER_NEON_BACKUP` (no spaces). Until #77 merges, a successful deploy still ships current `main` only.
+
 ## Hero title — full operating network — 2026-11-14 (02:50 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.

@@ -139,9 +139,13 @@ jobs:
           gzip hv-release.tar
           mv hv-release.tar.gz hv-release.tgz
       - name: Require explicit production migration confirmation
+        env:
+          PRODUCTION_MIGRATION_CONFIRMATION: ${{ inputs.production_migration_confirmation }}
         run: |
           set -euo pipefail
-          test "${{ inputs.production_migration_confirmation }}" = "APPLY_AFTER_NEON_BACKUP"
+          # Trim accidental leading/trailing whitespace from the workflow_dispatch input.
+          confirmation="$(printf '%s' "${PRODUCTION_MIGRATION_CONFIRMATION:-}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          test "$confirmation" = "APPLY_AFTER_NEON_BACKUP"
       - name: Apply approved production migrations and verify the schema
         env:
           PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
