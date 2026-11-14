@@ -171,7 +171,7 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
               </div>
               <div>
                 <p className="text-sm font-bold text-white">{config.title}</p>
-                <p className="text-[10px] text-white/40 flex items-center gap-1">
+                <p className="text-[10px] text-white/70 flex items-center gap-1">
                   <span
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: `var(${accentVar})` }}
@@ -182,7 +182,16 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: "rgba(255,255,255,0.82)", backgroundColor: "transparent" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "#fff";
+                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "rgba(255,255,255,0.82)";
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
               aria-label="Close AI Assistant"
             >
               <X size={16} />
@@ -195,12 +204,12 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
                 <div className="max-w-[85%] space-y-2">
                   <div
                     className={`rounded-2xl px-4 py-3 text-[13px] leading-relaxed ${
-                      msg.role === "user" ? "text-white" : "text-white/70"
+                      msg.role === "user" ? "text-white" : "text-white/92"
                     }`}
                     style={
                       msg.role === "user"
-                        ? { backgroundColor: `var(${accentVar})`, color: "var(--surface)" }
-                        : { backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }
+                        ? { backgroundColor: "var(--cobalt-600, #5B92FE)", color: "#fff" }
+                        : { backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }
                     }
                   >
                     {msg.content}
@@ -211,8 +220,8 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
                         <Link
                           key={action.id}
                           href={action.href}
-                          className="inline-flex items-center rounded-full px-3 py-1.5 text-[11px] font-medium text-white/90 transition-colors hover:text-white"
-                          style={{ backgroundColor: "rgba(47,111,176,0.28)", border: "1px solid rgba(157,195,230,0.35)" }}
+                          className="inline-flex items-center rounded-full px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:brightness-110"
+                          style={{ backgroundColor: "var(--cobalt-600, #5B92FE)", border: "1px solid var(--cobalt-600, #5B92FE)" }}
                         >
                           {action.label}
                         </Link>
