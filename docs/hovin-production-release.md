@@ -21,7 +21,7 @@ Owner-authorized path to ship HOVIN to TestFlight / Play and enable store links 
 
 ## Execute — Mac simulator (owner machine)
 
-Full troubleshooting for “Building • 451/455”, yellow RN warnings, “No script URL”, and Apple Account simulator sheets: **`docs/hovin-simulator-runbook.md`**.
+Full troubleshooting for “Building • 451/455”, yellow RN warnings, “No script URL”, blank screens, and Apple Account simulator sheets: **`docs/hovin-simulator-runbook.md`**. Product is the native **HOVIN** client (`com.hotelsvendors.hovin`) — **not** Expo Go.
 
 ```bash
 cd mobile

@@ -2,15 +2,29 @@
 
 This Cloud Agent / Linux VM **cannot** run Xcode or the iPhone simulator. Use this on the Mac that owns the HOVIN checkout.
 
+## HOVIN vs Expo Go (read this first)
+
+| | **HOVIN (correct)** | **Expo Go (wrong for this product)** |
+| --- | --- | --- |
+| What you launch | Native app **`HOVIN`** / bundle `com.hotelsvendors.hovin` | The purple **Expo Go** app from the App Store |
+| How you build it | `npm run ios` or Xcode → `mobile/ios/HOVIN.xcworkspace` | Scanning a Metro QR into Expo Go |
+| Where it lives | Repo folder `mobile/` (Expo SDK + custom native project under `mobile/ios`) | A generic Expo client that does **not** include HOVIN’s native modules |
+
+**Do not use Expo Go.** HOVIN is a custom native client (camera, SQLite, Secure Store, Reanimated, Clerk native, Xcode 27 plugins). Opening Expo Go, or scanning `npm start` into Expo Go, will look empty, crash, or show the wrong product. The home-screen / simulator icon must say **HOVIN**, not Expo Go.
+
+If the simulator shows nothing: confirm the running process is `com.hotelsvendors.hovin` (`xcrun simctl listapps booted | rg hovin`), not Expo Go.
+
 ## What the Xcode screenshot usually means
 
 | Symptom | Likely meaning |
 | --- | --- |
 | Status **Building • 451/455** with only yellow warnings | Often still linking. `ios.buildReactNativeFromSource=true` makes late steps slow (minutes), not dead. |
 | Issue navigator: React-cxxreact “no symbols”, Hermes CDPHandler / integer precision | Inherited React Native / CocoaPods noise. **Non-fatal** unless the build ends with a red error. |
-| App opens to **No script URL provided** | Debug scheme skips embedding JS. Metro is not running. |
+| App opens to **No script URL provided** or a blank charcoal screen | Debug scheme skips embedding JS. Metro is not running — start `npm start`, then relaunch **HOVIN** (not Expo Go). |
+| Config / setup copy instead of phone home | Missing `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (or set `EXPO_PUBLIC_HOVIN_VISUAL_REVIEW=1` for the watermarked gallery). |
 | Simulator stuck / “doesn’t work” with an Apple Account sheet | Host simulator state, not an HOVIN binary failure. Dismiss or skip the Apple ID prompt, then relaunch. |
 | Git branch `cursor/eseal-local-signer-d37d` in Xcode | Wrong line for current HOVIN phone work. Use the HOVIN PR stack below. |
+| You opened **Expo Go** | Wrong client — quit Expo Go and run `npm run ios` so **HOVIN.app** installs. |
 
 Verified earlier on this Mac setup: Xcode 27.1 Release simulator build with `CODE_SIGNING_ALLOWED=NO` produced `HOVIN.app` with an embedded `main.jsbundle`, and `com.hotelsvendors.hovin` launched on **iPhone 17 Pro**.
 
