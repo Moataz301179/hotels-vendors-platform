@@ -1,5 +1,16 @@
 # HotelsVendors — Production-Ready Handover
 
+## WhatsApp channel MVP — 2026-11-14
+
+- Branch: `cursor/whatsapp-channel-mvp-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed. No secrets stored in the repo.
+- Scope: smallest shippable WhatsApp channel on the existing Meta-default gateway (`lib/notifications/whatsapp.ts`, Twilio fallback). Wired `notify({ channel: "WHATSAPP" })`, honest `channels.whatsapp` on `GET /api/v2/notifications`, hotel order-transition WhatsApp when `allowExternal`, and Meta inbound webhook `GET|POST /api/webhooks/whatsapp` with verify-token + `X-Hub-Signature-256`, idempotent routing, and `HELP` / `STATUS` / `STOP`.
+- Review fixes (PR #80): STATUS requires ACTIVE account lookup (aligned with `getActorInternal`) plus `order:read` via `hasPermission` before any order query; inbound processing failures return HTTP 503 and do not mark webhook idempotency complete so Meta can retry.
+- Product boundaries held: no order creation, no credit-line approval, no PO payment via WhatsApp. STATUS returns order number + status only (no supplier identity / private commercial data). Supplier external WhatsApp remains suppressed until final release.
+- Env (empty placeholders in `.env.example`): `WHATSAPP_PROVIDER`, `WHATSAPP_BEARER_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`, optional Twilio trio. Runbook: `docs/operations/whatsapp-channel-mvp.md`.
+- Verification: `npx vitest run tests/p0/whatsapp-webhook.spec.ts tests/p0/whatsapp-inbound-routing.spec.ts tests/p0/whatsapp-gateway.spec.ts tests/p0/notification-service.spec.ts tests/p0/order-transition-notifications.spec.ts`.
+- Unresolved for launch: Meta Business verification + approved templates for cold windows; production secrets on host; Twilio inbound not in MVP; owner must approve merge/deploy. Sibling AI/dashboard/credit-line work was not modified.
+- Next action: Moataz configures Meta webhook + secrets on a non-prod host, smoke-tests inbound HELP/STATUS, then decides merge.
+
 ## Plus Jakarta Sans + AI Assistant — 2026-11-13
 
 - Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.

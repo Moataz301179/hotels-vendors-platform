@@ -5,10 +5,12 @@
  *   - Meta Cloud API   (WHATSAPP_PROVIDER=meta,    default)
  *   - Twilio WhatsApp  (WHATSAPP_PROVIDER=twilio)
  *
- * Env vars (see HOSTINGER-DEPLOY.md / .env.example):
+ * Env vars (see .env.example):
  *   WHATSAPP_PROVIDER          = "meta" | "twilio"
  *   WHATSAPP_BEARER_TOKEN      = Meta permanent token
  *   WHATSAPP_PHONE_NUMBER_ID   = Meta phone number ID
+ *   WHATSAPP_VERIFY_TOKEN      = Meta webhook verify token (inbound)
+ *   WHATSAPP_APP_SECRET        = Meta app secret (X-Hub-Signature-256)
  *   TWILIO_ACCOUNT_SID         = Twilio Account SID
  *   TWILIO_AUTH_TOKEN          = Twilio Auth Token
  *   TWILIO_WHATSAPP_FROM       = Twilio WhatsApp sender (e.g. +14155238886)
@@ -16,6 +18,8 @@
  * All senders return a boolean so callers can report delivery status without
  * throwing (invite flows treat WhatsApp as best-effort).
  */
+
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export interface WhatsAppMessage {
   /** Recipient number. Accepts +20..., 20..., or spaces/dashes. */
@@ -28,7 +32,7 @@ const META_GRAPH_BASE = "https://graph.facebook.com";
 const META_GRAPH_VERSION = "v18.0";
 
 /** Normalize to E.164 digits (no leading +) — e.g. "+20 100 123 4567" -> "201001234567". */
-function normalizeDigits(raw: string): string {
+export function normalizeWhatsAppDigits(raw: string): string {
   return raw.replace(/[^\d]/g, "");
 }
 
@@ -58,7 +62,7 @@ async function sendViaMeta(msg: WhatsAppMessage): Promise<boolean> {
     },
     body: JSON.stringify({
       messaging_product: "whatsapp",
-      to: normalizeDigits(msg.to),
+      to: normalizeWhatsAppDigits(msg.to),
       type: "text",
       text: { body: msg.body },
     }),
@@ -87,7 +91,7 @@ async function sendViaTwilio(msg: WhatsAppMessage): Promise<boolean> {
     },
     body: new URLSearchParams({
       From: `whatsapp:${from}`,
-      To: `whatsapp:+${normalizeDigits(msg.to)}`,
+      To: `whatsapp:+${normalizeWhatsAppDigits(msg.to)}`,
       Body: msg.body,
     }).toString(),
   });
@@ -130,4 +134,43 @@ export async function sendWhatsApp(msg: WhatsAppMessage): Promise<boolean> {
  */
 export function isWhatsAppConfigured(): boolean {
   return isMetaConfigured() || isTwilioConfigured();
+}
+
+/**
+ * Meta Cloud API webhook subscription verification (hub.challenge handshake).
+ * Returns the challenge string when the verify token matches; otherwise null.
+ */
+export function verifyMetaWebhookChallenge(params: {
+  mode: string | null;
+  token: string | null;
+  challenge: string | null;
+}): string | null {
+  const expected = process.env.WHATSAPP_VERIFY_TOKEN;
+  if (!expected) return null;
+  if (params.mode !== "subscribe") return null;
+  if (!params.token || !params.challenge) return null;
+  const a = Buffer.from(params.token);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  return params.challenge;
+}
+
+/**
+ * Verify Meta X-Hub-Signature-256 over the raw request body.
+ * Fails closed when WHATSAPP_APP_SECRET is unset.
+ */
+export function verifyMetaSignature(rawBody: string, signatureHeader: string | null): boolean {
+  const secret = process.env.WHATSAPP_APP_SECRET;
+  if (!secret || !signatureHeader) return false;
+  const prefix = "sha256=";
+  if (!signatureHeader.startsWith(prefix)) return false;
+  const provided = signatureHeader.slice(prefix.length);
+  const expected = createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
+  try {
+    const a = Buffer.from(provided, "hex");
+    const b = Buffer.from(expected, "hex");
+    return a.length === b.length && timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
