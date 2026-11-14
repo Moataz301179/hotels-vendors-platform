@@ -31,6 +31,8 @@ describe("public marketplace sourcing-area entry points", () => {
     expect(covers).toContain("/catalog/cover-furniture-fixtures.jpg");
     expect(covers).toContain("/catalog/cover-safety-compliance.jpg");
     expect(covers).toContain("/catalog/cover-hotel-technology.jpg");
+    expect(covers).toContain("/catalog/cover-housekeeping-laundry.jpg");
+    expect(covers).not.toContain("/catalog/cleaning-supplies.jpg");
     expect(covers).toContain("/catalog/guest-amenities.jpg");
     expect(covers).not.toContain("gastronorm-pan.jpg");
     expect(covers).not.toContain("lobby-armchair.jpg");

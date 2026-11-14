@@ -7,7 +7,7 @@ import { OPERATING_GROUPS } from "@/lib/directory/operating-category";
  */
 export const APPROVED_COVERS: Record<string, { image: string; detail: string }> = {
   "Restaurants & bars": { image: "/catalog/cover-food-beverage.png", detail: "Food, beverage, kitchen and table service" },
-  "Housekeeping & laundry": { image: "/catalog/cleaning-supplies.jpg", detail: "Linen, cleaning and room turnover" },
+  "Housekeeping & laundry": { image: "/catalog/cover-housekeeping-laundry.jpg", detail: "Linen, cleaning and room turnover" },
   "Guest rooms & amenities": { image: "/catalog/guest-amenities.jpg", detail: "In-room amenities and replenishment" },
   "Engineering & maintenance": { image: "/catalog/electrical-fixture.jpg", detail: "Property systems, parts and maintenance" },
   "Furniture, fixtures & outdoor": { image: "/catalog/cover-furniture-fixtures.jpg", detail: "Rooms, public areas and outdoor furniture" },
