@@ -21,7 +21,16 @@ describe("public marketplace sourcing-area entry points", () => {
     expect(visuals).toContain("/catalog/rice.jpg");
     expect(visuals).toContain("/catalog/bath-towel.jpg");
     expect(visuals).toContain("/catalog/guest-amenities.jpg");
-    expect(visuals).not.toMatch(/APPROVED_COVERS[\s\S]*category-/);
+    const covers = visuals.match(/export const APPROVED_COVERS[\s\S]*?= \{[\s\S]*?\n\};/)?.[0] ?? "";
+    expect(covers).not.toContain("category-");
+    expect(covers).toContain("/catalog/cover-food-beverage.png");
+    expect(covers).toContain("/catalog/cover-furniture-fixtures.jpg");
+    expect(covers).toContain("/catalog/cover-safety-compliance.jpg");
+    expect(covers).toContain("/catalog/cover-hotel-technology.jpg");
+    expect(covers).not.toContain("gastronorm-pan.jpg");
+    expect(covers).not.toContain("lobby-armchair.jpg");
+    expect(covers).not.toContain("fire-extinguisher.jpg");
+    expect(covers).not.toContain("guest-tv.jpg");
     expect(directory).toContain("MarketplaceCarousel");
     expect(directory).not.toContain("getProductImage");
     expect(directory).not.toContain("unsplash");

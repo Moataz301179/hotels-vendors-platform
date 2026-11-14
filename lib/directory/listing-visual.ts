@@ -6,14 +6,14 @@ import { OPERATING_GROUPS, operatingCategory } from "@/lib/directory/operating-c
  * operating-area covers. Covers remain only as a last-resort fallback.
  */
 export const APPROVED_COVERS: Record<string, { image: string; detail: string }> = {
-  "Restaurants & bars": { image: "/catalog/gastronorm-pan.jpg", detail: "Food, beverage, kitchen and table service" },
+  "Restaurants & bars": { image: "/catalog/cover-food-beverage.png", detail: "Food, beverage, kitchen and table service" },
   "Housekeeping & laundry": { image: "/catalog/cleaning-supplies.jpg", detail: "Linen, cleaning and room turnover" },
   "Guest rooms & amenities": { image: "/catalog/guest-amenities.jpg", detail: "In-room amenities and replenishment" },
   "Engineering & maintenance": { image: "/catalog/electrical-fixture.jpg", detail: "Property systems, parts and maintenance" },
-  "Furniture, fixtures & outdoor": { image: "/catalog/lobby-armchair.jpg", detail: "Rooms, public areas and outdoor furniture" },
+  "Furniture, fixtures & outdoor": { image: "/catalog/cover-furniture-fixtures.jpg", detail: "Rooms, public areas and outdoor furniture" },
   "Hotel services": { image: "/catalog/facility-service.jpg", detail: "Specialist operating services" },
-  "Safety & compliance": { image: "/catalog/fire-extinguisher.jpg", detail: "Detection, protection and response" },
-  "Hotel technology": { image: "/catalog/guest-tv.jpg", detail: "Rooms, meetings and property systems" },
+  "Safety & compliance": { image: "/catalog/cover-safety-compliance.jpg", detail: "Detection, protection and response" },
+  "Hotel technology": { image: "/catalog/cover-hotel-technology.jpg", detail: "Rooms, meetings and property systems" },
   "Uniforms & workwear": { image: "/catalog/chef-uniform.jpg", detail: "Kitchen, housekeeping and front office clothing" },
 };
 
