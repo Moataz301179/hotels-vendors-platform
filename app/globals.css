@@ -645,11 +645,7 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 .ops-reference-card{display:grid;gap:6px;padding:16px;text-align:left;box-shadow:none}
 .ops-reference-card span,.ops-reference-card small{color:var(--muted);font-size:12px}
 .ops-reference-card strong{font-size:16px;letter-spacing:-.02em}
-.buying-path{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:16px 0 0;padding:0;list-style:none}
-.buying-path li{display:grid;gap:3px;min-width:0;padding:10px;border:1px solid var(--line);background:var(--paper-50,#f7f7f0)}
-.buying-path span{color:#3f78e0;font-size:11px;font-weight:750}
-.buying-path strong{font-size:13px}.buying-path a{color:inherit;text-decoration:none}
-.buying-path small{color:var(--muted);font-size:12px;line-height:1.4}
+/* Legacy .buying-path grid retired — see components/procurement/buying-path.module.css */
 .hotel-selection-tray{padding:18px}
 .hotel-selection-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
 .hotel-selection-head h2{margin:4px 0 6px;font-size:24px;letter-spacing:-.03em}
@@ -657,7 +653,7 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 .hotel-selection-actions{display:flex;gap:8px;flex-wrap:wrap}
 .hotel-selection-items{display:grid;gap:8px;margin:14px 0 0;padding:0;list-style:none}
 .hotel-selection-items li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-@media (max-width:800px){.buying-path{grid-template-columns:1fr}.hotel-selection-head{display:grid}}
+@media (max-width:800px){.hotel-selection-head{display:grid}}
 @media (max-width:720px){
   .supplier-register-head,.ops-console .role-dashboard-hero{display:grid}
 }

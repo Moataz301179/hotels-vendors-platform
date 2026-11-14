@@ -1,36 +1,114 @@
-.path {
+.shell {
+  margin: 28px 0 8px;
+  padding: 22px 22px 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--cobalt-600) 8%, transparent), transparent 55%),
+    var(--paper-0);
+}
+
+.head {
   display: grid;
-  gap: 0;
-  margin: 22px 0 0;
+  gap: 8px;
+  max-width: 54rem;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--cobalt-700);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.head h2 {
+  margin: 0;
+  font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.head > p {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.phases {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--line);
+}
+
+.phase {
+  --phase-i: 0;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper-100) 70%, var(--paper-0));
+  animation: phase-arrive 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--phase-i) * 90ms);
+}
+
+.phaseHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.phaseIndex {
+  color: var(--charcoal);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.phaseHead strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.phaseHead small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .step {
   --step-i: 0;
   position: relative;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
-  padding: 18px 4px 18px 0;
-  border-bottom: 1px solid var(--line);
-  animation: buying-arrive 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--step-i) * 55ms);
-}
-
-.rail {
-  position: absolute;
-  left: 21px;
-  top: 52px;
-  bottom: -1px;
-  width: 1px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cobalt-600) 35%, var(--line)), var(--line));
-}
-
-.step:last-child .rail {
-  display: none;
+  animation: step-arrive 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(80ms + var(--step-i) * 45ms);
 }
 
 .mark {
@@ -38,37 +116,65 @@
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border: 1px solid color-mix(in srgb, var(--cobalt-600) 28%, var(--line));
   border-radius: 12px;
-  background: color-mix(in srgb, var(--ice-100) 80%, var(--paper-0));
+  background: var(--paper-0);
   color: var(--cobalt-700);
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .step:hover .mark {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.03);
   border-color: var(--cobalt-600);
-  background: var(--ice-100);
+  background: color-mix(in srgb, var(--ice-100) 85%, var(--paper-0));
+}
+
+.connector {
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: -10px;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cobalt-600) 40%, var(--line)),
+    var(--line)
+  );
 }
 
 .copy {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
-  padding-top: 2px;
+  padding-top: 1px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .index {
   color: var(--charcoal);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
 }
 
+.role {
+  color: var(--cobalt-700);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .copy strong {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.3;
@@ -84,16 +190,15 @@
 }
 
 .copy small {
-  max-width: 62ch;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
-@keyframes buying-arrive {
+@keyframes phase-arrive {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -101,26 +206,32 @@
   }
 }
 
-@media (max-width: 800px) {
-  .step {
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 12px;
-    padding-block: 16px;
+@keyframes step-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-
-  .mark {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+  to {
+    opacity: 1;
+    transform: none;
   }
+}
 
-  .rail {
-    left: 19px;
-    top: 48px;
+@media (max-width: 980px) {
+  .phases {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 16px;
+    border-radius: 14px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .phase,
   .step {
     animation: none;
   }
