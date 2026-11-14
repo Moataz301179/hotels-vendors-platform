@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN Expo Go launch (post #82) — 2026-11-14
+
+- Owner: “still hovin on the mobile simulator doesn’t work” after SDK 58 merge (#82).
+- Verified blockers on current `cursor/hovin-intelligence-168e`: (1) **broken lockfile** from #82 — `npm ci` fails until **PR #83** merges; (2) **Xcode / HOVIN.app** is the wrong path — committed `ios/` not regenerated for SDK 58; (3) missing Clerk key → charcoal ConfigSurface; (4) Expo Go must be **58.x**; (5) Node must be **22.13+**.
+- Splash / logo assets: sibling agents own those — this launch work does not touch branding assets.
+- Launch PR: `cursor/hovin-expo-go-launch-168e` stacks on #83 lockfile + adds `npm run doctor:go`, clearer runbook symptom table, ConfigSurface copy, splash hide timeout. No ios/android/EAS.
+- Next action: Moataz merges #83 (or checks out lockfile/launch branch), runs Expo Go checklist in `docs/hovin-simulator-runbook.md`. Do not open Xcode for this.
+
 ## HOVIN Expo Go SDK 58 — 2026-11-14
 
 - Branch: `cursor/hovin-expo-go-sdk58-168e` (from `cursor/hovin-intelligence-168e`, includes PR #81). Not merged to `main`. Not deployed.

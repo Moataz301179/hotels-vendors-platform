@@ -69,6 +69,14 @@ export default function RootLayout() {
     if (fontsLoaded) void SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
+  // Expo Go: if font download stalls, do not leave a permanent blank charcoal field.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void SplashScreen.hideAsync();
+    }, 8_000);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!fontsLoaded) {
     return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
   }
