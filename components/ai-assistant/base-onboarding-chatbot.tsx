@@ -66,14 +66,29 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
           body: JSON.stringify({ question: userMsg.content, messages: [...messages, userMsg] }),
         });
 
-        if (res.status === 401) throw new Error("SIGN_IN_REQUIRED");
-        if (res.status === 503) throw new Error("AI_PROVIDER_UNAVAILABLE");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = (await res.json()) as {
+        const payload = (await res.json().catch(() => ({}))) as {
           text?: string;
           content?: string;
+          error?: string;
+          code?: string;
           actions?: AssistantAction[];
         };
+
+        if (res.status === 401) throw new Error("SIGN_IN_REQUIRED");
+        if (res.status === 503 || payload.code === "AI_PROVIDER_UNAVAILABLE") {
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              last.content =
+                "The AI Assistant model is offline in this environment (no LLM provider key). Public product pages still work — use a link below, or ask the owner to set GROQ_API_KEY / OLLAMA.";
+              last.actions = Array.isArray(payload.actions) ? payload.actions.slice(0, 4) : undefined;
+            }
+            return next;
+          });
+          return;
+        }
+        if (!res.ok) throw new Error(payload.error || `HTTP ${res.status}`);
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
@@ -115,15 +130,15 @@ export function BaseOnboardingBot({ config }: { config: BotConfig }) {
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg"
               style={{
-                backgroundColor: "#3d4a56",
-                border: "2px solid #9dc3e6",
-                boxShadow: "0 0 24px rgba(47,111,176,0.22)",
+                backgroundColor: "var(--chrome, #141516)",
+                border: "2px solid #5B92FE",
+                boxShadow: "0 0 24px rgba(91,146,254,0.28)",
               }}
             >
               <Icon size={24} color="#e3eef7" strokeWidth={2} />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#5B92FE] border-2 border-[#3d4a56] animate-pulse" />
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#3d4a56] border border-white/10 text-[11px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#5B92FE] border-2 border-[#141516] animate-pulse" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#141516] border border-white/10 text-[11px] text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               {config.tooltip}
             </div>
           </div>

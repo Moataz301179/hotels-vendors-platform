@@ -1,5 +1,82 @@
 # HotelsVendors — Production-Ready Handover
 
+## Production deploy failed twice — same SHA already live — 2026-11-14 (03:32 Africa/Cairo)
+
+- Runs [`43540041524`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540041524) and [`43540648183`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540648183) both failed at **Activate release and verify** in ~2s with no remote stdout.
+- Head SHA for both: `c5456b61` — identical to live `/api/health` and to the last successful deploy `43392522982`.
+- Cause: activator `test ! -e /var/www/hv-releases/github-$GITHUB_SHA` (same class of failure as run `42939432074`). Redeploying an already-installed commit is refused by design.
+- Fix on #77: print an explicit refusal message naming the SHA/path instead of a silent `test` failure.
+- Next action: merge #77 so `main` gets a new SHA, then run Production Deploy once on that new SHA with `APPLY_AFTER_NEON_BACKUP`. Do not re-run deploy against `c5456b61`.
+
+## Production deploy not stuck — failed confirmation — 2026-11-14 (03:16 Africa/Cairo)
+
+- No Actions run is currently `in_progress` or queued.
+- Latest production deploy run [`43534291413`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43534291413) (02:27 Africa/Cairo) **failed in ~3 minutes**, not hung.
+- Cause: confirmation input was `" APPLY_AFTER_NEON_BACKUP"` (leading space) vs required exact `APPLY_AFTER_NEON_BACKUP`.
+- Prior successful deploy: run `43392522982` at 10:20 Africa/Cairo on 2026-11-13; live `/api/health` still `c5456b61`.
+- Hardening on #77: trim whitespace on the confirmation input before compare.
+- Next action: merge #77 (for hero + trim), then re-run deploy with exact `APPLY_AFTER_NEON_BACKUP` (no spaces). Until #77 merges, a successful deploy still ships current `main` only.
+
+## Hero title — full operating network — 2026-11-14 (02:50 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Hero `h1` set to: “We are the full operating network for hotel procurement.”
+- Removed prior two-line title (“One operating record…” / “From requirement to receipt.”).
+- CI homepage grep + hero OLED / devops-csp-recovery specs updated to the new string.
+- Next action: merge #77 → owner deploy with `APPLY_AFTER_NEON_BACKUP`.
+
+## AI Assistant model + carousel image match — 2026-11-14 (00:00 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Symptom: FAB opened but model looked “broken” — no LLM provider in Cloud Agent env → `/api/v2/assistant` 503; tiny local models also over-refused marketing questions.
+- Fix: OLED FAB chrome; honest 503 UX with public actions; public system prompt answers product questions directly; local verify with Ollama `llama3.2:3b` (`OLLAMA_URL` + `OLLAMA_MODEL`).
+- Carousel stills rematched to slide copy: F&B `/category-food-beverage.png`, HK `/category-housekeeping.png`, Eng `/category-engineering-ffe.png`, HOVIN `/hovin-receiving-field.jpg` (no tray/lamp/armchair mismatches).
+- Verification: vitest public-assistant + honesty + widget + failure + hero-carousel-imagery (18 passed); Playwright FAB reply + Register as a hotel action; API `provider=ollama`.
+- Unresolved: production still needs `GROQ_API_KEY` (or reachable Ollama) on the VPS runtime for live answers. Local Clerk uses preview placeholders; live `pk_live_` rejects non-hotelsvendors.com origins in the browser.
+- Next action: CI green on #77 → merge → owner sets LLM secret → `APPLY_AFTER_NEON_BACKUP` deploy.
+
+## Sealed-requirement strip rewrite — 2026-11-13 (23:46 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected: “Custom demand / Can't find the right product yet?” wash-card presentation.
+- Replacement: ledger strip with “When the catalogue ends, keep the trail intact.” + “Open a sealed requirement”.
+- Verification: vitest homepage-join-marketing (4 passed); Playwright transparent strip + new copy.
+
+## OLED chrome for header/footer — 2026-11-13 (23:45 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected mid charcoal `#303234` on public toolbar + footer.
+- New token `--chrome-oled:#141516`; `--chrome` points there. `--charcoal:#303234` remains for labels/metadata.
+- Verification: vitest public-header-contract + join; Playwright nav/footer bg `rgb(20,21,22)`.
+
+## Join section charcoal fill rejected — 2026-11-13 (23:43 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected: Join the network band on `var(--charcoal)` / `#303234`.
+- Fix: warm `var(--paper-100)` surface with ink titles, charcoal labels, cobalt only on path actions/icons.
+- Verification: vitest homepage-join-marketing (3 passed); Playwright join bg `rgb(241,240,232)`.
+
+## Homepage hero white overlay + Arabic funder option — 2026-11-13 (23:41 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Hero title/brand/lead overlay in white on a charcoal wash (full-bleed image retained). Cobalt remains CTA-only.
+- Added Arabic vendor option: «خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة» with English note that HV does not lend + link to `/solutions/funders`.
+- Verification: vitest homepage-hero-oled (5 passed); Playwright white overlay colors + Arabic string present.
+
+## Homepage hero type colors — 2026-11-13 (23:27 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Earlier pass removed amber eyebrows and cobalt `h1 em`. Superseded by white overlay above for the hero media stage.
+
+## Homepage carousel tray/lamp rejection — 2026-11-13 (23:25 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77 (also carries brand-first hero shell copy).
+- Rejected carousel stills removed: `/catalog/gastronorm-pan.jpg` (tray) and `/catalog/led-lamp.jpg` (lamp).
+- Replacement slides: `/category-food-beverage.png`, `/catalog/bed-linen.jpg`, `/catalog/lobby-armchair.jpg`, `/hovin-receiving-field.jpg`.
+- Catalog listing-visual rules for gastronorm/lamp SKUs unchanged (marketplace only).
+- Verification: vitest carousel + OLED specs passed; Playwright confirmed four slide srcs with zero tray/lamp hits.
+- Next action: wait CI green on #77, merge, then owner deploy when stack is on `main`.
+
 ## Solutions + About + footer partner labels — 2026-11-13
 
 - Branch: `cursor/solutions-about-footer-168e`. Rebuilt `/solutions/carriers` and `/solutions/funders` with verified “built today” vs “not connected” honesty.

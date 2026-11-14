@@ -74,27 +74,27 @@ export default function MarketingPage() {
           </div>
           <div className={heroStyles.shell}>
             <div className={heroStyles.copy}>
-              <p className={heroStyles.eyebrow}>Hospitality operating network · Egypt</p>
-              <h1>
-                Technology reimagined for hotel procurement.
-                <em> Every decision connected. Every handoff accountable.</em>
-              </h1>
+              <p className={heroStyles.brand}>HotelsVendors</p>
+              <p className={heroStyles.eyebrow}>Egypt · Hospitality procurement software</p>
+              <h1>We are the full operating network for hotel procurement.</h1>
               <p className={heroStyles.lead}>
-                One protected SaaS record for sourcing, approvals, delivery and receipt evidence—
-                so Egyptian hotel teams control spend without losing the operating trail.
+                Source, approve, deliver and prove what arrived—on a sealed commercial trail your teams can trust.
+              </p>
+              <p className={heroStyles.funderOption} lang="ar" dir="rtl">
+                خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة
+              </p>
+              <p className={heroStyles.funderOptionNote}>
+                Vendor option via independent network funders — HotelsVendors does not lend.{" "}
+                <Link href="/solutions/funders">How referrals work</Link>
               </p>
               <div className={heroStyles.actions}>
                 <Link href="/platform" className={heroStyles.primary}>
-                  Explore the platform <ArrowRight size={17} />
+                  See how it works <ArrowRight size={17} />
                 </Link>
                 <Link href="/hotels/signup" className={heroStyles.secondary}>
-                  Start a hotel workspace
+                  Register your hotel
                 </Link>
               </div>
-              <p className={heroStyles.signal}>
-                <span className={heroStyles.signalDot} aria-hidden="true" />
-                Built for operators — not a public product catalogue
-              </p>
             </div>
           </div>
         </div>
@@ -119,14 +119,14 @@ export default function MarketingPage() {
             ))}
           </div>
 
-          <aside className={styles.requirement} aria-label="Custom sourcing request">
+          <aside className={styles.requirement} aria-label="Sealed requirement">
             <div className={styles.requirementCopy}>
-              <p className={styles.requirementEyebrow}>Custom demand</p>
-              <h3>Can&apos;t find the right product yet?</h3>
-              <p>Write the specification once. Quantity, delivery context and authority stay on the same sealed record—so your team never chases an informal request outside the network.</p>
+              <p className={styles.requirementEyebrow}>Sealed requirement</p>
+              <h3>When the catalogue ends, keep the trail intact.</h3>
+              <p>Capture quantity, delivery context and authority on one protected record—before vendor identity is disclosed.</p>
             </div>
             <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.requirementCta}>
-              Start a sealed requirement <ArrowRight size={16} />
+              Open a sealed requirement <ArrowRight size={16} />
             </Link>
           </aside>
         </div>

@@ -27,10 +27,14 @@ describe('public header contract', () => {
     expect(footer).not.toContain('Funder partner portal');
   });
 
-  it('uses the solid charcoal chrome and cobalt action system', () => {
+  it('uses the OLED chrome token and cobalt action system', () => {
     expect(css).toContain('background:var(--chrome)');
     expect(css).toContain('background:var(--blue)');
     expect(css).toContain('color:#fff');
     expect(css).toContain('background:#fff');
+    const globals = readFileSync(resolve(root, 'app/globals.css'), 'utf8');
+    expect(globals).toContain('--chrome-oled:#141516');
+    expect(globals).toMatch(/--chrome:\s*var\(--chrome-oled\)/);
+    expect(globals).not.toMatch(/--chrome:\s*var\(--charcoal\)/);
   });
 });
