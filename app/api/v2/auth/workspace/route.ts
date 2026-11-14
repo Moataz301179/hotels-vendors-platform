@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { getOnboardingActor } from "@/lib/v2-auth";
+import { resolveCreditAccess } from "@/lib/credit/workspace-access";
 
 const publicRoles = ["HOTEL", "SUPPLIER"] as const;
 
@@ -13,7 +14,11 @@ export async function POST(request: Request) {
 
   const existing = await getOnboardingActor();
   if (existing) {
-    return NextResponse.json({ href: existing.status === "PENDING_VERIFICATION" ? "/onboarding" : "/dashboard" });
+    if (existing.status === "PENDING_VERIFICATION") {
+      return NextResponse.json({ href: "/onboarding" });
+    }
+    const access = await resolveCreditAccess(existing);
+    return NextResponse.json({ href: access.canOpenFullDashboard ? "/dashboard" : "/credit-line" });
   }
 
   const client = await clerkClient();

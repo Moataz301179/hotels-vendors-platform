@@ -12,6 +12,25 @@ describe("authentication handoff", () => {
     expect(decideHandoff({ signedIn: true, actor: { status: "ACTIVE" }, publicRoleDeclared: true, returnTo: "/orders?view=approval" }).href).toBe("/orders?view=approval");
   });
 
+  it("sends active hotels without a credit line to credit-line legibility first", () => {
+    expect(
+      decideHandoff({
+        signedIn: true,
+        actor: { status: "ACTIVE", platformRole: "HOTEL" },
+        publicRoleDeclared: true,
+        creditLineActive: false,
+      }).href
+    ).toBe("/credit-line");
+    expect(
+      decideHandoff({
+        signedIn: true,
+        actor: { status: "ACTIVE", platformRole: "HOTEL" },
+        publicRoleDeclared: true,
+        creditLineActive: true,
+      }).href
+    ).toBe("/dashboard");
+  });
+
   it("keeps an anonymous session on the sign-in page", () => {
     expect(decideHandoff({ signedIn: false, actor: null, publicRoleDeclared: false }).href).toBe("/login?redirect_url=%2Fauth%2Fcontinue");
   });

@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "backgroundColor": "#303234",
     "primaryColor": "#5B92FE",
     "runtimeVersion": {
@@ -73,10 +73,15 @@
       "favicon": "./assets/icon.png"
     },
     "extra": {
-      "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
       },
-      "router": {}
-    }
+      "eas": {
+        "projectId": "bd9d5d11-8eb4-4353-a7be-556cccd131f1"
+      }
+    },
+    "owner": "hotelsvendors"
   }
 }
