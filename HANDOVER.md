@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Dashboard AI UX + brand shell — 2026-11-14
+
+- Branch: `cursor/dashboard-ai-ux-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed.
+- AI: signed-in assistant now uses `lib/ai/tenant-assistant.ts` — empty tool snapshots become honesty notes (no `observedAt` dumps / “use the empty tools” theatre). Restaurant/opening intents get real workspace actions (`/workspace/marketplace`, marketplace category, approvals, Market Compass). Public grounding also covers F&B opening questions.
+- Shell: hotel nav regrouped into Command / Transactions / Intelligence; ops-console and account/security pages reuse workspace brand tokens (paper / charcoal / cobalt) instead of a flat drab admin look; AI Assistant widget uses the same palette.
+- Verification: `npx vitest run tests/p0/tenant-assistant.spec.ts tests/p0/assistant-honesty.spec.ts tests/p0/assistant-contract.spec.ts tests/p0/public-assistant.spec.ts tests/p0/role-navigation.spec.ts` (run on this branch). Residual: deeper per-page interactive redesign (orders/intelligence/onboarding density) and live signed-in LLM smoke still pending.
+- Next action: review PR against `cursor/hovin-intelligence-168e`; do not merge or deploy without owner approval.
+
 ## Plus Jakarta Sans + AI Assistant — 2026-11-13
 
 - Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
