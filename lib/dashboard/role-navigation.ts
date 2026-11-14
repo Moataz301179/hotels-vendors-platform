@@ -11,7 +11,7 @@ const sharedAccount: NavigationItem[] = [
 
 const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
   HOTEL: [
-    { label: 'Hotel operations', items: [{ href: '/dashboard', label: 'Today', icon: 'home' }, { href: '/workspace/marketplace', label: 'Source supplies', icon: 'search' }, { href: '/orders?view=approval', label: 'Approvals', icon: 'approval' }, { href: '/orders?view=receiving', label: 'Receiving', icon: 'receipt' }] },
+    { label: 'Hotel operations', items: [{ href: '/dashboard', label: 'Today', icon: 'home' }, { href: '/marketplace', label: 'Source supplies', icon: 'search' }, { href: '/orders?view=approval', label: 'Approvals', icon: 'approval' }, { href: '/orders?view=receiving', label: 'Receiving', icon: 'receipt' }] },
     { label: 'Plan and control', items: [{ href: '/intelligence', label: 'Market Compass', icon: 'insights' }, { href: '/connections', label: 'Connections & Data', icon: 'catalogue' }, { href: '/demand-aggregation', label: 'Volume planning', icon: 'planning' }, { href: '/funding', label: 'Funding records', icon: 'funding' }] },
     { label: 'Organization', items: sharedAccount },
   ],
