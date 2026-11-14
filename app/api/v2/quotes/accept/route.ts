@@ -7,6 +7,7 @@ import { costBreakdown } from '@/lib/procurement/pre-spend';
 import { PermissionDeniedError, requirePermission } from '@/lib/auth/rbac';
 import { FinancialAccessDeniedError, requireFinancialAccess } from '@/lib/auth/financial-access';
 import { hasResolvedProductEvidence } from '@/lib/catalog/resolved-product-evidence';
+import { assertCreditLineForOrders } from '@/lib/credit/workspace-access';
 import { z } from 'zod';
 
 const acceptQuoteInput = z.object({ quoteId: z.string().min(1), exceptionReason: z.string().trim().min(10).max(500).optional() });
@@ -16,6 +17,17 @@ export async function POST(req:Request){
  if(!['HOTEL','ADMIN'].includes(user.platformRole))return NextResponse.json({error:'HOTEL_ROLE_REQUIRED'},{status:403});
  try{await requirePermission({userId:user.id,tenantId:user.tenantId,platformRole:user.platformRole},'order:create');}catch(error){if(error instanceof PermissionDeniedError)return NextResponse.json({error:'ORDER_CREATE_PERMISSION_REQUIRED'},{status:403});throw error;}
  try{await requireFinancialAccess(user);}catch(error){if(error instanceof FinancialAccessDeniedError)return NextResponse.json({error:error.code},{status:403});throw error;}
+ // No funder-approved credit line → cannot place any order (quote accept creates the PO).
+ if(user.platformRole==='HOTEL'){
+  const credit=await assertCreditLineForOrders(user);
+  if(!credit.ok){
+   return NextResponse.json({
+    error:credit.code,
+    message:'A funder-approved credit line is required before a purchase order can be created. Submit organization legibility and wait for the funder decision.',
+    nextAction:credit.access.nextAction,
+   },{status:409});
+  }
+ }
  const parsed=acceptQuoteInput.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:'quoteId is required'},{status:400});
  const quote=await prisma.procurementQuote.findFirst({where:{id:parsed.data.quoteId,tenantId:user.tenantId,deletedAt:null,status:'SUBMITTED',supplier:{isVerified:true,status:'ACTIVE',deletedAt:null}},include:{rfq:true}});
  if(!quote)return NextResponse.json({error:'An available verified quote was not found'},{status:404});

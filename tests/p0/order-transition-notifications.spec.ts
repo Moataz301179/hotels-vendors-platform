@@ -85,9 +85,22 @@ describe("order transition notifications", () => {
 
   it("allows email for the hotel only when external delivery is permitted", async () => {
     await notifyOrderTransition({ ...base, allowExternal: true });
-    const hotelCall = m.notify.mock.calls.find((c) => c[0].userId === "user-hotel");
-    expect(hotelCall![0].channel).toBe("EMAIL");
+    const hotelCall = m.notify.mock.calls.find((c) => c[0].userId === "user-hotel" && c[0].channel === "EMAIL");
+    expect(hotelCall).toBeTruthy();
     expect(hotelCall![0].suppressExternal).toBe(false);
+  });
+
+  it("also attempts WhatsApp for the hotel when external delivery is permitted", async () => {
+    await notifyOrderTransition({ ...base, allowExternal: true });
+    const wa = m.notify.mock.calls.find((c) => c[0].userId === "user-hotel" && c[0].channel === "WHATSAPP");
+    expect(wa).toBeTruthy();
+    expect(wa![0].suppressExternal).toBe(false);
+  });
+
+  it("does not attempt WhatsApp for the hotel when external delivery is blocked", async () => {
+    await notifyOrderTransition({ ...base, allowExternal: false });
+    const wa = m.notify.mock.calls.find((c) => c[0].channel === "WHATSAPP");
+    expect(wa).toBeUndefined();
   });
 
   it("writes a dispute notification for DISPUTED transitions", async () => {

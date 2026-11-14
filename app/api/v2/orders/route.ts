@@ -45,8 +45,9 @@ export async function POST(req:Request){
  // Orders must originate from a tenant-scoped accepted supplier quote.  Keeping
  // this legacy endpoint closed prevents bypassing RFQ assignment, quote terms,
  // authority policy, payment guarantees, and the associated audit trail.
+ // Credit-line gating is enforced on quote accept; this path stays closed.
  void req;
- return NextResponse.json({error:"RFQ_QUOTE_ACCEPT_REQUIRED",message:"Create an RFQ and accept a verified supplier quote before creating an order."},{status:409});
+ return NextResponse.json({error:"RFQ_QUOTE_ACCEPT_REQUIRED",message:"Create an RFQ and accept a verified supplier quote before creating an order. A funder-approved credit line is required before that conversion."},{status:409});
 }
 
 export async function PATCH(req:Request){

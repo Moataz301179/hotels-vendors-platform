@@ -10,9 +10,11 @@ describe("AI procurement assistant widget contract", () => {
     expect(source).not.toContain("question: userMsg, messages");
   });
 
-  it("labels the floating widget as AI Assistant and keeps the public privacy notice", () => {
+  it("labels the floating widget as AI Assistant and keeps the honesty notice", () => {
     expect(source).toContain("Open HOTELSVENDORS AI Assistant");
-    expect(source).toContain("Public guidance never accesses organization records.");
+    expect(source).toContain("Empty telemetry is never treated as insight");
+    expect(source).toContain("Vendor identity stays sealed");
+    expect(source).toContain("var(--paper-50)");
     expect(source).not.toContain("Powered by HOTELSVENDORS Intelligence Engine (Ollama llama3.2)");
   });
 
