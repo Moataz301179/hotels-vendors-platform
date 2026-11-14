@@ -12,6 +12,8 @@ describe("hotel Source supplies catalogue linkage", () => {
     const hotelHrefs = navigationForRole("HOTEL").flatMap((group) => group.items.map((item) => ({ href: item.href, label: item.label })));
     expect(hotelHrefs).toContainEqual({ href: "/marketplace", label: "Source supplies" });
     expect(roleWorkspace("HOTEL")?.actions[0]).toMatchObject({ title: "Source catalog items", href: "/marketplace" });
+    expect(roleWorkspace("HOTEL", "OWNER")?.actions[0]).toMatchObject({ title: "Source supplies", href: "/marketplace" });
+    expect(roleWorkspace("HOTEL", "GM")?.actions[0]).toMatchObject({ href: "/marketplace" });
   });
 
   it("keeps the sourcing workspace and hotel list connected back to the catalogue", () => {
@@ -21,9 +23,12 @@ describe("hotel Source supplies catalogue linkage", () => {
     const rfqRoute = read("app/api/v2/rfq/route.ts");
 
     expect(consoleSource).toContain('href="/marketplace"');
-    expect(consoleSource).toContain("Browse reviewed catalogue");
+    expect(consoleSource).toContain("Open Source supplies catalogue");
+    expect(consoleSource).toContain("chooseCatalogueReference");
+    expect(consoleSource).toContain("addCatalogReferenceToBasket");
     expect(consoleSource).toContain('href="/workspace/marketplace/basket"');
     expect(workspacePage).toContain('href="/marketplace"');
+    expect(workspacePage).toContain("Choose products in catalogue");
     expect(workspacePage).toContain('href="/workspace/marketplace/basket"');
     expect(hotelDashboard).toContain('href="/marketplace"');
     expect(hotelDashboard).toContain("Source supplies");
