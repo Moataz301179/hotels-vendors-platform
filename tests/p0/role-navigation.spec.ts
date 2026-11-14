@@ -25,10 +25,17 @@ describe('role navigation boundaries', () => {
     expect(labels).toEqual(expect.arrayContaining(['Command', 'Transactions', 'Intelligence']));
     expect(criticalDestinationsForRole('HOTEL')).toEqual(expect.arrayContaining([
       '/dashboard',
+      '/credit-line',
       '/workspace/marketplace',
       '/intelligence',
       '/demand-aggregation',
       '/security',
     ]));
+  });
+
+  it('exposes credit-line destinations for hotels, suppliers, and funders', () => {
+    expect(hrefs('HOTEL')).toContain('/credit-line');
+    expect(hrefs('SUPPLIER')).toContain('/credit-line');
+    expect(hrefs('FACTORING')).toContain('/credit-line');
   });
 });

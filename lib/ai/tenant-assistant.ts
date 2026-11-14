@@ -33,6 +33,14 @@ const SIGNED_IN_ACTION_CATALOG: Array<{
   roles?: string[];
 }> = [
   {
+    id: "credit-line",
+    label: "Credit-line status",
+    href: "/credit-line",
+    match:
+      /\b(credit|legibilit|funders?|facilit(y|ies)|limits?|underwrit|cannot order|place an? order|before (i |we )?buy|eligibility|await(ing)? (funder|approval))\b/i,
+    roles: ["HOTEL", "SUPPLIER", "FACTORING", "ADMIN"],
+  },
+  {
     id: "source-supplies",
     label: "Source supplies",
     href: "/workspace/marketplace",
@@ -242,7 +250,7 @@ export function buildTenantSystemPrompt(args: {
 }): string {
   const emptiness = summarizeToolEmptiness(args.tools);
   const emptinessNote = emptiness.allEmpty
-    ? "All authorized tool snapshots are EMPTY for this tenant. Lead with hospitality procurement guidance and concrete workspace next steps. Do not invent metrics or recite empty tool names as findings."
+    ? "All authorized tool snapshots are EMPTY for this tenant. If the user wants to buy or place an order, route them to credit-line legibility / await funder approval first. Do not invent metrics, credit limits, or empty-tool findings."
     : emptiness.emptyTools.length > 0
       ? `Empty tools (ignore as insight): ${emptiness.emptyTools.join(", ")}. Populated tools: ${emptiness.populatedTools.join(", ") || "none"}.`
       : "Authorized tools returned recorded activity — cite only those populated results when relevant.";

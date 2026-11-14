@@ -11,21 +11,33 @@ const allowedMethods = ["FACTORING", "DEPOSIT", "SPLIT", "DIRECT"] as const;
 export async function POST(req: Request) {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
-  // A hotel requester cannot unlock supplier fulfilment by asserting that its
-  // own payment is guaranteed. This action is an auditable platform-control
-  // step performed after independent verification.
-  if (actor.platformRole !== "ADMIN") return NextResponse.json({ error: "PAYMENT_GUARANTEE_VERIFICATION_REQUIRED" }, { status: 403 });
-  try {
-    await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, "order:approve");
-  } catch (error) {
-    if (error instanceof PermissionDeniedError) return NextResponse.json({ error: "PAYMENT_GUARANTEE_PERMISSION_REQUIRED" }, { status: 403 });
-    throw error;
-  }
+  // Hotels cannot self-certify payment. Credit-line / FACTORING guarantees are
+  // recorded by the funder. ADMIN remains an auditable platform-control path
+  // for independently verified non-funder methods.
   const body = await req.json().catch(() => null);
   if (typeof body?.orderId !== "string" || typeof body?.tenantId !== "string" || !allowedMethods.includes(body?.method)) {
     return NextResponse.json({ error: "Hotel organization, order ID and a verified guarantee method are required." }, { status: 400 });
   }
-  const targetTenant = await managedHotelTenant(actor.tenantId, body.tenantId);
+  const method = body.method as (typeof allowedMethods)[number];
+  if (method === "FACTORING") {
+    if (actor.platformRole !== "FACTORING" || !actor.factoringCompanyId) {
+      return NextResponse.json({ error: "AUTHORIZED_FUNDER_REQUIRED", message: "Payment against a credit line must be recorded by the funder." }, { status: 403 });
+    }
+  } else if (actor.platformRole !== "ADMIN") {
+    return NextResponse.json({ error: "PAYMENT_GUARANTEE_VERIFICATION_REQUIRED" }, { status: 403 });
+  }
+  if (actor.platformRole === "ADMIN") {
+    try {
+      await requirePermission({ userId: actor.id, tenantId: actor.tenantId, platformRole: actor.platformRole }, "order:approve");
+    } catch (error) {
+      if (error instanceof PermissionDeniedError) return NextResponse.json({ error: "PAYMENT_GUARANTEE_PERMISSION_REQUIRED" }, { status: 403 });
+      throw error;
+    }
+  }
+  const targetTenant =
+    actor.platformRole === "FACTORING"
+      ? await prisma.tenant.findFirst({ where: { id: body.tenantId, deletedAt: null }, select: { id: true } })
+      : await managedHotelTenant(actor.tenantId, body.tenantId);
   if (!targetTenant) return NextResponse.json({ error: "HOTEL_TENANT_NOT_FOUND" }, { status: 404 });
   const order = await prisma.order.findFirst({ where: { id: body.orderId, tenantId: targetTenant.id, deletedAt: null }, select: { id: true, paymentGuaranteed: true, status: true } });
   if (!order) return NextResponse.json({ error: "ORDER_NOT_FOUND" }, { status: 404 });

@@ -15,6 +15,7 @@ const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
       label: 'Command',
       items: [
         { href: '/dashboard', label: 'Today', icon: 'home', detail: 'Role dashboard — next actions and live queues' },
+        { href: '/credit-line', label: 'Credit line', icon: 'funding', detail: 'Funder legibility and facility status — required before orders' },
         { href: '/workspace/marketplace', label: 'Source supplies', icon: 'search', detail: 'Browse sealed catalogue and start an RFQ' },
       ],
     },
@@ -41,6 +42,7 @@ const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
       label: 'Command',
       items: [
         { href: '/dashboard', label: 'Today', icon: 'home', detail: 'Vendor operating queue' },
+        { href: '/credit-line', label: 'Credit line', icon: 'funding', detail: 'Funder facility status — required before commercial unlock' },
         { href: '/suppliers', label: 'Catalogue & stock', icon: 'catalogue', detail: 'Owned product evidence and publication' },
       ],
     },
@@ -75,6 +77,7 @@ const navigation: Record<WorkspaceRole, NavigationGroup[]> = {
       label: 'Command',
       items: [
         { href: '/dashboard', label: 'Today', icon: 'home', detail: 'Referral review overview' },
+        { href: '/credit-line', label: 'Credit applications', icon: 'funding', detail: 'Approve or decline buyer/supplier credit lines' },
         { href: '/funding', label: 'Funding records', icon: 'funding', detail: 'Authorized receivable packets' },
       ],
     },
