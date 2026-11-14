@@ -1,0 +1,195 @@
+.handoff {
+  padding: clamp(64px, 8vw, 96px) 0;
+  background: var(--paper-100);
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(240px, 0.7fr);
+  gap: clamp(24px, 4vw, 48px);
+  align-items: end;
+  margin-bottom: 36px;
+}
+
+.intro h2 {
+  margin: 0;
+  font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.intro h2 em {
+  font-style: normal;
+  color: inherit;
+}
+
+.intro > p {
+  margin: 0;
+  max-width: 36ch;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.panel {
+  --i: 0;
+  position: relative;
+  display: grid;
+  gap: 14px;
+  min-height: 240px;
+  padding: 24px 24px 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper-0);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  animation: handoff-arrive 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: auto -20% -40% auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cobalt-600) 18%, transparent), transparent 70%);
+  opacity: 0.9;
+  transition: transform 0.35s ease;
+}
+
+.panel:hover {
+  transform: translateY(-4px);
+  border-color: var(--cobalt-600);
+  box-shadow: 0 18px 36px rgba(15, 20, 25, 0.1);
+}
+
+.panel:hover::before {
+  transform: scale(1.15) translate(-8px, -8px);
+}
+
+.panelTop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ice-100) 85%, var(--paper-0));
+  color: var(--cobalt-700);
+  border: 1px solid color-mix(in srgb, var(--cobalt-600) 22%, var(--line));
+}
+
+.index {
+  color: var(--charcoal);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.copy h3 {
+  margin: 0;
+  font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.copy p {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.result {
+  color: var(--charcoal);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--cobalt-700);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@keyframes handoff-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .intro {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+
+  .panel,
+  .panel::before {
+    transition: none;
+  }
+}

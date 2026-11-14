@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CircleDollarSign, Network, ScanSearch, Truck } from "lucide-react";
 import { publicPageMetadata } from "@/lib/seo";
+import styles from "./solutions.module.css";
 
 export const metadata = publicPageMetadata(
   "Hospitality Procurement Network Solutions",
@@ -75,38 +76,44 @@ export default function Solutions() {
           </figure>
         </div>
       </section>
-      <section className="hv-public-section">
+      <section className={styles.handoff} aria-labelledby="handoff-title">
         <div className="shell">
-          <div className="hv-public-section-head">
-            <div>
-              <h2>
-                Resolve the handoff.
-                <br />
-                <em>Keep the authority.</em>
-              </h2>
-            </div>
+          <div className={styles.intro}>
+            <h2 id="handoff-title">
+              Resolve the handoff.
+              <br />
+              <em>Keep the authority.</em>
+            </h2>
             <p>
-              Every product surface is anchored to a real workflow, a permission boundary and an outcome that
-              can be evidenced—not a generic marketplace promise.
+              Every surface maps to a real workflow, a permission boundary, and an outcome you can evidence—
+              not a generic marketplace promise.
             </p>
           </div>
-          <div className="hv-solution-ledger">
-            {solutions.map(({ title, text, icon: Icon, result, href, action }) => (
-              <article className="hv-solution-row" key={title}>
-                <span className="hv-public-actor-icon">
-                  <Icon size={20} />
-                </span>
-                <div className="hv-solution-main">
+          <div className={styles.grid}>
+            {solutions.map(({ title, text, icon: Icon, result, href, action }, index) => (
+              <Link
+                href={href}
+                className={styles.panel}
+                key={title}
+                style={{ ["--i" as string]: index }}
+              >
+                <div className={styles.panelTop}>
+                  <span className={styles.mark} aria-hidden="true">
+                    <Icon size={20} />
+                  </span>
+                  <span className={styles.index}>{String(index + 1).padStart(2, "0")}</span>
+                </div>
+                <div className={styles.copy}>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </div>
-                <div>
-                  <p className="hv-solution-result">{result}</p>
-                  <Link href={href} className="hv-public-text-link">
+                <div className={styles.meta}>
+                  <span className={styles.result}>{result}</span>
+                  <span className={styles.action}>
                     {action} <ArrowRight size={15} aria-hidden="true" />
-                  </Link>
+                  </span>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
