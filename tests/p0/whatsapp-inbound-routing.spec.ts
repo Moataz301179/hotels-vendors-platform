@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   preferenceCreate: vi.fn(),
   auditLogCreate: vi.fn(),
   sendWhatsApp: vi.fn(),
+  hasPermission: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -26,10 +27,23 @@ vi.mock("@/lib/notifications/whatsapp", () => ({
   sendWhatsApp: m.sendWhatsApp,
   normalizeWhatsAppDigits: (raw: string) => raw.replace(/[^\d]/g, ""),
 }));
+vi.mock("@/lib/auth/rbac", () => ({
+  hasPermission: m.hasPermission,
+}));
 
 const { handleInboundWhatsAppMessage, extractMetaInboundMessages } = await import(
   "../../lib/notifications/whatsapp-inbound"
 );
+
+const activeHotel = {
+  id: "user-1",
+  tenantId: "tenant-1",
+  phone: "+201001234567",
+  platformRole: "HOTEL" as const,
+  hotelId: "hotel-1",
+  supplierId: null,
+  status: "ACTIVE" as const,
+};
 
 describe("WhatsApp inbound routing", () => {
   beforeEach(() => {
@@ -38,6 +52,7 @@ describe("WhatsApp inbound routing", () => {
     m.auditLogCreate.mockResolvedValue({});
     m.preferenceFindFirst.mockResolvedValue(null);
     m.preferenceCreate.mockResolvedValue({});
+    m.hasPermission.mockResolvedValue(true);
     m.orderFindMany.mockResolvedValue([
       { orderNumber: "HV-1", status: "CONFIRMED" },
       { orderNumber: "HV-2", status: "IN_TRANSIT" },
@@ -82,15 +97,23 @@ describe("WhatsApp inbound routing", () => {
     );
   });
 
-  it("returns buyer-safe STATUS lines without supplier fields", async () => {
-    m.userFindFirst.mockResolvedValue({
-      id: "user-1",
-      tenantId: "tenant-1",
-      phone: "+201001234567",
-      platformRole: "HOTEL",
-      hotelId: "hotel-1",
-      supplierId: null,
+  it("looks up only ACTIVE, non-deleted accounts (getActorInternal-aligned)", async () => {
+    m.userFindFirst.mockResolvedValue(null);
+    await handleInboundWhatsAppMessage({
+      messageId: "wamid.suspended",
+      from: "201001234567",
+      text: "STATUS",
     });
+    expect(m.userFindFirst.mock.calls[0][0].where).toMatchObject({
+      deletedAt: null,
+      status: "ACTIVE",
+    });
+    expect(m.orderFindMany).not.toHaveBeenCalled();
+    expect(m.hasPermission).not.toHaveBeenCalled();
+  });
+
+  it("returns buyer-safe STATUS lines without supplier fields when order:read is granted", async () => {
+    m.userFindFirst.mockResolvedValue(activeHotel);
     const result = await handleInboundWhatsAppMessage({
       messageId: "wamid.2",
       from: "201001234567",
@@ -98,6 +121,10 @@ describe("WhatsApp inbound routing", () => {
     });
     expect(result.linked).toBe(true);
     expect(result.command).toBe("STATUS");
+    expect(m.hasPermission).toHaveBeenCalledWith(
+      { userId: "user-1", tenantId: "tenant-1", platformRole: "HOTEL" },
+      "order:read",
+    );
     expect(m.orderFindMany.mock.calls[0][0].select).toEqual({ orderNumber: true, status: true });
     const body = m.sendWhatsApp.mock.calls[0][0].body as string;
     expect(body).toContain("HV-1: CONFIRMED");
@@ -105,15 +132,21 @@ describe("WhatsApp inbound routing", () => {
     expect(body.toLowerCase()).not.toContain("vendor");
   });
 
-  it("opts out WHATSAPP preferences on STOP", async () => {
-    m.userFindFirst.mockResolvedValue({
-      id: "user-1",
-      tenantId: "tenant-1",
-      phone: "+201001234567",
-      platformRole: "HOTEL",
-      hotelId: "hotel-1",
-      supplierId: null,
+  it("denies STATUS without order:read and never queries orders", async () => {
+    m.userFindFirst.mockResolvedValue(activeHotel);
+    m.hasPermission.mockResolvedValue(false);
+    const result = await handleInboundWhatsAppMessage({
+      messageId: "wamid.noperm",
+      from: "201001234567",
+      text: "STATUS",
     });
+    expect(result.linked).toBe(true);
+    expect(m.orderFindMany).not.toHaveBeenCalled();
+    expect(m.sendWhatsApp.mock.calls[0][0].body).toContain("order:read");
+  });
+
+  it("opts out WHATSAPP preferences on STOP", async () => {
+    m.userFindFirst.mockResolvedValue(activeHotel);
     await handleInboundWhatsAppMessage({
       messageId: "wamid.3",
       from: "201001234567",
@@ -127,14 +160,23 @@ describe("WhatsApp inbound routing", () => {
     });
   });
 
+  it("propagates STOP preference failures so the webhook can retry", async () => {
+    m.userFindFirst.mockResolvedValue(activeHotel);
+    m.preferenceCreate.mockRejectedValue(new Error("db down"));
+    await expect(
+      handleInboundWhatsAppMessage({
+        messageId: "wamid.stop-fail",
+        from: "201001234567",
+        text: "STOP",
+      }),
+    ).rejects.toThrow("db down");
+    expect(m.sendWhatsApp).not.toHaveBeenCalled();
+  });
+
   it("scopes hotel STATUS queries to the requester, not the whole tenant", async () => {
     m.userFindFirst.mockResolvedValue({
+      ...activeHotel,
       id: "user-hotel",
-      tenantId: "tenant-1",
-      phone: "+201001234567",
-      platformRole: "HOTEL",
-      hotelId: "hotel-1",
-      supplierId: null,
     });
     await handleInboundWhatsAppMessage({
       messageId: "wamid.4",

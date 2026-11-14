@@ -12,8 +12,10 @@
  */
 
 import { createHash, randomUUID } from "node:crypto";
+import type { PlatformRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizePhone } from "@/lib/auth/phone";
+import { hasPermission } from "@/lib/auth/rbac";
 import { NOTIFICATION_TYPES, type NotificationType } from "@/lib/notifications/service";
 import { normalizeWhatsAppDigits, sendWhatsApp } from "@/lib/notifications/whatsapp";
 
@@ -47,11 +49,16 @@ function phoneCandidates(raw: string): string[] {
   return Array.from(new Set([e164, withPlus, digits, e164.replace(/^\+/, "")].filter(Boolean)));
 }
 
+/**
+ * Resolve a WhatsApp sender to an operational account.
+ * Mirrors getActorInternal: deleted rows and non-ACTIVE statuses are not actors.
+ */
 async function findUserByWhatsAppPhone(from: string) {
   const candidates = phoneCandidates(from);
   return prisma.user.findFirst({
     where: {
       deletedAt: null,
+      status: "ACTIVE",
       OR: candidates.map((phone) => ({ phone })),
     },
     select: {
@@ -61,6 +68,7 @@ async function findUserByWhatsAppPhone(from: string) {
       platformRole: true,
       hotelId: true,
       supplierId: true,
+      status: true,
     },
   });
 }
@@ -73,13 +81,28 @@ function parseCommand(text: string): string {
   return "UNKNOWN";
 }
 
-/** Buyer-safe order lines: order number + status only. Never supplier names/ids. */
+/**
+ * Buyer-safe order lines: order number + status only. Never supplier names/ids.
+ * Auth boundary matches GET /api/v2/orders: ACTIVE actor (lookup) + order:read.
+ */
 async function statusReplyForUser(user: {
   id: string;
   tenantId: string;
+  platformRole: PlatformRole;
   hotelId: string | null;
   supplierId: string | null;
 }): Promise<string> {
+  const allowed = await hasPermission(
+    { userId: user.id, tenantId: user.tenantId, platformRole: user.platformRole },
+    "order:read",
+  );
+  if (!allowed) {
+    return (
+      "Your account cannot read orders on WhatsApp.\n" +
+      "Ask a workspace admin for order:read, or check status in the HotelsVendors workspace."
+    );
+  }
+
   const where = user.supplierId
     ? { tenantId: user.tenantId, supplierId: user.supplierId, deletedAt: null }
     : { tenantId: user.tenantId, requesterId: user.id, deletedAt: null };

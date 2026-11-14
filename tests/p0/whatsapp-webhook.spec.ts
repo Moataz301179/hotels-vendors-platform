@@ -181,4 +181,42 @@ describe("WhatsApp Meta webhook", () => {
     expect(json.replayed).toBe(1);
     expect(handleInbound).not.toHaveBeenCalled();
   });
+
+  it("returns 503 and does not mark idempotency when inbound processing fails", async () => {
+    handleInbound.mockRejectedValue(new Error("preference write failed"));
+    const { POST } = await import("../../app/api/webhooks/whatsapp/route");
+    const payload = {
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          changes: [
+            {
+              value: {
+                messages: [
+                  {
+                    id: "wamid.FAIL1",
+                    from: "201001234567",
+                    type: "text",
+                    text: { body: "STOP" },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const body = JSON.stringify(payload);
+    const response = await POST(
+      new Request("https://example.test/api/webhooks/whatsapp", {
+        method: "POST",
+        headers: { "x-hub-signature-256": sign(body, "app-secret-test") },
+        body,
+      }),
+    );
+    expect(response.status).toBe(503);
+    const json = await response.json();
+    expect(json).toMatchObject({ failed: 1, retryable: true, processed: 0 });
+    expect(markWebhookProcessed).not.toHaveBeenCalled();
+  });
 });

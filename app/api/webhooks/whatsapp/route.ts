@@ -59,6 +59,7 @@ export async function POST(request: Request) {
   const messages = extractMetaInboundMessages(payload);
   let processed = 0;
   let replayed = 0;
+  let failed = 0;
 
   for (const message of messages) {
     const replay = await checkWebhookReplay("whatsapp", message.messageId);
@@ -69,6 +70,8 @@ export async function POST(request: Request) {
 
     try {
       const result = await handleInboundWhatsAppMessage(message);
+      // Mark complete only after successful handling so Meta can retry failures
+      // (e.g. STOP preference writes) without being permanently acknowledged.
       await markWebhookProcessed(
         "whatsapp",
         message.messageId,
@@ -77,11 +80,18 @@ export async function POST(request: Request) {
       processed += 1;
     } catch (error) {
       console.error("[WhatsApp] inbound handler failed", error);
-      // Acknowledge to Meta so it does not hammer retries forever; idempotency
-      // key is only marked on success so a retry can recover.
+      failed += 1;
     }
   }
 
-  // Always 200 for signed payloads — Meta retries on non-2xx.
+  // Signed payloads that fail processing must not be acknowledged — Meta
+  // retries on non-2xx. Already-processed message ids stay idempotent.
+  if (failed > 0) {
+    return NextResponse.json(
+      { received: true, processed, replayed, failed, retryable: true },
+      { status: 503 },
+    );
+  }
+
   return NextResponse.json({ received: true, processed, replayed });
 }
