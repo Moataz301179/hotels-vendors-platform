@@ -79,8 +79,8 @@ export default function MarketingPage() {
               <p className={heroStyles.lead}>
                 Source, approve, deliver and prove what arrived—on a sealed commercial trail your teams can trust.
               </p>
-              <p className={heroStyles.funderOption} lang="ar" dir="rtl">
-                خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة
+              <p className={heroStyles.funderOption}>
+                Vendor option: get paid within 48 hours via network funders.
               </p>
               <p className={heroStyles.funderOptionNote}>
                 Vendor option via independent network funders — HotelsVendors does not lend.{" "}

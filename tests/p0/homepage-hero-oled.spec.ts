@@ -35,7 +35,9 @@ describe("homepage hero OLED fade", () => {
     expect(css).toMatch(/\.primary\s*\{[^}]*background:\s*var\(--cobalt-600\)/s);
     expect(css).not.toMatch(/\.copy h1\s*\{[^}]*color:\s*var\(--ink\)/s);
     expect(css).not.toMatch(/\.copy h1 em\s*\{[^}]*color:\s*var\(--cobalt/s);
-    expect(css).not.toMatch(/color:\s*var\(--amber\)/i);
+    expect(css).toMatch(/\.funderOption\s*\{[^}]*color:\s*#e8c36a/s);
+    expect(css).not.toMatch(/\.copy h1\s*\{[^}]*color:\s*#e8c36a/s);
+    expect(css).not.toMatch(/\.eyebrow\s*\{[^}]*color:\s*#e8c36a/s);
   });
 
   it("keeps a dark charcoal band under bottom-aligned mobile copy", () => {
@@ -44,10 +46,10 @@ describe("homepage hero OLED fade", () => {
     expect(css).toContain("align-items: end");
   });
 
-  it("offers the Arabic 48-hour funder pathway without claiming HV lends", () => {
-    expect(page).toContain('lang="ar"');
-    expect(page).toContain('dir="rtl"');
-    expect(page).toContain("خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة");
+  it("offers the English 48-hour funder pathway without claiming HV lends", () => {
+    expect(page).toContain("Vendor option: get paid within 48 hours via network funders.");
+    expect(page).not.toContain("خيار للمورّد");
+    expect(page).not.toContain('lang="ar"');
     expect(page).toContain("HotelsVendors does not lend");
     expect(page).toContain("/solutions/funders");
     expect(page).not.toMatch(/HotelsVendors disburses/i);

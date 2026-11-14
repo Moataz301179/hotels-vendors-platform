@@ -145,9 +145,10 @@
 }
 
 .funderOption {
-  max-width: 36ch;
+  max-width: 42ch;
   margin: 18px 0 0;
-  color: #fff;
+  /* Light amber on the dark wash — readable callout, not title/CTA color. */
+  color: #e8c36a;
   font-size: clamp(15px, 1.6vw, 17px);
   font-weight: 600;
   line-height: 1.7;
