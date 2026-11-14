@@ -60,14 +60,6 @@
 .categoryBody h3{margin:8px 0 0;font-size:18px}
 .categoryBody p{flex:1;margin:6px 0 12px;color:var(--muted);font-size:12.5px;line-height:1.6}
 .categoryBody b{display:inline-flex;align-items:center;gap:7px;color:var(--cobalt-700);font-size:12px;font-weight:700}
-/* Ledger strip — no wash card / soft blue panel for this CTA. */
-.requirement{display:flex;align-items:center;justify-content:space-between;gap:clamp(24px,4vw,48px);margin-top:36px;padding:clamp(22px,3vw,28px) 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
-.requirementCopy{max-width:720px}
-.requirementEyebrow{margin:0 0 10px;color:var(--charcoal)!important;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
-.requirement h3{margin:0;font-family:var(--font-heading),'Plus Jakarta Sans',sans-serif;font-size:clamp(22px,2.4vw,30px);font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--ink)}
-.requirement p{max-width:52ch;margin:12px 0 0;color:var(--muted);font-size:15px;line-height:1.7}
-.requirementCta{display:inline-flex;flex:none;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:1px solid var(--cobalt-600);border-radius:9px;background:var(--cobalt-600);color:#fff;font-size:14px;font-weight:700;text-decoration:none;transition:background .18s,border-color .18s}
-.requirementCta:hover{background:var(--cobalt-700);border-color:var(--cobalt-700)}
 .textLink{display:inline-flex;flex:none;align-items:center;gap:8px;color:var(--cobalt-700);font-size:14px;font-weight:700;text-decoration:none}
 .textLink:hover{color:var(--cobalt-600)}
 .controlSection{background:var(--paper-200)}
@@ -111,19 +103,21 @@
 .mobileIntro .textLink{grid-column:1}
 /* Paper join band — charcoal fill rejected for this marketing section. */
 .join{padding:clamp(56px,7vw,88px) 0;background:var(--paper-100);color:var(--ink);border-top:1px solid var(--line)}
-.joinIntro{max-width:760px;margin-bottom:36px}
+.joinIntro{max-width:720px;margin-bottom:34px}
 .joinEyebrow{margin:0 0 14px;color:var(--charcoal)!important;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
-.join h2{margin:0 0 16px;font-family:var(--font-heading),'Plus Jakarta Sans',sans-serif;font-size:clamp(28px,3.6vw,46px);font-weight:700;letter-spacing:-.025em;line-height:1.08;color:var(--ink)}
-.joinIntro>p{margin:0;max-width:640px;color:var(--muted);font-size:15.5px;line-height:1.75}
-.joinPaths{display:grid;gap:0;border-top:1px solid var(--line)}
-.joinPath{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:22px 0;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;transition:background .18s,transform .18s}
-.joinPath:hover{transform:translateX(4px);background:color-mix(in srgb,var(--paper-0) 70%,transparent)}
-.joinPathIcon{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--ice-100);color:var(--cobalt-600)}
-.joinPathCopy{display:grid;gap:6px}
-.joinPathCopy>span{color:var(--charcoal);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
-.joinPathCopy strong{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
-.joinPathCopy p{margin:0;max-width:560px;color:var(--muted);font-size:13.5px;line-height:1.55}
-.joinPathAction{display:inline-flex;align-items:center;gap:6px;color:var(--cobalt-600);font-size:13px;font-weight:700;white-space:nowrap}
+.join h2{margin:0 0 14px;font-family:var(--font-heading),'Plus Jakarta Sans',sans-serif;font-size:clamp(28px,3.6vw,44px);font-weight:700;letter-spacing:-.025em;line-height:1.08;color:var(--ink)}
+.joinIntro>p{margin:0;max-width:54ch;color:var(--muted);font-size:15.5px;line-height:1.75}
+.joinPaths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.joinPath{display:flex;min-width:0;flex-direction:column;border:1px solid var(--line);border-radius:14px;background:var(--paper-0);color:inherit;overflow:hidden;text-decoration:none;transition:transform .18s,border-color .18s,box-shadow .18s}
+.joinPath:hover{transform:translateY(-4px);border-color:var(--cobalt-600);box-shadow:0 16px 34px rgba(15,20,25,.10)}
+.joinPathMedia{position:relative;aspect-ratio:1.45;margin:0;overflow:hidden;background:var(--paper-200)}
+.joinPathMedia img{object-fit:cover;object-position:center;transition:transform .45s ease}
+.joinPath:hover .joinPathMedia img{transform:scale(1.045)}
+.joinPathBody{display:flex;flex:1;flex-direction:column;gap:8px;padding:18px 20px 20px}
+.joinPathEyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--cobalt-700);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.joinPathBody strong{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.25;color:var(--ink)}
+.joinPathBody p{flex:1;margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.joinPathAction{display:inline-flex;align-items:center;gap:7px;margin-top:10px;color:var(--cobalt-700);font-size:12.5px;font-weight:700}
 .joinGuide{display:inline-flex;align-items:center;gap:8px;margin-top:28px;color:var(--ink);font-size:14px;font-weight:600;text-decoration:none}
 .joinGuide:hover{color:var(--cobalt-700)}
 .home a:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
@@ -138,8 +132,8 @@
 .controlCanvas{grid-template-columns:1fr}
 .controlAction{width:max-content}
 .outcomeBoard{grid-template-columns:1fr}
-.joinPath{grid-template-columns:auto minmax(0,1fr);gap:14px}
-.joinPathAction{grid-column:2}
+.joinPaths{grid-template-columns:repeat(2,minmax(0,1fr))}
+.joinPath:last-child{grid-column:1/-1}
 }
 @media(max-width:650px){
 .shell{width:calc(100% - 34px)}
@@ -157,8 +151,6 @@
 .journeySteps{padding:12px 20px}
 .journeyStep{padding:18px 0}
 .journeyStep strong{font-size:16px}
-.requirement{flex-direction:column;align-items:flex-start;padding-top:22px}
-.requirementCta{width:100%}
 .controlNav{grid-template-columns:1fr 1fr}
 .controlNav span:nth-child(3){border-left:0;border-top:1px solid var(--line)}
 .controlNav span:nth-child(4){border-top:1px solid var(--line)}
@@ -167,8 +159,10 @@
 .flowCard{min-height:200px}
 .outcomeBoard>div{min-height:0}
 .join{padding:48px 0}
-.joinPathCopy strong{font-size:16px}
+.joinPaths{grid-template-columns:1fr}
+.joinPath:last-child{grid-column:auto}
+.joinPathBody strong{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){
-.taskTile,.categoryCard,.categoryCard figure img,.flowCard,.joinPath{transition:none}
+.taskTile,.categoryCard,.categoryCard figure img,.flowCard,.joinPath,.joinPathMedia img{transition:none}
 }

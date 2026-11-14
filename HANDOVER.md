@@ -1,5 +1,12 @@
 # HotelsVendors — Production-Ready Handover
 
+## Hero brand line removed — 2026-11-14 (03:45 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-remove-brand-168e` (follow-on after #77 merged to `main` `16ed08e8`).
+- Removed the redundant hero `HotelsVendors` brand `<p>` above the eyebrow; nav logo remains the brand mark.
+- Verification: `vitest` homepage-hero-oled (5 passed).
+- Next action: merge this PR, then Production Deploy on the new `main` SHA with `APPLY_AFTER_NEON_BACKUP`.
+
 ## Production deploy failed twice — same SHA already live — 2026-11-14 (03:32 Africa/Cairo)
 
 - Runs [`43540041524`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540041524) and [`43540648183`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540648183) both failed at **Activate release and verify** in ~2s with no remote stdout.

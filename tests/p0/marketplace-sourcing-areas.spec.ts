@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const directory = readFileSync(join(process.cwd(), "components/marketing/marketplace-directory.tsx"), "utf8");
+const directoryCss = readFileSync(join(process.cwd(), "components/marketing/marketplace-directory.module.css"), "utf8");
 const visuals = readFileSync(join(process.cwd(), "lib/directory/listing-visual.ts"), "utf8");
 
 describe("public marketplace sourcing-area entry points", () => {
@@ -18,14 +19,44 @@ describe("public marketplace sourcing-area entry points", () => {
       expect(visuals).toContain(`"${category}":`);
     }
     expect(visuals).toContain("Food & beverage");
-    expect(visuals).toContain("/catalog/rice.jpg");
-    expect(visuals).toContain("/catalog/bath-towel.jpg");
-    expect(visuals).toContain("/catalog/guest-amenities.jpg");
-    expect(visuals).not.toMatch(/APPROVED_COVERS[\s\S]*category-/);
+    expect(visuals).toContain("Never invent family stock photos");
+    expect(visuals).toMatch(/listingImage[\s\S]*return null/);
+    expect(visuals).not.toContain("/catalog/rice.jpg");
+    expect(visuals).not.toContain("/catalog/pasta.jpg");
+    expect(visuals).not.toContain("/catalog/tea.jpg");
+    expect(visuals).not.toContain("/catalog/pantry.jpg");
+    const covers = visuals.match(/export const APPROVED_COVERS[\s\S]*?= \{[\s\S]*?\n\};/)?.[0] ?? "";
+    expect(covers).not.toContain("category-");
+    expect(covers).toContain("/catalog/cover-food-beverage.png");
+    expect(covers).toContain("/catalog/cover-furniture-fixtures.jpg");
+    expect(covers).toContain("/catalog/cover-safety-compliance.jpg");
+    expect(covers).toContain("/catalog/cover-hotel-technology.jpg");
+    expect(covers).toContain("/catalog/cover-housekeeping-laundry.jpg");
+    expect(covers).not.toContain("/catalog/cleaning-supplies.jpg");
+    expect(covers).toContain("/catalog/guest-amenities.jpg");
+    expect(covers).not.toContain("gastronorm-pan.jpg");
+    expect(covers).not.toContain("lobby-armchair.jpg");
+    expect(covers).not.toContain("fire-extinguisher.jpg");
+    expect(covers).not.toContain("guest-tv.jpg");
     expect(directory).toContain("MarketplaceCarousel");
     expect(directory).not.toContain("getProductImage");
     expect(directory).not.toContain("unsplash");
     expect(visuals).not.toContain("unsplash");
     expect(visuals).not.toContain("wikimedia");
+  });
+
+  it("paints the hotel-list selection bar in palette charcoal, not navy slate", () => {
+    expect(directoryCss).toMatch(/\.selectionBar\s*\{[^}]*background:\s*var\(--charcoal\)/s);
+    expect(directoryCss).not.toMatch(/\.selectionBar\s*\{[^}]*background:\s*#1d2730/s);
+  });
+
+  it("does not paint directory rows with repeated family stock photographs", () => {
+    expect(directory).not.toContain("listingImage(");
+    expect(directory).toContain("entry.image");
+    expect(directory).toContain("First-party product photos only");
+    expect(directory).not.toContain("/catalog/tea.jpg");
+    expect(directory).not.toContain("/catalog/pasta.jpg");
+    expect(directory).not.toContain("/catalog/pantry.jpg");
+    expect(directory).not.toContain("/catalog/cleaning-supplies.jpg");
   });
 });

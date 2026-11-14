@@ -6,9 +6,9 @@ const hotelManagementWorkspace: RoleWorkspace = {
   title: "Portfolio control",
   description: "Review organization-wide sourcing, approvals, and evidence-backed operating signals.",
   actions: [
-    { title: "Review sourcing activity", description: "Move from controlled catalog research into the RFQ workspace.", href: "/workspace/marketplace" },
+    { title: "Source supplies", description: "Browse the reviewed catalogue, choose specifications, then continue from the hotel list.", href: "/marketplace" },
+    { title: "Review sourcing activity", description: "Follow sealed requests and comparable responses in the hotel RFQ workspace.", href: "/workspace/marketplace" },
     { title: "Review approval activity", description: "Follow purchase orders and authority decisions across the organization.", href: "/orders" },
-    { title: "Inspect operating signals", description: "Review available procurement intelligence before deciding on action.", href: "/intelligence" },
   ],
 };
 
@@ -17,7 +17,7 @@ const workspaces: Record<string, RoleWorkspace> = {
     title: "Sourcing control",
     description: "Move a requirement from catalog discovery to a controlled RFQ and approval decision.",
     actions: [
-      { title: "Source catalog items", description: "Search verified catalog records and request a quote without supplier disclosure.", href: "/workspace/marketplace" },
+      { title: "Source catalog items", description: "Browse the reviewed catalogue, add specifications to the hotel list, then send sealed requests.", href: "/marketplace" },
       { title: "Review comparable terms", description: "Compare recorded commercial terms before selecting a response for approval.", href: "/workspace/marketplace" },
       { title: "Follow approvals", description: "Track purchase orders and their recorded approval state.", href: "/orders" },
     ],

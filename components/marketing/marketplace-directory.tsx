@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import styles from './marketplace-directory.module.css';
 import { MarketplaceCarousel } from './marketplace-carousel';
 import { operatingCategory } from '@/lib/directory/operating-category';
-import { APPROVED_COVERS, canonicalOperatingGroup, edibleRank, groupLabel, listingArabicName, listingImage, orderedOperatingGroups } from '@/lib/directory/listing-visual';
+import { APPROVED_COVERS, canonicalOperatingGroup, edibleRank, groupLabel, listingArabicName, orderedOperatingGroups } from '@/lib/directory/listing-visual';
 import { addCatalogReferenceToBasket, persistCatalogReferenceBasket, readCatalogReferenceBasket, setCatalogReferenceBasketQuantity, type CatalogReferenceBasketItem } from '@/lib/procurement/catalog-reference-basket';
 import { BuyingPath } from '@/components/procurement/buying-path';
 
@@ -129,7 +129,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     {grouped.length ? grouped.map((group) => <section key={group.group} aria-labelledby={`album-${group.group}`}>
       <header className={styles.album} id={`album-${group.group}`}>
         {group.cover ? <Image src={group.cover} alt="" width={120} height={80} /> : <span className={styles.albumMark}>No approved cover</span>}
-        <div><h3>{groupLabel(group.group)}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. {group.group === 'Restaurants & bars' ? 'Food and beverage items are listed before kitchen equipment.' : 'Each row shows an item picture or the area cover.'}</p></div>
+        <div><h3>{groupLabel(group.group)}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. {group.group === 'Restaurants & bars' ? 'Food and beverage items are listed before kitchen equipment.' : 'Rows use a category mark unless a first-party product photo is on file.'}</p></div>
       </header>
       <div className={styles.list} role="table" aria-label={group.group}>
       <div className={styles.listHead} role="row"><span>Specification</span><span>Unit</span><span>How it is bought</span><span>Quantity</span><span>List</span></div>
@@ -139,11 +139,15 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
         const saved = listedQuantity(entry.id);
         const draft = draftQuantity(entry.id);
         const unchanged = saved > 0 && draft === saved;
-        const image = listingImage(entry.name, entry.category);
+        // First-party product photos only. Family stock thumbs repeat across rows
+        // and are not reviewed product evidence — album covers carry the imagery.
+        const image = entry.image;
         const arabic = listingArabicName(entry.name, entry.nameAr);
         return <article className={styles.row} role="row" key={entry.id}>
           <div className={styles.identity}>
-            <span className={styles.thumb}>{image ? <Image src={image} alt="" width={72} height={72} /> : null}</span>
+            <span className={styles.thumb} aria-hidden="true">
+              {image ? <Image src={image} alt="" width={72} height={72} /> : <Icon size={22} />}
+            </span>
             <span>
               <Link href={`/marketplace/${entry.id}`}>{entry.name}</Link>
               {arabic ? <em lang="ar" dir="rtl">{arabic}</em> : null}

@@ -63,9 +63,9 @@ export function HotelDashboard() {
           <h1>Start with the requirement. Keep every handoff connected.</h1>
           <p className="muted">Browse reviewed products, assemble a sourcing request, approve the commercial decision, and follow receipt evidence without exposing private Vendor relationships.</p>
         </div>
-        <Link href="/workspace/marketplace" className="role-dashboard-primary">
+        <Link href="/marketplace" className="role-dashboard-primary">
           <PackageCheck aria-hidden="true" />
-          <span><small>Start here</small><strong>Source supplies</strong><em>Browse by category or add an approved item to a sourcing request.</em></span>
+          <span><small>Start here</small><strong>Source supplies</strong><em>Open the reviewed catalogue, choose specifications, then continue from the hotel list.</em></span>
           <ArrowRight aria-hidden="true" />
         </Link>
       </div>
@@ -103,7 +103,7 @@ export function HotelDashboard() {
             <div><span className="eyebrow">Your next actions</span><h2>Choose one clear task.</h2></div>
           </div>
           <div className="role-dashboard-action-grid">
-            <Link href="/workspace/marketplace" className="card role-dashboard-action">
+            <Link href="/marketplace" className="card role-dashboard-action">
               <PackageCheck aria-hidden="true" /><h3>Browse catalogue</h3>
               <p>Reviewed product references by category. No Vendor identity shown before authorization.</p>
               <span>Open <ArrowRight aria-hidden="true" /></span>

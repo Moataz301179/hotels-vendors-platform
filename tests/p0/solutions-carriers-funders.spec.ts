@@ -28,6 +28,7 @@ describe("carriers and funders solutions honesty", () => {
 
   it("recreates About with founder story and LinkedIn-grounded qualifications", () => {
     expect(about).toContain("Moataz Mohamed Abdel Ghani");
+    expect(about).toContain("hv-founder-name");
     expect(about).toContain("Bachelor of Accounting");
     expect(about).toContain("Alexandria University");
     expect(about).toContain("Deloitte");
@@ -36,5 +37,7 @@ describe("carriers and funders solutions honesty", () => {
     expect(about).toContain("Oliv Finance partner");
     expect(about).toContain("https://www.linkedin.com/in/moatazabdelghani");
     expect(about).toContain("does not lend");
+    expect(about).toContain("since 2022");
+    expect(about).not.toContain("hv-solution-ledger");
   });
 });

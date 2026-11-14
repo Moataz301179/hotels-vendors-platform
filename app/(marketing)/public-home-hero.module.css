@@ -94,7 +94,8 @@
   align-items: center;
   justify-items: start;
   min-height: inherit;
-  padding-block: clamp(56px, 8vw, 108px);
+  /* Extra bottom pad so CTAs clear the centered funder honesty note */
+  padding-block: clamp(56px, 8vw, 108px) clamp(72px, 9vw, 120px);
 }
 
 .copy {
@@ -105,21 +106,10 @@
   color: #fff;
 }
 
-.brand {
-  margin: 0 0 10px;
-  font-family: var(--font-heading), "Plus Jakarta Sans", sans-serif;
-  font-size: clamp(28px, 3.2vw, 40px);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: #fff;
-  text-shadow: 0 1px 18px rgba(15, 18, 22, 0.35);
-}
-
 .eyebrow {
   margin: 0 0 18px;
-  /* White metadata on the image overlay — not amber/cobalt type. */
-  color: rgba(255, 255, 255, 0.78) !important;
+  /* Muted light blue metadata on the image overlay — not amber or CTA cobalt. */
+  color: rgba(157, 195, 230, 0.88) !important;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -156,9 +146,10 @@
 }
 
 .funderOption {
-  max-width: 36ch;
+  max-width: 42ch;
   margin: 18px 0 0;
-  color: #fff;
+  /* Light amber on the dark wash — readable callout, not title/CTA color. */
+  color: #e8c36a;
   font-size: clamp(15px, 1.6vw, 17px);
   font-weight: 600;
   line-height: 1.7;
@@ -167,11 +158,19 @@
 }
 
 .funderOptionNote {
-  max-width: 42ch;
-  margin: 8px 0 0;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(14px, 2.4vw, 24px);
+  z-index: 2;
+  width: min(92%, 46rem);
+  max-width: 46rem;
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
   color: rgba(255, 255, 255, 0.72);
   font-size: 12.5px;
   line-height: 1.55;
+  text-shadow: 0 1px 12px rgba(15, 18, 22, 0.45);
 }
 
 .funderOptionNote a {
@@ -263,14 +262,13 @@
   .shell {
     width: calc(100% - 40px);
     align-items: end;
-    padding-block: 40px 48px;
+    padding-block: 40px 68px;
   }
 
   .copy {
     max-width: none;
   }
 
-  .brand,
   .copy h1,
   .lead,
   .funderOption {

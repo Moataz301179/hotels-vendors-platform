@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   Building2,
   ClipboardCheck,
-  GraduationCap,
   ShieldCheck,
   Truck,
 } from "lucide-react";
@@ -39,29 +38,6 @@ const roles = [
     text: "Review evidence a hotel has released. The funding decision, terms and disbursement stay with the funder.",
     href: "/solutions/funders",
     icon: ShieldCheck,
-  },
-];
-
-const credentials = [
-  {
-    label: "Education",
-    title: "Bachelor of Accounting",
-    detail: "Faculty of English Commerce, Alexandria University (1999–2003).",
-  },
-  {
-    label: "Audit foundation",
-    title: "Senior Auditor, Deloitte",
-    detail: "External audit discipline that shaped how HotelsVendors treats evidence, controls, and fail-closed handoffs.",
-  },
-  {
-    label: "Hospitality finance",
-    title: "Financial Controller, Better Homes Qatar",
-    detail: "Financial oversight and internal audit for a leading regional property brand (2014–2019).",
-  },
-  {
-    label: "Strategic partnerships",
-    title: "Business Development, Al Manna Group",
-    detail: "Advisory across digital transformation and commercial optimization for a diversified Qatar conglomerate (2019–present).",
   },
 ];
 
@@ -169,40 +145,24 @@ export default function AboutPage() {
 
       <section className="hv-public-section">
         <div className="shell">
-          <div className="hv-public-section-head">
-            <div>
-              <h2>
-                Founder.
-                <br />
-                <em>Moataz Mohamed Abdel Ghani</em>
-              </h2>
-            </div>
+          <div className="hv-founder-block">
+            <h2>
+              Founder.
+              <br />
+              <em className="hv-founder-name">Moataz Mohamed Abdel Ghani</em>
+            </h2>
             <p>
-              CEO &amp; Founder of HotelsVendors. Based in Cairo. More than seventeen years across audit,
-              hospitality finance, and digital commercial platforms—and an Oliv Finance partner for
-              independent supplier-financing referrals.
+              CEO &amp; Founder of HotelsVendors. Based in Cairo. A Bachelor of Accounting graduate from the
+              Faculty of English Commerce, Alexandria University, Moataz spent more than seventeen years
+              across Deloitte audit, hospitality finance as Financial Controller at Better Homes Qatar, and
+              business development at Al Manna Group—the evidence discipline behind HotelsVendors since 2022.
+              He is also an Oliv Finance partner for independent supplier-financing referrals. The company
+              does not lend, hold hotel funds, or publish a binding public offer; he built it around the work
+              a property already does—specify the need, assign authority, and prove what arrived—and also
+              founded MozixWatt, a renewable-energy venture with the same bias toward accountable operating
+              infrastructure.
             </p>
           </div>
-          <div className="hv-solution-ledger">
-            {credentials.map((item) => (
-              <article className="hv-solution-row" key={item.title}>
-                <span className="hv-public-actor-icon" aria-hidden="true">
-                  <GraduationCap size={18} />
-                </span>
-                <div className="hv-solution-main">
-                  <h3>{item.title}</h3>
-                  <p>{item.detail}</p>
-                </div>
-                <span className="hv-solution-result">{item.label}</span>
-              </article>
-            ))}
-          </div>
-          <p style={{ marginTop: 28, maxWidth: 720, color: "var(--muted)", lineHeight: 1.8 }}>
-            Moataz built HotelsVendors around the work a property already does: specify the need, assign
-            authority, and prove what arrived. The company does not lend, hold hotel funds, or publish a
-            binding public offer. He also founded MozixWatt, a renewable-energy venture, reflecting the same
-            bias toward accountable operating infrastructure.
-          </p>
           <div className="hv-public-actions" style={{ marginTop: 24 }}>
             <a
               className="hv-public-text-link"
