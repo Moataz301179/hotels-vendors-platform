@@ -60,7 +60,7 @@ export function ProductCard({
           {/* Swipe image gallery - supports multiple product images */}
           <div className="w-full h-full relative">
             <img 
-              src={images && images.length > 0 ? images[0] : "/catalog/gastronorm-pan.jpg"} 
+              src={images && images.length > 0 ? images[0] : "/catalog/cover-food-beverage.png"} 
               alt={name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"

@@ -43,4 +43,10 @@ describe("public marketplace sourcing-area entry points", () => {
     expect(directoryCss).toMatch(/\.selectionBar\s*\{[^}]*background:\s*var\(--charcoal\)/s);
     expect(directoryCss).not.toMatch(/\.selectionBar\s*\{[^}]*background:\s*#1d2730/s);
   });
+
+  it("does not paint directory rows with repeated family stock photographs", () => {
+    expect(directory).not.toContain("listingImage(");
+    expect(directory).toContain("entry.image");
+    expect(directory).toContain("First-party product photos only");
+  });
 });
