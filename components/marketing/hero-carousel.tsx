@@ -15,7 +15,7 @@ const slides = [
     href: "/marketplace?category=Restaurants%20%26%20bars",
     action: "Explore the sourcing area",
     image: "/category-food-beverage.png",
-    alt: "Hotel food and beverage operating area",
+    alt: "Hotel kitchen and dining operations ready for service",
   },
   {
     eyebrow: "Housekeeping & guest rooms",
@@ -24,7 +24,7 @@ const slides = [
     href: "/marketplace?category=Housekeeping%20%26%20laundry",
     action: "Explore housekeeping",
     image: "/category-housekeeping.png",
-    alt: "Hotel housekeeping room with linen and cleaning supplies",
+    alt: "Hotel housekeeping room prepared for guest-room turnover",
   },
   {
     eyebrow: "Engineering & furniture",
@@ -33,7 +33,7 @@ const slides = [
     href: "/marketplace?category=Engineering%20%26%20maintenance",
     action: "Explore engineering",
     image: "/category-engineering-ffe.png",
-    alt: "Hotel engineering components on a workbench",
+    alt: "Hotel engineering bench with property maintenance components",
   },
   {
     eyebrow: "HOVIN receiving",
@@ -41,7 +41,7 @@ const slides = [
     description: "HOVIN supports assigned receiving handoffs; people still confirm quantities and condition before a record moves on.",
     href: "/hovin",
     action: "Explore HOVIN",
-    image: "/hovin-delivery-verification.png",
+    image: "/hovin-receiving-field.jpg",
     alt: "Hotel receiving handoff verification on HOVIN",
   },
 ] as const;

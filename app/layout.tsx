@@ -31,5 +31,5 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({children}:{children:React.ReactNode}){
-  return <html lang="en"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
+  return <html lang="en" data-theme="light"><body><ClerkProvider dynamic localization={{signIn:{start:{title:"Sign in to HOTELSVENDORS",titleCombined:"Sign in to HOTELSVENDORS"}},signUp:{start:{title:"Join HOTELSVENDORS",titleCombined:"Join HOTELSVENDORS"}}}}><LanguageProvider>{children}</LanguageProvider></ClerkProvider></body></html>
 }

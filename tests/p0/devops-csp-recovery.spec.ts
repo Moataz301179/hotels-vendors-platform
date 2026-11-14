@@ -14,9 +14,8 @@ function run(nodeScript: string, args: string[]) {
 describe("DevOps recovery — CI workflow contract", () => {
   it("parses the CI workflow YAML and asserts the smoke-test homepage markers", () => {
     const yaml = readFileSync(join(REPO, ".github/workflows/ci.yml"), "utf8");
-    expect(yaml).toContain("grep -Fq 'Technology reimagined for hotel procurement' /tmp/hv-home.html");
-    expect(yaml).toContain("grep -Fq 'Every decision connected. Every handoff accountable' /tmp/hv-home.html");
-    expect(yaml).toContain("grep -Fq 'Egyptian hotel teams can control spend' /tmp/hv-home.html");
+    expect(yaml).toContain("grep -Fq 'We are the full operating network for hotel procurement.' /tmp/hv-home.html");
+    expect(yaml).toContain("grep -Fq 'See how it works' /tmp/hv-home.html");
   });
 
   it("parses the deploy workflow YAML and asserts the migration confirmation gate", () => {

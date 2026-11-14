@@ -2,9 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  CheckCircle2,
-  ClipboardCheck,
-  FileCheck2,
+  Building2,
   PackageCheck,
   PackageSearch,
   ScanLine,
@@ -14,7 +12,6 @@ import {
   Truck,
 } from "lucide-react";
 
-import { HovinReceivingPreview } from "@/components/marketing/hovin-receiving-preview";
 import { HeroCarousel } from "@/components/marketing/hero-carousel";
 import heroStyles from "./public-home-hero.module.css";
 import styles from "./public-home.module.css";
@@ -28,44 +25,77 @@ const categories = [
   { title: "Hotel services", body: "Specialist scopes for maintenance, compliance and operating support.", image: "/hv-workspace-team.webp", alt: "Hotel operations team coordinating service requirements", group: "Hotel services", icon: ShieldCheck },
 ];
 
-const actions = [
-  { number: "01", icon: PackageSearch, title: "Identify the need", body: "Start with the property category, specification, quantity and timing.", href: "/marketplace", cta: "Explore sourcing areas" },
-  { number: "02", icon: ClipboardCheck, title: "Own the decision", body: "Route the requirement, terms and authority checks through one record.", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace", cta: "Open a workspace" },
-  { number: "03", icon: FileCheck2, title: "Verify the handoff", body: "Keep order, delivery and receiving evidence connected after approval.", href: "/login?redirect_url=%2Forders", cta: "Follow an order" },
-];
-
-const lifecycle = [
-  { icon: PackageSearch, label: "Define", detail: "A reusable product reference or a precise new requirement", href: "/marketplace" },
-  { icon: ClipboardCheck, label: "Source", detail: "A sealed request with a clear commercial context", href: "/login?redirect_url=%2Fworkspace%2Fmarketplace" },
-  { icon: ShieldCheck, label: "Authorize", detail: "The accountable decision before a purchase order moves", href: "/login?redirect_url=%2Fdashboard" },
-  { icon: Truck, label: "Receive", detail: "Assigned delivery handoff and goods-receipt evidence", href: "/hovin" },
-];
-
-const roleStarts = [
-  { icon: ShieldCheck, label: "Hotel team", detail: "Control requirements, approvals, orders and the evidence behind each purchase.", href: "/hotels/signup", action: "Create hotel workspace" },
-  { icon: PackageSearch, label: "Vendor", detail: "Maintain owned catalogue evidence and respond to work allocated to your organization.", href: "/suppliers/signup", action: "Create vendor workspace" },
-  { icon: ScanLine, label: "Receiving operator", detail: "Use the assigned field handoff only when delivery evidence is ready to record.", href: "/hovin", action: "View HOVIN workflow" },
+const joinPaths = [
+  {
+    icon: Building2,
+    eyebrow: "Hotels",
+    title: "Buy with one accountable record",
+    detail: "Bring demand, approvals, purchase orders and receipt evidence into a single protected workspace for your properties.",
+    href: "/hotels/signup",
+    action: "Register your hotel",
+  },
+  {
+    icon: PackageSearch,
+    eyebrow: "Vendors",
+    title: "Serve qualified hospitality demand",
+    detail: "Maintain catalogue evidence and respond when work is allocated to you. Vendor identity stays sealed until the authorized stage.",
+    href: "/suppliers/signup",
+    action: "Register as a vendor",
+  },
+  {
+    icon: ScanLine,
+    eyebrow: "Receiving",
+    title: "Prove the delivery handoff",
+    detail: "HOVIN is the field path for delivery codes and goods-receipt evidence—used when a shipment is ready to confirm, not to place orders.",
+    href: "/hovin",
+    action: "See how HOVIN works",
+  },
 ];
 
 export default function MarketingPage() {
   return (
     <main className={styles.home}>
-      <section className={heroStyles.hero}>
-        <div className={styles.shell}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>One commercial record · Hospitality sourcing network · Egypt</p>
-              <h1>Technology reimagined for hotel procurement.<em> Every decision connected. Every handoff accountable.</em></h1>
-              <p className={styles.lead}>HotelsVendors turns fragmented sourcing, approval, delivery and receipt evidence into one protected operating record—so Egyptian hotel teams can control spend and qualify local supply with confidence.</p>
-              <div className={styles.actions}>
-                <Link href="/marketplace" className={styles.primary}>Open sourcing areas <ArrowRight size={17} /></Link>
-                <Link href="/hotels/signup" className={styles.secondary}>Register a hotel</Link>
+      <section className={heroStyles.hero} aria-label="HotelsVendors platform introduction">
+        <div className={heroStyles.stage}>
+          <div className={heroStyles.media} aria-hidden="true">
+            <figure className={heroStyles.mediaImage}>
+              <Image
+                src="/hero-clean.jpeg"
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+              />
+            </figure>
+            <div className={heroStyles.oled} />
+            <div className={heroStyles.oledTexture} />
+            <div className={heroStyles.oledSheen} />
+            <div className={heroStyles.fade} />
+          </div>
+          <div className={heroStyles.shell}>
+            <div className={heroStyles.copy}>
+              <p className={heroStyles.brand}>HotelsVendors</p>
+              <p className={heroStyles.eyebrow}>Egypt · Hospitality procurement software</p>
+              <h1>We are the full operating network for hotel procurement.</h1>
+              <p className={heroStyles.lead}>
+                Source, approve, deliver and prove what arrived—on a sealed commercial trail your teams can trust.
+              </p>
+              <p className={heroStyles.funderOption} lang="ar" dir="rtl">
+                خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة
+              </p>
+              <p className={heroStyles.funderOptionNote}>
+                Vendor option via independent network funders — HotelsVendors does not lend.{" "}
+                <Link href="/solutions/funders">How referrals work</Link>
+              </p>
+              <div className={heroStyles.actions}>
+                <Link href="/platform" className={heroStyles.primary}>
+                  See how it works <ArrowRight size={17} />
+                </Link>
+                <Link href="/hotels/signup" className={heroStyles.secondary}>
+                  Register your hotel
+                </Link>
               </div>
             </div>
-            <figure className={styles.heroVisual}>
-              <Image src="/hero-clean.jpeg" alt="Luxury hotel suite with a private balcony opening onto the sea" fill sizes="(max-width: 950px) calc(100vw - 48px), 44vw" />
-              <figcaption><span>Authorized hospitality imagery</span><small>HotelsVendors</small></figcaption>
-            </figure>
           </div>
         </div>
       </section>
@@ -81,20 +111,62 @@ export default function MarketingPage() {
         <div className={styles.shell}>
           <Header eyebrow="Hospitality sourcing map" title="Begin with the operating area behind the request." text="Browse public product references by hotel use. Private Vendor identity, terms and availability stay protected until the authorized workflow permits disclosure." />
           <div className={styles.categoryGrid}>
-            {categories.map(({ title, body, image, alt, group, icon: Icon }) => <Link href={`/marketplace?category=${encodeURIComponent(group)}`} className={styles.categoryCard} key={title}>
-              <figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure>
-              <div className={styles.categoryBody}><span><Icon size={15} aria-hidden="true" /> Sourcing area</span><h3>{title}</h3><p>{body}</p><b>Open area <ArrowRight size={15} /></b></div>
-            </Link>)}
+            {categories.map(({ title, body, image, alt, group, icon: Icon }) => (
+              <Link href={`/marketplace?category=${encodeURIComponent(group)}`} className={styles.categoryCard} key={title}>
+                <figure><Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 68px), (max-width: 950px) calc((100vw - 88px) / 3), 230px" /></figure>
+                <div className={styles.categoryBody}><span><Icon size={15} aria-hidden="true" /> Sourcing area</span><h3>{title}</h3><p>{body}</p><b>Open area <ArrowRight size={15} /></b></div>
+              </Link>
+            ))}
           </div>
-          <div className={styles.requirement}><div><strong>Nothing suitable in the directory?</strong><p>Create a controlled requirement from the hotel workspace. Its specification, quantity and delivery context stay with the sourcing record rather than becoming an untracked request.</p></div><Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace">Create a requirement <ArrowRight size={16} /></Link></div>
+
+          <aside className={styles.requirement} aria-label="Sealed requirement">
+            <div className={styles.requirementCopy}>
+              <p className={styles.requirementEyebrow}>Sealed requirement</p>
+              <h3>When the catalogue ends, keep the trail intact.</h3>
+              <p>Capture quantity, delivery context and authority on one protected record—before vendor identity is disclosed.</p>
+            </div>
+            <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.requirementCta}>
+              Open a sealed requirement <ArrowRight size={16} />
+            </Link>
+          </aside>
         </div>
       </section>
 
-      <section className={styles.close}><div className={styles.shell}><div className={styles.closeHeading}><p className={styles.eyebrow}>Enter the operating network</p><h2>Open a workspace that matches your responsibility.</h2><p>Hotels and Vendors can register directly.</p></div><div className={styles.roleStartGrid}>{roleStarts.map(({ icon: Icon, label, detail, href, action }) => <Link href={href} className={styles.roleStart} key={label}><Icon size={22} aria-hidden="true" /><div><span>{label}</span><p>{detail}</p></div><strong>{action}<ArrowRight size={15}/></strong></Link>)}</div><Link href="/getting-started" className={styles.textLink}>See the guided onboarding path <ArrowRight size={16} /></Link></div></section>
+      <section className={styles.join} aria-labelledby="join-title">
+        <div className={styles.shell}>
+          <div className={styles.joinIntro}>
+            <p className={styles.joinEyebrow}>Join the network</p>
+            <h2 id="join-title">Built for hotels and vendors who need accountable procurement—not another inbox.</h2>
+            <p>Register in minutes. Hotels control purchasing. Vendors serve qualified demand. Receiving teams prove the handoff when delivery evidence is ready.</p>
+          </div>
+          <div className={styles.joinPaths}>
+            {joinPaths.map(({ icon: Icon, eyebrow, title, detail, href, action }) => (
+              <Link href={href} className={styles.joinPath} key={eyebrow}>
+                <span className={styles.joinPathIcon} aria-hidden="true"><Icon size={22} /></span>
+                <div className={styles.joinPathCopy}>
+                  <span>{eyebrow}</span>
+                  <strong>{title}</strong>
+                  <p>{detail}</p>
+                </div>
+                <span className={styles.joinPathAction}>{action} <ArrowRight size={15} /></span>
+              </Link>
+            ))}
+          </div>
+          <Link href="/getting-started" className={styles.joinGuide}>Prefer a guided walkthrough? Start here <ArrowRight size={16} /></Link>
+        </div>
+      </section>
     </main>
   );
 }
 
 function Header({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
-  return <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>{eyebrow}</p><h2>{title}</h2></div><p>{text}</p></div>;
+  return (
+    <div className={styles.sectionHeading}>
+      <div>
+        <p className={styles.eyebrow}>{eyebrow}</p>
+        <h2>{title}</h2>
+      </div>
+      <p>{text}</p>
+    </div>
+  );
 }

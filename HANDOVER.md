@@ -1,77 +1,143 @@
 # HotelsVendors — Production-Ready Handover
 
-## HOVIN Expo Go SDK 58 — 2026-11-14
+## Production deploy failed twice — same SHA already live — 2026-11-14 (03:32 Africa/Cairo)
 
-- Branch: `cursor/hovin-expo-go-sdk58-168e` (from `cursor/hovin-intelligence-168e`, includes PR #81). Not merged to `main`. Not deployed.
-- Owner root cause: store Expo Go is **58.x**; `mobile/` was SDK **54** → “Project is incompatible with this version of Expo Go”. HOVIN does not require APIs Expo Go lacks, so Expo Go is the primary launch path after upgrade.
-- Repo changes: Expo/`expo-*` → SDK 58, RN 0.88.1, Reanimated/Worklets aligned; added `expo-constants`; removed `eas-cli` from project deps; `FieldShade` uses `StyleSheet.absoluteFill`; clearer missing-`.env.local` Clerk error; runbooks/README/doctor now lead with Expo Go 58 steps. Committed `ios/` / `android/` / EAS left untouched (native regen is a separate PR).
-- Verification (Cloud Agent): `npx expo install --check`, `npx tsc --noEmit`, `npx expo-doctor`, `npx expo export --platform ios|android`, mobile unit tests — see PR.
-- CI fix (PR #82): first `mobile-gates` failed — lockfile built with `--legacy-peer-deps` omitted RN metro peer packages that strict `npm ci` requires; also CI Node 20 vs RN 0.88 engine `^22.13`. Regenerated lockfile with plain `npm install`; workflow Node → 22. Local `npm ci` + tsc + expo config + vitest.mobile pass.
-- Next action: Moataz updates Expo Go to 58.x, `npm ci` in `mobile/`, sets Clerk key, `npx expo login`, `npm start -- --tunnel`, scans QR; allow `exp://` in Clerk if needed. Do not route to Xcode-only for this.
+- Runs [`43540041524`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540041524) and [`43540648183`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43540648183) both failed at **Activate release and verify** in ~2s with no remote stdout.
+- Head SHA for both: `c5456b61` — identical to live `/api/health` and to the last successful deploy `43392522982`.
+- Cause: activator `test ! -e /var/www/hv-releases/github-$GITHUB_SHA` (same class of failure as run `42939432074`). Redeploying an already-installed commit is refused by design.
+- Fix on #77: print an explicit refusal message naming the SHA/path instead of a silent `test` failure.
+- Next action: merge #77 so `main` gets a new SHA, then run Production Deploy once on that new SHA with `APPLY_AFTER_NEON_BACKUP`. Do not re-run deploy against `c5456b61`.
 
-## HOVIN simulator / Xcode hang diagnosis — 2026-11-14
+## Production deploy not stuck — failed confirmation — 2026-11-14 (03:16 Africa/Cairo)
 
-- Branch: `cursor/hovin-simulator-fix-168e` (from `cursor/hovin-intelligence-168e`). PR #81. Landed on intelligence base. Not on `main`. Not deployed.
-- Owner report: HOVIN + simulator “don’t work”; Xcode screenshot showed **Building • 451/455**, 19 yellow warnings, destination **iPhone 17 Pro**, git branch in the Xcode chrome was `cursor/eseal-local-signer-d37d`. Follow-up: “where is hovin? … is it expo go or hovin?”
-- Verified facts (at the time): custom native client at `mobile/` (then Expo 54 / RN 0.81, bundle `com.hotelsvendors.hovin`, workspace `mobile/ios/HOVIN.xcworkspace`). `ios.buildReactNativeFromSource=true` makes late compile/link steps slow. Scheme LaunchAction is **Debug**, which sets `SKIP_BUNDLING=1` (needs Metro). Versioned `ios/.xcode.env` previously used only `command -v node`, which is often empty under Xcode GUI. Superseded for day-to-day launch by the Expo Go SDK 58 path above; Xcode remains optional advanced.
-- Repo fixes: robust `mobile/ios/.xcode.env` Node resolution; removed phantom `HOVINTests` from `HOVIN.xcscheme`; `mobile/scripts/ios-sim-doctor.mjs` + `npm run doctor:ios`; visual-review path for `with-hv-public-env.mjs`.
-- Next action for native-only work: Mac steps in the optional section of `docs/hovin-simulator-runbook.md`.
+- No Actions run is currently `in_progress` or queued.
+- Latest production deploy run [`43534291413`](https://github.com/Moataz301179/hotels-vendors-platform/actions/runs/43534291413) (02:27 Africa/Cairo) **failed in ~3 minutes**, not hung.
+- Cause: confirmation input was `" APPLY_AFTER_NEON_BACKUP"` (leading space) vs required exact `APPLY_AFTER_NEON_BACKUP`.
+- Prior successful deploy: run `43392522982` at 10:20 Africa/Cairo on 2026-11-13; live `/api/health` still `c5456b61`.
+- Hardening on #77: trim whitespace on the confirmation input before compare.
+- Next action: merge #77 (for hero + trim), then re-run deploy with exact `APPLY_AFTER_NEON_BACKUP` (no spaces). Until #77 merges, a successful deploy still ships current `main` only.
 
-## Dashboard AI UX + brand shell — 2026-11-14
+## Hero title — full operating network — 2026-11-14 (02:50 Africa/Cairo)
 
-- Branch: `cursor/dashboard-ai-ux-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed.
-- AI: signed-in assistant now uses `lib/ai/tenant-assistant.ts` — empty tool snapshots become honesty notes (no `observedAt` dumps / “use the empty tools” theatre). Restaurant/opening intents get real workspace actions (`/workspace/marketplace`, marketplace category, approvals, Market Compass). Public grounding also covers F&B opening questions.
-- Shell: hotel nav regrouped into Command / Transactions / Intelligence; ops-console and account/security pages reuse workspace brand tokens (paper / charcoal / cobalt) instead of a flat drab admin look; AI Assistant widget uses the same palette.
-- **Credit-line gate (binding product flow):** after onboarding, hotels/suppliers must complete funder legibility at `/credit-line`. Full dashboard opens only with an ACTIVE funder-recorded facility (`CreditFacility` / `OlivCreditFacility`). Quote accept returns `CREDIT_LINE_REQUIRED` without it. Funder-only PATCH approves/rejects applications and writes ACTIVE facilities. FACTORING method payment guarantees require the funder actor. AI routes empty-order / credit questions to `/credit-line`.
-- Verification: prior assistant suites + `tests/p0/credit-line-gate.spec.ts`, updated handoff / role-nav / payment-guarantee specs. Residual: supplier Oliv facility write path for funder UI (hotel CreditFacility wired); live signed-in end-to-end with a real FACTORING actor still pending.
-- Merge note: merged latest `cursor/hovin-intelligence-168e` (includes WhatsApp channel MVP #80); only `HANDOVER.md` conflicted — both top sections kept.
-- Next action: review PR against `cursor/hovin-intelligence-168e`; do not merge or deploy without owner approval.
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Hero `h1` set to: “We are the full operating network for hotel procurement.”
+- Removed prior two-line title (“One operating record…” / “From requirement to receipt.”).
+- CI homepage grep + hero OLED / devops-csp-recovery specs updated to the new string.
+- Next action: merge #77 → owner deploy with `APPLY_AFTER_NEON_BACKUP`.
 
-## WhatsApp channel MVP — 2026-11-14
+## AI Assistant model + carousel image match — 2026-11-14 (00:00 Africa/Cairo)
 
-- Landed on `cursor/hovin-intelligence-168e` via PR #80 (`cursor/whatsapp-channel-mvp-168e`). Not on `main`. Not deployed. No secrets stored in the repo.
-- Scope: smallest shippable WhatsApp channel on the existing Meta-default gateway (`lib/notifications/whatsapp.ts`, Twilio fallback). Wired `notify({ channel: "WHATSAPP" })`, honest `channels.whatsapp` on `GET /api/v2/notifications`, hotel order-transition WhatsApp when `allowExternal`, and Meta inbound webhook `GET|POST /api/webhooks/whatsapp` with verify-token + `X-Hub-Signature-256`, idempotent routing, and `HELP` / `STATUS` / `STOP`.
-- Review fixes (PR #80): STATUS requires ACTIVE account lookup (aligned with `getActorInternal`) plus `order:read` via `hasPermission` before any order query; inbound processing failures return HTTP 503 and do not mark webhook idempotency complete so Meta can retry.
-- Product boundaries held: no order creation, no credit-line approval, no PO payment via WhatsApp. STATUS returns order number + status only (no supplier identity / private commercial data). Supplier external WhatsApp remains suppressed until final release.
-- Env (empty placeholders in `.env.example`): `WHATSAPP_PROVIDER`, `WHATSAPP_BEARER_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`, optional Twilio trio. Runbook: `docs/operations/whatsapp-channel-mvp.md`.
-- Verification: `npx vitest run tests/p0/whatsapp-webhook.spec.ts tests/p0/whatsapp-inbound-routing.spec.ts tests/p0/whatsapp-gateway.spec.ts tests/p0/notification-service.spec.ts tests/p0/order-transition-notifications.spec.ts`.
-- Unresolved for launch: Meta Business verification + approved templates for cold windows; production secrets on host; Twilio inbound not in MVP; owner must approve deploy to `main`. Sibling AI/dashboard/credit-line work lives on PR #79 and was not modified by #80.
-- Next action: Moataz configures Meta webhook + secrets on a non-prod host, smoke-tests inbound HELP/STATUS, then decides when to promote with the HOVIN stack.
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Symptom: FAB opened but model looked “broken” — no LLM provider in Cloud Agent env → `/api/v2/assistant` 503; tiny local models also over-refused marketing questions.
+- Fix: OLED FAB chrome; honest 503 UX with public actions; public system prompt answers product questions directly; local verify with Ollama `llama3.2:3b` (`OLLAMA_URL` + `OLLAMA_MODEL`).
+- Carousel stills rematched to slide copy: F&B `/category-food-beverage.png`, HK `/category-housekeeping.png`, Eng `/category-engineering-ffe.png`, HOVIN `/hovin-receiving-field.jpg` (no tray/lamp/armchair mismatches).
+- Verification: vitest public-assistant + honesty + widget + failure + hero-carousel-imagery (18 passed); Playwright FAB reply + Register as a hotel action; API `provider=ollama`.
+- Unresolved: production still needs `GROQ_API_KEY` (or reachable Ollama) on the VPS runtime for live answers. Local Clerk uses preview placeholders; live `pk_live_` rejects non-hotelsvendors.com origins in the browser.
+- Next action: CI green on #77 → merge → owner sets LLM secret → `APPLY_AFTER_NEON_BACKUP` deploy.
+
+## Sealed-requirement strip rewrite — 2026-11-13 (23:46 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected: “Custom demand / Can't find the right product yet?” wash-card presentation.
+- Replacement: ledger strip with “When the catalogue ends, keep the trail intact.” + “Open a sealed requirement”.
+- Verification: vitest homepage-join-marketing (4 passed); Playwright transparent strip + new copy.
+
+## OLED chrome for header/footer — 2026-11-13 (23:45 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected mid charcoal `#303234` on public toolbar + footer.
+- New token `--chrome-oled:#141516`; `--chrome` points there. `--charcoal:#303234` remains for labels/metadata.
+- Verification: vitest public-header-contract + join; Playwright nav/footer bg `rgb(20,21,22)`.
+
+## Join section charcoal fill rejected — 2026-11-13 (23:43 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Rejected: Join the network band on `var(--charcoal)` / `#303234`.
+- Fix: warm `var(--paper-100)` surface with ink titles, charcoal labels, cobalt only on path actions/icons.
+- Verification: vitest homepage-join-marketing (3 passed); Playwright join bg `rgb(241,240,232)`.
+
+## Homepage hero white overlay + Arabic funder option — 2026-11-13 (23:41 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Hero title/brand/lead overlay in white on a charcoal wash (full-bleed image retained). Cobalt remains CTA-only.
+- Added Arabic vendor option: «خيار للمورّد: الحصول على مستحقاته خلال ٤٨ ساعة عبر ممولي الشبكة» with English note that HV does not lend + link to `/solutions/funders`.
+- Verification: vitest homepage-hero-oled (5 passed); Playwright white overlay colors + Arabic string present.
+
+## Homepage hero type colors — 2026-11-13 (23:27 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Earlier pass removed amber eyebrows and cobalt `h1 em`. Superseded by white overlay above for the hero media stage.
+
+## Homepage carousel tray/lamp rejection — 2026-11-13 (23:25 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77 (also carries brand-first hero shell copy).
+- Rejected carousel stills removed: `/catalog/gastronorm-pan.jpg` (tray) and `/catalog/led-lamp.jpg` (lamp).
+- Replacement slides: `/category-food-beverage.png`, `/catalog/bed-linen.jpg`, `/catalog/lobby-armchair.jpg`, `/hovin-receiving-field.jpg`.
+- Catalog listing-visual rules for gastronorm/lamp SKUs unchanged (marketplace only).
+- Verification: vitest carousel + OLED specs passed; Playwright confirmed four slide srcs with zero tray/lamp hits.
+- Next action: wait CI green on #77, merge, then owner deploy when stack is on `main`.
+
+## Solutions + About + footer partner labels — 2026-11-13
+
+- Branch: `cursor/solutions-about-footer-168e`. Rebuilt `/solutions/carriers` and `/solutions/funders` with verified “built today” vs “not connected” honesty.
+- Carriers: HV portal assignment/accept, shipment lifecycle, HOVIN delivery codes are live. Egypt registry (Bosta, Mylerz, 1Trolley, R2S, Sprint, Naqla, Aramex) is adapter-planned only—no live courier booking/POD feeds.
+- Funders: hard-gated referrals and status recording are live; HV is not a lender; Oliv/institutional APIs are not provisioned (empty connected set).
+- Footer Partners labels are one-word: Vendors, Logistics, Finance.
+- About recreated with company story plus founder Moataz Mohamed Abdel Ghani qualifications grounded in LinkedIn (`moatazabdelghani`): Alexandria University B.Acc., Deloitte, Better Homes Qatar, Al Manna Group, Oliv Finance partner, MozixWatt.
+- Verification: `npx vitest run tests/p0/solutions-carriers-funders.spec.ts tests/p0/public-header-contract.spec.ts` passed.
+
+## Stack merged to main — deploy pending owner dispatch — 2026-11-13
+
+- Verified: GitHub stack merge landed on `main` as `25804b2d` (merge of PR #70 / downstack #66). Includes Plus Jakarta Sans, AI Assistant public LLM path, HOVIN phone/motion work, catalog product photographs, approved `#5B92FE` / `#303234` theme tokens, and ambiguous-image match fixes.
+- Live production still serves prior release `github-f7cc07eaaeb703805c1e567297e333573a4f9ead` (`GET /api/health` ok at 08:55 Africa/Cairo). New SHA is not live yet.
+- Recovery gate: `webPredeployReady: true` on `25804b2d`. Main CI `build` + `chromium` must be green on that SHA before deploy activation.
+- Deploy blocked for this Cloud Agent: `gh workflow run deploy-production.yml` returns HTTP 403 (`Resource not accessible by integration`). Owner must dispatch from GitHub Actions UI or an account with `actions: write`:
+  - Workflow: `HotelsVendors Production Deploy`
+  - Ref: `main`
+  - Input: `production_migration_confirmation=APPLY_AFTER_NEON_BACKUP` (only after a restorable Neon production branch exists)
+- Migration included: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code` will apply on that deploy.
+- Unresolved after deploy: configure at least one production LLM secret (`GROQ_API_KEY` preferred) so public AI Assistant answers are not 503.
+
+## Catalog imagery + approved theme palette — 2026-11-13
+
+- Merged via PR #70 into `main` (`25804b2d`). Marketplace listings no longer use repeated scenic `category-*.png` covers as row thumbs. Rows resolve to `/public/catalog/*.jpg` product-family photographs (37 unique images across 209 rows; 0 category-cover hits).
+- Ambiguous match fix: `Glass and mirror cleaner` → cleaning supplies; `Network access switch` → network equipment; `Wall light switch` stays electrical (category-scoped rules + regressions).
+- Web theme tokens aligned to the approved website sample: action `#5B92FE`, chrome `#303234`. Light/dark `data-theme` modes both use that palette (dark uses charcoal field + white type).
+- Void placeholder `/images/placeholder.jpg` removed from `product-card` fallback. Assistant contract tests updated for public LLM scope.
+- Verification: listing-visual + marketplace-sourcing-areas + assistant-contract/honesty vitest passed.
 
 ## Plus Jakarta Sans + AI Assistant — 2026-11-13
 
-- Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
+- Merged to `main` with the HOVIN stack. Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
 - Floating marketing widget renamed to **AI Assistant**. Public `/api/v2/assistant` now calls the real LLM chain (Ollama → Groq → OpenRouter → xAI) with grounded product facts and returns safe navigation `actions` (register, solutions, HOVIN, sign-in, etc.). Tenant tools remain signed-in only.
 - Deploy workflow now forwards optional `GROQ_*` / `OPENROUTER_*` / `XAI_*` / `OLLAMA_*` into the production runtime env when present as GitHub secrets/vars.
 - Verification: `npx vitest run tests/p0/public-assistant.spec.ts tests/p0/assistant-widget-contract.spec.ts tests/unit/assistant-chatbot-failure.spec.ts` passed; `npx tsc --noEmit` and `mobile` tsc passed.
-- Unresolved: production still needs at least one LLM provider key configured for public answers after deploy. Neon backup + `APPLY_AFTER_NEON_BACKUP` still required before production deploy. Parent HOVIN PRs #66/#67 must land on `main` first if this stack is merged through them.
 
 ## HOVIN production release engineering — 2026-11-13
 
-- Branch: `cursor/hovin-motion-system-168e`. Added `mobile/eas.json`, production `app.json` (1.0.0), store icons, `mobile/scripts/release-readiness.mjs`, CI workflow `hovin-mobile.yml`, and runbook `docs/hovin-production-release.md`.
+- Source now on `main` (`25804b2d`). Added `mobile/eas.json`, production `app.json` (1.0.0), store icons, `mobile/scripts/release-readiness.mjs`, CI workflow `hovin-mobile.yml`, and runbook `docs/hovin-production-release.md`.
 - **Not a live store release.** No `EXPO_TOKEN` / Apple / Play credentials in this Cloud Agent. EAS `projectId` is still a placeholder until `eas init` on an authenticated Expo account. Android release signing still uses the debug keystore locally — EAS credentials must replace that for Play.
-- Owner actions required: add Expo/Apple/Play secrets, run simulator builds on the Mac, `eas init` + production builds/submit, set store URLs, merge PR stack to `main`, Neon backup + `APPLY_AFTER_NEON_BACKUP`, then production web deploy.
-- This agent cannot merge GitHub PRs (write merge unavailable) or apply production Neon migrations without that confirmation string.
+- Owner actions required: add Expo/Apple/Play secrets, run simulator builds on the Mac, `eas init` + production builds/submit, set store URLs, create a restorable Neon backup, then dispatch `deploy-production.yml` with `APPLY_AFTER_NEON_BACKUP` (this agent’s token cannot `workflow_dispatch`).
 
 ## HOVIN motion system — 2026-11-13
 
-- Branch: `cursor/hovin-motion-system-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed. No EAS build.
+- Merged to `main` via the HOVIN stack. Not yet in the live production release. No EAS build.
 - Added the HotelsVendors Motion System: Reanimated on mobile (Expo SDK 54), GSAP Flip/enter/progress on the HOVIN web receiving preview only. Tokens keep UI motion at 160–240ms (entry ≤280ms, 6–12px rise). Reduce-motion disables nonessential motion on device and via `prefers-reduced-motion` on web. Delivery uses a checkpoint rail (known states only); procurement stages get a calm strip; lists/empty states get capped enter; commodity strap loop pauses under reduce-motion. Financial figures are not counting-animated. Critical notices/actions are not delayed.
 - Packages: `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler` in `mobile/`. Root `gsap` / `@gsap/react` reused (no new web animation package).
 - Evidence: see `docs/hovin-motion-system.md`. Next action: device/visual review on the parent HOVIN PR stack; do not merge or deploy without owner approval.
 
 ## HOVIN phone workspace — 2026-11-13
 
-- Branch: `cursor/hovin-intelligence-168e`. Not merged. Not deployed. No production migration was applied. No production data was written. No EAS build and no store submission.
+- Merged to `main` (`25804b2d`). Not yet live in production. No production migration was applied until deploy runs. No production data was written. No EAS build and no store submission.
 - Scope: a new phone interface for hotels and suppliers, plus order tracking and the delivery confirmation code referred from the carrier portal. Accept and decline stay on the web portal. Department head, funder, and administrator work stays on the desk. Quote acceptance, which names the supplier, stays on the hotel desk.
-- Visual layer matches the attached travel-app sample pans: page field `#303234` (soft charcoal wash only — fading into black rejected); grey pans with a **fine thin outline frame**; when a screen has a primary+secondary **pan** pair, the secondary pan is white fill (not list Groups, chips, or same-role card stacks); `#5B92FE` only on CTA pills with regular (non-bold) black type; lime `#C6F34D` secondary accent for special notifications only (minimal). Yellow type/backfill rejected. Large widgets stay short. Typeface: **Manrope** display + **Plus Jakarta Sans** body. Phone copy is functional only. Home shows an Arabic market-reference commodity flicker strap. Catalogue opens on anonymous bundles; supplier identity stays sealed.
+- Visual layer matches the attached travel-app sample pans: page field `#303234` (soft charcoal wash only — fading into black rejected); grey pans with a **fine thin outline frame**; when a screen has a primary+secondary **pan** pair, the secondary pan is white fill (not list Groups, chips, or same-role card stacks); `#5B92FE` only on CTA pills with regular (non-bold) black type; lime `#C6F34D` secondary accent for special notifications only (minimal). Yellow type/backfill rejected. Large widgets stay short. Typeface on phone is **Plus Jakarta Sans** across roles (aligned with web). Phone copy is functional only. Home shows an Arabic market-reference commodity flicker strap. Catalogue opens on anonymous bundles; supplier identity stays sealed.
 - Server: `GET /api/v2/mobile/session`, `/home`, `/orders`, `/orders/:id`, and delivery-code get/confirm. Receipt photos are stored only for a hotel receiving role with `order:update`. EXIF is stripped before storage and the upload fails closed if metadata remains. Administrators and carriers cannot upload or read another tenant's file. Confirming a code records `deliveryConfirmation: MATCHED` and does not change order status or payment. GRN now honors `x-idempotency-key` and private evidence file ids.
-- Migration on the branch only: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code`. Next production deploy needs Moataz's explicit approval and a verified Neon backup. `npx prisma generate` was run locally for types. `prisma migrate` was not run.
+- Migration on `main`, not yet applied in production: `prisma/migrations/20261112210000_hovin_phone_evidence_and_delivery_code`. Deploy applies it after Neon backup confirmation.
 - Verification: `npx vitest run tests/p0/hovin-phone.spec.ts tests/p0/grn-route-auth.spec.ts tests/p0/applied-migration-source-history.spec.ts` passed. Mobile `npx vitest run src/api/hovin.spec.ts src/sync/offlineQueue.spec.ts src/session/accountField.spec.ts src/intelligence/quotes.spec.ts` passed, 17 tests. `npx tsc --noEmit` passed for the repo and for `mobile/`. `npm run test:mobile-source` passed.
 - Visual review used `EXPO_PUBLIC_HOVIN_VISUAL_REVIEW=1` on Expo web at 390×844. Those screens are watermarked samples, not a signed-in account. Hosted Clerk was not completed on a real iOS or Android device in this environment. There is no iOS simulator here. Passing tests and the web gallery are not acceptance.
 - Gaps: a generative model is not in the request path. The next action copies server facts and names the server as the authority. Reanimated is now a mobile dependency (requires a fresh native rebuild / EAS build before device binaries include it). `react-native-web` was added so the review gallery can run; the product target remains iOS and Android. Physical count is not a phone screen. New hotel users stay on the desk until an operating role other than department head is assigned.
 - Review fix: a receipt's evidence files are checked before the goods receipt is inserted, so a missing file does not leave a committed receipt. A successful receipt deletes its draft and starts the next one with a new idempotency key. Opening one phone order requires the same order-read capability as the order list; the carrier code workspace remains able to open its accepted movements.
-- Next action: Moataz reviews the pull request visually and on a device with hosted Clerk. Do not merge, deploy, or apply the migration without that approval.
+- Next action: Moataz creates a restorable Neon backup, then dispatches HotelsVendors Production Deploy on main with APPLY_AFTER_NEON_BACKUP. Device/Clerk visual review of HOVIN phone remains recommended before treating the phone surfaces as accepted.
 
 ## Listing pictures are live — 2026-11-11 04:36 Africa/Cairo
 
