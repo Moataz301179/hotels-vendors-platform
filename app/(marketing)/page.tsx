@@ -76,10 +76,7 @@ export default function MarketingPage() {
             <div className={heroStyles.copy}>
               <p className={heroStyles.brand}>HotelsVendors</p>
               <p className={heroStyles.eyebrow}>Egypt · Hospitality procurement software</p>
-              <h1>
-                One operating record for hotel purchasing.
-                <em> From requirement to receipt.</em>
-              </h1>
+              <h1>We are the full operating network for hotel procurement.</h1>
               <p className={heroStyles.lead}>
                 Source, approve, deliver and prove what arrived—on a sealed commercial trail your teams can trust.
               </p>

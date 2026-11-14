@@ -1,5 +1,13 @@
 # HotelsVendors — Production-Ready Handover
 
+## Hero title — full operating network — 2026-11-14 (02:50 Africa/Cairo)
+
+- Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
+- Hero `h1` set to: “We are the full operating network for hotel procurement.”
+- Removed prior two-line title (“One operating record…” / “From requirement to receipt.”).
+- CI homepage grep + hero OLED / devops-csp-recovery specs updated to the new string.
+- Next action: merge #77 → owner deploy with `APPLY_AFTER_NEON_BACKUP`.
+
 ## AI Assistant model + carousel image match — 2026-11-14 (00:00 Africa/Cairo)
 
 - Branch / PR: `cursor/hero-copy-rewrite-168e` / #77.
