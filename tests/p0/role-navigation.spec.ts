@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navigationForRole } from '@/lib/dashboard/role-navigation';
+import { criticalDestinationsForRole, navigationForRole } from '@/lib/dashboard/role-navigation';
 
 function hrefs(role: string) {
   return navigationForRole(role).flatMap((group) => group.items.map((item) => item.href));
@@ -17,6 +17,18 @@ describe('role navigation boundaries', () => {
     expect(hrefs('HOTEL')).toEqual(expect.arrayContaining([
       '/orders?view=approval',
       '/orders?view=receiving',
+    ]));
+  });
+
+  it('groups hotel screens into command, transactions, and intelligence', () => {
+    const labels = navigationForRole('HOTEL').map((group) => group.label);
+    expect(labels).toEqual(expect.arrayContaining(['Command', 'Transactions', 'Intelligence']));
+    expect(criticalDestinationsForRole('HOTEL')).toEqual(expect.arrayContaining([
+      '/dashboard',
+      '/workspace/marketplace',
+      '/intelligence',
+      '/demand-aggregation',
+      '/security',
     ]));
   });
 });
