@@ -19,13 +19,27 @@ Owner-authorized path to ship HOVIN to TestFlight / Play and enable store links 
 4. Explicit `APPLY_AFTER_NEON_BACKUP` after a restorable Neon production branch exists
 5. Merge of PR stack to `main` and production web deploy (GitHub write merge / deploy dispatch)
 
-## Execute — Mac simulator (owner machine)
+## Execute — phone via Expo Go (primary)
 
-Full troubleshooting for “Building • 451/455”, yellow RN warnings, “No script URL”, blank screens, and Apple Account simulator sheets: **`docs/hovin-simulator-runbook.md`**. Product is the native **HOVIN** client (`com.hotelsvendors.hovin`) — **not** Expo Go.
+Day-to-day HOVIN launch uses **Expo Go 58.x**. Full steps: **`docs/hovin-simulator-runbook.md`**.
 
 ```bash
 cd mobile
-git checkout cursor/hovin-simulator-fix-168e   # or cursor/hovin-intelligence-168e once merged
+git checkout cursor/hovin-expo-go-sdk58-168e   # or cursor/hovin-intelligence-168e once merged
+npm ci
+export EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_…   # or root .env.local NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+export EXPO_PUBLIC_HOVIN_API_ORIGIN=https://www.hotelsvendors.com
+npx expo login   # same account as Expo Go
+npm start -- --tunnel
+# Scan the Metro QR with Expo Go 58.x; allow exp:// redirect in Clerk if auth fails
+```
+
+## Execute — Mac custom native client (optional)
+
+For local `HOVIN.app` / Xcode troubleshooting (“Building • 451/455”, etc.): **`docs/hovin-simulator-runbook.md`**.
+
+```bash
+cd mobile
 npm ci
 # Pin Node for Xcode GUI (required — empty NODE_BINARY hangs late script phases):
 node -e "console.log(process.execPath)"   # paste into ios/.xcode.env.local as NODE_BINARY

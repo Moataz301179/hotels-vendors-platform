@@ -20,7 +20,7 @@ export function FieldShade({
         locations={[0, 0.35, 0.7, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
       {children}

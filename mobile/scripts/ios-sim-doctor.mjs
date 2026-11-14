@@ -40,7 +40,7 @@ else fail("Node executable missing");
 const appJson = JSON.parse(readFileSync(resolve(root, "app.json"), "utf8"));
 ok(`Native product: ${appJson.expo?.name} / ${appJson.expo?.ios?.bundleIdentifier}`);
 warn(
-  "This is the HOVIN custom native client — do not use the Expo Go store app. Launch with `npm run ios` or Xcode on HOVIN.xcworkspace so the simulator shows HOVIN, not Expo Go.",
+  "Prefer Expo Go 58.x (`npm start -- --tunnel`) for day-to-day HOVIN. This doctor is for the optional custom native client (`npm run ios` / Xcode on HOVIN.xcworkspace).",
 );
 
 const buildFromSource = appJson.expo?.plugins?.some(
