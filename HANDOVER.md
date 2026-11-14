@@ -1,5 +1,14 @@
 # HotelsVendors — Production-Ready Handover
 
+## HOVIN simulator / Xcode hang diagnosis — 2026-11-14
+
+- Branch: `cursor/hovin-simulator-fix-168e` (from `cursor/hovin-intelligence-168e`). Not merged. Not deployed.
+- Owner report: HOVIN + simulator “don’t work”; Xcode screenshot showed **Building • 451/455**, 19 yellow warnings, destination **iPhone 17 Pro**, git branch in the Xcode chrome was `cursor/eseal-local-signer-d37d`.
+- Verified facts: HOVIN lives at `mobile/` (Expo 54 / RN 0.81, `com.hotelsvendors.hovin`, workspace `mobile/ios/HOVIN.xcworkspace`). `ios.buildReactNativeFromSource=true` makes late compile/link steps slow. Scheme LaunchAction is **Debug**, which sets `SKIP_BUNDLING=1` (needs Metro). Versioned `ios/.xcode.env` previously used only `command -v node`, which is often empty under Xcode GUI and stalls script phases near the end of the build. Issue-navigator React-cxxreact / Hermes warnings are inherited CocoaPods noise and are not a red failure by themselves. Prior Mac evidence (HANDOVER 2026-11-04) already launched HOVIN on iPhone 17 Pro; Apple Account Verification on the simulator is host state.
+- Repo fixes: robust `mobile/ios/.xcode.env` Node resolution; removed phantom `HOVINTests` from `HOVIN.xcscheme`; `mobile/scripts/ios-sim-doctor.mjs` + `npm run doctor:ios`; visual-review path for `with-hv-public-env.mjs`; runbooks `docs/hovin-simulator-runbook.md` and `mobile/README.md`.
+- This Linux Cloud Agent cannot run Xcode or the simulator. Owner must pin `ios/.xcode.env.local`, run `npm run doctor:ios`, then `npm start` + `npm run ios` on the Mac (or Release for a packaged smoke test).
+- Next action: Moataz runs the Mac steps in `docs/hovin-simulator-runbook.md` on the HOVIN branch (not eseal); do not merge without that local confirmation.
+
 ## Plus Jakarta Sans + AI Assistant — 2026-11-13
 
 - Branch: `cursor/jakarta-ai-assistant-168e` (from motion stack). Web + mobile use **Plus Jakarta Sans** only; title weights are medium (500) / bold (700). Georgia/Manrope heading splits removed from public pages.
