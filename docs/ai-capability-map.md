@@ -162,13 +162,16 @@ returns the list and unread count.
 **Data source:** `Notification` + `NotificationPreference`.
 
 **Status: BUILT.** `lib/notifications/service.ts` persists before delivery,
-enforces preferences, refuses cross-tenant recipients, and reports SMS /
-WhatsApp honestly as "recorded but not sent" (no provider wired). Wired into
-order transitions via `lib/orders/notify.ts`. Acceptance tests:
-`tests/p0/notification-service.spec.ts` (10/10),
-`tests/p0/order-transition-notifications.spec.ts` (10/10).
+enforces preferences, refuses cross-tenant recipients, and delivers WhatsApp
+when Meta/Twilio env + user phone are present (SMS still recorded-but-not-sent).
+Wired into order transitions via `lib/orders/notify.ts` (hotel WhatsApp when
+`allowExternal`). Inbound Meta webhook: `/api/webhooks/whatsapp`. Acceptance
+tests: `tests/p0/notification-service.spec.ts`,
+`tests/p0/order-transition-notifications.spec.ts`,
+`tests/p0/whatsapp-*.spec.ts`.
 
-**Missing:** inbox UI; SMS/WhatsApp providers; escalation policy.
+**Missing:** inbox UI; SMS provider; Meta template approvals for cold outreach;
+escalation policy.
 
 ---
 
