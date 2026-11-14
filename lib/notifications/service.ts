@@ -19,6 +19,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { addEmailJob } from "./queue";
+import { isWhatsAppConfigured, sendWhatsApp } from "./whatsapp";
 
 export const NOTIFICATION_TYPES = [
   "ORDER_UPDATE",
@@ -88,7 +89,7 @@ export async function notify(input: NotifyInput): Promise<NotifyResult> {
   // Recipient must belong to the caller's tenant — a cross-tenant row is a bug.
   const recipient = await prisma.user.findFirst({
     where: { id: userId, tenantId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, phone: true },
   });
   if (!recipient) {
     return { notificationId: "", delivered: false, channel, reason: "no_channel" };
@@ -138,7 +139,24 @@ export async function notify(input: NotifyInput): Promise<NotifyResult> {
     return { notificationId: notification.id, delivered: true, channel };
   }
 
-  // SMS / WHATSAPP have no provider wired yet. Honest state: recorded, not sent.
+  if (channel === "WHATSAPP") {
+    if (!isWhatsAppConfigured() || !recipient.phone) {
+      // Honest: recorded, not sent — provider missing or phone unlinked.
+      return { notificationId: notification.id, delivered: false, channel, reason: "no_channel" };
+    }
+    const text = [input.subject, input.body].filter(Boolean).join("\n\n");
+    const sent = await sendWhatsApp({ to: recipient.phone, body: text || "HotelsVendors update" });
+    if (!sent) {
+      return { notificationId: notification.id, delivered: false, channel, reason: "no_channel" };
+    }
+    await prisma.notification.update({
+      where: { id: notification.id },
+      data: { sentAt: new Date() },
+    });
+    return { notificationId: notification.id, delivered: true, channel };
+  }
+
+  // SMS has no provider wired yet. Honest state: recorded, not sent.
   return { notificationId: notification.id, delivered: false, channel, reason: "no_channel" };
 }
 

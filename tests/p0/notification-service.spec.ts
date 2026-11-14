@@ -20,6 +20,8 @@ const m = vi.hoisted(() => ({
   notificationCount: vi.fn(),
   notificationFindMany: vi.fn(),
   addEmailJob: vi.fn(),
+  sendWhatsApp: vi.fn(),
+  isWhatsAppConfigured: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -36,6 +38,10 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 vi.mock("@/lib/notifications/queue", () => ({ addEmailJob: m.addEmailJob }));
+vi.mock("@/lib/notifications/whatsapp", () => ({
+  sendWhatsApp: m.sendWhatsApp,
+  isWhatsAppConfigured: m.isWhatsAppConfigured,
+}));
 
 const { notify, markNotificationRead, unreadCount, listNotifications, preferenceAllows } = await import(
   "../../lib/notifications/service"
@@ -55,7 +61,7 @@ const input = {
 describe("unified notification service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    m.userFindFirst.mockResolvedValue({ id: "user-1", email: "buyer@hotel.test" });
+    m.userFindFirst.mockResolvedValue({ id: "user-1", email: "buyer@hotel.test", phone: "+201001234567" });
     m.preferenceFindFirst.mockResolvedValue(null);
     m.notificationCreate.mockResolvedValue({ id: "notif-1" });
     m.notificationUpdate.mockResolvedValue({});
@@ -63,6 +69,8 @@ describe("unified notification service", () => {
     m.notificationCount.mockResolvedValue(3);
     m.notificationFindMany.mockResolvedValue([]);
     m.addEmailJob.mockResolvedValue({});
+    m.sendWhatsApp.mockResolvedValue(true);
+    m.isWhatsAppConfigured.mockReturnValue(true);
   });
 
   it("never delivers to a recipient outside the caller's tenant", async () => {
@@ -107,6 +115,32 @@ describe("unified notification service", () => {
     expect(result.reason).toBe("no_channel");
     expect(m.addEmailJob).not.toHaveBeenCalled();
     expect(m.notificationCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("delivers WHATSAPP when the provider is configured and the user has a phone", async () => {
+    const result = await notify({ ...input, channel: "WHATSAPP" });
+    expect(result.delivered).toBe(true);
+    expect(m.sendWhatsApp).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "+201001234567", body: expect.stringContaining("Order 123 confirmed") }),
+    );
+    expect(m.notificationUpdate).toHaveBeenCalled();
+  });
+
+  it("records WHATSAPP without sending when the provider is not configured", async () => {
+    m.isWhatsAppConfigured.mockReturnValue(false);
+    const result = await notify({ ...input, channel: "WHATSAPP" });
+    expect(result.delivered).toBe(false);
+    expect(result.reason).toBe("no_channel");
+    expect(m.sendWhatsApp).not.toHaveBeenCalled();
+    expect(m.notificationCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("records WHATSAPP without sending when the user has no phone", async () => {
+    m.userFindFirst.mockResolvedValue({ id: "user-1", email: "buyer@hotel.test", phone: null });
+    const result = await notify({ ...input, channel: "WHATSAPP" });
+    expect(result.delivered).toBe(false);
+    expect(result.reason).toBe("no_channel");
+    expect(m.sendWhatsApp).not.toHaveBeenCalled();
   });
 
   it("respects suppressExternal (pre-release safety)", async () => {
