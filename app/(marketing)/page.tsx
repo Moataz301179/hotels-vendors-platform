@@ -33,6 +33,8 @@ const joinPaths = [
     detail: "Bring demand, approvals, purchase orders and receipt evidence into a single protected workspace for your properties.",
     href: "/hotels/signup",
     action: "Register your hotel",
+    image: "/hv-procurement-team.webp",
+    alt: "Hotel procurement team reviewing purchasing work together",
   },
   {
     icon: PackageSearch,
@@ -41,6 +43,8 @@ const joinPaths = [
     detail: "Maintain catalogue evidence and respond when work is allocated to you. Vendor identity stays sealed until the authorized stage.",
     href: "/suppliers/signup",
     action: "Register as a vendor",
+    image: "/category-supplier-catalogue.png",
+    alt: "Supplier catalogue materials prepared for hospitality demand",
   },
   {
     icon: ScanLine,
@@ -49,6 +53,8 @@ const joinPaths = [
     detail: "HOVIN is the field path for delivery codes and goods-receipt evidence—used when a shipment is ready to confirm, not to place orders.",
     href: "/hovin",
     action: "See how HOVIN works",
+    image: "/hovin-receiving-field.jpg",
+    alt: "Field receiving confirmation on a hotel delivery dock",
   },
 ];
 
@@ -135,19 +141,24 @@ export default function MarketingPage() {
         <div className={styles.shell}>
           <div className={styles.joinIntro}>
             <p className={styles.joinEyebrow}>Join the network</p>
-            <h2 id="join-title">Built for hotels and vendors who need accountable procurement—not another inbox.</h2>
-            <p>Register in minutes. Hotels control purchasing. Vendors serve qualified demand. Receiving teams prove the handoff when delivery evidence is ready.</p>
+            <h2 id="join-title">Three doors into the same commercial trail.</h2>
+            <p>Hotels buy. Vendors respond. Receiving proves the handoff. Pick the path that matches your responsibility—each one stays on the sealed record.</p>
           </div>
           <div className={styles.joinPaths}>
-            {joinPaths.map(({ icon: Icon, eyebrow, title, detail, href, action }) => (
+            {joinPaths.map(({ icon: Icon, eyebrow, title, detail, href, action, image, alt }) => (
               <Link href={href} className={styles.joinPath} key={eyebrow}>
-                <span className={styles.joinPathIcon} aria-hidden="true"><Icon size={22} /></span>
-                <div className={styles.joinPathCopy}>
-                  <span>{eyebrow}</span>
+                <figure className={styles.joinPathMedia}>
+                  <Image src={image} alt={alt} fill sizes="(max-width: 650px) calc(100vw - 34px), (max-width: 950px) calc((100vw - 54px) / 2), 360px" />
+                </figure>
+                <div className={styles.joinPathBody}>
+                  <span className={styles.joinPathEyebrow}>
+                    <Icon size={15} aria-hidden="true" />
+                    {eyebrow}
+                  </span>
                   <strong>{title}</strong>
                   <p>{detail}</p>
+                  <b className={styles.joinPathAction}>{action} <ArrowRight size={15} /></b>
                 </div>
-                <span className={styles.joinPathAction}>{action} <ArrowRight size={15} /></span>
               </Link>
             ))}
           </div>

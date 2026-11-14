@@ -43,4 +43,14 @@ describe("homepage join marketing", () => {
     expect(css).toMatch(/\.join h2\{[^}]*color:var\(--ink\)/s);
     expect(css).not.toMatch(/\.join\{[^}]*background:var\(--charcoal\)/s);
   });
+
+  it("presents join paths as image-backed cards, not icon list rows", () => {
+    expect(page).toContain("/hv-procurement-team.webp");
+    expect(page).toContain("/category-supplier-catalogue.png");
+    expect(page).toContain("/hovin-receiving-field.jpg");
+    expect(page).toContain("joinPathMedia");
+    expect(css).toMatch(/\.joinPaths\{[^}]*grid-template-columns:repeat\(3/s);
+    expect(css).toMatch(/\.joinPathMedia\{[^}]*aspect-ratio/s);
+    expect(css).not.toMatch(/\.joinPaths\{[^}]*border-top:1px solid var\(--line\)/s);
+  });
 });
