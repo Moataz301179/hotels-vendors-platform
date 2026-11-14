@@ -129,7 +129,7 @@ export function MarketplaceDirectory({ entries, initialCategory }: { entries: Ma
     {grouped.length ? grouped.map((group) => <section key={group.group} aria-labelledby={`album-${group.group}`}>
       <header className={styles.album} id={`album-${group.group}`}>
         {group.cover ? <Image src={group.cover} alt="" width={120} height={80} /> : <span className={styles.albumMark}>No approved cover</span>}
-        <div><h3>{groupLabel(group.group)}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. {group.group === 'Restaurants & bars' ? 'Food and beverage items are listed before kitchen equipment.' : 'Each row shows an item picture or the area cover.'}</p></div>
+        <div><h3>{groupLabel(group.group)}</h3><p>{group.entries.length} specification{group.entries.length === 1 ? '' : 's'}. {group.group === 'Restaurants & bars' ? 'Food and beverage items are listed before kitchen equipment.' : 'Rows use a category mark unless a first-party product photo is on file.'}</p></div>
       </header>
       <div className={styles.list} role="table" aria-label={group.group}>
       <div className={styles.listHead} role="row"><span>Specification</span><span>Unit</span><span>How it is bought</span><span>Quantity</span><span>List</span></div>

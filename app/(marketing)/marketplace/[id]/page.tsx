@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { publicMarketplaceDirectoryProfileWhere } from '@/lib/directory/public-marketplace';
 import { MarketplaceSelectionAction } from '@/components/marketing/marketplace-selection-action';
 import { operatingCategory } from '@/lib/directory/operating-category';
-import { groupLabel, listingArabicName, listingImage } from '@/lib/directory/listing-visual';
+import { groupLabel, listingArabicName } from '@/lib/directory/listing-visual';
 import { publicDirectoryFields, publicDirectorySpecifications, publicDirectoryText } from '@/lib/directory/public-directory-profile';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +31,8 @@ export default async function MarketplaceReferencePage({ params }: { params: Pro
   const specifications = publicDirectorySpecifications(entry.attributes);
   const material = specifications.material ?? null;
   const description = publicDirectoryText(entry.description);
-  const image = listingImage(fields.name, fields.category);
+  // First-party product photos only — never invent pasta/tea/pantry stock evidence.
+  const image = null;
   const arabic = listingArabicName(fields.name, fields.nameAr);
 
   return <main className="hv-public-page hv-marketplace-reference">
