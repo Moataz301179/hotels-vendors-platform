@@ -16,5 +16,5 @@ export function WorkspaceNavigation({role}:{role:string}) {
  const pathname=usePathname();
  const search = useSearchParams().toString();
  const currentSearch = search ? `?${search}` : '';
- return <nav className="side" aria-label="Workspace navigation">{navigationForRole(role).map((group)=><div className="side-group" key={group.label}><span className="side-label">{group.label}</span>{group.items.map((item)=>{const Icon=icons[item.icon];return <Link key={item.href} href={item.href} aria-current={isWorkspaceNavigationActive(item.href, pathname, currentSearch)?'page':undefined}><Icon aria-hidden="true"/>{item.label}</Link>})}</div>)}</nav>;
+ return <nav className="side" aria-label="Workspace navigation">{navigationForRole(role).map((group)=><div className="side-group" key={group.label}><span className="side-label">{group.label}</span>{group.items.map((item)=>{const Icon=icons[item.icon];return <Link key={item.href} href={item.href} title={item.detail} aria-current={isWorkspaceNavigationActive(item.href, pathname, currentSearch)?'page':undefined}><Icon aria-hidden="true"/><span className="side-link-copy"><strong>{item.label}</strong>{item.detail ? <small>{item.detail}</small> : null}</span></Link>})}</div>)}</nav>;
 }

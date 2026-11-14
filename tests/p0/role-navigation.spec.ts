@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navigationForRole } from '@/lib/dashboard/role-navigation';
+import { criticalDestinationsForRole, navigationForRole } from '@/lib/dashboard/role-navigation';
 
 function hrefs(role: string) {
   return navigationForRole(role).flatMap((group) => group.items.map((item) => item.href));
@@ -18,5 +18,24 @@ describe('role navigation boundaries', () => {
       '/orders?view=approval',
       '/orders?view=receiving',
     ]));
+  });
+
+  it('groups hotel screens into command, transactions, and intelligence', () => {
+    const labels = navigationForRole('HOTEL').map((group) => group.label);
+    expect(labels).toEqual(expect.arrayContaining(['Command', 'Transactions', 'Intelligence']));
+    expect(criticalDestinationsForRole('HOTEL')).toEqual(expect.arrayContaining([
+      '/dashboard',
+      '/credit-line',
+      '/workspace/marketplace',
+      '/intelligence',
+      '/demand-aggregation',
+      '/security',
+    ]));
+  });
+
+  it('exposes credit-line destinations for hotels, suppliers, and funders', () => {
+    expect(hrefs('HOTEL')).toContain('/credit-line');
+    expect(hrefs('SUPPLIER')).toContain('/credit-line');
+    expect(hrefs('FACTORING')).toContain('/credit-line');
   });
 });

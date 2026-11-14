@@ -350,7 +350,7 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 @media(max-width:600px){.app-shell .app-top-links>a{display:none}}
 .app-shell .side-layout{grid-template-columns:256px minmax(0,1fr)}
 .app-shell .side{background:var(--workspace-panel);border-right-color:var(--workspace-border);padding:24px 14px}
-.app-shell .side .side-label{padding:0 12px 10px;color:#778895;font-size:10px}.app-shell .side a{min-height:44px;margin:3px 0;border-radius:10px;color:#52636e;font-size:13px}.app-shell .side a:hover{background:#f0f5f8;color:var(--workspace-ink)}.app-shell .side a.active{background:var(--workspace-accent-soft);border-color:#9dc3e6;color:#245c96}
+.app-shell .side .side-label{padding:0 12px 10px;color:#778895;font-size:10px;letter-spacing:.12em;text-transform:uppercase}.app-shell .side a{min-height:48px;margin:3px 0;padding:10px 12px;border-radius:10px;color:#52636e;font-size:13px}.app-shell .side a:hover{background:#f0f5f8;color:var(--workspace-ink)}.app-shell .side a.active{background:var(--workspace-accent-soft);border-color:#9dc3e6;color:#245c96}
 .app-shell .app-body{max-width:1540px;padding:42px clamp(20px,4vw,56px) 72px;color:var(--workspace-ink)}
 .app-shell .app-body h1{font-size:clamp(32px,3.4vw,48px)!important;line-height:1.04;letter-spacing:-.052em!important;margin:0}.app-shell .app-body h2{letter-spacing:-.035em}.app-shell .app-body p{line-height:1.65}
 .app-shell .card{background:var(--workspace-panel);border-color:var(--workspace-border);border-radius:16px;box-shadow:0 1px 2px rgba(20,37,48,.04),0 10px 28px rgba(20,37,48,.035)}
@@ -617,16 +617,46 @@ input:not(.cl-root *),select:not(.cl-root *),textarea:not(.cl-root *){border:1px
 .fee-calculator__note { margin: 14px 0 0; }
 .fee-calculator .pill-muted { margin-left: 8px; }
 
+/* Ops console uses the same brand workspace tokens — dense, not drab. */
 .ops-console.role-dashboard-hero,
-.ops-console .role-dashboard-hero{padding:22px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:none}
-.ops-console .role-dashboard-hero h1{font-size:clamp(28px,3vw,36px)!important;letter-spacing:-.04em!important;max-width:18ch}
-.ops-console .role-dashboard-hero p{font-size:14px;line-height:1.6;max-width:62ch}
+.ops-console .role-dashboard-hero{
+  padding:clamp(22px,3vw,34px);
+  border:1px solid #cadce8;
+  border-radius:16px;
+  background:linear-gradient(125deg,var(--accent-wash),var(--paper-0) 68%);
+  box-shadow:0 8px 24px rgba(36,95,147,.06);
+}
+.ops-console .role-dashboard-hero h1{font-size:clamp(28px,3.2vw,40px)!important;letter-spacing:-.045em!important;max-width:22ch;color:var(--workspace-ink)}
+.ops-console .role-dashboard-hero p{font-size:14px;line-height:1.65;max-width:62ch;color:var(--workspace-muted)}
 .ops-workboard{display:flex;flex-wrap:wrap;gap:8px}
-.ops-workboard a{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:650;text-decoration:none}
-.ops-workboard a:hover,.ops-workboard a:focus-visible{border-color:var(--cobalt-600);color:var(--cobalt-700);outline:2px solid var(--focus);outline-offset:2px}
-.ops-console .role-dashboard-metrics{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
-.ops-console .role-dashboard-metric{min-height:0;padding:16px}
-.ops-console .role-dashboard-metric strong{font-size:28px}
+.ops-workboard a{
+  display:inline-flex;align-items:center;min-height:38px;padding:0 13px;
+  border:1px solid var(--workspace-border);border-radius:10px;
+  background:var(--workspace-panel);color:var(--workspace-ink);
+  font-size:13px;font-weight:650;text-decoration:none;
+  transition:border-color .16s,background .16s,color .16s;
+}
+.ops-workboard a:hover,.ops-workboard a:focus-visible{
+  border-color:var(--cobalt-600);background:var(--workspace-accent-soft);color:var(--cobalt-700);
+  outline:2px solid var(--focus);outline-offset:2px;
+}
+.ops-console .role-dashboard-metrics{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.ops-console .role-dashboard-metric{min-height:0;padding:18px;border-radius:14px;background:var(--workspace-panel);border-color:var(--workspace-border)}
+.ops-console .role-dashboard-metric strong{font-size:28px;color:var(--workspace-ink)}
+.ops-console .role-dashboard-action{border-radius:14px;background:var(--workspace-panel)}
+.ops-console .role-dashboard-journey{border-radius:14px;background:var(--workspace-panel);border-color:var(--workspace-border)}
+.app-shell .side a{align-items:flex-start}
+.app-shell .side .side-link-copy{display:grid;gap:2px;min-width:0}
+.app-shell .side .side-link-copy strong{font-size:13px;font-weight:650;line-height:1.25}
+.app-shell .side .side-link-copy small{color:var(--workspace-muted);font-size:10px;line-height:1.35;font-weight:500;white-space:normal}
+.app-shell .side a.active .side-link-copy small{color:#3d6f9a}
+.account-page{display:grid;gap:18px;max-width:920px}
+.account-page .card{padding:24px;border-radius:14px;background:var(--workspace-panel);border:1px solid var(--workspace-border)}
+.account-page dl{display:grid;grid-template-columns:minmax(140px,.4fr) minmax(0,1fr);gap:10px 18px;margin:16px 0 0}
+.account-page dt{color:var(--workspace-muted);font-size:12px;font-weight:700}
+.account-page dd{margin:0;font-size:14px;color:var(--workspace-ink)}
+.account-page h2{margin:0 0 8px;font-size:20px}
+.account-page p{margin:0;color:var(--workspace-muted);font-size:14px;line-height:1.65}
 .supplier-register{padding:22px}
 .supplier-register-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
 .supplier-register-head h2{margin:6px 0 8px;font-size:28px;letter-spacing:-.04em}
