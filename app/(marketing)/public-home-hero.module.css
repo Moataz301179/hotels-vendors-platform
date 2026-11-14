@@ -94,7 +94,8 @@
   align-items: center;
   justify-items: start;
   min-height: inherit;
-  padding-block: clamp(56px, 8vw, 108px);
+  /* Extra bottom pad so CTAs clear the centered funder honesty note */
+  padding-block: clamp(56px, 8vw, 108px) clamp(72px, 9vw, 120px);
 }
 
 .copy {
@@ -157,11 +158,19 @@
 }
 
 .funderOptionNote {
-  max-width: 42ch;
-  margin: 8px 0 0;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(14px, 2.4vw, 24px);
+  z-index: 2;
+  width: min(92%, 46rem);
+  max-width: 46rem;
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
   color: rgba(255, 255, 255, 0.72);
   font-size: 12.5px;
   line-height: 1.55;
+  text-shadow: 0 1px 12px rgba(15, 18, 22, 0.45);
 }
 
 .funderOptionNote a {
@@ -253,7 +262,7 @@
   .shell {
     width: calc(100% - 40px);
     align-items: end;
-    padding-block: 40px 48px;
+    padding-block: 40px 68px;
   }
 
   .copy {

@@ -82,10 +82,6 @@ export default function MarketingPage() {
               <p className={heroStyles.funderOption}>
                 Vendor option: get paid within 48 hours via network funders.
               </p>
-              <p className={heroStyles.funderOptionNote}>
-                Vendor option via independent network funders — HotelsVendors does not lend.{" "}
-                <Link href="/solutions/funders">How referrals work</Link>
-              </p>
               <div className={heroStyles.actions}>
                 <Link href="/platform" className={heroStyles.primary}>
                   See how it works <ArrowRight size={17} />
@@ -96,6 +92,10 @@ export default function MarketingPage() {
               </div>
             </div>
           </div>
+          <p className={heroStyles.funderOptionNote}>
+            Vendor option via independent network funders — HotelsVendors does not lend.{" "}
+            <Link href="/solutions/funders">How referrals work</Link>
+          </p>
         </div>
       </section>
 

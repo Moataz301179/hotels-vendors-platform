@@ -54,4 +54,11 @@ describe("homepage hero OLED fade", () => {
     expect(page).toContain("/solutions/funders");
     expect(page).not.toMatch(/HotelsVendors disburses/i);
   });
+
+  it("pins the funder honesty note to the bottom center of the hero stage", () => {
+    expect(css).toMatch(/\.funderOptionNote\s*\{[^}]*position:\s*absolute/s);
+    expect(css).toMatch(/\.funderOptionNote\s*\{[^}]*left:\s*50%/s);
+    expect(css).toMatch(/\.funderOptionNote\s*\{[^}]*text-align:\s*center/s);
+    expect(css).toMatch(/\.funderOptionNote\s*\{[^}]*transform:\s*translateX\(-50%\)/s);
+  });
 });
