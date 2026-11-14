@@ -492,8 +492,9 @@
   gap: 16px;
   margin-top: 16px;
   padding: 14px 16px;
-  border: 1px solid #1d2730;
-  background: #1d2730;
+  border: 1px solid var(--charcoal);
+  /* Soft charcoal only — navy slate (#1d2730) is outside the palette. */
+  background: var(--charcoal);
   color: #f4f7f8;
 }
 .selectionBar strong,

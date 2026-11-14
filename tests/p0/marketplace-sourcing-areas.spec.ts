@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const directory = readFileSync(join(process.cwd(), "components/marketing/marketplace-directory.tsx"), "utf8");
+const directoryCss = readFileSync(join(process.cwd(), "components/marketing/marketplace-directory.module.css"), "utf8");
 const visuals = readFileSync(join(process.cwd(), "lib/directory/listing-visual.ts"), "utf8");
 
 describe("public marketplace sourcing-area entry points", () => {
@@ -36,5 +37,10 @@ describe("public marketplace sourcing-area entry points", () => {
     expect(directory).not.toContain("unsplash");
     expect(visuals).not.toContain("unsplash");
     expect(visuals).not.toContain("wikimedia");
+  });
+
+  it("paints the hotel-list selection bar in palette charcoal, not navy slate", () => {
+    expect(directoryCss).toMatch(/\.selectionBar\s*\{[^}]*background:\s*var\(--charcoal\)/s);
+    expect(directoryCss).not.toMatch(/\.selectionBar\s*\{[^}]*background:\s*#1d2730/s);
   });
 });
