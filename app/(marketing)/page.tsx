@@ -123,17 +123,6 @@ export default function MarketingPage() {
               </Link>
             ))}
           </div>
-
-          <aside className={styles.requirement} aria-label="Sealed requirement">
-            <div className={styles.requirementCopy}>
-              <p className={styles.requirementEyebrow}>Sealed requirement</p>
-              <h3>When the catalogue ends, keep the trail intact.</h3>
-              <p>Capture quantity, delivery context and authority on one protected record—before vendor identity is disclosed.</p>
-            </div>
-            <Link href="/login?redirect_url=%2Fworkspace%2Fmarketplace" className={styles.requirementCta}>
-              Open a sealed requirement <ArrowRight size={16} />
-            </Link>
-          </aside>
         </div>
       </section>
 
